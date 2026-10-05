@@ -309,9 +309,11 @@ com=shell("Comisiones · Octubre 2026","Comisiones",
  subtitle="Cálculo automático al cierre de mes, con historial y detalle exportable")
 page("Comisiones.html","Comisiones",com,"Motor de comisiones")
 
-# 12 Reportes
+# 12 Reportes · las tres vistas comparten la misma barra de pestañas (cada una es una pantalla)
+def rep_tabs(active):
+    return tabs([("Dashboard por rol","Reportes.html"),("Reportes self-service","ConstructorReportes.html"),("Dashboard ejecutivo","DashboardEjecutivo.html")],active)
 rep=shell("Reportes y dashboards","Reportes",
- tabs(["Dashboard por rol",("Reportes self-service","ConstructorReportes.html"),("Dashboard ejecutivo","DashboardEjecutivo.html")],"Dashboard por rol"),
+ rep_tabs("Dashboard por rol"),
  kpis(["Ventas por nivel (real)","Matrículas del mes","Cobros vs pendientes","Ocupación de cursos"]),
  two(card("Ventas por sede y modalidad", box("Gráfico",160)),card("Pipeline comercial (Kommo → venta → matrícula)", box("Gráfico",160))),
  card("Reportes self-service", row(box("Entidad: estudiantes / ventas / cursos / profesores",44,w="360px"),box("Filtros + columnas",44,w="260px"),box("Rango de fechas",44,w="180px"),'<div style="margin-left:auto"></div>',btn("Generar",None,True),btn("Exportar"))+box("Cada exportación queda registrada en el audit log (datos de menores · LOPDP)",48)),
@@ -446,6 +448,7 @@ page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Inventario"
 
 # 29 Constructor de reportes
 page("ConstructorReportes.html","Reportes self-service",shell("Constructor de reportes","Reportes",
+ rep_tabs("Reportes self-service"),
  two(card("Definir reporte", form(["Entidad (estudiantes / ventas / cursos / profesores / comisiones)","Columnas"],1)+form(["Filtro sede","Filtro estado","Desde","Hasta"])+row(btn("Generar",None,True),btn("Guardar como reporte"))),
      card("Reportes guardados", li(["Nuevos estudiantes por mes (reemplaza New Students Report)","Ventas por nivel y sede","Cobros pendientes por asesor","Profesores activos y horas"]))),
  card("Resultado", table(["Mes","Quito","Valle","Ambato","Total"],[["Ago","32","18","11","61"],["Sep","40","22","14","76"],["Oct","28","15","9","52"]])+row(btn("Exportar Excel"),btn("Exportar PDF"))),
@@ -453,6 +456,7 @@ page("ConstructorReportes.html","Reportes self-service",shell("Constructor de re
 
 # 30 Dashboard ejecutivo
 page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Reportes",
+ rep_tabs("Dashboard ejecutivo"),
  row(box("Período: 2026",44,w="160px"),box("Comparar con 2025",44,w="180px"),box("Sede: Todas",44,w="140px")),
  kpis(["Ingresos YTD","Estudiantes activos","Ticket promedio por paquete","Margen por sede"]),
  two(card("Ingresos por mes y sede", box("Gráfico de líneas",180)), card("Mix por programa y modalidad", box("Gráfico de torta / barras",180))),
