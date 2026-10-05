@@ -11,7 +11,7 @@
 <div class="wf-bar"><a href="index.html">← Mapa de pantallas</a><span>Recuperar contraseña</span><span class="wf-tag">WIREFRAME · alto nivel</span></div>
 <div style="min-height:820px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:#1f2937;background:#f3f4f6">
 <form style="width:100%;max-width:420px;background:#fff;border:2px solid #1f2937;padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
-  <div style="width:100%;height:64px;box-sizing:border-box;border:2px dashed #9ca3af;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;text-align:center;padding:8px;">Logo Cambridge</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:#6b7280;letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>
   <h1 style="margin:0;font-size:22px">Recuperar contraseña</h1>
   <p style="margin:0;font-size:14px;color:#6b7280">Te enviamos un enlace temporal al correo registrado. Caduca en 30 minutos.</p>
   <label for="email" style="font-size:13px;font-weight:600">Correo</label>
@@ -37,6 +37,17 @@
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
   });
+})();
+(function(){
+  var sel=document.getElementById('sede'); if(!sel) return;
+  function apply(v){
+    document.querySelectorAll('[data-sv]').forEach(function(e){var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];});
+    document.querySelectorAll('[data-sede]').forEach(function(r){var rs=r.getAttribute('data-sede');r.style.display=(v==='Todas'||rs==='Todas'||rs===v)?'contents':'none';});
+  }
+  var saved=null; try{saved=localStorage.getItem('wf-sede');}catch(e){}
+  if(saved&&[].some.call(sel.options,function(o){return o.value===saved;})) sel.value=saved;
+  apply(sel.value);
+  sel.addEventListener('change',function(){try{localStorage.setItem('wf-sede',sel.value);}catch(e){}apply(sel.value);});
 })();
 document.querySelectorAll('.tabs').forEach(function(bar){
   var btns=bar.querySelectorAll('[data-tab]');

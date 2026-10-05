@@ -118,6 +118,17 @@ def page(fname, title, inner, lang_title):
     setTimeout(function(){{toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;}},1100);
   }});
 }})();
+(function(){{
+  var sel=document.getElementById('sede'); if(!sel) return;
+  function apply(v){{
+    document.querySelectorAll('[data-sv]').forEach(function(e){{var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];}});
+    document.querySelectorAll('[data-sede]').forEach(function(r){{var rs=r.getAttribute('data-sede');r.style.display=(v==='Todas'||rs==='Todas'||rs===v)?'contents':'none';}});
+  }}
+  var saved=null; try{{saved=localStorage.getItem('wf-sede');}}catch(e){{}}
+  if(saved&&[].some.call(sel.options,function(o){{return o.value===saved;}})) sel.value=saved;
+  apply(sel.value);
+  sel.addEventListener('change',function(){{try{{localStorage.setItem('wf-sede',sel.value);}}catch(e){{}}apply(sel.value);}});
+}})();
 document.querySelectorAll('.tabs').forEach(function(bar){{
   var btns=bar.querySelectorAll('[data-tab]');
   btns.forEach(function(b){{
@@ -133,11 +144,18 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
 </html>'''
     open(os.path.join(ROOT,fname),"w").write(html)
 
-def table(cols, rows, h=46):
+def table(cols, rows, h=46, sede=None):
+    """sede = índice de la columna cuyo valor (Quito/Valle/Ambato) filtra la fila con el selector global."""
     hd="".join(f'<div style="padding:10px 12px;font-weight:700;font-size:13px;border-bottom:2px solid {INK}">{c}</div>' for c in cols)
     body=""
     for r in rows:
-        body+="".join(f'<div style="padding:12px;font-size:13px;border-bottom:1px solid {LINE};min-height:{h}px;box-sizing:border-box;display:flex;align-items:center">{c}</div>' for c in r)
+        cells="".join(f'<div style="padding:12px;font-size:13px;border-bottom:1px solid {LINE};min-height:{h}px;box-sizing:border-box;display:flex;align-items:center">{c}</div>' for c in r)
+        sd=""
+        if sede is not None:
+            import re as _re
+            m=_re.search(r"Quito|Valle|Ambato|Todas", str(r[sede]))
+            if m: sd=f' data-sede="{m.group(0)}"'
+        body+=f'<div style="display:contents"{sd}>{cells}</div>'
     return f'<div style="display:grid;grid-template-columns:repeat({len(cols)}, minmax(0, 1fr));border:2px solid {INK}">{hd}{body}</div>'
 
 def tabs(items, active, panels=None):
@@ -164,8 +182,98 @@ def form(fields, cols=2):
         out+=f'<div style="display:flex;flex-direction:column;gap:6px"><label for="f{i}" style="font-size:13px;font-weight:600">{f}</label><input id="f{i}" style="min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px"></div>'
     return f'<div style="display:grid;grid-template-columns:repeat({cols}, minmax(0, 1fr));gap:16px">{out}</div>'
 
-def kpis(labels):
-    return f'<div style="display:grid;grid-template-columns:repeat({len(labels)}, minmax(0, 1fr));gap:16px">'+"".join(box(l,110) for l in labels)+'</div>'
+# ---------- Componentes de detalle (sin cajas grises) ----------
+SEDES=["Todas","Quito","Valle","Ambato"]
+def sv(todas,quito,valle,ambato):
+    """Valor que cambia con el selector de sede global."""
+    import json as _j
+    d=_j.dumps({"Todas":str(todas),"Quito":str(quito),"Valle":str(valle),"Ambato":str(ambato)},ensure_ascii=False).replace("'","&#39;")
+    return f"<span data-sv='{d}'>{todas}</span>"
+
+def kpi(label, value, sub=""):
+    return (f'<div style="border:2px solid {INK};padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0">'
+            f'<span style="font-size:12px;color:{MUTE};text-transform:uppercase;letter-spacing:.04em">{label}</span>'
+            f'<span style="font-size:26px;font-weight:700;line-height:1.1">{value}</span>'
+            + (f'<span style="font-size:12px;color:{MUTE}">{sub}</span>' if sub else '') + '</div>')
+def kpis(items):
+    return f'<div style="display:grid;grid-template-columns:repeat({len(items)}, minmax(0, 1fr));gap:16px">'+"".join(kpi(*i) for i in items)+'</div>'
+
+_fid=[0]
+def _nid():
+    _fid[0]+=1; return f"c{_fid[0]}"
+CTL=f"min-height:40px;padding:0 10px;border:2px solid {LINE};font:inherit;font-size:14px;background:#fff;color:{INK};width:100%"
+def sel(label, options, w="160px"):
+    i=_nid(); opts="".join(f'<option>{o}</option>' for o in options)
+    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<select id="{i}" style="{CTL}">{opts}</select></label>'
+def search(label, placeholder, w="280px"):
+    i=_nid()
+    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<input id="{i}" type="search" placeholder="{placeholder}" style="{CTL}"></label>'
+def dates(label="Rango de fechas", a="2026-10-01", b="2026-10-31"):
+    i=_nid()
+    return (f'<div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:{MUTE}"><label for="{i}">{label}</label>'
+            f'<div style="display:flex;gap:6px;align-items:center"><input id="{i}" type="date" value="{a}" style="{CTL};width:150px"><span>a</span><input type="date" value="{b}" aria-label="Hasta" style="{CTL};width:150px"></div></div>')
+def filters(*ctrls, actions=""):
+    return '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">'+"".join(ctrls)+(f'<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center">{actions}</div>' if actions else '')+'</div>'
+
+def note(text, kind="info"):
+    col={"info":ACC,"warn":"#b45309","ok":"#047857"}[kind]
+    return f'<p style="margin:0;padding:10px 14px;border-left:4px solid {col};background:#f9fafb;font-size:13px;line-height:1.5;color:{INK}">{text}</p>'
+def kv(*pairs):
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;align-items:center">'+"".join(f'<span><span style="color:{MUTE}">{k}</span> <b>{v}</b></span>' for k,v in pairs)+'</div>'
+def badge(text, kind="neutral"):
+    bg={"neutral":FILL,"ok":"#d1fae5","warn":"#fef3c7","bad":"#fee2e2"}[kind]
+    return f'<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:{bg};font-size:12px;font-weight:600">{text}</span>'
+def progress(pct, label=""):
+    return (f'<div style="display:flex;flex-direction:column;gap:4px;font-size:13px"><div style="display:flex;justify-content:space-between"><span>{label}</span><b>{pct}%</b></div>'
+            f'<div style="height:10px;background:{FILL};border:1px solid {LINE}"><div style="width:{pct}%;height:100%;background:{INK}"></div></div></div>')
+def hbars(items, unit=""):
+    mx=max(v for _,v in items) or 1; out=""
+    for l,v in items:
+        out+=(f'<div style="display:grid;grid-template-columns:150px 1fr 80px;gap:10px;align-items:center;font-size:13px"><span>{l}</span>'
+              f'<div style="height:16px;background:{FILL}"><div style="width:{v/mx*100:.0f}%;height:100%;background:{INK}"></div></div><b style="text-align:right">{unit}{v:,}{"%" if unit=="" and mx<=100 else ""}</b></div>')
+    return f'<div style="display:flex;flex-direction:column;gap:8px">{out}</div>'
+def vbars(groups, series, h=150):
+    cols=[INK,"#9ca3af","#d1d5db"]; mx=max(v for _,vs in groups for v in vs) or 1
+    g="".join('<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1"><div style="display:flex;align-items:flex-end;gap:3px;height:%dpx">'%h+
+              "".join(f'<div title="{series[i]}: {v}" style="width:22px;height:{v/mx*h:.0f}px;background:{cols[i]};position:relative"><span style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px">{v}</span></div>' for i,v in enumerate(vs))+
+              f'</div><span style="font-size:12px;text-align:center">{l}</span></div>' for l,vs in groups)
+    leg="".join(f'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><i style="width:12px;height:12px;background:{cols[i]};display:inline-block"></i>{n}</span>' for i,n in enumerate(series))
+    return f'<div style="display:flex;flex-direction:column;gap:10px;padding-top:16px"><div style="display:flex;gap:8px;border-bottom:1px solid {LINE};padding-bottom:6px">{g}</div><div style="display:flex;gap:16px">{leg}</div></div>'
+def linechart(labels, series, h=160):
+    W=600; cols=[INK,"#9ca3af","#60a5fa"]; mx=max(v for vs in series.values() for v in vs) or 1
+    n=len(labels); xs=[40+i*(W-60)/(n-1) for i in range(n)]
+    paths=""
+    for k,(name,vs) in enumerate(series.items()):
+        pts=" ".join(f"{xs[i]:.0f},{h-20-(v/mx)*(h-40):.0f}" for i,v in enumerate(vs))
+        paths+=f'<polyline fill="none" stroke="{cols[k]}" stroke-width="2.5" points="{pts}"/>'
+    axis="".join(f'<text x="{xs[i]:.0f}" y="{h-4}" font-size="11" text-anchor="middle" fill="{MUTE}">{l}</text>' for i,l in enumerate(labels))
+    grid="".join(f'<line x1="40" x2="{W-20}" y1="{h-20-(h-40)*f:.0f}" y2="{h-20-(h-40)*f:.0f}" stroke="{FILL}"/><text x="36" y="{h-16-(h-40)*f:.0f}" font-size="10" text-anchor="end" fill="{MUTE}">{mx*f:.0f}</text>' for f in (0,.5,1))
+    leg="".join(f'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><i style="width:16px;height:3px;background:{cols[k]};display:inline-block"></i>{n}</span>' for k,n in enumerate(series))
+    return f'<div style="display:flex;flex-direction:column;gap:8px"><svg viewBox="0 0 {W} {h}" style="width:100%;height:auto" role="img" aria-label="Gráfico de líneas">{grid}{paths}{axis}</svg><div style="display:flex;gap:16px">{leg}</div></div>'
+def funnel(stages):
+    mx=stages[0][1]; out=""
+    for i,(l,v) in enumerate(stages):
+        conv=f' · {v/stages[i-1][1]*100:.0f}% del paso anterior' if i else ''
+        out+=f'<div style="display:flex;align-items:center;gap:12px;font-size:13px"><div style="width:{v/mx*100:.0f}%;min-width:70px;background:{INK};color:#fff;padding:8px 10px;font-weight:600;box-sizing:border-box">{v:,}</div><span>{l}{conv}</span></div>'
+    return f'<div style="display:flex;flex-direction:column;gap:6px">{out}</div>'
+def stacked(parts):
+    cols=[INK,"#6b7280","#9ca3af","#d1d5db"]
+    bar="".join(f'<div title="{l} {p}%" style="width:{p}%;background:{cols[i%4]};height:100%"></div>' for i,(l,p) in enumerate(parts))
+    leg="".join(f'<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px"><i style="width:12px;height:12px;background:{cols[i%4]};display:inline-block"></i>{l} <b>{p}%</b></span>' for i,(l,p) in enumerate(parts))
+    return f'<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;height:24px;border:1px solid {LINE}">{bar}</div><div style="display:flex;flex-wrap:wrap;gap:12px">{leg}</div></div>'
+def upload(label, hint):
+    i=_nid()
+    return (f'<div style="border:2px dashed {LINE};padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:13px;width:100%;box-sizing:border-box">'
+            f'<label for="{i}" style="font-weight:600">{label}</label><input id="{i}" type="file" style="font:inherit;font-size:13px"><span style="color:{MUTE}">{hint}</span></div>')
+def pager(total, per=20):
+    pages="".join(f'<a href="#" aria-label="Página {n}" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{"#fff" if n==1 else INK};background:{INK if n==1 else "#fff"}">{n}</a>' for n in (1,2,3))
+    return (f'<div style="display:flex;align-items:center;gap:12px;font-size:13px;color:{MUTE}"><span>{total} registros · {per} por página</span>'
+            f'<span style="margin-left:auto;display:flex;gap:4px">{pages}<a href="#" aria-label="Siguiente" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{INK}">›</a></span></div>')
+def logo():
+    return f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:{MUTE};letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>'
+def flow(steps):
+    return '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px">'+"".join((f'<li style="padding:6px 10px;border:1px solid {INK}">{st}</li>'+('<li aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
+
 
 def row(*cells, gap=16):
     return f'<div style="display:flex;flex-wrap:wrap;gap:{gap}px;align-items:center">'+"".join(cells)+'</div>'
@@ -182,7 +290,7 @@ def li(items):
 # 1 Login
 login=f'''<div style="min-height:{H}px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:{INK};background:{FILL2}">
 <form style="width:100%;max-width:420px;background:#fff;border:2px solid {INK};padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
-  {box("Logo Cambridge",64)}
+  {logo()}
   <h1 style="margin:0;font-size:22px">Ingresar</h1>
   <label for="email" style="font-size:13px;font-weight:600">Correo</label>
   <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" style="min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">
@@ -197,38 +305,41 @@ page("Main.html","Login",login,"Login")
 
 # 2 Home
 home=shell("Inicio","Inicio",
- kpis(["Estudiantes activos","Ventas del mes (niveles)","Cobros pendientes","Aprobaciones pendientes"])+
+ kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Cobros pendientes",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 facturas","15 facturas","10 facturas","6 facturas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")])+
  two(card("Pendientes de aprobación", li(["Descuento 42% · estudiante · asesor","Alta de profesor · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))),
      card("Accesos rápidos", row(btn("Nueva venta","NuevaVenta.html",True),btn("Nuevo estudiante","NuevoEstudiante.html"),btn("Payment sheet","PaymentSheet.html"),btn("Comisiones","Comisiones.html")))),
- card("Actividad reciente (audit log)", box("Últimas acciones: quién, qué, cuándo, desde qué sede",90)),
+ card("Actividad reciente (audit log)", table(["Fecha/hora","Usuario","Acción","Detalle","Sede"],[["Hoy 10:12","Carla M.","Creó venta","María Andrade · B1–B2 · 10% desc.","Quito"],["Hoy 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado","Quito"],["Ayer 17:05","Secretaría","Registró ingreso","Kids 2 Workbook × 8 · pedido #P-040","Valle"],["Ayer 15:30","Coord. Académica","Confirmó sesión","Teens A2 · 2 h · 9/10 asistencia","Ambato"]],sede=4)+row('<a href="AuditLog.html" style="font-size:13px">Ver todo el audit log</a>')),
  subtitle="Vista por rol: Gerencia, Dirección Comercial, Coordinación Académica, Asesor, Secretaría")
 page("Home.html","Inicio",home,"Inicio por rol")
 
 # 3 Estudiantes
 est=shell("Estudiantes","Estudiantes",
- row(box("Buscar: nombre, cédula, email",44,w="320px"),box("Filtro sede",44,w="140px"),box("Filtro estado",44,w="140px"),box("Filtro nivel",44,w="140px"),'<div style="margin-left:auto"></div>',btn("Nuevo estudiante",None,True),btn("Importar / Exportar")),
+ filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),actions=btn("Nuevo estudiante",None,True)+btn("Importar / Exportar")),
  table(["Nombre","Cédula","Sede","Nivel actual","Estado","Acción"],[
   ["María Andrade","17xxxxxxxx","Quito","B1","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
   ["Juan Pérez","17xxxxxxxx","Valle","A2","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
   ["Luis Torres","18xxxxxxxx","Ambato","A1","Inactivo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Ana Ruiz (menor)","17xxxxxxxx","Quito","Kids 2","Activo",'<a href="Ficha360.html">Ver ficha</a>']]),
- box("Paginación · 800 registros consolidados de las 3 sedes",44),
+  ["Ana Ruiz (menor)","17xxxxxxxx","Quito","Kids 2","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Pedro Mora","17xxxxxxxx","Valle","B1","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Camila Sánchez","18xxxxxxxx","Ambato","A2","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Diego Vargas (menor)","17xxxxxxxx","Valle","Kids 1","Activo",'<a href="Ficha360.html">Ver ficha</a>']],sede=2),
+ pager(sv(812,420,230,162)),
  subtitle="Una sola base para Quito, Valle y Ambato · exportar queda registrado en el audit log")
 page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
 
 # 4 Ficha 360
 ficha=shell("María Andrade","Estudiantes",
- row(box("Sede: Quito · Estado: Activo · Asesor: Carla M.",44,w="460px"),'<div style="margin-left:auto"></div>',btn("Nueva venta","NuevaVenta.html",True),btn("Editar","NuevoEstudiante.html")),
+ row(kv(("Cédula","1712345678"),("Sede","Quito"),("Estado",badge("Activo","ok")),("Asesor","Carla M."),("Nivel actual","B1 · 2º módulo"),("Alta","12 ene 2026")),'<div style="margin-left:auto"></div>',btn("Nueva venta","NuevaVenta.html",True),btn("Editar","NuevoEstudiante.html")),
  tabs(["Datos","Cursos y notas","Niveles / crédito","Facturas y pagos","Archivos","Historial"],"Niveles / crédito",{
   "Datos": two(card("Datos personales", form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede"])),
-               card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+box("Representante (si es menor): nombre, cédula, teléfono, autorización firmada",72)))+row(btn("Guardar cambios",None,True)),
-  "Cursos y notas": table(["Curso","Nivel","Modalidad","Profesor","Asistencia","Nota final","Estado"],[["Adults B1 Virtual","B1","Virtual","P. Gómez","18/20","—","En curso"],["Adults A2","A2","Presencial","L. Vega","20/20","85","Pass"],["Adults A1","A1","Presencial","L. Vega","19/20","88","Pass"]])+box("Notas y asistencia sincronizadas desde Moodle · progreso por módulo",48),
-  "Niveles / crédito": two(card("Niveles comprados vs consumidos", box("Pagó 4 niveles · consumió 2 · 1 en curso · 1 pendiente",120)+box("Barra de progreso del paquete",40)),
-     card("Resumen financiero", box("Factura consolidada #1234 · $980 · pagado",60)+box("Saldo pendiente: $0 · descuento aplicado: 10% (aprobado)",60)))+
+               card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
+  "Cursos y notas": table(["Curso","Nivel","Modalidad","Profesor","Asistencia","Nota final","Estado"],[["Adults B1 Virtual","B1","Virtual","P. Gómez","18/20","—","En curso"],["Adults A2","A2","Presencial","L. Vega","20/20","85","Pass"],["Adults A1","A1","Presencial","L. Vega","19/20","88","Pass"]])+note("Notas y asistencia se sincronizan desde Moodle cada noche. Última sincronización: hoy 02:00."),
+  "Niveles / crédito": two(card("Niveles comprados vs consumidos", kv(("Comprados","4 niveles (A1, A2, B1, B2)"),("Consumidos","2"),("En curso","1 (B1)"),("Pendiente","1 (B2)"))+progress(56,"Avance del paquete · 9 de 16 módulos")+table(["Nivel","Estado","Curso","Cierre"],[["A1",badge("Pass","ok"),"Adults A1 · L. Vega","dic 2025"],["A2",badge("Pass","ok"),"Adults A2 · L. Vega","jun 2026"],["B1",badge("En curso"),"Adults B1 Virtual · P. Gómez","—"],["B2",badge("Pendiente","warn"),"Sin asignar","—"]])),
+     card("Resumen financiero", kv(("Factura","#1234 (B1–B2)"),("Total","$980"),("Pagado","$980"),("Saldo","$0"),("Descuento","10% aprobado por Dir. Comercial"))+hbars([("Facturado",1880),("Cobrado",1880),("Notas de crédito",45)],"$")+row('<a href="DetalleFactura.html" style="font-size:13px">Ver factura #1234</a>')))+
      card("Cursos tomados", table(["Curso","Nivel","Profesor","Estado","Nota"],[["Adults B1 Virtual","B1","P. Gómez","En curso","—"],["Adults A2","A2","L. Vega","Pass","85"]])),
   "Facturas y pagos": table(["Factura","Concepto","Total","Pagado","Saldo","Estado","Acción"],[["#1234","Paquete B1–B2 (2 niveles)","$980","$980","$0","Pagada",btn("Ver","DetalleFactura.html")],["#1102","Paquete A1–A2 (2 niveles)","$900","$900","$0","Pagada",btn("Ver","DetalleFactura.html")],["NC-07","Nota de crédito · libro devuelto","-$45","—","—","Aplicada",btn("Ver","DetalleFactura.html")]])+row(btn("Nueva venta","NuevaVenta.html",True),btn("Registrar pago")),
-  "Archivos": table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["autorizacion_representante.pdf","Autorización","Secretaría","12 ene"],["certificado_A2.pdf","Certificado","Sistema","30 jun"]])+row(box("Arrastrar archivo o seleccionar",60,w="420px"),btn("Subir archivo",None,True)),
-  "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["04 oct 10:12","Carla M.","Creó venta","Paquete B1–B2 · 10% descuento"],["04 oct 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["12 ene 11:05","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+box("Vista filtrada del audit log para este estudiante",44),
+  "Archivos": table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["autorizacion_representante.pdf","Autorización","Secretaría","12 ene"],["certificado_A2.pdf","Certificado","Sistema","30 jun"]])+row(upload("Adjuntar archivo","PDF, JPG o PNG · máx. 10 MB"),btn("Subir archivo",None,True)),
+  "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["04 oct 10:12","Carla M.","Creó venta","Paquete B1–B2 · 10% descuento"],["04 oct 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["12 ene 11:05","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+note("Vista filtrada del audit log para este estudiante. El registro completo está en Configuración → Audit log."),
  }),
  subtitle="Ficha 360°: todo lo del estudiante en una sola vista")
 page("Ficha360.html","Ficha estudiante",ficha,"Ficha 360 del estudiante")
@@ -238,9 +349,9 @@ steps=["1 Estudiante","2 Niveles","3 Descuento","4 Pago","5 Factura"]
 stepper='<div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px">'+"".join(f'<div style="padding:10px;text-align:center;font-size:13px;font-weight:600;border:2px solid {INK};background:{"#1f2937" if i==2 else "#fff"};color:{"#fff" if i==2 else INK}">{s}</div>' for i,s in enumerate(steps))+'</div>'
 venta=shell("Nueva venta por niveles","Facturación",
  stepper,
- two(card("Estudiante y niveles", box("María Andrade · Quito",48)+box("Niveles seleccionados: B1, B2 (2 niveles = 4 módulos)",72)+box("Modalidad: Virtual · Precio lista: $1,000",48)),
-     card("Descuento", row(box("Descuento %",44,w="120px"),box("Motivo (obligatorio)",44,w="260px"))+box("Regla: hasta 10% lo aplica el asesor. Más de 10% requiere aprobación del Director Comercial",72)+row(btn("Solicitar aprobación","Aprobaciones.html")))),
- card("Resultado", box("Una sola factura consolidada por el paquete de niveles (reemplaza las 8 facturas por módulo) · método de pago · estado de cobro",72)+row(btn("Atrás"),btn("Emitir factura y matricular","Ficha360.html",True))),
+ two(card("Estudiante y niveles", kv(("Estudiante","María Andrade"),("Sede","Quito"),("Asesor","Carla M."))+table(["Nivel","Módulos","Modalidad","Precio"],[["B1","2","Virtual","$500"],["B2","2","Virtual","$500"]])+kv(("Niveles","2 (4 módulos)"),("Precio lista","$1,000"),("Libros","B1 + B2 · $80"))),
+     card("Descuento", filters(sel("Descuento %",["0%","5%","10%","15%","20%"],w="120px"),sel("Motivo (obligatorio)",["Referido","Promoción","Convenio empresa","Otro"],w="220px"))+note("Hasta 10% lo aplica el asesor. Más de 10% pasa a aprobación del Director Comercial y la venta queda en espera.","warn")+row(btn("Solicitar aprobación","SolicitudDescuento.html")))),
+ card("Resultado", table(["Concepto","Cant.","Precio","Total"],[["Nivel B1 (2 módulos)","1","$500","$500"],["Nivel B2 (2 módulos)","1","$500","$500"],["Descuento 10% (referido)","","","-$100"],["Libros B1 + B2","2","$40","$80"]])+filters(sel("Método de pago",["Transferencia","Efectivo","Tarjeta","Crédito directo"],w="180px"),sel("Plan",["Contado","2 cuotas","4 cuotas"],w="140px"),actions=kv(("Total","$980")))+note("Se emite una sola factura consolidada por el paquete (reemplaza las 8 facturas por módulo). Al emitir, el estudiante queda matriculado en B1 y se comprometen 2 libros en inventario.")+row(btn("Atrás"),btn("Emitir factura y matricular","Ficha360.html",True))),
  subtitle="Reemplaza la facturación 1:1 por módulo")
 page("NuevaVenta.html","Nueva venta",venta,"Nueva venta por niveles")
 
@@ -248,28 +359,32 @@ page("NuevaVenta.html","Nueva venta",venta,"Nueva venta por niveles")
 apr=shell("Bandeja de aprobaciones","Aprobaciones",
  tabs(["Todas (3)","Descuentos","Profesores","Asignaciones"],"Todas (3)",{
   "Todas (3)": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Descuento","42% · María Andrade · motivo: referido","Carla M. (asesor)","Hoy",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)],["Alta profesor","Nuevo profesor · tarifa $7/h · contrato por horas","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)],["Asignación","Profesor sin contrato activo en curso B1","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64),
-  "Descuentos": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Descuento","42% · María Andrade · motivo: referido","Carla M. (asesor)","Hoy",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+box("Regla vigente: hasta 10% lo aplica el asesor · más de 10% requiere Director Comercial",48),
-  "Profesores": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Alta profesor","Nuevo profesor · tarifa $7/h · contrato por horas","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+box("El profesor queda 'Pendiente de aprobación' hasta que Dirección apruebe · recién ahí puede recibir cursos",48),
-  "Asignaciones": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Asignación","Profesor sin contrato activo en curso B1","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+box("Se bloquea la asignación de un profesor sin contrato vigente hasta que Coordinación apruebe la excepción",48),
+  "Descuentos": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Descuento","42% · María Andrade · motivo: referido","Carla M. (asesor)","Hoy",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+note("Regla vigente: hasta 10% lo aplica el asesor. Más de 10% requiere Director Comercial."),
+  "Profesores": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Alta profesor","Nuevo profesor · tarifa $7/h · contrato por horas","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+note("El profesor queda 'Pendiente de aprobación' hasta que Dirección apruebe. Recién ahí puede recibir cursos y aparecer en la payment sheet."),
+  "Asignaciones": table(["Tipo","Detalle","Solicitado por","Fecha","Acción"],[["Asignación","Profesor sin contrato activo en curso B1","Coordinación académica","Ayer",row(btn("Aprobar",None,True),btn("Rechazar"),gap=8)]],h=64)+note("Se bloquea la asignación de un profesor sin contrato vigente hasta que Coordinación apruebe la excepción.","warn"),
  }),
- card("Trazabilidad", box("Cada decisión queda en el audit log: quién aprobó, cuándo, con qué justificación · el solicitante recibe notificación",72)),
+ card("Decisiones recientes", table(["Fecha","Tipo","Detalle","Decisión","Por","Justificación"],[["Ayer 16:20","Descuento","15% · Ana Ruiz","Aprobado","Dir. Comercial","Convenio empresa"],["Ayer 11:05","Alta profesor","M. Castro · $6.50/h","Aprobado","Dirección","Contrato firmado adjunto"],["02 oct","Descuento","30% · Luis Torres","Rechazado","Dir. Comercial","Sin motivo válido"]])+note("Cada decisión queda en el audit log con quién, cuándo y justificación. El solicitante recibe notificación en la plataforma y por email.")),
  subtitle="Control preventivo: nada sensible pasa sin un segundo par de ojos")
 page("Aprobaciones.html","Aprobaciones",apr,"Bandeja de aprobaciones")
 
 # 7 Cursos
 cursos=shell("Cursos","Cursos",
- row(box("Buscar curso",44,w="260px"),box("Programa",44,w="140px"),box("Nivel",44,w="120px"),box("Modalidad",44,w="140px"),box("Estado",44,w="120px"),'<div style="margin-left:auto"></div>',btn("Nuevo curso",None,True)),
+ filters(search("Buscar","Nombre del curso o profesor",w="260px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Estado",["Todos","En curso","Por abrir","Cerrado"],w="130px"),actions=btn("Nuevo curso",None,True)),
  table(["Curso","Sede","Nivel","Modalidad","Profesor","Estudiantes","Acción"],[
   ["Adults B1 Virtual","Quito","B1","Virtual","P. Gómez","12/15",'<a href="DetalleCurso.html">Ver</a>'],
   ["Kids 2 Tarde","Valle","Kids 2","Presencial","L. Vega","8/10",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Teens A2","Ambato","A2","Presencial","(sin asignar)","5/10",'<a href="DetalleCurso.html">Ver</a>']]),
+  ["Teens A2","Ambato","A2","Presencial","(sin asignar)","5/10",'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults A2","Valle","A2","Presencial","P. Gómez","9/12",'<a href="DetalleCurso.html">Ver</a>'],
+  ["Kids 1 Mañana","Ambato","Kids 1","Presencial","M. Castro","7/10",'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults B2 Intensivo","Quito","B2","Presencial","L. Vega","11/12",'<a href="DetalleCurso.html">Ver</a>']],sede=1),
  subtitle="Programa, nivel, modalidad, horario y aula por sede")
 page("Cursos.html","Cursos",cursos,"Listado de cursos")
 
 # 8 Detalle curso
 det=shell("Adults B1 Virtual · Quito","Cursos",
- row(box("Lun-Mié-Vie 18:00–20:00 · 36 h · 60% completado",44,w="420px"),'<div style="margin-left:auto"></div>',btn("Registrar sesión",None,True),btn("Editar curso")),
- two(card("Profesor asignado", box("P. Gómez · contrato activo ✓ · tarifa $7/h",60)+box("Cambiar profesor → valida contrato activo, si no, va a aprobación",60)),
+ row(kv(("Horario","Lun-Mié-Vie 18:00–20:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Aula","Zoom · sala 2"),("Cupo","12/15"),("Libro","Adults B1 Student Book")),'<div style="margin-left:auto"></div>',btn("Registrar sesión",None,True),btn("Editar curso")),
+ progress(60,"Avance del curso · 22 de 36 horas dictadas"),
+ two(card("Profesor asignado", kv(("Profesor",'<a href="FichaProfesor.html">P. Gómez</a>'),("Contrato",badge("Activo hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Horas en este curso","22 h · $154"))+filters(sel("Cambiar profesor",["P. Gómez","L. Vega","M. Castro","R. Salas (contrato vencido)"],w="260px"),actions=btn("Cambiar",None,False,"Si el nuevo profesor no tiene contrato activo, el cambio queda pendiente de aprobación de Coordinación."))+note("Cambiar profesor valida contrato activo. Si no lo tiene, la asignación va a la bandeja de aprobaciones.")),
      card("Sesiones", table(["Fecha","Horas","Registro"],[["01 oct","2","Automático"],["03 oct","2","Manual"],["06 oct","2","Pendiente"]]))),
  card("Estudiantes del curso", table(["Estudiante","Asistencia","Nota","Estado"],[["María Andrade","90%","—","En curso"],["Juan Pérez","70%","—","En curso"],["Luis Torres","40%","—","Riesgo"]])),
  subtitle="Las sesiones registradas aquí alimentan la payment sheet del profesor y el progreso del estudiante")
@@ -277,35 +392,37 @@ page("DetalleCurso.html","Detalle curso",det,"Detalle de curso y sesiones")
 
 # 9 Profesores
 prof=shell("Profesores","Profesores",
- row(box("Buscar profesor",44,w="260px"),box("Estado",44,w="140px"),box("Sede",44,w="140px"),'<div style="margin-left:auto"></div>',btn("Alta de profesor","AltaProfesor.html",True),btn("Payment sheet","PaymentSheet.html")),
+ filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Pendiente de aprobación","Inactivo"],w="200px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")),
  table(["Profesor","Contrato","Tarifa/h","Cursos activos","Estado","Acción"],[
   ["P. Gómez","Por horas · vigente","$7.00","3","Activo",'<a href="FichaProfesor.html">Ver ficha</a>'],
   ["L. Vega","Por horas · vigente","$6.50","2","Activo",'<a href="FichaProfesor.html">Ver ficha</a>'],
   ["R. Salas","Vencido","$5.70","0","Inactivo",'<a href="FichaProfesor.html">Ver ficha</a>']]),
- card("Alta de profesor (flujo)", box("Formulario de alta → queda en estado 'Pendiente de aprobación' → Dirección aprueba → recién puede recibir cursos y pagos",72)),
+ card("Alta de profesor (flujo)", flow(["Formulario de alta","Pendiente de aprobación","Dirección aprueba","Puede recibir cursos","Aparece en payment sheet"])+note("Nadie puede crear un profesor que cobre sin pasar por aprobación. Hoy hay 1 alta pendiente (M. Castro).")),
  subtitle="Nadie crea un profesor que pueda cobrar sin aprobación (el caso del profesor falso)")
 page("Profesores.html","Profesores",prof,"Listado de profesores")
 
 # 10 Payment sheet
 ps=shell("Payment sheet · Octubre 2026","Profesores",
- row(box("Mes",44,w="160px"),box("Sede",44,w="140px"),box("Estado: Borrador",44,w="160px"),'<div style="margin-left:auto"></div>',btn("Exportar"),btn("Aprobar pagos",None,True)),
+ filters(sel("Mes",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),sel("Tipo de contrato",["Todos","Por horas","Nómina"],w="150px"),actions=kv(("Estado",badge("Borrador","warn")),("Total a pagar","$615.60"),("Alertas","2"))+btn("Exportar")+btn("Aprobar pagos",None,True)),
  table(["Profesor","Sesiones","Horas","Tarifa","A pagar","Factura prof.","Alerta"],[
   ["P. Gómez","24","48","$7.00","$336","$336","—"],
   ["L. Vega","18","36","$6.50","$234","$260","Diferencia +$26"],
   ["R. Salas","4","8","$5.70","$45.60","—","Contrato vencido"]]),
- card("Cómo se calcula", box("Sesiones registradas en los cursos × tarifa hora = monto · se compara contra la factura que entrega el profesor · diferencias y profesores sin contrato se marcan antes de aprobar",72)),
+ two(card("Cómo se calcula", flow(["Sesiones confirmadas","× tarifa/hora","Monto a pagar","vs factura del profesor","Alertas"])+note("Diferencias y profesores sin contrato vigente bloquean la aprobación hasta resolverse.")),
+     card("Alertas del mes", table(["Profesor","Alerta","Acción"],[["L. Vega","Factura $260 vs calculado $234 (+$26)",'<a href="FichaProfesor.html">Revisar sesiones</a>'],["R. Salas","Contrato vencido · 8 h registradas",'<a href="AltaProfesor.html">Renovar contrato</a>']]))),
  subtitle="Reemplaza el Excel + Drive de 2 días al mes")
 page("PaymentSheet.html","Payment sheet",ps,"Payment sheet de profesores")
 
 # 11 Comisiones
 com=shell("Comisiones · Octubre 2026","Comisiones",
- row(box("Período",44,w="160px"),box("Estado: En revisión (draft → revisión → aprobado)",44,w="380px"),'<div style="margin-left:auto"></div>',btn("Reglas de comisión"),btn("Exportar"),btn("Aprobar período",None,True)),
+ filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))+btn("Reglas de comisión")+btn("Exportar")+btn("Aprobar período",None,True)),
+ flow(["Borrador (cálculo automático)","En revisión (Dir. Comercial)","Aprobado (se paga)"]),
  table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
   ["Carla M.","14","6 / 8","12","14","$420",'<a href="DetalleComision.html">Ver detalle</a>'],
   ["Diego R.","9","4 / 5","12","9","$180",'<a href="DetalleComision.html">Ver detalle</a>'],
   ["Sofía L.","11","7 / 4","10","11","$330",'<a href="DetalleComision.html">Ver detalle</a>']]),
- two(card("Meta vs real por asesor", box("Gráfico de barras: meta vs real",140)),
-     card("Reglas activas", li(["Rango 1–5 niveles: X% · 6–10: Y% · 11+: Z%","Virtual y presencial con tasa distinta","Bono por cumplir meta mensual"]))),
+ two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
+     card("Reglas activas", li(["Rango 1–5 niveles: 2% virtual · 3% presencial","Rango 6–10 niveles: 3% virtual · 4% presencial","Rango 11+ niveles: 4% virtual · 5% presencial","Bono $50 por cumplir meta mensual"])+row('<a href="ReglasComision.html" style="font-size:13px">Editar reglas</a>'))),
  subtitle="Cálculo automático al cierre de mes, con historial y detalle exportable")
 page("Comisiones.html","Comisiones",com,"Motor de comisiones")
 
@@ -314,25 +431,27 @@ def rep_tabs(active):
     return tabs([("Dashboard por rol","Reportes.html"),("Reportes self-service","ConstructorReportes.html"),("Dashboard ejecutivo","DashboardEjecutivo.html")],active)
 rep=shell("Reportes y dashboards","Reportes",
  rep_tabs("Dashboard por rol"),
- kpis(["Ventas por nivel (real)","Matrículas del mes","Cobros vs pendientes","Ocupación de cursos"]),
- two(card("Ventas por sede y modalidad", box("Gráfico",160)),card("Pipeline comercial (Kommo → venta → matrícula)", box("Gráfico",160))),
- card("Reportes self-service", row(box("Entidad: estudiantes / ventas / cursos / profesores",44,w="360px"),box("Filtros + columnas",44,w="260px"),box("Rango de fechas",44,w="180px"),'<div style="margin-left:auto"></div>',btn("Generar",None,True),btn("Exportar"))+box("Cada exportación queda registrada en el audit log (datos de menores · LOPDP)",48)),
+ kpis([("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70 · 109%"),("Matrículas del mes",sv(52,28,15,9),"+8% vs sep"),("Cobrado / pendiente",sv("$31,200 / $12,450","$16,900 / $6,200","$9,100 / $4,100","$5,200 / $2,150"),"71% cobrado"),("Ocupación de cursos",sv("82%","86%","78%","75%"),sv("41 cursos activos","22 cursos","12 cursos","7 cursos"))]),
+ two(card("Ventas por sede y modalidad (niveles, octubre)", vbars([("Quito",[24,16]),("Valle",[14,8]),("Ambato",[9,5])],["Presencial","Virtual"])),
+     card("Pipeline comercial (Kommo → venta → matrícula)", funnel([("Leads Kommo",310),("Contactados",205),("Cotizaciones",120),("Ventas",76),("Matriculados",52)]))),
+ card("Reportes self-service", filters(sel("Entidad",["Estudiantes","Ventas","Cursos","Profesores","Comisiones"],w="180px"),sel("Agrupar por",["Mes","Sede","Nivel","Asesor"],w="140px"),dates(),actions=btn("Generar",None,True)+btn("Exportar"))+note("Cada exportación queda registrada en el audit log. Los reportes con datos de menores se marcan como sensibles (LOPDP).")+row('<a href="ConstructorReportes.html" style="font-size:13px">Abrir el constructor completo</a>')),
  subtitle="Estefanía arma sus propios reportes sin pedirle nada a un desarrollador")
 page("Reportes.html","Reportes",rep,"Reportes y dashboards")
 
 
 # 13 Usuarios y roles
 page("Usuarios.html","Usuarios",shell("Usuarios y roles","Configuración",
- row(box("Buscar usuario",44,w="260px"),box("Rol",44,w="160px"),box("Sede",44,w="140px"),'<div style="margin-left:auto"></div>',btn("Nuevo usuario",None,True)),
- table(["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>']]),
+ filters(search("Buscar","Nombre o email",w="260px"),sel("Rol",["Todos","Administrador General","Director Comercial","Coordinador Académico","Asesor Comercial","Secretaría","Profesor (consulta)"],w="220px"),sel("Estado",["Todos","Activo","Inactivo"],w="130px"),actions=btn("Nuevo usuario",None,True)),
+ table(["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
  card("Matriz de permisos por rol", table(["Acción","Admin","Dir. Comercial","Coord. Académica","Asesor","Secretaría"],[["Crear estudiante","✓","✓","—","✓","✓"],["Aplicar descuento >10%","✓","✓","—","—","—"],["Aprobar profesor","✓","✓","—","—","—"],["Exportar base completa","✓","—","—","—","—"],["Ver otras sedes","✓","✓","—","—","—"]])),
  subtitle="RBAC: roles, permisos por acción y visibilidad multi-sede"),"Usuarios y roles")
 
 # 14 Audit log
 page("AuditLog.html","Audit log",shell("Audit log","Configuración",
- row(box("Usuario",44,w="180px"),box("Acción",44,w="160px"),box("Entidad",44,w="160px"),box("Rango de fechas",44,w="200px"),box("Sede",44,w="120px"),'<div style="margin-left:auto"></div>',btn("Exportar log")),
- table(["Fecha/hora","Usuario","Acción","Entidad","Detalle","IP / sede"],[["04 oct 10:12","Carla M.","Creó","Estudiante","María Andrade","Quito"],["04 oct 09:40","Dir. Comercial","Aprobó","Descuento","42% → rechazado, 10% aprobado","Quito"],["03 oct 17:05","Secretaría","Exportó","Estudiantes","120 registros (filtro Valle)","Valle"],["03 oct 15:30","Estefanía","Modificó","Tarifa","P. Gómez $6.50 → $7.00","Quito"]]),
- card("Alertas", box("Exportaciones masivas, cambios de tarifa y descuentos fuera de regla se marcan para revisión (LOPDP, datos de menores)",64)),
+ filters(sel("Usuario",["Todos","Estefanía","Carla M.","Dir. Comercial","Secretaría","Coord. Académica"],w="160px"),sel("Acción",["Todas","Creó","Modificó","Aprobó","Rechazó","Exportó","Eliminó"],w="130px"),sel("Entidad",["Todas","Estudiante","Factura","Descuento","Profesor","Tarifa","Curso","Inventario"],w="140px"),dates(),actions=btn("Exportar log")),
+ table(["Fecha/hora","Usuario","Acción","Entidad","Detalle","IP / sede"],[["04 oct 10:12","Carla M.","Creó","Estudiante","María Andrade","Quito"],["04 oct 09:40","Dir. Comercial","Aprobó","Descuento","42% → rechazado, 10% aprobado","Quito"],["03 oct 17:05","Secretaría","Exportó","Estudiantes","120 registros (filtro Valle)","Valle"],["03 oct 15:30","Estefanía","Modificó","Tarifa","P. Gómez $6.50 → $7.00","Quito"]],sede=5),
+ pager(sv("4,120","2,210","1,180","730"),50),
+ card("Alertas marcadas para revisión", table(["Fecha","Alerta","Usuario","Estado"],[["03 oct 17:05","Exportación masiva: 120 estudiantes (incluye menores)","Secretaría",badge("Revisada","ok")],["03 oct 15:30","Cambio de tarifa de profesor","Estefanía",badge("Pendiente","warn")],["02 oct 11:00","Descuento fuera de regla (42%)","Carla M.",badge("Rechazado","bad")]])+note("Exportaciones masivas, cambios de tarifa y descuentos fuera de regla se marcan automáticamente (LOPDP, datos de menores). Nada se borra.")),
  subtitle="Quién hizo qué, cuándo y desde dónde. Nada se borra."),"Audit log")
 
 # 15 Configuración
@@ -340,7 +459,7 @@ page("Configuracion.html","Configuración",shell("Configuración","Configuració
  tabs(["Sedes","Catálogo de niveles y precios","Tarifas de profesores","Reglas de aprobación","Parámetros"],"Catálogo de niveles y precios",{
   "Sedes": table(["Sede","Ciudad","Dirección","Aulas","Estado"],[["Quito centro","Quito","Av. Amazonas N24-03","6","Activa"],["Valle de los Chillos","Quito","Av. Ilaló 120","4","Activa"],["Ambato","Ambato","Av. Cevallos 08-33","3","Activa"],["Quito Norte","Quito","—","—","Próxima"]])+row(btn("Nueva sede",None,True)),
   "Catálogo de niveles y precios": table(["Programa","Nivel","Módulos","Precio virtual","Precio presencial","Estado"],[["Adults","A1","2","$450","$500","Activo"],["Adults","B1","2","$500","$550","Activo"],["Kids","Kids 2","2","$380","$420","Activo"],["Teens","A2","2","$420","$470","Activo"]])+row(btn("Nuevo nivel",None,True),btn("Editar precios")),
-  "Tarifas de profesores": table(["Tipo de contrato","Tarifa base / hora","Modalidad","Vigencia","Estado"],[["Por horas","$7.00","Presencial","2026","Activa"],["Por horas","$6.50","Virtual","2026","Activa"],["Nómina","Salario mensual","Ambas","2026","Activa"]])+box("La tarifa individual se fija en la ficha del profesor y requiere aprobación de Dirección",48),
+  "Tarifas de profesores": table(["Tipo de contrato","Tarifa base / hora","Modalidad","Vigencia","Estado"],[["Por horas","$7.00","Presencial","2026","Activa"],["Por horas","$6.50","Virtual","2026","Activa"],["Nómina","Salario mensual","Ambas","2026","Activa"]])+note("La tarifa individual se fija en la ficha del profesor y requiere aprobación de Dirección."),
   "Reglas de aprobación": table(["Regla","Condición","Aprueba","Estado"],[["Descuento fuera de regla","> 10%","Director Comercial","Activa"],["Alta de profesor","Siempre","Dirección","Activa"],["Asignación sin contrato","Profesor sin contrato vigente","Coordinación Académica","Activa"],["Exportar base completa","Siempre","Administrador General","Activa"]])+row(btn("Nueva regla",None,True)),
   "Parámetros": form(["Moneda","Zona horaria","Días de vencimiento de factura","Umbral de alerta de stock","Email de notificaciones","Proveedor de libros por defecto"]),
  }),
@@ -350,38 +469,38 @@ page("Configuracion.html","Configuración",shell("Configuración","Configuració
 # 16 Nuevo estudiante
 page("NuevoEstudiante.html","Nuevo estudiante",shell("Nuevo estudiante","Estudiantes",
  form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede","Ocupación / empresa","Cómo nos conoció (lead Kommo)"]),
- card("Si es menor de edad", form(["Nombre del representante","Cédula del representante","Teléfono del representante","Autorización firmada (archivo)"])+box("Marcador automático de dato sensible: menor de edad · discapacidad",44)),
+ card("Si es menor de edad", form(["Nombre del representante","Cédula del representante","Teléfono del representante","Autorización firmada (archivo)"])+note("Marcador automático de dato sensible: menor de edad · discapacidad. Estos registros exigen autorización firmada y se marcan en toda exportación (LOPDP).","warn")),
  row(btn("Cancelar","Estudiantes.html"),btn("Guardar estudiante","Ficha360.html",True)),
  subtitle="Un solo formulario para las 3 sedes, con validación de duplicados por cédula"),"Nuevo estudiante")
 
 # 17 Importar / exportar
 page("ImportExport.html","Importar / exportar",shell("Importar / exportar estudiantes","Estudiantes",
- two(card("Importar", box("Arrastrar archivo CSV / Excel",120)+box("Vista previa: 120 filas · 3 duplicados detectados · 2 con cédula inválida",64)+row(btn("Descargar plantilla"),btn("Importar",None,True))),
-     card("Exportar", row(box("Filtro sede",44,w="140px"),box("Estado",44,w="140px"),box("Columnas",44,w="160px"))+box("Aviso: la exportación queda registrada en el audit log con tu usuario",64)+row(btn("Exportar CSV",None,True)))),
+ two(card("Importar", upload("Arrastrar archivo CSV o Excel","Columnas: nombres, apellidos, cédula, fecha de nacimiento, email, teléfono, sede")+kv(("Archivo","estudiantes_valle.xlsx"),("Filas","120"),("Válidas",badge("115","ok")),("Duplicados",badge("3","warn")),("Cédula inválida",badge("2","bad")))+table(["Fila","Nombre","Cédula","Problema"],[["17","Juan Pérez","1712345678","Ya existe (Valle)"],["42","Ana Ruiz","1798765432","Ya existe (Quito)"],["88","Pedro Mora","17-ABC","Cédula inválida"]])+row(btn("Descargar plantilla"),btn("Importar",None,True))),
+     card("Exportar", filters(sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Columnas",["Básicas (nombre, cédula, sede, nivel)","Completas","Contacto"],w="260px"))+kv(("Registros a exportar",sv(812,420,230,162)),("Incluye menores","sí (marcado sensible)"))+note("La exportación queda registrada en el audit log con tu usuario, filtros y cantidad de registros.","warn")+row(btn("Exportar CSV",None,True)))),
  subtitle="Carga masiva con validación y exportación auditada"),"Importar / exportar")
 
 # 18 Nuevo curso
 page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
  form(["Nombre del curso","Programa (Adults / Kids / Teens)","Nivel","Modalidad (virtual / presencial)","Tipo (grupo / individual)","Sede","Aula / enlace virtual","Fecha inicio","Fecha fin","Días y horario","Total de horas","Cupo máximo"]),
- card("Profesor", row(box("Seleccionar profesor",44,w="300px"),box("Validación: contrato activo ✓",44,w="260px"))+box("Si el profesor no tiene contrato activo, la asignación queda pendiente de aprobación",48)),
+ card("Profesor", filters(sel("Seleccionar profesor",["P. Gómez · contrato activo","L. Vega · contrato activo","M. Castro · pendiente de aprobación","R. Salas · contrato vencido"],w="320px"),actions=kv(("Validación",badge("Contrato activo ✓","ok"))))+note("Si el profesor no tiene contrato activo, la asignación queda pendiente de aprobación de Coordinación y el curso se crea sin profesor.")),
  row(btn("Cancelar","Cursos.html"),btn("Crear curso","DetalleCurso.html",True)),
  subtitle="Al crear el curso se descuenta el stock de libros por cupo (inventario)"),"Nuevo curso")
 
 # 19 Sesiones
 cal="".join(f'<div style="border:1px solid {LINE};min-height:90px;padding:6px;font-size:12px"><b>{d}</b><br>{c}</div>' for d,c in [("Lun 5","B1 Virtual 18:00<br>Kids 2 15:00"),("Mar 6","Teens A2 16:00"),("Mié 7","B1 Virtual 18:00<br>Kids 2 15:00"),("Jue 8","Teens A2 16:00"),("Vie 9","B1 Virtual 18:00"),("Sáb 10","Intensivo A1 09:00"),("Dom 11","")])
 page("Sesiones.html","Sesiones",shell("Registro de sesiones","Cursos",
- row(box("Semana 5–11 oct",44,w="200px"),box("Sede",44,w="140px"),box("Profesor",44,w="160px"),'<div style="margin-left:auto"></div>',btn("Registrar sesión manual",None,True)),
+ filters(sel("Semana",["5–11 oct 2026","28 sep–4 oct 2026","12–18 oct 2026"],w="190px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro"],w="160px"),sel("Estado",["Todas","Confirmada","Pendiente","No dictada"],w="140px"),actions=kv(("Confirmadas","7"),("Pendientes","3"))+btn("Registrar sesión manual",None,True)),
  f'<div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px">{cal}</div>',
- two(card("Sesión seleccionada", box("B1 Virtual · Lun 5 oct 18:00–20:00 · P. Gómez · 2 h · asistencia 12/15",64)+row(btn("Confirmar sesión",None,True),btn("Marcar no dictada"))),
+ two(card("Sesión seleccionada", kv(("Curso","B1 Virtual · Quito"),("Fecha","Lun 5 oct · 18:00–20:00"),("Profesor","P. Gómez"),("Horas","2"),("Origen","Automática (Moodle)"),("Asistencia","12/15"),("Estado",badge("Pendiente","warn")))+row(btn("Confirmar sesión",None,True),btn("Marcar no dictada"))),
      card("Alertas", li(["Sesión fuera del horario programado","Profesor con contrato vencido","Curso sin sesiones registradas esta semana"]))),
  subtitle="Las sesiones confirmadas alimentan progreso y payment sheet"),"Registro de sesiones")
 
 # 20 Ficha profesor
 page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
- row(box("Contrato por horas · vigente hasta dic 2026 · Quito y Valle",44,w="460px"),'<div style="margin-left:auto"></div>',btn("Editar","AltaProfesor.html"),btn("Ver payment sheet","PaymentSheet.html")),
+ row(kv(("Cédula","1709876543"),("Contrato",badge("Por horas · vigente hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Sedes","Quito y Valle"),("Cursos activos","3"),("Horas del mes","48")),'<div style="margin-left:auto"></div>',btn("Editar","AltaProfesor.html"),btn("Ver payment sheet","PaymentSheet.html")),
  tabs(["Datos","Contrato y tarifa","Cursos","Sesiones","Historial de pagos"],"Contrato y tarifa",{
   "Datos": form(["Nombres y apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Sede(s)","Especialidad / certificaciones","Estado"])+row(btn("Guardar cambios",None,True)),
-  "Contrato y tarifa": two(card("Contrato", box("Tipo: por horas · Tarifa: $7.00/h · Vigencia: ene–dic 2026 · Aprobado por Dirección el 10-ene",80)+box("Documento de contrato (archivo)",48)),
+  "Contrato y tarifa": two(card("Contrato", kv(("Tipo","Por horas"),("Tarifa","$7.00/h"),("Vigencia","1 ene – 31 dic 2026"),("Aprobado por","Dirección · 10 ene 2026"),("Modalidades","Virtual y presencial"))+table(["Documento","Subido por","Fecha"],[["contrato_pgomez_2026.pdf","Coord. Académica","8 ene 2026"],["cedula_pgomez.pdf","Coord. Académica","8 ene 2026"]])),
      card("Historial de contratos", table(["Vigencia","Tipo","Tarifa","Aprobó"],[["2026","Por horas","$7.00/h","Dirección"],["2025","Por horas","$6.50/h","Dirección"]]))),
   "Cursos": table(["Curso","Sede","Nivel","Modalidad","Horario","Estudiantes","Estado"],[["Adults B1 Virtual","Quito","B1","Virtual","L-M-V 19:00","12","En curso"],["Adults A2","Valle","A2","Presencial","M-J 17:00","9","En curso"],["Adults A1","Quito","A1","Presencial","S 09:00","14","Cerrado"]])+row(btn("Ver cursos","Cursos.html")),
   "Sesiones": table(["Fecha","Curso","Duración","Origen","Estado"],[["03 oct","Adults B1 Virtual","2 h","Automática (Moodle)","Confirmada"],["02 oct","Adults A2","2 h","Manual","Confirmada"],["01 oct","Adults B1 Virtual","2 h","Automática (Moodle)","Pendiente"]])+row(btn("Registrar sesión","Sesiones.html",True)),
@@ -392,56 +511,57 @@ page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
 # 21 Alta profesor
 page("AltaProfesor.html","Alta de profesor",shell("Alta de profesor","Profesores",
  form(["Nombres y apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Sede(s)","Tipo de contrato","Tarifa por hora","Vigencia del contrato","Contrato firmado (archivo)"]),
- card("Qué pasa al guardar", box("El profesor se crea en estado 'Pendiente de aprobación' → notificación a Dirección → recién al aprobarse puede recibir cursos y aparecer en la payment sheet",72)),
+ card("Qué pasa al guardar", flow(["Se crea 'Pendiente de aprobación'","Notificación a Dirección","Dirección aprueba o rechaza","Puede recibir cursos y aparecer en payment sheet"])),
  row(btn("Cancelar","Profesores.html"),btn("Enviar a aprobación","Aprobaciones.html",True)),
  subtitle="Control preventivo contra el caso del profesor falso"),"Alta de profesor")
 
 # 22 Facturas
 page("Facturas.html","Facturas",shell("Facturas","Facturación",
- row(box("Buscar factura / estudiante",44,w="280px"),box("Sede",44,w="140px"),box("Estado de cobro",44,w="160px"),box("Rango de fechas",44,w="200px"),'<div style="margin-left:auto"></div>',btn("Nueva venta","NuevaVenta.html",True),btn("Exportar")),
- kpis(["Facturado del mes","Cobrado","Pendiente","Notas de crédito"]),
- table(["Factura","Estudiante","Sede","Niveles","Monto","Estado","Acción"],[["#1234","María Andrade","Quito","B1, B2","$980","Pagada",'<a href="DetalleFactura.html">Ver</a>'],["#1235","Juan Pérez","Valle","A2","$450","Pendiente",'<a href="DetalleFactura.html">Ver</a>'],["#1236","Luis Torres","Ambato","A1","$420","Nota de crédito",'<a href="DetalleFactura.html">Ver</a>']]),
+ filters(search("Buscar","Nº de factura o estudiante",w="260px"),sel("Estado de cobro",["Todos","Pagada","Pendiente","Parcial","Nota de crédito"],w="160px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="140px"),dates(),actions=btn("Nueva venta","NuevaVenta.html",True)+btn("Exportar")),
+ kpis([("Facturado del mes",sv("$43,650","$23,100","$13,200","$7,350"),sv("76 facturas","40 facturas","22 facturas","14 facturas")),("Cobrado",sv("$31,200","$16,900","$9,100","$5,200"),"71%"),("Pendiente",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 facturas","15 facturas","10 facturas","6 facturas")),("Notas de crédito",sv("$140","$45","$50","$45"),"3 emitidas")]),
+ table(["Factura","Estudiante","Sede","Niveles","Monto","Estado","Acción"],[["#1234","María Andrade","Quito","B1, B2","$980","Pagada",'<a href="DetalleFactura.html">Ver</a>'],["#1235","Juan Pérez","Valle","A2","$450","Pendiente",'<a href="DetalleFactura.html">Ver</a>'],["#1236","Luis Torres","Ambato","A1","$420","Nota de crédito",'<a href="DetalleFactura.html">Ver</a>'],["#1237","Pedro Mora","Valle","B1","$500","Pagada",'<a href="DetalleFactura.html">Ver</a>'],["#1238","Camila Sánchez","Ambato","A2, B1","$950","Parcial",'<a href="DetalleFactura.html">Ver</a>'],["#1239","Ana Ruiz","Quito","Kids 2","$380","Pendiente",'<a href="DetalleFactura.html">Ver</a>']],sede=2),
+ pager(sv(76,40,22,14)),
  subtitle="Una factura por paquete de niveles, con estado de cobro"),"Facturas")
 
 # 23 Detalle factura
 page("DetalleFactura.html","Detalle factura",shell("Factura #1234","Facturación",
- two(card("Datos", box("María Andrade · Quito · 02 oct 2026 · Asesor: Carla M.",48)+table(["Concepto","Cant.","Precio","Total"],[["Nivel B1 (2 módulos)","1","$500","$500"],["Nivel B2 (2 módulos)","1","$500","$500"],["Descuento 10% (aprobado por Dir. Comercial)","","","-$100"],["Libros B1 + B2","2","$40","$80"]])+box("Total: $980 · Método: transferencia · Estado: pagada",48)),
-     card("Notas de crédito y cambios", box("Sin notas de crédito",48)+row(btn("Emitir nota de crédito"),btn("Cambio de curso"))+box("Una devolución o cambio de curso genera nota de crédito vinculada y revierte el libro al stock",64))),
+ two(card("Datos", kv(("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Sede","Quito"),("Fecha","02 oct 2026"),("Asesor","Carla M."),("Vence","17 oct 2026"))+table(["Concepto","Cant.","Precio","Total"],[["Nivel B1 (2 módulos)","1","$500","$500"],["Nivel B2 (2 módulos)","1","$500","$500"],["Descuento 10% (aprobado por Dir. Comercial)","","","-$100"],["Libros B1 + B2","2","$40","$80"]])+kv(("Total","$980"),("Pagado","$980"),("Saldo","$0"),("Estado",badge("Pagada","ok")))),
+     card("Pagos, notas de crédito y cambios", table(["Fecha","Tipo","Detalle","Monto"],[["02 oct","Pago","Transferencia · ref. 884512","$980"],["—","Nota de crédito","Ninguna emitida","—"]])+row(btn("Emitir nota de crédito"),btn("Cambio de curso"))+note("Una devolución o cambio de curso genera una nota de crédito vinculada a esta factura y revierte el libro al stock de la sede."))),
  row(btn("Volver","Facturas.html"),btn("Descargar PDF"),btn("Registrar pago",None,True)),
  subtitle="Factura consolidada con su trazabilidad completa"),"Detalle de factura")
 
 # 24 Solicitud de descuento
 page("SolicitudDescuento.html","Solicitud de descuento",shell("Solicitud de descuento","Facturación",
- f'<div style="max-width:640px;border:2px solid {INK};padding:24px;display:flex;flex-direction:column;gap:16px">'+box("Venta: María Andrade · B1 + B2 · $1,000",48)+form(["Descuento solicitado (%)","Monto resultante"])+form(["Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)"],1)+form(["Justificación"],1)+box("Regla: >10% requiere aprobación del Director Comercial · el asesor ve el estado en su bandeja",56)+row(btn("Cancelar","NuevaVenta.html"),btn("Enviar solicitud","Aprobaciones.html",True))+'</div>',
+ f'<div style="max-width:640px;border:2px solid {INK};padding:24px;display:flex;flex-direction:column;gap:16px">'+kv(("Venta","María Andrade · B1 + B2"),("Precio lista","$1,000"),("Asesor","Carla M."))+form(["Descuento solicitado (%)","Monto resultante"])+form(["Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)"],1)+form(["Justificación"],1)+note("Más de 10% requiere aprobación del Director Comercial. El asesor ve el estado de su solicitud en Notificaciones.","warn")+row(btn("Cancelar","NuevaVenta.html"),btn("Enviar solicitud","Aprobaciones.html",True))+'</div>',
  subtitle="Reemplaza el campo 'Reason' opcional de TeamDesk"),"Solicitud de descuento")
 
 # 25 Detalle comisión por asesor
 page("DetalleComision.html","Detalle comisión",shell("Comisiones · Carla M. · Octubre 2026","Comisiones",
- kpis(["Niveles vendidos: 14","Meta: 12","Cumplimiento: 117%","Comisión: $420"]),
+ kpis([("Niveles vendidos","14","6 virtual · 8 presencial"),("Meta","12","asignada por Dir. Comercial"),("Cumplimiento","117%","bono activado"),("Comisión","$420","$370 + bono $50")]),
  table(["Fecha","Estudiante","Niveles","Modalidad","Monto venta","Regla aplicada","Comisión"],[["02 oct","María Andrade","2","Virtual","$1,000","Rango 11+ · 4%","$40"],["05 oct","Juan Pérez","1","Presencial","$450","Rango 11+ · 5%","$22.50"],["09 oct","Ana Ruiz","2","Presencial","$760","Rango 11+ · 5%","$38"]]),
- two(card("Bonos", box("Bono por meta cumplida: $50",48)), card("Historial", box("Sep: $300 · Ago: $280 · Jul: $350",48))),
+ two(card("Bonos", table(["Bono","Condición","Estado","Monto"],[["Meta mensual","≥ 12 niveles","Cumplida (14)","$50"]])), card("Historial de comisiones", hbars([("Jul",350),("Ago",280),("Sep",300),("Oct",420)],"$"))),
  row(btn("Volver","Comisiones.html"),btn("Exportar detalle")),
  subtitle="Cada comisión muestra qué regla la generó"),"Detalle de comisión")
 
 # 26 Reglas de comisión
 page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Comisiones",
  table(["Regla","Condición","Virtual","Presencial","Vigencia","Estado"],[["Rango 1","1–5 niveles / mes","2%","3%","2026","Activa"],["Rango 2","6–10 niveles / mes","3%","4%","2026","Activa"],["Rango 3","11+ niveles / mes","4%","5%","2026","Activa"],["Bono meta","Cumple meta mensual","$50","$50","2026","Activa"]]),
- two(card("Nueva regla", form(["Nombre","Condición (niveles / modalidad / meta)","% o monto","Vigencia"])+row(btn("Guardar regla",None,True))), card("Simulador", box("Probar reglas contra las ventas del mes pasado antes de activarlas",100))),
+ two(card("Nueva regla", form(["Nombre","Condición (niveles / modalidad / meta)","% o monto","Vigencia"])+row(btn("Guardar regla",None,True))), card("Simulador", filters(sel("Período de prueba",["Septiembre 2026","Agosto 2026"],w="170px"),actions=btn("Simular",None,False,"Se recalculan las comisiones del período elegido con las reglas actuales, sin guardar nada."))+table(["Asesor","Comisión real","Con reglas nuevas","Diferencia"],[["Carla M.","$300","$330","+$30"],["Diego R.","$150","$150","$0"],["Sofía L.","$280","$310","+$30"]])+note("Probar reglas contra las ventas de un mes cerrado antes de activarlas."))),
  subtitle="Configurable sin código; cada cambio queda en el audit log"),"Reglas de comisión")
 
 # 27 Inventario
 page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
- row(box("Buscar libro",44,w="240px"),box("Sede",44,w="140px"),box("Estado de stock",44,w="160px"),'<div style="margin-left:auto"></div>',btn("Nuevo pedido a proveedor","Movimientos.html",True)),
- kpis(["Ítems con stock negativo: 3","Pedidos en camino: 2","Valor en stock","Alertas"]),
+ filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado de stock",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","Movimientos.html",True)),
+ kpis([("Ítems con stock negativo",sv(3,0,1,2),"requieren pedido"),("Pedidos en camino",sv(2,1,1,0),"#P-041 llega 8 oct"),("Valor en stock",sv("$6,840","$3,900","$1,760","$1,180"),"a precio de compra"),("Comprometido por cursos",sv(12,5,4,3),"libros de cursos por abrir")]),
  table(["Libro","Nivel","Quito","Valle","Ambato","Comprometido","Alerta"],[["Adults B1 Student Book","B1","4","-2","1","5","Pedir 6"],["Kids 2 Workbook","Kids 2","0","3","-1","4","Pedir 4"],["Teens A2","A2","8","2","5","3","—"]]),
  subtitle="Reemplaza el email diario de notify@teamdesk con alertas inteligentes"),"Inventario de libros")
 
 # 28 Movimientos
 page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Inventario",
  tabs(["Movimientos","Pedidos a proveedor","Notas de crédito"],"Pedidos a proveedor",{
-  "Movimientos": table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"]])+row(box("Filtro: tipo · sede · rango de fechas",44,w="360px"),'<div style="margin-left:auto"></div>',btn("Registrar movimiento",None,True),btn("Exportar")),
+  "Movimientos": table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"]],sede=4)+filters(sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),dates(),actions=btn("Registrar movimiento",None,True)+btn("Exportar")),
   "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado"],[["#P-041","Books & Bits","12","$480","02 oct","En camino"],["#P-040","Books & Bits","8","$320","25 sep","Recibido"],["#P-039","Books & Bits","20","$800","10 sep","Recibido"]])+
-     two(card("Registrar ingreso", form(["Pedido","Cantidad recibida"])+row(btn("Registrar ingreso",None,True))), card("Forecast", box("Cursos que abren el próximo mes × cupo = libros necesarios por sede",100))),
+     two(card("Registrar ingreso", form(["Pedido","Cantidad recibida"])+row(btn("Registrar ingreso",None,True))), card("Forecast de libros (noviembre)", table(["Libro","Cursos por abrir","Cupo","Necesarios","Stock","Pedir"],[["Adults B1 Student Book","2","30","30","3","27"],["Kids 2 Workbook","1","10","10","2","8"],["Teens A2","1","10","10","15","0"]])+note("Cursos que abren el próximo mes × cupo = libros necesarios por sede."))),
   "Notas de crédito": table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[["NC-07","#1234","María Andrade","Libro devuelto","$45","02 oct","Aplicada"],["NC-06","#1180","Juan Pérez","Cambio de modalidad","$50","20 sep","Aplicada"],["NC-05","#1102","Ana Ruiz","Libro con defecto","$45","05 sep","Pendiente"]])+row(btn("Nueva nota de crédito",None,True),btn("Ver facturas","Facturas.html")),
  }),
  subtitle="Entradas, salidas y devoluciones vinculadas a cursos y facturas"),"Movimientos de inventario")
@@ -457,10 +577,10 @@ page("ConstructorReportes.html","Reportes self-service",shell("Constructor de re
 # 30 Dashboard ejecutivo
 page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Reportes",
  rep_tabs("Dashboard ejecutivo"),
- row(box("Período: 2026",44,w="160px"),box("Comparar con 2025",44,w="180px"),box("Sede: Todas",44,w="140px")),
- kpis(["Ingresos YTD","Estudiantes activos","Ticket promedio por paquete","Margen por sede"]),
- two(card("Ingresos por mes y sede", box("Gráfico de líneas",180)), card("Mix por programa y modalidad", box("Gráfico de torta / barras",180))),
- two(card("Funnel comercial", box("Leads (Kommo) → cotizaciones → ventas → matrículas",120)), card("Retención y avance de niveles", box("% de estudiantes que continúan al siguiente nivel",120))),
+ filters(sel("Período",["2026 (ene–oct)","2025","Último trimestre"],w="170px"),sel("Comparar con",["2025","Sin comparación"],w="160px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px")),
+ kpis([("Ingresos YTD",sv("$386,400","$204,800","$116,900","$64,700"),"+12% vs 2025"),("Estudiantes activos",sv(812,420,230,162),"+3% vs 2025"),("Ticket promedio por paquete",sv("$915","$940","$890","$880"),"2.1 niveles por venta"),("Margen por sede",sv("34%","38%","31%","27%"),"después de profesores y libros")]),
+ two(card("Ingresos por mes (miles de $)", linechart(["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"],{"Quito":[18,19,21,20,22,21,19,20,23,24],"Valle":[10,11,12,11,13,12,11,12,13,14],"Ambato":[6,6,7,6,7,7,6,6,7,8]})), card("Mix por programa y modalidad", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)]))),
+ two(card("Funnel comercial (2026)", funnel([("Leads Kommo",2840),("Cotizaciones",1120),("Ventas",640),("Matriculados",598)])), card("Retención y avance de niveles", hbars([("Continúan al siguiente nivel",71),("Pausan (vuelven en 6 meses)",14),("Abandonan",15)],"")+progress(71,"Retención objetivo 2026: 75%"))),
  subtitle="Vista gerencial, distinta de la reportería operativa"),"Dashboard ejecutivo")
 
 # 31 Chatbot
@@ -471,26 +591,26 @@ chat=f'<div style="max-width:760px;border:2px solid {INK};display:flex;flex-dire
  f'<div style="align-self:flex-start;max-width:70%;padding:10px 14px;background:{FILL};font-size:14px">La payment sheet de octubre está en borrador con 2 alertas. Solo puedes ver pagos de las sedes que tu rol permite.</div>'+ \
  f'</div><div style="display:flex;gap:8px;padding:12px;border-top:2px solid {LINE}"><label for="msg" style="position:absolute;left:-9999px">Mensaje</label><input id="msg" placeholder="Pregunta sobre estudiantes, cursos, pagos o reportes" style="flex:1;min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">{btn("Enviar",None,True)}</div></div>'
 page("Chatbot.html","Asistente interno",shell("Asistente interno","Inicio",chat,
- box("Responde solo con datos de la plataforma y respeta los permisos del usuario (RBAC). No expone datos de otras sedes.",56),
+ two(card("Qué puede responder", li(["Consultas sobre estudiantes, cursos, profesores, facturas y stock","Estado de aprobaciones y payment sheet","Resúmenes: '¿cuántos estudiantes activos tiene Valle en B1?'"])), card("Límites", li(["Responde solo con datos de la plataforma","Respeta el rol y las sedes del usuario (RBAC)","No modifica datos: para eso enlaza a la pantalla correspondiente"]))),
  subtitle="Consulta ágil para el equipo, sin armar un reporte"),"Asistente interno")
 
 # 32 Integraciones
 page("Integraciones.html","Integraciones",shell("Integraciones","Configuración",
  table(["Sistema","Uso","Estado","Última sincronización","Acción"],[["Kommo (CRM)","Leads → estudiantes","Conectado","Hoy 09:00",btn("Configurar")],["Moodle (LMS)","Matrícula → curso virtual","Pendiente de API del proveedor","—",btn("Configurar")],["Dora","Por definir con el cliente","Pendiente","—",btn("Configurar")]]),
- two(card("API keys y webhooks", box("Claves por sistema · webhooks de notificación · documentación OpenAPI",100)), card("Log de sincronización", table(["Fecha","Sistema","Resultado"],[["04 oct","Kommo","12 leads importados"],["03 oct","Kommo","1 error: email duplicado"]]))),
+ two(card("API keys y webhooks", table(["Clave","Sistema","Creada","Último uso","Estado"],[["kommo-prod-••••7f2a","Kommo","12 ene","Hoy 09:00",badge("Activa","ok")],["moodle-test-••••91c0","Moodle","20 sep","—",badge("Pendiente","warn")]])+table(["Webhook","Evento","URL"],[["Nuevo lead","lead.created","https://api.cambridge.../kommo"],["Matrícula","enrollment.created","https://moodle.cambridge.../enrol"]])+row('<a href="#" style="font-size:13px">Documentación OpenAPI</a>')), card("Log de sincronización", table(["Fecha","Sistema","Resultado"],[["04 oct","Kommo","12 leads importados"],["03 oct","Kommo","1 error: email duplicado"]]))),
  subtitle="Sujeto al esquema de apificación disponible en cada proveedor"),"Integraciones")
 
 # 33 Notificaciones
 page("Notificaciones.html","Notificaciones",shell("Notificaciones","Inicio",
  table(["Tipo","Mensaje","Fecha","Acción"],[["Aprobación","Descuento 42% pendiente de tu aprobación","Hoy",'<a href="Aprobaciones.html">Revisar</a>'],["Inventario","Stock negativo: Adults B1 en Valle","Hoy",'<a href="Inventario.html">Ver</a>'],["Pagos","Payment sheet de octubre lista para revisión","Ayer",'<a href="PaymentSheet.html">Ver</a>'],["Alta","Profesor nuevo aprobado: puede recibir cursos","Ayer",'<a href="Profesores.html">Ver</a>']]),
- card("Preferencias", box("Qué notificaciones recibe cada rol, por email y en la plataforma",64)),
+ card("Preferencias por rol", table(["Notificación","Admin","Dir. Comercial","Coord. Académica","Asesor","Secretaría","Canal"],[["Aprobación pendiente","✓","✓","✓","—","—","Plataforma + email"],["Descuento aprobado / rechazado","—","—","—","✓","—","Plataforma + email"],["Stock negativo","✓","—","—","—","✓","Plataforma"],["Payment sheet lista","✓","—","✓","—","—","Email"],["Profesor aprobado","—","—","✓","—","—","Plataforma"]])),
  subtitle="Centro de avisos que mueve los flujos de aprobación"),"Notificaciones")
 
 # ---------- Pantallas de formulario y acción (todo botón lleva a algún lado) ----------
 # 34 Recuperar contraseña
 rec=f'''<div style="min-height:{H}px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:{INK};background:{FILL2}">
 <form style="width:100%;max-width:420px;background:#fff;border:2px solid {INK};padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
-  {box("Logo Cambridge",64)}
+  {logo()}
   <h1 style="margin:0;font-size:22px">Recuperar contraseña</h1>
   <p style="margin:0;font-size:14px;color:{MUTE}">Te enviamos un enlace temporal al correo registrado. Caduca en 30 minutos.</p>
   <label for="email" style="font-size:13px;font-weight:600">Correo</label>
@@ -505,64 +625,64 @@ page("RecuperarContrasena.html","Recuperar contraseña",rec,"Recuperar contrase�
 page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual","Cursos",
  form(["Curso","Profesor (se valida contrato activo)","Fecha","Hora inicio","Hora fin","Horas (calculado)","Modalidad","Aula / enlace"]),
  card("Asistencia", table(["Estudiante","Presente","Observación"],[["María Andrade","☑","—"],["Juan Pérez","☑","—"],["Luis Torres","☐","Aviso previo"]])),
- box("Si la fecha u hora no coinciden con el horario del curso, la sesión se marca 'fuera de horario' y pide confirmación de Coordinación",56),
+ note("Si la fecha u hora no coinciden con el horario del curso, la sesión se marca 'fuera de horario' y pide confirmación de Coordinación.","warn"),
  row(btn("Cancelar","Sesiones.html"),btn("Guardar sesión",None,True,"La sesión queda registrada como manual, pendiente de confirmación. Al confirmarse suma horas a la payment sheet.","Sesiones.html")),
  subtitle="Para clases que no entran por Moodle: presenciales, reposiciones, individuales"),"Registrar sesión manual")
 
 # 36 Registrar pago
 page("RegistrarPago.html","Registrar pago",shell("Registrar pago · Factura #1235","Facturación",
- box("Juan Pérez · Valle · Nivel A2 · Total $450 · Pagado $0 · Saldo $450",48),
+ kv(("Estudiante","Juan Pérez"),("Sede","Valle"),("Factura","#1235 · Nivel A2"),("Total","$450"),("Pagado","$0"),("Saldo","$450"),("Vence","20 oct 2026")),
  form(["Monto","Fecha de pago","Método (efectivo / transferencia / tarjeta)","Referencia / comprobante","Comprobante (archivo)","Observación"]),
- card("Resultado", box("Si el pago cubre el saldo la factura pasa a Pagada; si es parcial queda Pendiente con el nuevo saldo. Se notifica al asesor.",64)),
+ card("Resultado", flow(["Pago registrado","Cubre el saldo → Pagada","Parcial → Pendiente con nuevo saldo","Notificación al asesor"])),
  row(btn("Cancelar","DetalleFactura.html"),btn("Registrar pago",None,True,"Se registra el pago, se actualiza el estado de cobro y queda en el audit log.","DetalleFactura.html")),
  subtitle="Estado de cobro por factura, no por módulo"),"Registrar pago")
 
 # 37 Nota de crédito
 page("NotaCredito.html","Nota de crédito",shell("Nueva nota de crédito","Facturación",
  form(["Factura origen","Estudiante (automático)","Motivo (devolución / cambio de curso / libro con defecto / otro)","Monto","Devolver libro al stock (sí / no)","Justificación"]),
- card("Qué pasa al emitir", box("Se vincula a la factura origen, ajusta el saldo o genera devolución, revierte el libro al inventario si aplica y queda en el audit log",64)),
+ card("Qué pasa al emitir", flow(["Se vincula a la factura origen","Ajusta saldo o genera devolución","Libro vuelve al stock (si aplica)","Audit log"])),
  row(btn("Cancelar","DetalleFactura.html"),btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html")),
  subtitle="Toda devolución o cambio deja rastro contable"),"Nota de crédito")
 
 # 38 Registrar movimiento de inventario
 page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Inventario",
  form(["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
- box("Una salida sin factura o curso vinculado pide justificación y se marca para revisión",48),
+ note("Una salida sin factura o curso vinculado pide justificación y se marca para revisión.","warn"),
  row(btn("Cancelar","Movimientos.html"),btn("Registrar movimiento",None,True,"Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario.","Movimientos.html")),
  subtitle="Reemplaza los ajustes a mano en TeamDesk"),"Registrar movimiento")
 
 # 39 Nuevo pedido a proveedor
 page("NuevoPedido.html","Nuevo pedido",shell("Nuevo pedido a proveedor","Inventario",
  form(["Proveedor (Books & Bits)","Sede destino","Fecha estimada de entrega"]),
- card("Ítems", table(["Libro","Stock actual","Comprometido","Sugerido","Cantidad a pedir"],[["Adults B1 Student Book","-2","5","6","6"],["Kids 2 Workbook","-1","4","4","4"],["Teens A2","5","3","—","0"]])+box("Sugerido = comprometido por cursos que abren − stock disponible",44)),
+ card("Ítems", table(["Libro","Stock actual","Comprometido","Sugerido","Cantidad a pedir"],[["Adults B1 Student Book","-2","5","6","6"],["Kids 2 Workbook","-1","4","4","4"],["Teens A2","5","3","—","0"]])+note("Sugerido = comprometido por cursos que abren − stock disponible.")),
  row(btn("Cancelar","Movimientos.html"),btn("Enviar pedido",None,True,"El pedido queda En camino y se notifica a Secretaría de la sede para registrar el ingreso cuando llegue.","Movimientos.html")),
  subtitle="Pedido con cantidades sugeridas por el forecast de cursos"),"Nuevo pedido a proveedor")
 
 # 40 Nuevo usuario
 page("NuevoUsuario.html","Nuevo usuario",shell("Nuevo usuario","Configuración",
  form(["Nombres y apellidos","Email","Rol (Admin / Dir. Comercial / Coord. Académica / Asesor / Secretaría / Profesor)","Sedes visibles","Estado","2FA obligatorio (sí / no)"]),
- card("Permisos del rol elegido", li(["Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede","No puede: aprobar profesores, exportar base completa, ver otras sedes"])+box("La matriz completa se edita en Usuarios y roles → Matriz de permisos",44)),
+ card("Permisos del rol elegido", li(["Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede","No puede: aprobar profesores, exportar base completa, ver otras sedes"])+note("La matriz completa se edita en Usuarios y roles → Matriz de permisos.")),
  row(btn("Cancelar","Usuarios.html"),btn("Guardar usuario",None,True,"Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log.","Usuarios.html")),
  subtitle="Un usuario, un rol, las sedes que le corresponden"),"Nuevo usuario")
 
 # 41 Nueva sede
 page("NuevaSede.html","Nueva sede",shell("Nueva sede","Configuración",
  form(["Nombre","Ciudad","Dirección","Teléfono","Aulas","Responsable","Estado (activa / próxima)"]),
- box("Al crear la sede aparece en el selector global, en filtros y en la matriz de visibilidad por rol. Inventario arranca en cero.",56),
+ note("Al crear la sede aparece en el selector global, en filtros y en la matriz de visibilidad por rol. Inventario arranca en cero."),
  row(btn("Cancelar","Configuracion.html"),btn("Guardar sede",None,True,"La sede queda disponible en toda la plataforma. "+AUDIT,"Configuracion.html")),
  subtitle="Preparado para Quito Norte y las que vengan"),"Nueva sede")
 
 # 42 Nuevo nivel
 page("NuevoNivel.html","Nuevo nivel",shell("Nuevo nivel del catálogo","Configuración",
  form(["Programa (Adults / Kids / Teens)","Nivel","Módulos que lo componen","Horas totales","Precio virtual","Precio presencial","Libro asociado","Vigencia del precio"]),
- box("Los precios tienen vigencia: una venta usa el precio vigente a su fecha; cambiar el precio no altera facturas emitidas",56),
+ note("Los precios tienen vigencia: una venta usa el precio vigente a su fecha. Cambiar el precio no altera facturas emitidas."),
  row(btn("Cancelar","Configuracion.html"),btn("Guardar nivel",None,True,"El nivel queda disponible para nuevas ventas y cursos. "+AUDIT,"Configuracion.html")),
  subtitle="Catálogo configurable sin desarrollador"),"Nuevo nivel")
 
 # 43 Nueva regla de aprobación
 page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configuración",
  form(["Nombre de la regla","Entidad (descuento / profesor / asignación / exportación / tarifa)","Condición (ej. descuento > 10%)","Quién aprueba (rol)","Notificar a","Vigencia","Estado"]),
- box("Toda acción que cumpla la condición queda bloqueada hasta que el rol aprobador decida en la bandeja de aprobaciones",56),
+ note("Toda acción que cumpla la condición queda bloqueada hasta que el rol aprobador decida en la bandeja de aprobaciones."),
  row(btn("Cancelar","Configuracion.html"),btn("Guardar regla",None,True,"La regla queda activa y se aplica desde ahora. "+AUDIT,"Configuracion.html")),
  subtitle="Las reglas de negocio viven en configuración, no en código"),"Nueva regla de aprobación")
 
@@ -598,7 +718,7 @@ idx=f'''<!doctype html>
 <body class="hub">
 <header class="hub-head">
 <h1>Plataforma Cambridge · Wireframes</h1>
-<p>Versión de alto nivel para validar el flujo, no el diseño. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar.</p>
+<p>Versión de alto nivel para validar el flujo, no el diseño. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar. El selector de sede de la barra superior filtra cifras y tablas.</p>
 </header>
 {sec}
 <footer class="hub-foot">Orkesta · Cambridge School of Languages · Fase 0 Discovery y Diseño</footer>
