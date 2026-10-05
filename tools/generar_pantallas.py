@@ -31,7 +31,7 @@ def shell(title, active, *parts, subtitle=""):
   <div style="font-weight:700;font-size:16px">Plataforma Cambridge</div>
   <div style="display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px">
     <label for="sede" style="color:{MUTE}">Sede</label>
-    <select id="sede" style="min-height:44px;padding:0 12px;border:2px solid {LINE};background:#fff;font-size:13px"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select>
+    <select id="sede" style="height:30px;padding:0 6px;border:1px solid {LINE};border-radius:4px;background:#fff;font:inherit;font-size:13px;color:{INK};outline-offset:1px"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select>
   </div>
   <a href="Notificaciones.html" style="font-size:13px">Notificaciones (3)</a><a href="Chatbot.html" style="font-size:13px">Asistente</a><div style="font-size:13px;color:{MUTE}">Estefanía · Admin</div>
 </header>
