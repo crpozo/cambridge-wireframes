@@ -4,7 +4,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 
 ## Antes de tocar nada, lee
 - `docs/PROYECTO.md`: qué es el proyecto, el cliente, los dolores, los 11 módulos del contrato, fases y plazos.
-- `docs/PANTALLAS.md`: las 33 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
+- `docs/PANTALLAS.md`: las 43 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
 - `docs/DECISIONES.md`: decisiones y supuestos tomados en los wireframes.
 - `docs/fuentes/`: propuesta comercial, análisis técnico-comercial y contrato (PDF). Fuente de verdad del alcance.
 
@@ -25,6 +25,8 @@ docs/                   documentación de contexto
 - Pestañas: `tabs(items, active, panels)`. `panels` es un dict etiqueta → HTML y cada pestaña muestra su panel en la misma página (JS mínimo en `page()`). Una pestaña que es otra pantalla se pasa como tupla `("Etiqueta","Pantalla.html")` y navega. Toda pestaña debe tener panel o href, nunca quedar muerta.
 - Nombres de archivo en PascalCase sin acentos ni espacios (`NuevaVenta.html`). Idioma de la UI: español.
 - Botones y enlaces deben apuntar a la siguiente pantalla del flujo (no dejar `href` rotos; verificar con el grep del final).
+- Ningún botón queda muerto. `btn(label, href)` navega. `btn(label)` sin href busca la etiqueta en el dict `ACTIONS`: si el valor es un `.html` navega; si es `(descripción, siguiente)` abre el diálogo de confirmación (inyectado en `page()`) que explica qué pasaría y, tras confirmar, muestra un toast y navega a `siguiente` si lo hay. También se puede pasar `btn(label, None, primary, action="…", next="X.html")`. Una etiqueta nueva sin entrada en `ACTIONS` hace fallar el generador a propósito.
+- El hub (`rows`) numera solo; toda pantalla nueva debe estar en `rows`.
 - Accesibilidad mínima aunque sea wireframe: `<button>`, `<a href>`, `<input>` con `<label>`.
 - No inventar funcionalidades fuera del contrato (Cláusula Tercera). Si algo no está en los 11 módulos, va como "fuera de alcance" o se pregunta.
 
@@ -32,6 +34,7 @@ docs/                   documentación de contexto
 ```
 python3 tools/generar_pantallas.py
 grep -o 'href="[A-Za-z0-9]*\.html"' *.html | sed 's/.*href="//;s/"//' | sort -u | while read f; do [ -f "$f" ] || echo "ROTO $f"; done
+for f in *.html; do grep -q "href=\"$f\"" index.html || echo "FUERA DEL HUB $f"; done   # solo debe listar index.html
 ```
 
 ## Publicación

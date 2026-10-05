@@ -26,7 +26,24 @@
   </main>
 </div>
 </div>
+<dialog id="wf-dialog" style="border:2px solid #1f2937;padding:24px;max-width:480px;font-family:'IBM Plex Sans',sans-serif;color:#1f2937">
+  <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
+  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#6b7280"></p>
+  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#fff;color:#1f2937;font:inherit;font-weight:600;cursor:pointer">Cancelar</button><button type="button" id="wf-ok" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#1f2937;color:#fff;font:inherit;font-weight:600;cursor:pointer">Confirmar</button></div>
+</dialog>
+<div id="wf-toast" role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:12px 20px;font-size:14px;display:none;z-index:10"></div>
 <script>
+(function(){
+  var dlg=document.getElementById('wf-dialog'),title=document.getElementById('wf-dialog-title'),text=document.getElementById('wf-dialog-text'),toast=document.getElementById('wf-toast'),cur=null;
+  document.querySelectorAll('[data-action]').forEach(function(b){
+    b.addEventListener('click',function(){cur=b;title.textContent=b.textContent.trim();text.textContent=b.dataset.action;dlg.showModal();});
+  });
+  document.getElementById('wf-cancel').addEventListener('click',function(){dlg.close();});
+  document.getElementById('wf-ok').addEventListener('click',function(){
+    dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
+    setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
 document.querySelectorAll('.tabs').forEach(function(bar){
   var btns=bar.querySelectorAll('[data-tab]');
   btns.forEach(function(b){

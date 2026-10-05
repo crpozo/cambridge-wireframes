@@ -1,8 +1,10 @@
-# Pantallas de la Plataforma Cambridge (33)
+# Pantallas de la Plataforma Cambridge (43)
 
 Todas comparten la misma **shell**: barra superior con nombre de la plataforma, selector de sede global (Todas / Quito / Valle / Ambato), notificaciones, asistente y usuario con rol; menú lateral: Inicio, Estudiantes, Cursos, Profesores, Facturación, Comisiones, Inventario, Reportes, Aprobaciones, Configuración. Lo que cada rol ve depende del RBAC (M1).
 
 Formato: **archivo** · qué muestra · de dónde se llega / a dónde va.
+
+Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pantalla; los botones de acción (guardar, aprobar, rechazar, exportar, confirmar…) abren un diálogo que explica qué pasaría al confirmar y, si aplica, llevan a la siguiente pantalla.
 
 ## Acceso y navegación
 1. **Main.html · Login** (M1). Email, contraseña, recuperar contraseña, 2FA opcional. → Home.
@@ -60,3 +62,15 @@ Formato: **archivo** · qué muestra · de dónde se llega / a dónde va.
 - **Curso**: Cursos → NuevoCurso (valida profesor) → DetalleCurso → Sesiones.
 - **Profesor**: Profesores → AltaProfesor → Aprobaciones → FichaProfesor → PaymentSheet.
 - **Cierre de mes**: Sesiones → PaymentSheet; ventas → Comisiones → DetalleComision; todo → Reportes / DashboardEjecutivo.
+
+## Pantallas de formulario y acción (agregadas para cerrar todos los flujos)
+34. **RecuperarContrasena.html** (M1). Envío de enlace temporal al correo. ← Main. → Main.
+35. **RegistrarSesion.html · Sesión manual** (M3). Curso, profesor con validación de contrato, fecha y horas, asistencia por estudiante; alerta si está fuera de horario. ← Sesiones, DetalleCurso, FichaProfesor. → Sesiones.
+36. **RegistrarPago.html** (M5). Monto, fecha, método, comprobante; actualiza el estado de cobro de la factura. ← DetalleFactura, Ficha360. → DetalleFactura.
+37. **NotaCredito.html** (M5/M7). Factura origen, motivo, monto, devolución de libro al stock. ← DetalleFactura, Movimientos. → DetalleFactura.
+38. **RegistrarMovimiento.html** (M7). Ingreso / salida / traslado / devolución con vínculo a factura, curso o pedido. ← Movimientos. → Movimientos.
+39. **NuevoPedido.html** (M7). Pedido a Books & Bits con cantidades sugeridas por el forecast de cursos. ← Inventario. → Movimientos.
+40. **NuevoUsuario.html** (M1). Datos, rol, sedes visibles, 2FA; muestra los permisos del rol. ← Usuarios. → Usuarios.
+41. **NuevaSede.html** (M10). Alta de sede: aparece en selector global, filtros y visibilidad por rol. ← Configuración. → Configuración.
+42. **NuevoNivel.html** (M10). Programa, nivel, módulos, horas, precios con vigencia, libro asociado. ← Configuración. → Configuración.
+43. **NuevaRegla.html** (M1/M10). Regla de aprobación: entidad, condición, rol aprobador, notificación, vigencia. ← Configuración. → Configuración.
