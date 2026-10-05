@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asistente interno · Wireframes Plataforma Cambridge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wf-bar"><a href="index.html">← Mapa de pantallas</a><span>Asistente interno</span><span class="wf-tag">WIREFRAME · alto nivel</span></div>
+<div style="min-height:820px;display:flex;flex-direction:column;font-family:'IBM Plex Sans',sans-serif;color:#1f2937;background:#fff">
+<header style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 24px;border-bottom:2px solid #1f2937">
+  <div style="font-weight:700;font-size:16px">Plataforma Cambridge</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px">
+    <label for="sede" style="color:#6b7280">Sede</label>
+    <select id="sede" style="min-height:44px;padding:0 12px;border:2px solid #9ca3af;background:#fff;font-size:13px"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select>
+  </div>
+  <a href="Notificaciones.html" style="font-size:13px">Notificaciones (3)</a><a href="Chatbot.html" style="font-size:13px">Asistente</a><div style="font-size:13px;color:#6b7280">Estefanía · Admin</div>
+</header>
+<div style="display:flex;flex-wrap:wrap;flex:1">
+  <nav style="width:200px;border-right:2px solid #1f2937;padding:8px 0"><a href="Home.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;background:#e5e7eb;font-weight:700;">Inicio</a><a href="Estudiantes.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Estudiantes</a><a href="Cursos.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Cursos</a><a href="Profesores.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Profesores</a><a href="Facturas.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Facturación</a><a href="Comisiones.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Comisiones</a><a href="Inventario.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Inventario</a><a href="Reportes.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Reportes</a><a href="Aprobaciones.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Aprobaciones</a><a href="Configuracion.html" style="display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:#1f2937;">Configuración</a></nav>
+  <main style="flex:999 1 560px;min-width:0;padding:24px;display:flex;flex-direction:column;gap:20px">
+    <div><h1 style="margin:0;font-size:24px">Asistente interno</h1><p style="margin:4px 0 0;color:#6b7280;font-size:14px">Consulta ágil para el equipo, sin armar un reporte</p></div>
+    <div style="max-width:760px;border:2px solid #1f2937;display:flex;flex-direction:column;height:520px"><div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto"><div style="align-self:flex-end;max-width:70%;padding:10px 14px;background:#1f2937;color:#fff;font-size:14px">¿Cuántos estudiantes activos tiene Valle en nivel B1?</div><div style="align-self:flex-start;max-width:70%;padding:10px 14px;background:#e5e7eb;font-size:14px">Valle tiene 23 estudiantes activos en B1, repartidos en 2 cursos (P. Gómez y L. Vega). ¿Quieres ver el listado?</div><div style="align-self:flex-end;max-width:70%;padding:10px 14px;background:#1f2937;color:#fff;font-size:14px">¿Qué pagos a profesores están pendientes de aprobar?</div><div style="align-self:flex-start;max-width:70%;padding:10px 14px;background:#e5e7eb;font-size:14px">La payment sheet de octubre está en borrador con 2 alertas. Solo puedes ver pagos de las sedes que tu rol permite.</div></div><div style="display:flex;gap:8px;padding:12px;border-top:2px solid #9ca3af"><label for="msg" style="position:absolute;left:-9999px">Mensaje</label><input id="msg" placeholder="Pregunta sobre estudiantes, cursos, pagos o reportes" style="flex:1;min-height:44px;padding:0 12px;border:2px solid #9ca3af;font-size:14px"><button type="button" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:2px solid #1f2937;font-size:14px;font-weight:600;text-decoration:none;box-sizing:border-box;background:#1f2937;color:#fff;cursor:pointer">Enviar</button></div></div><div style="width:100%;height:56px;box-sizing:border-box;border:2px dashed #9ca3af;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;text-align:center;padding:8px;">Responde solo con datos de la plataforma y respeta los permisos del usuario (RBAC). No expone datos de otras sedes.</div>
+  </main>
+</div>
+</div>
+</body>
+</html>

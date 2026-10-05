@@ -1,0 +1,62 @@
+# Pantallas de la Plataforma Cambridge (33)
+
+Todas comparten la misma **shell**: barra superior con nombre de la plataforma, selector de sede global (Todas / Quito / Valle / Ambato), notificaciones, asistente y usuario con rol; menú lateral: Inicio, Estudiantes, Cursos, Profesores, Facturación, Comisiones, Inventario, Reportes, Aprobaciones, Configuración. Lo que cada rol ve depende del RBAC (M1).
+
+Formato: **archivo** · qué muestra · de dónde se llega / a dónde va.
+
+## Acceso y navegación
+1. **Main.html · Login** (M1). Email, contraseña, recuperar contraseña, 2FA opcional. → Home.
+2. **Home.html · Inicio por rol** (M1/M8). KPIs del rol, pendientes de aprobación, accesos rápidos (nueva venta, nuevo estudiante, payment sheet, comisiones), actividad reciente del audit log. → cualquier módulo.
+3. **Notificaciones.html** (M1). Centro de avisos: aprobaciones pendientes, stock negativo, payment sheet lista, profesor aprobado. Cada aviso enlaza a su pantalla.
+4. **Chatbot.html · Asistente interno** (M9). Chat sobre datos de la plataforma respetando permisos y sede del usuario.
+
+## Estudiantes (M2)
+5. **Estudiantes.html · Listado**. Búsqueda por nombre/cédula/email, filtros sede/estado/nivel, tabla consolidada de las 3 sedes, nuevo estudiante, importar/exportar. → Ficha360, NuevoEstudiante, ImportExport.
+6. **NuevoEstudiante.html**. Formulario único, bloque de representante si es menor, marcadores de dato sensible, validación de duplicados por cédula. → Ficha360.
+7. **Ficha360.html · Ficha 360°**. Cabecera (sede, estado, asesor), tabs: Datos, Cursos y notas, Niveles/crédito (comprados vs consumidos), Facturas y pagos, Archivos, Historial. Botón Nueva venta. → NuevaVenta.
+8. **ImportExport.html**. Carga CSV/Excel con vista previa y detección de duplicados; exportación filtrada y auditada.
+
+## Flujo comercial (M5 + M1 aprobaciones)
+9. **NuevaVenta.html · Nueva venta por niveles**. Wizard: Estudiante → Niveles → Descuento → Pago → Factura. Reemplaza la facturación por módulo; genera una factura consolidada. → SolicitudDescuento, Aprobaciones, Ficha360.
+10. **SolicitudDescuento.html**. Porcentaje, monto resultante, motivo de lista cerrada, justificación. Regla ilustrativa: >10% requiere Director Comercial. → Aprobaciones.
+11. **Aprobaciones.html · Bandeja de aprobaciones** (M1). Tabs: descuentos, profesores, asignaciones. Aprobar/rechazar con trazabilidad y notificación al solicitante.
+12. **Facturas.html · Listado de facturas**. KPIs de facturado/cobrado/pendiente, tabla con estado de cobro. → DetalleFactura, NuevaVenta.
+13. **DetalleFactura.html**. Líneas por nivel, descuento aprobado, libros, total, método y estado; notas de crédito y cambio de curso; registrar pago.
+
+## Flujo académico (M3)
+14. **Cursos.html · Listado**. Filtros programa/nivel/modalidad/estado, ocupación, profesor. → DetalleCurso, NuevoCurso.
+15. **NuevoCurso.html**. Programa, nivel, modalidad, tipo, sede, aula, fechas, horario, horas, cupo; selección de profesor con validación de contrato activo (si no, va a aprobación). Al crear se compromete stock de libros. → DetalleCurso.
+16. **DetalleCurso.html**. Horario y progreso, profesor asignado, sesiones (automáticas/manuales/pendientes), estudiantes con asistencia, nota y estado. → Sesiones.
+17. **Sesiones.html · Registro de sesiones**. Vista semanal tipo calendario, confirmar o marcar no dictada, alertas (fuera de horario, contrato vencido, curso sin sesiones). Alimenta progreso y payment sheet.
+
+## Flujo profesores (M4)
+18. **Profesores.html · Listado**. Contrato, tarifa, cursos activos, estado. Alta de profesor y acceso a payment sheet. → AltaProfesor, FichaProfesor, PaymentSheet.
+19. **AltaProfesor.html · Alta con aprobación**. Datos, contrato, tarifa, vigencia, archivo firmado. Queda "pendiente de aprobación" hasta que Dirección apruebe; recién entonces puede recibir cursos y pagos. → Aprobaciones.
+20. **FichaProfesor.html**. Tabs: Datos, Contrato y tarifa, Cursos, Sesiones, Historial de pagos. → PaymentSheet.
+21. **PaymentSheet.html**. Mes, sede, estado (borrador/aprobado). Por profesor: sesiones, horas, tarifa, a pagar, factura del profesor, alerta de diferencia o contrato vencido. Aprobar pagos, exportar.
+
+## Comisiones (M6)
+22. **Comisiones.html · Período**. Estado draft → revisión → aprobado; tabla por asesor (niveles, modalidad, meta, real, comisión); gráfico meta vs real; reglas activas. → DetalleComision, ReglasComision.
+23. **DetalleComision.html · Detalle por asesor**. Cada venta con la regla que la generó, bonos, historial, exportar.
+24. **ReglasComision.html**. Tabla de reglas (rangos, modalidad, bono meta, vigencia), nueva regla, simulador contra ventas pasadas. Cambios al audit log.
+
+## Inventario (M7)
+25. **Inventario.html · Stock por sede**. Libro × sede, comprometido por cursos abiertos, alertas de pedido. → Movimientos.
+26. **Movimientos.html**. Tabs: movimientos, pedidos a proveedor (Books & Bits), notas de crédito; registrar ingreso; forecast por cursos próximos.
+
+## Reportes y dashboards (M8 + M10)
+27. **Reportes.html · Dashboard por rol**. KPIs (ventas por nivel real, matrículas, cobros, ocupación), gráficos por sede/modalidad y pipeline comercial, bloque de reportes self-service. → ConstructorReportes, DashboardEjecutivo.
+28. **ConstructorReportes.html**. Entidad, columnas, filtros, rango; reportes guardados (reemplazo del "New Students Report"); resultado y exportación.
+29. **DashboardEjecutivo.html** (M10). Ingresos YTD, estudiantes activos, ticket promedio, margen por sede; ingresos por mes/sede, mix programa/modalidad, funnel comercial, retención por nivel.
+
+## Administración y gobierno (M1 + M11)
+30. **Usuarios.html · Usuarios y roles**. Listado de usuarios con rol y sedes visibles; matriz de permisos por rol.
+31. **Configuracion.html**. Tabs: sedes, catálogo de niveles y precios, tarifas de profesores, reglas de aprobación, parámetros.
+32. **AuditLog.html**. Filtros por usuario/acción/entidad/fecha/sede; registro de quién hizo qué, cuándo y desde dónde; alertas por exportaciones masivas, cambios de tarifa y descuentos fuera de regla.
+33. **Integraciones.html** (M11). Estado de Kommo, Moodle y Dora; API keys, webhooks, documentación; log de sincronización.
+
+## Flujos principales (para validar con el cliente)
+- **Venta**: Estudiantes → Ficha360 → NuevaVenta → (SolicitudDescuento → Aprobaciones) → DetalleFactura.
+- **Curso**: Cursos → NuevoCurso (valida profesor) → DetalleCurso → Sesiones.
+- **Profesor**: Profesores → AltaProfesor → Aprobaciones → FichaProfesor → PaymentSheet.
+- **Cierre de mes**: Sesiones → PaymentSheet; ventas → Comisiones → DetalleComision; todo → Reportes / DashboardEjecutivo.
