@@ -26,5 +26,17 @@
   </main>
 </div>
 </div>
+<script>
+document.querySelectorAll('.tabs').forEach(function(bar){
+  var btns=bar.querySelectorAll('[data-tab]');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on);x.style.borderBottomColor=on?'#1f2937':'transparent';x.style.fontWeight=on?700:400;});
+      var el=bar.nextElementSibling;
+      while(el&&el.hasAttribute('data-panel')){el.style.display=el.getAttribute('data-panel')===b.dataset.tab?'flex':'none';el=el.nextElementSibling;}
+    });
+  });
+});
+</script>
 </body>
 </html>

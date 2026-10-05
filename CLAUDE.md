@@ -22,6 +22,7 @@ docs/                   documentación de contexto
 - **Las páginas se generan**: edita `tools/generar_pantallas.py` y corre `python3 tools/generar_pantallas.py` desde la raíz del repo (escribe en `ROOT`; ajusta esa constante a la ruta del repo si hace falta). No edites los `.html` a mano si vas a regenerar, se pierden.
 - Nivel de fidelidad: **alto nivel / lo-fi**. Cajas grises con etiqueta, tablas con 3-4 filas de ejemplo, sin diseño visual. El objetivo es validar flujo y contenido con el cliente (Estefanía), no la estética.
 - Toda pantalla usa la misma shell: barra superior (selector de sede global, notificaciones, asistente, usuario/rol) + menú lateral por módulo. Nueva pantalla = nueva llamada a `page(...)` + agregarla a `rows` para que aparezca en el hub y, si aplica, un enlace en el menú `nav()`.
+- Pestañas: `tabs(items, active, panels)`. `panels` es un dict etiqueta → HTML y cada pestaña muestra su panel en la misma página (JS mínimo en `page()`). Una pestaña que es otra pantalla se pasa como tupla `("Etiqueta","Pantalla.html")` y navega. Toda pestaña debe tener panel o href, nunca quedar muerta.
 - Nombres de archivo en PascalCase sin acentos ni espacios (`NuevaVenta.html`). Idioma de la UI: español.
 - Botones y enlaces deben apuntar a la siguiente pantalla del flujo (no dejar `href` rotos; verificar con el grep del final).
 - Accesibilidad mínima aunque sea wireframe: `<button>`, `<a href>`, `<input>` con `<label>`.

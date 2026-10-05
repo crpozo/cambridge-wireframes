@@ -5,4 +5,4 @@ Wireframes estáticos de alto nivel (HTML/CSS, sin build) publicados con GitHub 
 - `index.html`: mapa de pantallas por flujo
 - Una página por pantalla (`Main.html` = login)
 
-Publicar: Settings → Pages → Deploy from branch `main` / root.
+Publicación: GitHub Pages desde `main` / root (Settings → Pages → Deploy from a branch) o con el workflow `.github/workflows/pages.yml` (Source: GitHub Actions). URL: https://crpozo.github.io/cambridge-wireframes/
