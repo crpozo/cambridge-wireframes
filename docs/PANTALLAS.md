@@ -1,4 +1,4 @@
-# Pantallas de la Plataforma Cambridge (43)
+# Pantallas de la Plataforma Cambridge (44 · 40 visibles en el hub)
 
 Todas comparten la misma **shell**: barra superior con nombre de la plataforma, selector de sede global (Todas / Quito / Valle / Ambato), notificaciones, asistente y usuario con rol; menú lateral: Inicio, Estudiantes, Cursos, Profesores, Facturación, Comisiones, Inventario, Reportes, Aprobaciones, Configuración. Lo que cada rol ve depende del RBAC (M1).
 
@@ -15,7 +15,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 ## Estudiantes (M2)
 5. **Estudiantes.html · Listado**. Búsqueda por nombre/cédula/email, filtros sede/estado/nivel, tabla consolidada de las 3 sedes, nuevo estudiante, importar/exportar. → Ficha360, NuevoEstudiante, ImportExport.
 6. **NuevoEstudiante.html**. Formulario único, bloque de representante si es menor, marcadores de dato sensible, validación de duplicados por cédula. → Ficha360.
-7. **Ficha360.html · Ficha 360°**. Cabecera (sede, estado, asesor), tabs: Datos, Cursos y notas, Niveles/crédito (comprados vs consumidos), Facturas y pagos, Archivos, Historial. Botón Nueva venta. → NuevaVenta.
+7. **Ficha360.html · Ficha 360°**. Cabecera (sede, estado, asesor, nivel/módulo, ID legado TeamDesk), tabs: Datos, Matrículas y notas (número de matrícula, código de curso, saldo, asistencia, pass/fail), Niveles/crédito, Facturas y pagos, Archivos y certificados, Historial. Botón Nueva matrícula. → NuevaVenta, DetalleMatricula.
 8. **ImportExport.html**. Carga CSV/Excel con vista previa y detección de duplicados; exportación filtrada y auditada.
 
 ## Flujo comercial (M5 + M1 aprobaciones)
@@ -74,3 +74,6 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 41. **NuevaSede.html** (M10). Alta de sede: aparece en selector global, filtros y visibilidad por rol. ← Configuración. → Configuración.
 42. **NuevoNivel.html** (M10). Programa, nivel, módulos, horas, precios con vigencia, libro asociado. ← Configuración. → Configuración.
 43. **NuevaRegla.html** (M1/M10). Regla de aprobación: entidad, condición, rol aprobador, notificación, vigencia. ← Configuración. → Configuración.
+44. **DetalleMatricula.html · Detalle de matrícula** (M5/M2). Equivalente al Enrollment de TeamDesk pero por paquete de niveles: estudiante, curso (código), horario, asesor, plan de pago; resumen (subtotal, descuento, total, pagado, saldo); cargos (tuition, niveles, libros); tabs Facturas y pagos, Códigos de libros, Asistencia, Certificados, Comisión. Acciones: cambio de curso, enviar enlace de clase, hoja de asistencia, anular (con aprobación). ← Ficha360, DetalleCurso, NuevaVenta.
+
+Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.

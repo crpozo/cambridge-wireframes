@@ -4,8 +4,8 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 
 ## Antes de tocar nada, lee
 - `docs/PROYECTO.md`: qué es el proyecto, el cliente, los dolores, los 11 módulos del contrato, fases y plazos.
-- `docs/PANTALLAS.md`: las 43 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
-- `docs/DECISIONES.md`: decisiones y supuestos tomados en los wireframes.
+- `docs/PANTALLAS.md`: las 44 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
+- `docs/DECISIONES.md`: decisiones y supuestos tomados en los wireframes, y el **mapeo TeamDesk → Plataforma** (tablas, vistas y campos del sistema actual y a qué pantalla van). Al modelar una pantalla, respeta ese mapeo y los identificadores legados (código de curso 0001-AAAA-NNNN, matrícula 001-AAAANNNNN).
 - `docs/fuentes/`: propuesta comercial, análisis técnico-comercial y contrato (PDF). Fuente de verdad del alcance.
 
 ## Estructura
@@ -31,6 +31,7 @@ docs/                   documentación de contexto
 - El hub (`rows`) numera solo; toda pantalla nueva debe estar en `rows`.
 - Pantallas ocultas: el set `HIDDEN` del generador (hoy: el módulo de Facturación: Facturas, DetalleFactura, RegistrarPago, NotaCredito) quita esas pantallas del menú lateral y del hub, pero se siguen generando para que ningún enlace se rompa. Para volver a mostrarlas, vaciar el set.
 - Accesibilidad mínima aunque sea wireframe: `<button>`, `<a href>`, `<input>` con `<label>`.
+- Datos de ejemplo siempre ficticios: nunca copiar nombres, cédulas, teléfonos ni correos reales de capturas de TeamDesk u otros sistemas del cliente.
 - No inventar funcionalidades fuera del contrato (Cláusula Tercera). Si algo no está en los 11 módulos, va como "fuera de alcance" o se pregunta.
 
 ## Verificación rápida
