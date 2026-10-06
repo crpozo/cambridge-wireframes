@@ -70,14 +70,41 @@ def btn(label, href=None, primary=False, action=None, next=None):
 # Para volver a mostrar Facturación, vaciar este set.
 HIDDEN={"Facturas.html","DetalleFactura.html","RegistrarPago.html","NotaCredito.html"}
 
+# Tipos de usuario (RBAC). Código → (nombre del rol, usuario de ejemplo)
+ROLES=[("ADM","Administrador General","Estefanía"),("GER","Gerente General","Gerencia"),("DIR","Director Comercial","Dir. Comercial"),("SUC","Administrador de Sucursal","Admin. Valle"),("COO","Coordinador Académico","Coord. Académica"),("ASE","Asesor Comercial","Carla M."),("SEC","Secretaría","Secretaría"),("PRO","Profesor (consulta)","P. Gómez")]
+ALL="ADM,GER,DIR,SUC,COO,ASE,SEC,PRO"
+COMERCIAL="ADM,GER,DIR,SUC,ASE,SEC"
+ACADEMICO="ADM,GER,SUC,COO,PRO"
+APROBADORES="ADM,GER,DIR,SUC,COO"
+def only(roles, html, inline=False):
+    """Envuelve html para que solo lo vean esos roles (códigos separados por coma)."""
+    return f'<{"span" if inline else "div"} data-roles="{roles}" style="display:contents">{html}</{"span" if inline else "div"}>'
+
+# Menú lateral agrupado por áreas. Cada ítem: (nombre, archivo, roles que lo ven). Un área desaparece si el rol no ve ninguno de sus ítems.
+NAV=[
+ ("",[("Inicio","Home.html",ALL)]),
+ ("Académico",[("Estudiantes","Estudiantes.html",ALL),("Cursos","Cursos.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO")]),
+ ("Comercial",[("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Facturación","Facturas.html",COMERCIAL),("Comisiones","Comisiones.html","ADM,GER,DIR,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
+ ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
+ ("Dirección",[("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
+ ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM")]),
+]
+# alias: nombre antiguo de sección activa → ítem del menú
+NAV_ALIAS={"Inventario":"Stock por sede","Facturación":"Facturación"}
 def nav(active):
-    items=[("Inicio","Home.html"),("Estudiantes","Estudiantes.html"),("Cursos","Cursos.html"),("Profesores","Profesores.html"),("Facturación","Facturas.html"),("Comisiones","Comisiones.html"),("Inventario","Inventario.html"),("Reportes","Reportes.html"),("Aprobaciones","Aprobaciones.html"),("Configuración","Configuracion.html")]
-    items=[(n,h) for n,h in items if h not in HIDDEN]
+    active=NAV_ALIAS.get(active,active)
     out=""
-    for n,h in items:
-        st=f"display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:{INK};"
-        if n==active: st+=f"background:{FILL};font-weight:700;"
-        out+= f'<a href="{h}" style="{st}">{n}</a>' if h else f'<div style="{st}color:{MUTE}">{n}</div>'
+    for area,items in NAV:
+        items=[(n,h,r) for n,h,r in items if h not in HIDDEN]
+        if not items: continue
+        roles=",".join(sorted({c for _,_,r in items for c in r.split(",")}))
+        links=""
+        for n,h,r in items:
+            st=f"display:block;padding:10px 16px;font-size:14px;text-decoration:none;color:{INK};"
+            if n==active: st+=f"background:{FILL};font-weight:700;"
+            links+=f'<a href="{h}" data-roles="{r}" style="{st}">{n}</a>'
+        head=f'<div style="padding:14px 16px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:{MUTE}">{area}</div>' if area else ""
+        out+=f'<div data-roles="{roles}" style="display:contents">{head}{links}</div>'
     return out
 
 def shell(title, active, *parts, subtitle=""):
@@ -88,8 +115,10 @@ def shell(title, active, *parts, subtitle=""):
   <div style="display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px">
     <label for="sede" style="color:{MUTE}">Sede</label>
     <select id="sede" style="height:30px;padding:0 6px;border:1px solid {LINE};border-radius:4px;background:#fff;font:inherit;font-size:13px;color:{INK};outline-offset:1px"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select>
+    <label for="rol" style="color:{MUTE};margin-left:8px">Ver como</label>
+    <select id="rol" style="height:30px;padding:0 6px;border:1px solid {LINE};border-radius:4px;background:#fff;font:inherit;font-size:13px;color:{INK};outline-offset:1px">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select>
   </div>
-  <a href="Notificaciones.html" style="font-size:13px">Notificaciones (3)</a><a href="Chatbot.html" style="font-size:13px">Asistente</a><div style="font-size:13px;color:{MUTE}">Estefanía · Admin</div>
+  <a href="Notificaciones.html" style="font-size:13px">Notificaciones (3)</a><a href="Chatbot.html" style="font-size:13px">Asistente</a><div id="rol-user" style="font-size:13px;color:{MUTE}">Estefanía · Administrador General</div>
 </header>
 <div style="display:flex;flex-wrap:wrap;flex:1">
   <nav style="width:200px;border-right:2px solid {INK};padding:8px 0">{nav(active)}</nav>
@@ -162,16 +191,39 @@ def page(fname, title, inner, lang_title):
   document.querySelectorAll('[data-fcol]').forEach(function(c){{c.addEventListener('input',refresh);c.addEventListener('change',refresh);}});
   refresh();
 }})();
+(function(){{
+  var rs=document.getElementById('rol'); if(!rs) return;
+  function apply(){{
+    var r=rs.value, opt=rs.options[rs.selectedIndex];
+    var u=document.getElementById('rol-user'); if(u) u.textContent=opt.getAttribute('data-user')+' · '+opt.textContent;
+    document.querySelectorAll('[data-roles]').forEach(function(e){{
+      var ok=e.getAttribute('data-roles').split(',').indexOf(r)>=0;
+      if(e.hasAttribute('data-panel')){{ if(!ok){{e.dataset.wfHidden='1';e.style.display='none';}} else {{delete e.dataset.wfHidden;}} return; }}
+      if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
+      e.style.display=ok?e.dataset.wfD:'none';
+    }});
+    document.querySelectorAll('.tabs').forEach(function(bar){{
+      var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
+      var act=btns.filter(function(b){{return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';}})[0];
+      if(!act){{ var first=btns.filter(function(b){{return b.style.display!=='none';}})[0]; if(first) first.click(); }}
+    }});
+  }}
+  var saved=null; try{{saved=localStorage.getItem('wf-rol');}}catch(e){{}}
+  if(saved&&[].some.call(rs.options,function(o){{return o.value===saved;}})) rs.value=saved;
+  rs.addEventListener('change',function(){{try{{localStorage.setItem('wf-rol',rs.value);}}catch(e){{}}apply();}});
+  window.wfApplyRole=apply;
+}})();
 document.querySelectorAll('.tabs').forEach(function(bar){{
   var btns=bar.querySelectorAll('[data-tab]');
   btns.forEach(function(b){{
     b.addEventListener('click',function(){{
       btns.forEach(function(x){{var on=x===b;x.setAttribute('aria-selected',on);x.style.borderBottomColor=on?'{INK}':'transparent';x.style.fontWeight=on?700:400;}});
       var el=bar.nextElementSibling;
-      while(el&&el.hasAttribute('data-panel')){{el.style.display=el.getAttribute('data-panel')===b.dataset.tab?'flex':'none';el=el.nextElementSibling;}}
+      while(el&&el.hasAttribute('data-panel')){{el.style.display=(el.getAttribute('data-panel')===b.dataset.tab&&!el.dataset.wfHidden)?'flex':'none';el=el.nextElementSibling;}}
     }});
   }});
 }});
+if(window.wfApplyRole) window.wfApplyRole();
 </script>
 </body>
 </html>'''
@@ -193,22 +245,24 @@ def table(cols, rows, h=46, sede=None):
     empty=f'<div class="wf-empty" style="display:none;grid-column:1/-1;padding:24px;text-align:center;color:{MUTE};font-size:14px">Sin resultados con estos filtros</div>'
     return f'<div class="wf-table" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="display:grid;grid-template-columns:repeat({len(cols)}, minmax(0, 1fr));border:2px solid {INK}">{hd}{body}{empty}</div>'
 
-def tabs(items, active, panels=None):
+def tabs(items, active, panels=None, roles=None):
     """items: lista de etiquetas o (etiqueta, href). panels: dict etiqueta -> html del panel.
     Las pestañas con panel cambian de contenido en la misma página; las que tienen href navegan."""
-    panels=panels or {}
+    panels=panels or {}; roles=roles or {}
     bar=""; body=""
     for t in items:
         label,href = t if isinstance(t,tuple) else (t,None)
         on = label==active
+        rl=f' data-roles="{roles[label]}"' if label in roles else ""
         st=f"padding:10px 16px;font-size:14px;font-family:inherit;color:{INK};background:none;border:0;border-bottom:3px solid {INK if on else 'transparent'};font-weight:{700 if on else 400};cursor:pointer;text-decoration:none"
         if href:
-            bar+=f'<a href="{href}" role="tab" style="{st}">{label}</a>'
+            bar+=f'<a href="{href}" role="tab"{rl} style="{st}">{label}</a>'
         else:
-            bar+=f'<button type="button" role="tab" data-tab="{label}" aria-selected="{"true" if on else "false"}" style="{st}">{label}</button>'
+            bar+=f'<button type="button" role="tab" data-tab="{label}"{rl} aria-selected="{"true" if on else "false"}" style="{st}">{label}</button>'
     for label,content in panels.items():
         on = label==active
-        body+=f'<div role="tabpanel" data-panel="{label}" style="display:{"flex" if on else "none"};flex-direction:column;gap:20px">{content}</div>'
+        rl=f' data-roles="{roles[label]}"' if label in roles else ""
+        body+=f'<div role="tabpanel" data-panel="{label}"{rl} style="display:{"flex" if on else "none"};flex-direction:column;gap:20px">{content}</div>'
     return f'<div class="tabs" role="tablist" style="display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid {LINE}">{bar}</div>{body}'
 
 def form(fields, cols=2):
@@ -308,6 +362,13 @@ def pager(total, per=20):
             f'<span style="margin-left:auto;display:flex;gap:4px">{pages}<a href="#" aria-label="Siguiente" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{INK}">›</a></span></div>')
 def logo():
     return f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:{MUTE};letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>'
+def ai(items, ask="¿Qué más quieres saber?"):
+    """Tarjeta del asistente interno (M9): observaciones generadas sobre la base unificada, solo lectura, respetando el rol. items: [(observación, texto del enlace, href)]"""
+    lis="".join(f'<li style="display:flex;gap:10px;align-items:flex-start"><span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:{ACC}"></span><span>{t} <a href="{h}" style="white-space:nowrap">{l} →</a></span></li>' for t,l,h in items)
+    return (f'<section style="border:2px solid {ACC};padding:16px;display:flex;flex-direction:column;gap:12px;background:#f8fafc"><div style="display:flex;align-items:center;gap:8px"><h2 style="margin:0;font-size:16px">Asistente · lo que vale la pena mirar</h2><span style="font-size:11px;color:{MUTE};margin-left:auto">generado ahora · solo lectura · según tu rol</span></div>'
+            f'<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5">{lis}</ul>'
+            f'<div style="display:flex;gap:8px;align-items:center"><label for="ai-q" style="position:absolute;left:-9999px">Pregunta</label><input id="ai-q" placeholder="{ask}" style="{CTL};max-width:520px">{btn("Preguntar","Chatbot.html")}</div></section>')
+
 def flow(steps):
     return '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px">'+"".join((f'<li style="padding:6px 10px;border:1px solid {INK}">{st}</li>'+('<li aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
 
@@ -342,16 +403,23 @@ page("Main.html","Login",login,"Login")
 
 # 2 Home
 home=shell("Inicio","Inicio",
- kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")])+
- two(card("Pendientes de aprobación", li(["Descuento 42% · estudiante · asesor","Alta de profesor · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))),
-     card("Accesos rápidos", row(btn("Nueva venta","NuevaVenta.html",True),btn("Nuevo estudiante","NuevoEstudiante.html"),btn("Payment sheet","PaymentSheet.html"),btn("Comisiones","Comisiones.html")))),
- card("Actividad reciente (audit log)", table(["Fecha/hora","Usuario","Acción","Detalle","Sede"],[["Hoy 10:12","Carla M.","Creó venta","María Andrade · B1–B2 · 10% desc.","Quito"],["Hoy 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado","Quito"],["Ayer 17:05","Secretaría","Registró ingreso","Kids 2 Workbook × 8 · pedido #P-040","Valle"],["Ayer 15:30","Coord. Académica","Confirmó sesión","Teens A2 · 2 h · 9/10 asistencia","Ambato"]],sede=4)+row('<a href="AuditLog.html" style="font-size:13px">Ver todo el audit log</a>')),
+ only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
+ only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
+ only("ASE,SEC", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para María Andrade sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?"))+
+ only("ADM,GER,DIR,SUC,SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")]))+
+ only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
+ only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$420","$420","$0","$0"),"se paga al cobrar")]))+
+ two(only(APROBADORES, card("Pendientes de aprobación", li(["Descuento 42% · estudiante · asesor","Alta de profesor · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
+     +only("ASE,SEC", card("Mis pendientes", li(["Solicitud de descuento 42% · María Andrade · esperando a Dir. Comercial","4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
+     +only("PRO", card("Mis clases de hoy", li(["B1 Virtual · 19:00–21:00 · Zoom 2 · 12 estudiantes","Adults A2 · 18:00–20:00 · C-5 · 9 estudiantes"])+row(btn("Registrar sesión",None,True),btn("Ver mis cursos","Cursos.html")))),
+     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True))+note("Lo que ves en Inicio, en el menú y en las pestañas depende de tu rol. Cambia 'Ver como' en la barra superior para probar cada tipo de usuario."))),
+ only("ADM,GER,DIR,SUC,COO,SEC",card("Actividad reciente (audit log)", table(["Fecha/hora","Usuario","Acción","Detalle","Sede"],[["Hoy 10:12","Carla M.","Creó venta","María Andrade · B1–B2 · 10% desc.","Quito"],["Hoy 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado","Quito"],["Ayer 17:05","Secretaría","Registró ingreso","Kids 2 Workbook × 8 · pedido #P-040","Valle"],["Ayer 15:30","Coord. Académica","Confirmó sesión","Teens A2 · 2 h · 9/10 asistencia","Ambato"]],sede=4)+row('<a href="AuditLog.html" style="font-size:13px">Ver todo el audit log</a>'))),
  subtitle="Vista por rol: Gerencia, Dirección Comercial, Coordinación Académica, Asesor, Secretaría")
 page("Home.html","Inicio",home,"Inicio por rol")
 
 # 3 Estudiantes
 est=shell("Estudiantes","Estudiantes",
- filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="130px"),sel("Vista",["Alumnos activos","Alumnos inactivos","Duplicados entre sedes","Matrículas con saldo","Nuevos este mes"],w="190px",col=False),actions=btn("Nuevo estudiante",None,True)+btn("Importar / Exportar")),
+ filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="130px"),sel("Vista",["Alumnos activos","Alumnos inactivos","Duplicados entre sedes","Matrículas con saldo","Nuevos este mes"],w="190px",col=False),actions=only(COMERCIAL,btn("Nuevo estudiante",None,True),True)+only("ADM,GER,SUC,SEC",btn("Importar / Exportar"),True)),
  note("Las vistas guardadas reemplazan las de TeamDesk (Alumnos indexados activos / inactivos / x cruzar). Un nivel = 2 módulos; se muestra el nivel comercial y el módulo académico en curso."),
  table(["Nombre","Cédula","Sede","Programa","Nivel","Asesor","Estado","Acción"],[
   ["María Andrade","1712345678","Quito","Adults","B1 · módulo 7","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
@@ -371,7 +439,7 @@ page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
 # 4 Ficha 360
 ficha=shell("María Andrade","Estudiantes",
  row(kv(("Cédula","1712345678"),("Sede","Quito"),("Estado",badge("Activo","ok")),("Asesor","Carla M."),("Nivel actual","B1 · módulo 7 de 16"),("Alta","12 ene 2026"),("ID legado TeamDesk","Valle · 001-2026xxxxx")),'<div style="margin-left:auto"></div>',btn("Nueva matrícula",None,True),btn("Editar","NuevoEstudiante.html")),
- tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",{
+ tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
   "Datos": two(card("Datos personales", form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede"])),
                card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
   "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],[
@@ -389,13 +457,14 @@ ficha=shell("María Andrade","Estudiantes",
      card("Certificados emitidos", table(["Nivel","Nota","Emitido","Acción"],[["A1","80 · Pass","dic 2025",btn("Descargar PDF")],["A2","85 · Pass","jun 2026",btn("Descargar PDF")]])+row(btn("Emitir certificado"))+note("Los exámenes internacionales (tabla International Exams de TeamDesk) no están en los 11 módulos del contrato: se migran como archivo histórico y se confirma con el cliente si se gestionan aquí."))),
   "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["04 oct 10:12","Carla M.","Creó venta","Paquete B1–B2 · 10% descuento"],["04 oct 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["12 ene 11:05","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+note("Vista filtrada del audit log para este estudiante. El registro completo está en Configuración → Audit log."),
  }),
+ only("ADM,GER,DIR,SUC,COO,ASE,SEC", ai([("Lleva 4 módulos aprobados con 91% de asistencia; al ritmo actual termina B2 en junio 2027. Buen candidato para ofrecer el paquete B2–C1 antes del cierre de B1.","Nueva matrícula","NuevaVenta.html"),("Faltó 2 veces seguidas la semana pasada en B1 Virtual (antes nunca). Vale la pena un mensaje antes de que afecte el módulo.","Ver asistencia","DetalleMatricula.html"),("Su descuento del 10% fue por referido: trajo a Pedro Mora, que ya está matriculado.","Ver detalle de comisión","DetalleComision.html")],"Pregunta: ¿qué nivel le toca y cuándo abre el próximo curso?")),
  subtitle="Ficha 360°: todo lo del estudiante en una sola vista")
 page("Ficha360.html","Ficha estudiante",ficha,"Ficha 360 del estudiante")
 
 # 5 Nueva venta
 steps=["1 Estudiante","2 Niveles y curso","3 Descuento","4 Pago","5 Matrícula"]
 stepper='<div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px">'+"".join(f'<div style="padding:10px;text-align:center;font-size:13px;font-weight:600;border:2px solid {INK};background:{"#1f2937" if i==2 else "#fff"};color:{"#fff" if i==2 else INK}">{s}</div>' for i,s in enumerate(steps))+'</div>'
-venta=shell("Nueva matrícula · venta por niveles","Estudiantes",
+venta=shell("Nueva matrícula · venta por niveles","Nueva matrícula",
  stepper,
  two(card("Estudiante, niveles y curso", kv(("Estudiante","María Andrade"),("Sede","Quito"),("Asesor (vendor)","Carla M."))+table(["Nivel","Módulos","Modalidad","Precio"],[["B1","7 y 8","Virtual","$500"],["B2","9 y 10","Virtual","$500"]])+filters(sel("Curso para el primer módulo",["0001-2026-0767 · Adults B1 Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · 12/15","0001-2026-0772 · Adults B1 · Sa 09:00–13:00 · 9/12"],w="100%",col=False),sel("Plan de pago",["Contado","2 cuotas","4 cuotas"],w="140px",col=False),sel("Facturar a",["Estudiante","Empresa Andina S.A. (convenio 15%)","Clínica Valle (convenio 10%)","Otra empresa…"],w="260px",col=False))+kv(("Niveles","2 (4 módulos)"),("Precio lista","$1,000"),("Libros","B1 + B2 · $80"),("Inicio","3 nov 2026"))),
      card("Descuento", filters(sel("Descuento %",["0%","5%","10%","15%","20%"],w="120px"),sel("Motivo (obligatorio)",["Referido","Promoción","Convenio empresa","Otro"],w="220px"))+note("Hasta 10% lo aplica el asesor. Más de 10% pasa a aprobación del Director Comercial y la venta queda en espera.","warn")+row(btn("Solicitar aprobación","SolicitudDescuento.html")))),
@@ -405,10 +474,12 @@ page("NuevaVenta.html","Nueva matrícula",venta,"Nueva matrícula (venta por niv
 
 # 5b Detalle de matrícula (equivalente al Enrollment de TeamDesk, pero por paquete de niveles)
 page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-202602794","Estudiantes",
- row(kv(("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Curso",'<a href="DetalleCurso.html">0001-2026-0767 · English for Adults B1 Virtual</a>'),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","3 nov 2026"),("Fin","20 feb 2027"),("Asesor (vendor)","Carla M."),("Plan de pago","Contado"),("Estado",badge("En curso","ok"))),'<div style="margin-left:auto"></div>',btn("Cambio de curso"),btn("Enviar enlace de clase"),btn("Hoja de asistencia"),btn("Anular matrícula")),
+ row(kv(("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Curso",'<a href="DetalleCurso.html">0001-2026-0767 · English for Adults B1 Virtual</a>'),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","3 nov 2026"),("Fin","20 feb 2027"),("Asesor (vendor)","Carla M."),("Plan de pago","Contado"),("Estado",badge("En curso","ok"))),'<div style="margin-left:auto"></div>',only(COMERCIAL+",COO",btn("Cambio de curso"),True),only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True),only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True),only("ADM,GER,DIR,SUC",btn("Anular matrícula"),True)),
+ only(COMERCIAL,
  two(card("Resumen", kv(("Subtotal","$1,080"),("Descuento","-$100 (10% referido)"),("Total","$980"),("Pagado","$980"),("Saldo","$0"))+progress(50,"Paquete · módulo 7 de 10 comprados (B1–B2)")),
-     card("Cargos y descuentos", table(["Concepto","Monto","Descuento","Subtotal","Observación"],[["Matrícula (tuition fee)","$0","—","$0","—"],["Nivel B1 (módulos 7–8)","$500","10%","$450","Beneficio referido · aprobado Dir. Comercial"],["Nivel B2 (módulos 9–10)","$500","10%","$450","—"],["Libros / materiales","$80","—","$80","Empower B1+ SB + WB"]]))),
- tabs(["Facturas y pagos","Códigos de libros","Asistencia","Certificados","Comisión"],"Facturas y pagos",{
+     card("Cargos y descuentos", table(["Concepto","Monto","Descuento","Subtotal","Observación"],[["Matrícula (tuition fee)","$0","—","$0","—"],["Nivel B1 (módulos 7–8)","$500","10%","$450","Beneficio referido · aprobado Dir. Comercial"],["Nivel B2 (módulos 9–10)","$500","10%","$450","—"],["Libros / materiales","$80","—","$80","Empower B1+ SB + WB"]])))),
+ only("COO,PRO", card("Resumen académico", kv(("Paquete","B1–B2 · módulos 7 a 10"),("Módulo en curso","7"),("Asistencia","18/20 · 90%"),("Nota parcial","—"),("Estado",badge("En curso","ok")))+progress(50,"Paquete · módulo 7 de 10"))),
+ tabs(["Facturas y pagos","Códigos de libros","Asistencia","Certificados","Comisión"],"Facturas y pagos",roles={"Facturas y pagos":COMERCIAL,"Comisión":"ADM,GER,DIR,ASE"},panels={
   "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["#1234","02 oct 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
   "Códigos de libros": table(["Material","ISBN","Código de activación","Entregado","Acción"],[["Empower B1+ Intermediate Combo B SB (digital pack)","9781108961523","EMP-B1-7K2Q-••••","02 oct 2026",badge("Activado","ok")],["Empower B1+ Workbook","9781108961530","Pendiente","—",btn("Asignar código",None,False)]])+note("Los códigos de activación de material digital se compran a Books & Bits con el pedido y se asignan al estudiante al entregar el libro (hoy: 'Purchased Book Codes' en TeamDesk)."),
   "Asistencia": table(["Sesión","Fecha","Presente","Observación"],[["1","3 nov · 19:00","✓","—"],["2","4 nov · 19:00","✓","—"],["3","5 nov · 19:00","✗","Aviso previo"],["4","6 nov · 19:00","✓","—"]])+kv(("Asistencia","18/20 · 90%"),("Mínimo para aprobar","75%")),
@@ -432,7 +503,7 @@ page("Aprobaciones.html","Aprobaciones",apr,"Bandeja de aprobaciones")
 # 7 Cursos
 V='<a href="DetalleCurso.html">Ver</a>'
 cursos=shell("Cursos","Cursos",
- filters(search("Buscar","Código, nombre o profesor",w="240px"),sel("Vista",["Todos los cursos","Cursos abiertos por horario","Disponibilidad (cupos libres)","Cursos con saldos de estudiantes","Terminados sin calificar","Próximos a iniciar","Cerrados"],w="230px",col=False),sel("Programa",["Todos","Adults","Teens","Kids","Tailored"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro","(sin asignar)"],w="150px"),sel("Estado",["Todos","En curso","Por abrir","Terminado sin calificar","Cerrado"],w="200px"),actions=btn("Nuevo curso",None,True)),
+ filters(search("Buscar","Código, nombre o profesor",w="240px"),sel("Vista",["Todos los cursos","Cursos abiertos por horario","Disponibilidad (cupos libres)","Cursos con saldos de estudiantes","Terminados sin calificar","Próximos a iniciar","Cerrados"],w="230px",col=False),sel("Programa",["Todos","Adults","Teens","Kids","Tailored"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro","(sin asignar)"],w="150px"),sel("Estado",["Todos","En curso","Por abrir","Terminado sin calificar","Cerrado"],w="200px"),actions=only("ADM,GER,SUC,COO",btn("Nuevo curso",None,True),True)),
  kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Por abrir",sv(6,2,3,1),"inician en 30 días"),("Con saldos de estudiantes",sv(9,4,3,2),sv("$2,840 pendientes","$1,320","$980","$540")),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados")]),
  table(["Código","Curso","Sede","Programa","Nivel","Modalidad","Horario","Aula","Profesor","Cupo","Avance","Estado","Acción"],[
   ["0001-2026-0767","English for Adults B1 Virtual","Quito","Adults","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","Zoom 2","P. Gómez","12/15","60%",badge("En curso","ok"),V],
@@ -448,6 +519,7 @@ cursos=shell("Cursos","Cursos",
   ["0001-2025-0330","English for Teens A2","Valle","Teens","A2","Presencial","Vi 15:00–19:00","C-2","L. Vega","9/10","100%",badge("Cerrado"),V]],sede=2),
  pager(sv(58,29,18,11)),
  note("El código de curso conserva el formato de TeamDesk (0001-AAAA-NNNN) para la migración y la reconciliación. Avance = % de horas dictadas sobre el total."),
+ only("ADM,GER,SUC,COO", ai([("Adults A1 Sábados terminó hace 5 días sin calificar: 14 estudiantes no pueden matricularse en A2 y hay 3 cupos esperándolos en 0001-2026-0620.","Calificar","DetalleCurso.html"),("Dos cursos 'por abrir' en Ambato tienen menos de 5 inscritos a 2 semanas del inicio. Históricamente no abren con menos de 6.","Ver cursos de Ambato","Cursos.html"),("El aula Q-1 está al 60% de ocupación y C-2 (Valle) al 0%: el nuevo Kids 2 podría ir a C-2 el sábado.","Ver aulas","Configuracion.html")],"Pregunta: ¿qué cursos abren en noviembre y cuántos libros necesitan?")),
  subtitle="Programa, nivel, modalidad, horario y aula por sede")
 page("Cursos.html","Cursos",cursos,"Listado de cursos")
 
@@ -457,7 +529,7 @@ det=shell("0001-2026-0767 · English for Adults B1 Virtual · Quito","Cursos",
  progress(60,"Avance del curso · 22 de 36 horas dictadas · termina en 7 semanas"),
  two(card("Profesor asignado", kv(("Profesor",'<a href="FichaProfesor.html">P. Gómez</a>'),("Contrato",badge("Activo hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Horas en este curso","22 h · $154"))+filters(sel("Cambiar profesor",["P. Gómez","L. Vega","M. Castro","R. Salas (contrato vencido)"],w="260px"),actions=btn("Cambiar",None,False,"Si el nuevo profesor no tiene contrato activo, el cambio queda pendiente de aprobación de Coordinación."))+note("Cambiar profesor valida contrato activo. Si no lo tiene, la asignación va a la bandeja de aprobaciones.")),
      card("Sesiones", table(["Fecha","Horas","Registro"],[["01 oct","2","Automático"],["03 oct","2","Manual"],["06 oct","2","Pendiente"]]))),
- card("Estudiantes matriculados", filters(sel("Mostrar",["Todos","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=btn("Calificar curso",None,True)+btn("Exportar"))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Teléfono contacto","Nota","Estado","Acción"],[
+ card("Estudiantes matriculados", filters(sel("Mostrar",["Todos","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only(ACADEMICO,btn("Calificar curso",None,True),True)+only("ADM,GER,DIR,SUC,COO",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Teléfono contacto","Nota","Estado","Acción"],[
   ["001-202602794",'<a href="Ficha360.html">María Andrade</a>',"90%","$230","$230","$0","099 000 0001","—",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602846",'<a href="Ficha360.html">Pedro Mora</a>',"85%","$230","$122","$108","099 000 0002","—",badge("Saldo pendiente","warn"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602860",'<a href="Ficha360.html">Valeria Cedeño</a>',"70%","$230","$230","$0","099 000 0003","—",badge("Riesgo asistencia","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
@@ -467,14 +539,16 @@ page("DetalleCurso.html","Detalle curso",det,"Detalle de curso y sesiones")
 
 # 9 Profesores
 prof=shell("Profesores","Profesores",
- filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Pendiente de aprobación","Inactivo"],w="200px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")),
- table(["Profesor","Sede","Contrato","Tarifa/h","Cursos activos","Estado","Acción"],[
-  ["P. Gómez","Quito","Por horas · vigente","$7.00","3",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["L. Vega","Valle","Por horas · vigente","$6.50","2",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["R. Salas","Ambato","Vencido","$5.70","0",badge("Inactivo","bad"),'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["M. Castro","Ambato","Por horas · vigente","$6.50","2",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["S. Jiménez","Quito","Nómina","—","4",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["D. Paredes","Valle","Por horas · pendiente","$6.00","0",badge("Pendiente de aprobación","warn"),'<a href="FichaProfesor.html">Ver ficha</a>']],sede=1),
+ filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Pendiente de aprobación","Inactivo"],w="200px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),sel("Vista",["Todos","Dictando ahora","Con horas libres","Sin contrato vigente"],w="170px",col=False),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")),
+ kpis([("Profesores activos",sv(36,18,11,7),"de 100 registrados"),("Dictando ahora",sv(5,3,1,1),"sesiones en curso"),("Horas esta semana",sv(412,210,124,78),"programadas"),("Sin contrato vigente con clases",sv(1,0,0,1),"bloquea pago")]),
+ table(["Profesor","Sede","Contrato","Tarifa/h","Cursos activos","Clases hoy","Horas / semana","Asistencia de sus cursos","Estado","Acción"],[
+  ["P. Gómez","Quito","Por horas · vigente","$7.00","3","2 · B1 Virtual 19:00, A2 18:00","14 h","88%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  ["L. Vega","Valle","Por horas · vigente","$6.50","2","1 · Kids 2 Tarde 15:00","10 h","91%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  ["R. Salas","Ambato","Vencido","$5.70","0","—","0 h","—",badge("Inactivo","bad"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  ["M. Castro","Ambato","Por horas · vigente","$6.50","2","1 · Kids 1 Mañana 16:00","8 h","84%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  ["S. Jiménez","Quito","Nómina","—","4","2 · A1 Sábados, B2 Intensivo","20 h","93%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  ["D. Paredes","Valle","Por horas · pendiente","$6.00","0","—","0 h","—",badge("Pendiente de aprobación","warn"),'<a href="FichaProfesor.html">Ver perfil</a>']],sede=1),
+ ai([("Teens B1 Virtual (Valle) abre en 2 semanas sin profesor. P. Gómez dicta B1 Virtual en Quito con 88% de asistencia y tiene libres Lu-Ma-Mi-Ju 17:00–19:00.","Ver perfil","FichaProfesor.html"),("S. Jiménez está en 20 h/semana, el máximo de su contrato de nómina. No asignarle el curso nuevo de sábado.","Ver carga","FichaProfesor.html"),("R. Salas tiene contrato vencido y 8 h registradas este mes: la payment sheet no se puede aprobar hasta renovar o anular esas sesiones.","Renovar contrato","AltaProfesor.html")],"Pregunta: ¿quién puede cubrir Kids 2 Tarde el miércoles?"),
  card("Alta de profesor (flujo)", flow(["Formulario de alta","Pendiente de aprobación","Dirección aprueba","Puede recibir cursos","Aparece en payment sheet"])+note("Nadie puede crear un profesor que cobre sin pasar por aprobación. Hoy hay 1 alta pendiente (D. Paredes).")),
  subtitle="Nadie crea un profesor que pueda cobrar sin aprobación (el caso del profesor falso)")
 page("Profesores.html","Profesores",prof,"Listado de profesores")
@@ -521,7 +595,7 @@ page("Reportes.html","Reportes",rep,"Reportes y dashboards")
 
 
 # 13 Usuarios y roles
-page("Usuarios.html","Usuarios",shell("Usuarios y roles","Configuración",
+page("Usuarios.html","Usuarios",shell("Usuarios y roles","Usuarios y roles",
  filters(search("Buscar","Nombre o email",w="260px"),sel("Rol",["Todos","Administrador General","Gerente General","Director Comercial","Administrador de Sucursal","Coordinador Académico","Asesor Comercial","Secretaría","Profesor (consulta)"],w="220px"),sel("Estado",["Todos","Activo","Inactivo"],w="130px"),actions=btn("Nuevo usuario",None,True)),
  table(["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Diego R.","Asesor Comercial","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Sofía L.","Asesor Comercial","Ambato","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Dir. Comercial","Director Comercial","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Secretaría Ambato","Secretaría","Ambato","Inactivo",'<a href="NuevoUsuario.html">Editar</a>'],["Admin. Sucursal Valle","Administrador de Sucursal","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Gerencia","Gerente General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
  note("Los empleados de TeamDesk (tabla Employees: p. ej. 'Administrador de Sucursal') se migran como usuarios con rol; los datos personales del empleado (cédula, teléfono, cumpleaños) quedan en su ficha de usuario, no en una tabla aparte."),
@@ -529,7 +603,7 @@ page("Usuarios.html","Usuarios",shell("Usuarios y roles","Configuración",
  subtitle="RBAC: roles, permisos por acción y visibilidad multi-sede"),"Usuarios y roles")
 
 # 14 Audit log
-page("AuditLog.html","Audit log",shell("Audit log","Configuración",
+page("AuditLog.html","Audit log",shell("Audit log","Audit log",
  filters(sel("Usuario",["Todos","Estefanía","Carla M.","Dir. Comercial","Secretaría","Coord. Académica"],w="160px"),sel("Acción",["Todas","Creó","Modificó","Aprobó","Rechazó","Exportó","Eliminó"],w="130px"),sel("Entidad",["Todas","Estudiante","Factura","Descuento","Profesor","Tarifa","Curso","Inventario"],w="140px"),dates(),actions=btn("Exportar log")),
  table(["Fecha/hora","Usuario","Acción","Entidad","Detalle","IP / sede"],[["04 oct 10:12","Carla M.","Creó","Estudiante","María Andrade","Quito"],["04 oct 09:40","Dir. Comercial","Aprobó","Descuento","42% → rechazado, 10% aprobado","Quito"],["03 oct 17:05","Secretaría","Exportó","Estudiantes","120 registros (filtro Valle)","Valle"],["03 oct 15:30","Estefanía","Modificó","Tarifa","P. Gómez $6.50 → $7.00","Quito"],["03 oct 11:20","Coord. Académica","Creó","Curso","Teens B1 Virtual · Valle","Valle"],["02 oct 16:45","Carla M.","Rechazó","Descuento","Solicitud 30% · Luis Torres (retirada)","Quito"],["02 oct 10:05","Secretaría","Modificó","Inventario","Traslado 3 × Adults B1 Quito → Valle","Valle"],["01 oct 09:30","Dir. Comercial","Aprobó","Profesor","M. Castro · $6.50/h","Ambato"],["30 sep 18:00","Estefanía","Eliminó","Curso","Kids 1 Tarde (sin inscritos)","Ambato"]],sede=5),
  pager(sv("4,120","2,210","1,180","730"),50),
@@ -589,7 +663,7 @@ page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
 
 # 19 Sesiones
 cal="".join(f'<div style="border:1px solid {LINE};min-height:90px;padding:6px;font-size:12px"><b>{d}</b><br>{c}</div>' for d,c in [("Lun 5","B1 Virtual 18:00<br>Kids 2 15:00"),("Mar 6","Teens A2 16:00"),("Mié 7","B1 Virtual 18:00<br>Kids 2 15:00"),("Jue 8","Teens A2 16:00"),("Vie 9","B1 Virtual 18:00"),("Sáb 10","Intensivo A1 09:00"),("Dom 11","")])
-page("Sesiones.html","Sesiones",shell("Registro de sesiones","Cursos",
+page("Sesiones.html","Sesiones",shell("Registro de sesiones","Sesiones",
  filters(sel("Semana",["5–11 oct 2026","28 sep–4 oct 2026","12–18 oct 2026"],w="190px",col=False),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro"],w="160px"),sel("Origen",["Todos","Automática (Moodle)","Manual"],w="170px"),sel("Estado",["Todas","Confirmada","Pendiente","No dictada"],w="140px"),actions=kv(("Confirmadas","4"),("Pendientes","3"),("No dictadas","1"))+btn("Registrar sesión manual",None,True)),
  table(["Fecha","Curso","Sede","Profesor","Horas","Origen","Estado"],[["Lun 5 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Lun 5 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("Confirmada","ok")],["Mar 6 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Confirmada","ok")],["Mié 7 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Confirmada","ok")],["Mié 7 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("No dictada","bad")],["Jue 8 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Pendiente","warn")],["Vie 9 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Sáb 10 · 09:00","Intensivo A1","Quito","L. Vega","4","Manual",badge("Confirmada","ok")]],sede=2),
  card("Calendario de la semana", f'<div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px">{cal}</div>'),
@@ -599,12 +673,17 @@ page("Sesiones.html","Sesiones",shell("Registro de sesiones","Cursos",
 
 # 20 Ficha profesor
 page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
- row(kv(("Cédula","1709876543"),("Contrato",badge("Por horas · vigente hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Sedes","Quito y Valle"),("Cursos activos","3"),("Horas del mes","48")),'<div style="margin-left:auto"></div>',btn("Editar","AltaProfesor.html"),btn("Ver payment sheet","PaymentSheet.html")),
- tabs(["Datos","Contrato y tarifa","Cursos","Sesiones","Historial de pagos"],"Contrato y tarifa",{
+ row(kv(("Cédula","1709876543"),("Contrato",badge("Por horas · vigente hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Sedes","Quito y Valle"),("Especialidad","Adults · B1–C1 · certificación CELTA"),("Desde","feb 2024")),'<div style="margin-left:auto"></div>',only("ADM,GER,SUC,COO",btn("Editar","AltaProfesor.html"),True),only("ADM,GER,SUC,COO",btn("Ver payment sheet","PaymentSheet.html"),True),only("ADM,GER,SUC,COO",btn("Asignar a curso",None,False,"Se elige un curso sin profesor compatible con su disponibilidad; si el contrato no está vigente la asignación va a aprobación."),True)),
+ kpis([("Dictando ahora","B1 Virtual · Zoom 2","19:00–21:00 · 12 estudiantes conectados"),("Horas esta semana","14 h","de 20 h máx. del contrato"),("Asistencia de sus cursos","88%","promedio últimas 4 semanas"),("Aprobación (pass)","94%","últimos 3 módulos cerrados")]),
+ tabs(["Agenda y carga","Datos","Contrato y tarifa","Cursos","Sesiones","Historial de pagos"],"Agenda y carga",roles={"Contrato y tarifa":"ADM,GER,DIR,SUC,COO","Historial de pagos":"ADM,GER,SUC,COO"},panels={
+  "Agenda y carga": two(card("Clases de hoy · martes 6 oct", table(["Hora","Curso","Sede / aula","Estudiantes","Sesión"],[["18:00–20:00","0001-2026-0620 · Adults A2","Valle · C-5","9/12",badge("Confirmada","ok")],["19:00–21:00","0001-2026-0767 · Adults B1 Virtual","Quito · Zoom 2","12/15",badge("En curso ahora","warn")]])+note("Mañana: B1 Virtual 19:00. Jueves: A2 18:00 y B1 Virtual 19:00. Sábado libre.")),
+     card("Carga semanal (horas)", vbars([("Lu",[4]),("Ma",[4]),("Mi",[2]),("Ju",[4]),("Vi",[0]),("Sa",[0])],["Horas dictadas"],h=120)+kv(("Total","14 h"),("Máximo contrato","20 h"),("Disponible","Lu-Ma-Mi-Ju 17:00–19:00 · Vi · Sa"))))
+     +card("Cursos que dicta ahora", table(["Código","Curso","Sede","Horario","Aula","Estudiantes","Asistencia","Avance","Termina"],[["0001-2026-0767","English for Adults B1 Virtual","Quito","Lu-Ma-Mi-Ju 19:00–21:00","Zoom 2","12/15","90%","60%","20 nov"],["0001-2026-0620","English for Adults A2","Valle","Lu-Mi 18:00–20:00","C-5","9/12","85%","59%","5 dic"],["0001-2026-0772","English for Teens B1 Virtual (propuesto)","Valle","Lu-Ma-Mi-Ju 17:00–19:00","Teams 1","6/12","—","—","inicia 20 oct"]],sede=2))
+     +ai([("Su asistencia promedio (88%) está 4 puntos sobre el promedio de la sede; el módulo 7 de B1 Virtual va al día con el programa.","Ver curso","DetalleCurso.html"),("Tiene 6 h libres entre semana a las 17:00: puede tomar Teens B1 Virtual sin pasar las 20 h del contrato.","Asignar","NuevoCurso.html"),("Registró 2 sesiones manuales fuera de horario en septiembre; Coordinación debe confirmarlas antes del cierre de la payment sheet.","Ver sesiones","Sesiones.html")],"Pregunta: ¿cuántas horas lleva este mes y cuánto suma su payment sheet?"),
   "Datos": form(["Nombres y apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Sede(s)","Especialidad / certificaciones","Estado"])+row(btn("Guardar cambios",None,True)),
   "Contrato y tarifa": two(card("Contrato", kv(("Tipo","Por horas"),("Tarifa","$7.00/h"),("Vigencia","1 ene – 31 dic 2026"),("Aprobado por","Dirección · 10 ene 2026"),("Modalidades","Virtual y presencial"))+table(["Documento","Subido por","Fecha"],[["contrato_pgomez_2026.pdf","Coord. Académica","8 ene 2026"],["cedula_pgomez.pdf","Coord. Académica","8 ene 2026"]])),
      card("Historial de contratos", table(["Vigencia","Tipo","Tarifa","Aprobó"],[["2026","Por horas","$7.00/h","Dirección"],["2025","Por horas","$6.50/h","Dirección"]]))),
-  "Cursos": table(["Curso","Sede","Nivel","Modalidad","Horario","Estudiantes","Estado"],[["Adults B1 Virtual","Quito","B1","Virtual","L-M-V 19:00","12","En curso"],["Adults A2","Valle","A2","Presencial","M-J 17:00","9","En curso"],["Adults A1","Quito","A1","Presencial","S 09:00","14","Cerrado"]])+row(btn("Ver cursos","Cursos.html")),
+  "Cursos": table(["Código","Curso","Sede","Nivel","Modalidad","Horario","Estudiantes","Asistencia","Pass","Estado"],[["0001-2026-0767","English for Adults B1 Virtual","Quito","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","12","90%","—",badge("En curso","ok")],["0001-2026-0620","English for Adults A2","Valle","A2","Presencial","Lu-Mi 18:00–20:00","9","85%","—",badge("En curso","ok")],["0001-2026-0512","English for Adults A2","Quito","A2","Presencial","Lu-Mi 18:00–20:00","11","92%","100%",badge("Cerrado")],["0001-2025-0430","English for Adults A1","Quito","A1","Presencial","Sa 09:00–13:00","14","88%","93%",badge("Cerrado")],["0001-2025-0210","English for Adults B1","Quito","B1","Presencial","Ma-Ju 19:00–21:00","10","86%","90%",badge("Cerrado")]],sede=2)+kv(("Cursos dictados","5"),("Estudiantes acumulados","56"),("Pass promedio","94%"))+row(btn("Ver cursos","Cursos.html")),
   "Sesiones": table(["Fecha","Curso","Duración","Origen","Estado"],[["03 oct","Adults B1 Virtual","2 h","Automática (Moodle)","Confirmada"],["02 oct","Adults A2","2 h","Manual","Confirmada"],["01 oct","Adults B1 Virtual","2 h","Automática (Moodle)","Pendiente"]])+row(btn("Registrar sesión","Sesiones.html",True)),
   "Historial de pagos": table(["Mes","Horas","Tarifa","Monto","Estado","Acción"],[["Oct 2026","48","$7.00","$336","Borrador",btn("Ver","PaymentSheet.html")],["Sep 2026","44","$7.00","$308","Pagado",btn("Ver","PaymentSheet.html")],["Ago 2026","40","$7.00","$280","Pagado",btn("Ver","PaymentSheet.html")]]),
  }),
@@ -642,7 +721,7 @@ page("DetalleFactura.html","Detalle factura",shell("Factura #1234","Facturación
  subtitle="Factura consolidada con su trazabilidad completa"),"Detalle de factura")
 
 # 24 Solicitud de descuento
-page("SolicitudDescuento.html","Solicitud de descuento",shell("Solicitud de descuento","Facturación",
+page("SolicitudDescuento.html","Solicitud de descuento",shell("Solicitud de descuento","Nueva matrícula",
  f'<div style="max-width:640px;border:2px solid {INK};padding:24px;display:flex;flex-direction:column;gap:16px">'+kv(("Venta","María Andrade · B1 + B2"),("Precio lista","$1,000"),("Asesor","Carla M."))+form(["Descuento solicitado (%)","Monto resultante"])+form(["Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)"],1)+form(["Justificación"],1)+note("Más de 10% requiere aprobación del Director Comercial. El asesor ve el estado de su solicitud en Notificaciones.","warn")+row(btn("Cancelar","NuevaVenta.html"),btn("Enviar solicitud","Aprobaciones.html",True))+'</div>',
  subtitle="Reemplaza el campo 'Reason' opcional de TeamDesk"),"Solicitud de descuento")
 
@@ -677,7 +756,7 @@ page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
  subtitle="Reemplaza el email diario de notify@teamdesk con alertas inteligentes"),"Inventario de libros")
 
 # 28 Movimientos
-page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Inventario",
+page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos y pedidos",
  tabs(["Ingresos de proveedor","Movimientos","Pedidos a proveedor","Códigos de activación","Notas de crédito"],"Ingresos de proveedor",{
   "Ingresos de proveedor": filters(search("Buscar","Nº de factura del proveedor",w="220px"),sel("Proveedor",["Todos","Books & Bits","Otro"],w="150px"),sel("Estado",["Todos","Recibido","Con pendientes"],w="150px"),dates(),actions=btn("Registrar ingreso de proveedor",None,True))+table(["Fecha","Ingreso","Factura proveedor","Proveedor","Sede","Ítems","Total","Libros pendientes","Códigos pendientes","Comprobante","Estado"],[
      ["04 oct","IM202610-02","000815787","Books & Bits","Valle","4","$145.30","0","0","comprobante_books_and_bits_2026-10-04.pdf",badge("Recibido","ok")],
@@ -704,7 +783,7 @@ page("ConstructorReportes.html","Reportes self-service",shell("Constructor de re
  subtitle="El reporte que hoy hay que pedirle al desarrollador, en minutos"),"Constructor de reportes")
 
 # 30 Dashboard ejecutivo
-page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Reportes",
+page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Dashboard ejecutivo",
  rep_tabs("Dashboard ejecutivo"),
  filters(sel("Período",["2026 (ene–oct)","2025","Último trimestre"],w="170px"),sel("Comparar con",["2025","Sin comparación"],w="160px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px")),
  kpis([("Ingresos YTD",sv("$386,400","$204,800","$116,900","$64,700"),"+12% vs 2025"),("Estudiantes activos",sv(812,420,230,162),"+3% vs 2025"),("Ticket promedio por paquete",sv("$915","$940","$890","$880"),"2.1 niveles por venta"),("Margen por sede",sv("34%","38%","31%","27%"),"después de profesores y libros")]),
@@ -724,7 +803,7 @@ page("Chatbot.html","Asistente interno",shell("Asistente interno","Inicio",chat,
  subtitle="Consulta ágil para el equipo, sin armar un reporte"),"Asistente interno")
 
 # 32 Integraciones
-page("Integraciones.html","Integraciones",shell("Integraciones","Configuración",
+page("Integraciones.html","Integraciones",shell("Integraciones","Integraciones",
  table(["Sistema","Uso","Estado","Última sincronización","Acción"],[["Kommo (CRM)","Leads → estudiantes","Conectado","Hoy 09:00",btn("Configurar")],["Moodle (LMS)","Matrícula → curso virtual · notas y asistencia","Pendiente de API del proveedor","—",btn("Configurar")],["Dora","Por definir con el cliente","Pendiente","—",btn("Configurar")],["Microsoft 365 (Teams / cuentas)","Enlace de clase virtual y cuenta del estudiante","Fuera del contrato · se evalúa en Fase 1","—",btn("Configurar")],["Email / WhatsApp (plantillas)","Notificaciones a estudiantes (enlace de clase, saldos)","Plantillas migradas de TeamDesk","—",btn("Configurar")]]),
  note("Las tablas 'Microsoft Accounts', 'Email Templates', 'Companies' y 'Portfolio' de TeamDesk no están en los 11 módulos del contrato. Se migran como datos y su gestión se confirma con el cliente (Cláusula Tercera, 3.2)."),
  two(card("API keys y webhooks", table(["Clave","Sistema","Creada","Último uso","Estado"],[["kommo-prod-••••7f2a","Kommo","12 ene","Hoy 09:00",badge("Activa","ok")],["moodle-test-••••91c0","Moodle","20 sep","—",badge("Pendiente","warn")]])+table(["Webhook","Evento","URL"],[["Nuevo lead","lead.created","https://api.cambridge.../kommo"],["Matrícula","enrollment.created","https://moodle.cambridge.../enrol"]])+row('<a href="#" style="font-size:13px">Documentación OpenAPI</a>')), card("Log de sincronización", table(["Fecha","Sistema","Resultado"],[["04 oct","Kommo","12 leads importados"],["03 oct","Kommo","1 error: email duplicado"]]))),
@@ -752,7 +831,7 @@ rec=f'''<div style="min-height:{H}px;display:flex;align-items:center;justify-con
 page("RecuperarContrasena.html","Recuperar contraseña",rec,"Recuperar contraseña")
 
 # 35 Registrar sesión manual
-page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual","Cursos",
+page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual","Sesiones",
  form(["Curso","Profesor (se valida contrato activo)","Fecha","Hora inicio","Hora fin","Horas (calculado)","Modalidad","Aula / enlace"]),
  card("Asistencia", table(["Estudiante","Presente","Observación"],[["María Andrade","☑","—"],["Juan Pérez","☑","—"],["Luis Torres","☐","Aviso previo"]])),
  note("Si la fecha u hora no coinciden con el horario del curso, la sesión se marca 'fuera de horario' y pide confirmación de Coordinación.","warn"),
@@ -775,21 +854,21 @@ page("NotaCredito.html","Nota de crédito",shell("Nueva nota de crédito","Factu
  subtitle="Toda devolución o cambio deja rastro contable"),"Nota de crédito")
 
 # 38 Registrar movimiento de inventario
-page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Inventario",
+page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Movimientos y pedidos",
  form(["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
  note("Una salida sin factura o curso vinculado pide justificación y se marca para revisión.","warn"),
  row(btn("Cancelar","Movimientos.html"),btn("Registrar movimiento",None,True,"Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario.","Movimientos.html")),
  subtitle="Reemplaza los ajustes a mano en TeamDesk"),"Registrar movimiento")
 
 # 39 Nuevo pedido a proveedor
-page("NuevoPedido.html","Nuevo pedido",shell("Nuevo pedido a proveedor","Inventario",
+page("NuevoPedido.html","Nuevo pedido",shell("Nuevo pedido a proveedor","Movimientos y pedidos",
  form(["Proveedor (Books & Bits)","Sede destino","Fecha estimada de entrega"]),
  card("Ítems", table(["Libro","Stock actual","Comprometido","Sugerido","Cantidad a pedir"],[["Adults B1 Student Book","-2","5","6","6"],["Kids 2 Workbook","-1","4","4","4"],["Teens A2","5","3","—","0"]])+note("Sugerido = comprometido por cursos que abren − stock disponible.")),
  row(btn("Cancelar","Movimientos.html"),btn("Enviar pedido",None,True,"El pedido queda En camino y se notifica a Secretaría de la sede para registrar el ingreso cuando llegue.","Movimientos.html")),
  subtitle="Pedido con cantidades sugeridas por el forecast de cursos"),"Nuevo pedido a proveedor")
 
 # 40 Nuevo usuario
-page("NuevoUsuario.html","Nuevo usuario",shell("Nuevo usuario","Configuración",
+page("NuevoUsuario.html","Nuevo usuario",shell("Nuevo usuario","Usuarios y roles",
  form(["Nombres y apellidos","Email","Rol (Admin / Dir. Comercial / Coord. Académica / Asesor / Secretaría / Profesor)","Sedes visibles","Estado","2FA obligatorio (sí / no)"]),
  card("Permisos del rol elegido", li(["Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede","No puede: aprobar profesores, exportar base completa, ver otras sedes"])+note("La matriz completa se edita en Usuarios y roles → Matriz de permisos.")),
  row(btn("Cancelar","Usuarios.html"),btn("Guardar usuario",None,True,"Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log.","Usuarios.html")),
@@ -817,20 +896,17 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
  subtitle="Las reglas de negocio viven en configuración, no en código"),"Nueva regla de aprobación")
 
 rows=[
- ("Acceso y navegación",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. Las notificaciones y el asistente son transversales y acompañan todos los flujos."),
- ("Estudiantes",[("Estudiantes.html","Listado"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar")],"Buscar o crear estudiante → ficha 360° con matrículas, niveles, facturas y archivos. Importación con validación de duplicados, exportación auditada."),
- ("Flujo comercial",[("NuevaVenta.html","Nueva matrícula (venta por niveles)"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación." if HIDDEN else "Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → una factura consolidada con su estado de cobro, pagos y notas de crédito."),
- ("Flujo académico",[("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual")],"Curso con profesor validado → sesiones registradas (automáticas o manuales) → alimentan progreso del estudiante y payment sheet."),
- ("Flujo profesores",[("Profesores.html","Profesores"),("AltaProfesor.html","Alta con aprobación"),("FichaProfesor.html","Ficha del profesor"),("PaymentSheet.html","Payment sheet")],"Alta pasa por aprobación antes de poder cobrar. Payment sheet = sesiones × tarifa, comparada contra la factura del profesor."),
- ("Comisiones",[("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Cierre de mes: cálculo automático por reglas configurables (draft → revisión → aprobado), con detalle por asesor."),
- ("Inventario",[("Inventario.html","Stock por sede"),("Movimientos.html","Movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede, pedidos a Books & Bits, ingresos, movimientos y notas de crédito vinculadas a cursos y facturas."),
- ("Reportes y dashboards",[("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería operativa self-service y vista gerencial separada."),
- ("Administración y gobierno",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones")],"RBAC, catálogos y reglas configurables, trazabilidad completa e integraciones con Kommo, Moodle y Dora."),
+ ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
+ ("Académico · Coordinación, profesores, secretaría",[("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta con aprobación"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
+ ("Comercial · Asesores, Dirección Comercial, secretaría",[("NuevaVenta.html","Nueva matrícula (venta por niveles)"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
+ ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
+ ("Dirección · Gerencia, Dirección Comercial",[("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
+ ("Administración · Administrador General",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones")],"RBAC, catálogos (sedes, aulas, programas, productos, empresas), reglas configurables, trazabilidad completa e integraciones."),
 ]
-sec=""
-N=0
 rows=[(t,[(f,n) for f,n in files if f not in HIDDEN],d) for t,files,d in rows]
 rows=[r for r in rows if r[1]]
+sec=""
+N=0
 TOTAL=sum(len(f) for _,f,_ in rows)
 for t,files,desc in rows:
     cards=""
@@ -850,7 +926,7 @@ idx=f'''<!doctype html>
 <body class="hub">
 <header class="hub-head">
 <h1>Plataforma Cambridge · Wireframes</h1>
-<p>Versión de alto nivel para validar el flujo, no el diseño. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar. El selector de sede de la barra superior filtra cifras y tablas.</p>
+<p>Versión de alto nivel para validar el flujo, no el diseño. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar. El selector de sede filtra cifras y tablas, y 'Ver como' cambia el tipo de usuario: menú, pestañas y accesos cambian según el rol.</p>
 </header>
 {sec}
 <footer class="hub-foot">Orkesta · Cambridge School of Languages · Fase 0 Discovery y Diseño</footer>

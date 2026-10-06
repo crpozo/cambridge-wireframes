@@ -4,6 +4,8 @@ Todas comparten la misma **shell**: barra superior con nombre de la plataforma, 
 
 Formato: **archivo** · qué muestra · de dónde se llega / a dónde va.
 
+El hub y el menú lateral están agrupados por áreas (Académico, Comercial, Inventario, Dirección, Administración) y cada ítem se muestra según el tipo de usuario elegido en "Ver como".
+
 Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pantalla; los botones de acción (guardar, aprobar, rechazar, exportar, confirmar…) abren un diálogo que explica qué pasaría al confirmar y, si aplica, llevan a la siguiente pantalla.
 
 ## Acceso y navegación
@@ -34,7 +36,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 ## Flujo profesores (M4)
 18. **Profesores.html · Listado**. Contrato, tarifa, cursos activos, estado. Alta de profesor y acceso a payment sheet. → AltaProfesor, FichaProfesor, PaymentSheet.
 19. **AltaProfesor.html · Alta con aprobación**. Datos, contrato, tarifa, vigencia, archivo firmado. Queda "pendiente de aprobación" hasta que Dirección apruebe; recién entonces puede recibir cursos y pagos. → Aprobaciones.
-20. **FichaProfesor.html**. Tabs: Datos, Contrato y tarifa, Cursos, Sesiones, Historial de pagos. → PaymentSheet.
+20. **FichaProfesor.html · Perfil del profesor**. KPIs (dictando ahora, horas de la semana vs. contrato, asistencia de sus cursos, pass), tabs: Agenda y carga (clases de hoy, carga semanal, cursos que dicta, asistente), Datos, Contrato y tarifa, Cursos (histórico con asistencia y pass), Sesiones, Historial de pagos. Acción Asignar a curso. → PaymentSheet, DetalleCurso.
 21. **PaymentSheet.html**. Mes, sede, estado (borrador/aprobado). Por profesor: sesiones, horas, tarifa, a pagar, factura del profesor, alerta de diferencia o contrato vencido. Aprobar pagos, exportar.
 
 ## Comisiones (M6)
