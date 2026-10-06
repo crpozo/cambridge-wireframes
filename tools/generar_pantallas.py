@@ -58,8 +58,13 @@ def btn(label, href=None, primary=False, action=None, next=None):
     nx=f' data-next="{next}"' if next else ""
     return f'<button type="button" data-action="{action}"{nx} style="{st}">{label}</button>'
 
+# Pantallas ocultas: se generan (los enlaces siguen funcionando) pero no aparecen en el menú ni en el hub.
+# Para volver a mostrar Facturación, vaciar este set.
+HIDDEN={"Facturas.html","DetalleFactura.html","RegistrarPago.html","NotaCredito.html"}
+
 def nav(active):
     items=[("Inicio","Home.html"),("Estudiantes","Estudiantes.html"),("Cursos","Cursos.html"),("Profesores","Profesores.html"),("Facturación","Facturas.html"),("Comisiones","Comisiones.html"),("Inventario","Inventario.html"),("Reportes","Reportes.html"),("Aprobaciones","Aprobaciones.html"),("Configuración","Configuracion.html")]
+    items=[(n,h) for n,h in items if h not in HIDDEN]
     out=""
     for n,h in items:
         st=f"display:block;padding:12px 16px;font-size:14px;text-decoration:none;color:{INK};"
@@ -744,7 +749,7 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
 rows=[
  ("Acceso y navegación",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. Las notificaciones y el asistente son transversales y acompañan todos los flujos."),
  ("Estudiantes",[("Estudiantes.html","Listado"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("ImportExport.html","Importar / exportar")],"Buscar o crear estudiante → ficha 360° con niveles, facturas y archivos. Importación con validación de duplicados, exportación auditada."),
- ("Flujo comercial",[("NuevaVenta.html","Nueva venta por niveles"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → una factura consolidada con su estado de cobro, pagos y notas de crédito."),
+ ("Flujo comercial",[("NuevaVenta.html","Nueva venta por niveles"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación." if HIDDEN else "Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → una factura consolidada con su estado de cobro, pagos y notas de crédito."),
  ("Flujo académico",[("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual")],"Curso con profesor validado → sesiones registradas (automáticas o manuales) → alimentan progreso del estudiante y payment sheet."),
  ("Flujo profesores",[("Profesores.html","Profesores"),("AltaProfesor.html","Alta con aprobación"),("FichaProfesor.html","Ficha del profesor"),("PaymentSheet.html","Payment sheet")],"Alta pasa por aprobación antes de poder cobrar. Payment sheet = sesiones × tarifa, comparada contra la factura del profesor."),
  ("Comisiones",[("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Cierre de mes: cálculo automático por reglas configurables (draft → revisión → aprobado), con detalle por asesor."),
@@ -754,6 +759,8 @@ rows=[
 ]
 sec=""
 N=0
+rows=[(t,[(f,n) for f,n in files if f not in HIDDEN],d) for t,files,d in rows]
+rows=[r for r in rows if r[1]]
 TOTAL=sum(len(f) for _,f,_ in rows)
 for t,files,desc in rows:
     cards=""

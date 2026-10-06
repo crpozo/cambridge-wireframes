@@ -29,6 +29,7 @@ docs/                   documentación de contexto
 - Botones y enlaces deben apuntar a la siguiente pantalla del flujo (no dejar `href` rotos; verificar con el grep del final).
 - Ningún botón queda muerto. `btn(label, href)` navega. `btn(label)` sin href busca la etiqueta en el dict `ACTIONS`: si el valor es un `.html` navega; si es `(descripción, siguiente)` abre el diálogo de confirmación (inyectado en `page()`) que explica qué pasaría y, tras confirmar, muestra un toast y navega a `siguiente` si lo hay. También se puede pasar `btn(label, None, primary, action="…", next="X.html")`. Una etiqueta nueva sin entrada en `ACTIONS` hace fallar el generador a propósito.
 - El hub (`rows`) numera solo; toda pantalla nueva debe estar en `rows`.
+- Pantallas ocultas: el set `HIDDEN` del generador (hoy: el módulo de Facturación: Facturas, DetalleFactura, RegistrarPago, NotaCredito) quita esas pantallas del menú lateral y del hub, pero se siguen generando para que ningún enlace se rompa. Para volver a mostrarlas, vaciar el set.
 - Accesibilidad mínima aunque sea wireframe: `<button>`, `<a href>`, `<input>` con `<label>`.
 - No inventar funcionalidades fuera del contrato (Cláusula Tercera). Si algo no está en los 11 módulos, va como "fuera de alcance" o se pregunta.
 
@@ -36,7 +37,7 @@ docs/                   documentación de contexto
 ```
 python3 tools/generar_pantallas.py
 grep -o 'href="[A-Za-z0-9]*\.html"' *.html | sed 's/.*href="//;s/"//' | sort -u | while read f; do [ -f "$f" ] || echo "ROTO $f"; done
-for f in *.html; do grep -q "href=\"$f\"" index.html || echo "FUERA DEL HUB $f"; done   # solo debe listar index.html
+for f in *.html; do grep -q "href=\"$f\"" index.html || echo "FUERA DEL HUB $f"; done   # solo debe listar index.html y las de HIDDEN
 ```
 
 ## Publicación
