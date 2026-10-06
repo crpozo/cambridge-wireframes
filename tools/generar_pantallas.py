@@ -119,15 +119,35 @@ def page(fname, title, inner, lang_title):
   }});
 }})();
 (function(){{
-  var sel=document.getElementById('sede'); if(!sel) return;
-  function apply(v){{
+  var sel=document.getElementById('sede');
+  function refresh(){{
+    var v=sel?sel.value:'Todas';
     document.querySelectorAll('[data-sv]').forEach(function(e){{var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];}});
-    document.querySelectorAll('[data-sede]').forEach(function(r){{var rs=r.getAttribute('data-sede');r.style.display=(v==='Todas'||rs==='Todas'||rs===v)?'contents':'none';}});
+    document.querySelectorAll('.wf-table').forEach(function(t){{
+      var cols=JSON.parse(t.getAttribute('data-cols'));
+      var f=t.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')) f=f.previousElementSibling;
+      var ctrls=(f&&f.classList.contains('wf-filters'))?[].slice.call(f.querySelectorAll('[data-fcol]')):[];
+      var shown=0;
+      t.querySelectorAll('.wf-row').forEach(function(r){{
+        var rs=r.getAttribute('data-sede'); var ok=(!rs||v==='Todas'||rs==='Todas'||rs===v);
+        var cells=[].map.call(r.children,function(c){{return c.textContent.trim().toLowerCase();}});
+        ctrls.forEach(function(c){{ if(!ok) return; var q=c.value.trim().toLowerCase(); if(!q||/^tod[oa]s$/.test(q)) return;
+          var col=c.getAttribute('data-fcol');
+          if(col==='*'){{ ok=cells.some(function(x){{return x.indexOf(q)>=0;}}); }}
+          else {{ var i=cols.indexOf(col); if(i>=0) ok=cells[i].indexOf(q)>=0; }} }});
+        r.style.display=ok?'contents':'none'; if(ok) shown++;
+      }});
+      var e=t.querySelector('.wf-empty'); if(e) e.style.display=shown?'none':'block';
+      var pg=t.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){{var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}}
+    }});
   }}
-  var saved=null; try{{saved=localStorage.getItem('wf-sede');}}catch(e){{}}
-  if(saved&&[].some.call(sel.options,function(o){{return o.value===saved;}})) sel.value=saved;
-  apply(sel.value);
-  sel.addEventListener('change',function(){{try{{localStorage.setItem('wf-sede',sel.value);}}catch(e){{}}apply(sel.value);}});
+  if(sel){{
+    var saved=null; try{{saved=localStorage.getItem('wf-sede');}}catch(e){{}}
+    if(saved&&[].some.call(sel.options,function(o){{return o.value===saved;}})) sel.value=saved;
+    sel.addEventListener('change',function(){{try{{localStorage.setItem('wf-sede',sel.value);}}catch(e){{}}refresh();}});
+  }}
+  document.querySelectorAll('[data-fcol]').forEach(function(c){{c.addEventListener('input',refresh);c.addEventListener('change',refresh);}});
+  refresh();
 }})();
 document.querySelectorAll('.tabs').forEach(function(bar){{
   var btns=bar.querySelectorAll('[data-tab]');
@@ -155,8 +175,10 @@ def table(cols, rows, h=46, sede=None):
             import re as _re
             m=_re.search(r"Quito|Valle|Ambato|Todas", str(r[sede]))
             if m: sd=f' data-sede="{m.group(0)}"'
-        body+=f'<div style="display:contents"{sd}>{cells}</div>'
-    return f'<div style="display:grid;grid-template-columns:repeat({len(cols)}, minmax(0, 1fr));border:2px solid {INK}">{hd}{body}</div>'
+        body+=f'<div class="wf-row" style="display:contents"{sd}>{cells}</div>'
+    import json as _j
+    empty=f'<div class="wf-empty" style="display:none;grid-column:1/-1;padding:24px;text-align:center;color:{MUTE};font-size:14px">Sin resultados con estos filtros</div>'
+    return f'<div class="wf-table" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="display:grid;grid-template-columns:repeat({len(cols)}, minmax(0, 1fr));border:2px solid {INK}">{hd}{body}{empty}</div>'
 
 def tabs(items, active, panels=None):
     """items: lista de etiquetas o (etiqueta, href). panels: dict etiqueta -> html del panel.
@@ -202,18 +224,20 @@ _fid=[0]
 def _nid():
     _fid[0]+=1; return f"c{_fid[0]}"
 CTL=f"min-height:40px;padding:0 10px;border:2px solid {LINE};font:inherit;font-size:14px;background:#fff;color:{INK};width:100%"
-def sel(label, options, w="160px"):
+def sel(label, options, w="160px", col=None):
+    """Dentro de filters(): filtra la tabla siguiente por la columna `col` (por defecto, la columna que se llama igual que la etiqueta). col=False no filtra."""
     i=_nid(); opts="".join(f'<option>{o}</option>' for o in options)
-    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<select id="{i}" style="{CTL}">{opts}</select></label>'
+    fc="" if col is False else f' data-fcol="{col or label}"'
+    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<select id="{i}"{fc} style="{CTL}">{opts}</select></label>'
 def search(label, placeholder, w="280px"):
     i=_nid()
-    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<input id="{i}" type="search" placeholder="{placeholder}" style="{CTL}"></label>'
+    return f'<label style="display:flex;flex-direction:column;gap:4px;width:{w};font-size:12px;color:{MUTE}">{label}<input id="{i}" type="search" data-fcol="*" placeholder="{placeholder}" style="{CTL}"></label>'
 def dates(label="Rango de fechas", a="2026-10-01", b="2026-10-31"):
     i=_nid()
     return (f'<div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:{MUTE}"><label for="{i}">{label}</label>'
             f'<div style="display:flex;gap:6px;align-items:center"><input id="{i}" type="date" value="{a}" style="{CTL};width:150px"><span>a</span><input type="date" value="{b}" aria-label="Hasta" style="{CTL};width:150px"></div></div>')
 def filters(*ctrls, actions=""):
-    return '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">'+"".join(ctrls)+(f'<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center">{actions}</div>' if actions else '')+'</div>'
+    return '<div class="wf-filters" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">'+"".join(ctrls)+(f'<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center">{actions}</div>' if actions else '')+'</div>'
 
 def note(text, kind="info"):
     col={"info":ACC,"warn":"#b45309","ok":"#047857"}[kind]
@@ -267,7 +291,7 @@ def upload(label, hint):
             f'<label for="{i}" style="font-weight:600">{label}</label><input id="{i}" type="file" style="font:inherit;font-size:13px"><span style="color:{MUTE}">{hint}</span></div>')
 def pager(total, per=20):
     pages="".join(f'<a href="#" aria-label="Página {n}" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{"#fff" if n==1 else INK};background:{INK if n==1 else "#fff"}">{n}</a>' for n in (1,2,3))
-    return (f'<div style="display:flex;align-items:center;gap:12px;font-size:13px;color:{MUTE}"><span>{total} registros · {per} por página</span>'
+    return (f'<div class="wf-pager" style="display:flex;align-items:center;gap:12px;font-size:13px;color:{MUTE}"><span>{total} registros · {per} por página<span class="wf-shown"></span></span>'
             f'<span style="margin-left:auto;display:flex;gap:4px">{pages}<a href="#" aria-label="Siguiente" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{INK}">›</a></span></div>')
 def logo():
     return f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:{MUTE};letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>'
@@ -314,15 +338,18 @@ page("Home.html","Inicio",home,"Inicio por rol")
 
 # 3 Estudiantes
 est=shell("Estudiantes","Estudiantes",
- filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),actions=btn("Nuevo estudiante",None,True)+btn("Importar / Exportar")),
- table(["Nombre","Cédula","Sede","Nivel actual","Estado","Acción"],[
-  ["María Andrade","17xxxxxxxx","Quito","B1","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Juan Pérez","17xxxxxxxx","Valle","A2","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Luis Torres","18xxxxxxxx","Ambato","A1","Inactivo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Ana Ruiz (menor)","17xxxxxxxx","Quito","Kids 2","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Pedro Mora","17xxxxxxxx","Valle","B1","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Camila Sánchez","18xxxxxxxx","Ambato","A2","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Diego Vargas (menor)","17xxxxxxxx","Valle","Kids 1","Activo",'<a href="Ficha360.html">Ver ficha</a>']],sede=2),
+ filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="130px"),actions=btn("Nuevo estudiante",None,True)+btn("Importar / Exportar")),
+ table(["Nombre","Cédula","Sede","Programa","Nivel","Asesor","Estado","Acción"],[
+  ["María Andrade","1712345678","Quito","Adults","B1","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Juan Pérez","1723456789","Valle","Adults","A2","Diego R.","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Luis Torres","1834567890","Ambato","Adults","A1","Sofía L.","Inactivo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Ana Ruiz (menor)","1745678901","Quito","Kids","Kids 2","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Pedro Mora","1756789012","Valle","Adults","B1","Diego R.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Camila Sánchez","1867890123","Ambato","Teens","A2","Sofía L.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Diego Vargas (menor)","1778901234","Valle","Kids","Kids 1","Diego R.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Valeria Cedeño","1789012345","Quito","Adults","B2","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Mateo Salazar (menor)","1890123456","Ambato","Teens","A1","Sofía L.","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
+  ["Gabriela Núñez","1701234567","Quito","Adults","A2","Carla M.","Inactivo",'<a href="Ficha360.html">Ver ficha</a>']],sede=2),
  pager(sv(812,420,230,162)),
  subtitle="Una sola base para Quito, Valle y Ambato · exportar queda registrado en el audit log")
 page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
@@ -369,14 +396,19 @@ page("Aprobaciones.html","Aprobaciones",apr,"Bandeja de aprobaciones")
 
 # 7 Cursos
 cursos=shell("Cursos","Cursos",
- filters(search("Buscar","Nombre del curso o profesor",w="260px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Estado",["Todos","En curso","Por abrir","Cerrado"],w="130px"),actions=btn("Nuevo curso",None,True)),
- table(["Curso","Sede","Nivel","Modalidad","Profesor","Estudiantes","Acción"],[
-  ["Adults B1 Virtual","Quito","B1","Virtual","P. Gómez","12/15",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Kids 2 Tarde","Valle","Kids 2","Presencial","L. Vega","8/10",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Teens A2","Ambato","A2","Presencial","(sin asignar)","5/10",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Adults A2","Valle","A2","Presencial","P. Gómez","9/12",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Kids 1 Mañana","Ambato","Kids 1","Presencial","M. Castro","7/10",'<a href="DetalleCurso.html">Ver</a>'],
-  ["Adults B2 Intensivo","Quito","B2","Presencial","L. Vega","11/12",'<a href="DetalleCurso.html">Ver</a>']],sede=1),
+ filters(search("Buscar","Nombre del curso o profesor",w="260px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro","(sin asignar)"],w="150px"),sel("Estado",["Todos","En curso","Por abrir","Cerrado"],w="130px"),actions=btn("Nuevo curso",None,True)),
+ table(["Curso","Sede","Programa","Nivel","Modalidad","Profesor","Estudiantes","Estado","Acción"],[
+  ["Adults B1 Virtual","Quito","Adults","B1","Virtual","P. Gómez","12/15",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Kids 2 Tarde","Valle","Kids","Kids 2","Presencial","L. Vega","8/10",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Teens A2","Ambato","Teens","A2","Presencial","(sin asignar)","5/10",badge("Por abrir","warn"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults A2","Valle","Adults","A2","Presencial","P. Gómez","9/12",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Kids 1 Mañana","Ambato","Kids","Kids 1","Presencial","M. Castro","7/10",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults B2 Intensivo","Quito","Adults","B2","Presencial","L. Vega","11/12",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults A1 Sábados","Quito","Adults","A1","Presencial","L. Vega","14/15",badge("Cerrado"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Teens B1 Virtual","Valle","Teens","B1","Virtual","P. Gómez","6/12",badge("Por abrir","warn"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Kids 2 Mañana","Quito","Kids","Kids 2","Presencial","M. Castro","10/10",badge("En curso","ok"),'<a href="DetalleCurso.html">Ver</a>'],
+  ["Adults A2 Virtual","Ambato","Adults","A2","Virtual","(sin asignar)","3/12",badge("Por abrir","warn"),'<a href="DetalleCurso.html">Ver</a>']],sede=1),
+ pager(sv(41,22,12,7)),
  subtitle="Programa, nivel, modalidad, horario y aula por sede")
 page("Cursos.html","Cursos",cursos,"Listado de cursos")
 
@@ -393,21 +425,27 @@ page("DetalleCurso.html","Detalle curso",det,"Detalle de curso y sesiones")
 # 9 Profesores
 prof=shell("Profesores","Profesores",
  filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Pendiente de aprobación","Inactivo"],w="200px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")),
- table(["Profesor","Contrato","Tarifa/h","Cursos activos","Estado","Acción"],[
-  ["P. Gómez","Por horas · vigente","$7.00","3","Activo",'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["L. Vega","Por horas · vigente","$6.50","2","Activo",'<a href="FichaProfesor.html">Ver ficha</a>'],
-  ["R. Salas","Vencido","$5.70","0","Inactivo",'<a href="FichaProfesor.html">Ver ficha</a>']]),
- card("Alta de profesor (flujo)", flow(["Formulario de alta","Pendiente de aprobación","Dirección aprueba","Puede recibir cursos","Aparece en payment sheet"])+note("Nadie puede crear un profesor que cobre sin pasar por aprobación. Hoy hay 1 alta pendiente (M. Castro).")),
+ table(["Profesor","Sede","Contrato","Tarifa/h","Cursos activos","Estado","Acción"],[
+  ["P. Gómez","Quito","Por horas · vigente","$7.00","3",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
+  ["L. Vega","Valle","Por horas · vigente","$6.50","2",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
+  ["R. Salas","Ambato","Vencido","$5.70","0",badge("Inactivo","bad"),'<a href="FichaProfesor.html">Ver ficha</a>'],
+  ["M. Castro","Ambato","Por horas · vigente","$6.50","2",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
+  ["S. Jiménez","Quito","Nómina","—","4",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver ficha</a>'],
+  ["D. Paredes","Valle","Por horas · pendiente","$6.00","0",badge("Pendiente de aprobación","warn"),'<a href="FichaProfesor.html">Ver ficha</a>']],sede=1),
+ card("Alta de profesor (flujo)", flow(["Formulario de alta","Pendiente de aprobación","Dirección aprueba","Puede recibir cursos","Aparece en payment sheet"])+note("Nadie puede crear un profesor que cobre sin pasar por aprobación. Hoy hay 1 alta pendiente (D. Paredes).")),
  subtitle="Nadie crea un profesor que pueda cobrar sin aprobación (el caso del profesor falso)")
 page("Profesores.html","Profesores",prof,"Listado de profesores")
 
 # 10 Payment sheet
 ps=shell("Payment sheet · Octubre 2026","Profesores",
- filters(sel("Mes",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),sel("Tipo de contrato",["Todos","Por horas","Nómina"],w="150px"),actions=kv(("Estado",badge("Borrador","warn")),("Total a pagar","$615.60"),("Alertas","2"))+btn("Exportar")+btn("Aprobar pagos",None,True)),
- table(["Profesor","Sesiones","Horas","Tarifa","A pagar","Factura prof.","Alerta"],[
-  ["P. Gómez","24","48","$7.00","$336","$336","—"],
-  ["L. Vega","18","36","$6.50","$234","$260","Diferencia +$26"],
-  ["R. Salas","4","8","$5.70","$45.60","—","Contrato vencido"]]),
+ filters(sel("Mes",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),sel("Contrato",["Todos","Por horas","Nómina"],w="150px"),sel("Alerta",["Todas","Diferencia","Contrato vencido","Factura sin sesiones"],w="190px"),actions=kv(("Estado",badge("Borrador","warn")),("Total a pagar","$1,145.60"),("Alertas","3"))+btn("Exportar")+btn("Aprobar pagos",None,True)),
+ table(["Profesor","Sede","Contrato","Sesiones","Horas","Tarifa","A pagar","Factura prof.","Alerta"],[
+  ["P. Gómez","Quito","Por horas","24","48","$7.00","$336","$336","—"],
+  ["L. Vega","Valle","Por horas","18","36","$6.50","$234","$260",badge("Diferencia +$26","warn")],
+  ["R. Salas","Ambato","Por horas","4","8","$5.70","$45.60","—",badge("Contrato vencido","bad")],
+  ["M. Castro","Ambato","Por horas","20","40","$6.50","$260","$260","—"],
+  ["S. Jiménez","Quito","Nómina","30","60","—","Salario","—","—"],
+  ["D. Paredes","Valle","Por horas","0","0","$6.00","$0","$120",badge("Factura sin sesiones","bad")]],sede=1),
  two(card("Cómo se calcula", flow(["Sesiones confirmadas","× tarifa/hora","Monto a pagar","vs factura del profesor","Alertas"])+note("Diferencias y profesores sin contrato vigente bloquean la aprobación hasta resolverse.")),
      card("Alertas del mes", table(["Profesor","Alerta","Acción"],[["L. Vega","Factura $260 vs calculado $234 (+$26)",'<a href="FichaProfesor.html">Revisar sesiones</a>'],["R. Salas","Contrato vencido · 8 h registradas",'<a href="AltaProfesor.html">Renovar contrato</a>']]))),
  subtitle="Reemplaza el Excel + Drive de 2 días al mes")
@@ -442,14 +480,14 @@ page("Reportes.html","Reportes",rep,"Reportes y dashboards")
 # 13 Usuarios y roles
 page("Usuarios.html","Usuarios",shell("Usuarios y roles","Configuración",
  filters(search("Buscar","Nombre o email",w="260px"),sel("Rol",["Todos","Administrador General","Director Comercial","Coordinador Académico","Asesor Comercial","Secretaría","Profesor (consulta)"],w="220px"),sel("Estado",["Todos","Activo","Inactivo"],w="130px"),actions=btn("Nuevo usuario",None,True)),
- table(["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
+ table(["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Diego R.","Asesor Comercial","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Sofía L.","Asesor Comercial","Ambato","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Dir. Comercial","Director Comercial","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Secretaría Ambato","Secretaría","Ambato","Inactivo",'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
  card("Matriz de permisos por rol", table(["Acción","Admin","Dir. Comercial","Coord. Académica","Asesor","Secretaría"],[["Crear estudiante","✓","✓","—","✓","✓"],["Aplicar descuento >10%","✓","✓","—","—","—"],["Aprobar profesor","✓","✓","—","—","—"],["Exportar base completa","✓","—","—","—","—"],["Ver otras sedes","✓","✓","—","—","—"]])),
  subtitle="RBAC: roles, permisos por acción y visibilidad multi-sede"),"Usuarios y roles")
 
 # 14 Audit log
 page("AuditLog.html","Audit log",shell("Audit log","Configuración",
  filters(sel("Usuario",["Todos","Estefanía","Carla M.","Dir. Comercial","Secretaría","Coord. Académica"],w="160px"),sel("Acción",["Todas","Creó","Modificó","Aprobó","Rechazó","Exportó","Eliminó"],w="130px"),sel("Entidad",["Todas","Estudiante","Factura","Descuento","Profesor","Tarifa","Curso","Inventario"],w="140px"),dates(),actions=btn("Exportar log")),
- table(["Fecha/hora","Usuario","Acción","Entidad","Detalle","IP / sede"],[["04 oct 10:12","Carla M.","Creó","Estudiante","María Andrade","Quito"],["04 oct 09:40","Dir. Comercial","Aprobó","Descuento","42% → rechazado, 10% aprobado","Quito"],["03 oct 17:05","Secretaría","Exportó","Estudiantes","120 registros (filtro Valle)","Valle"],["03 oct 15:30","Estefanía","Modificó","Tarifa","P. Gómez $6.50 → $7.00","Quito"]],sede=5),
+ table(["Fecha/hora","Usuario","Acción","Entidad","Detalle","IP / sede"],[["04 oct 10:12","Carla M.","Creó","Estudiante","María Andrade","Quito"],["04 oct 09:40","Dir. Comercial","Aprobó","Descuento","42% → rechazado, 10% aprobado","Quito"],["03 oct 17:05","Secretaría","Exportó","Estudiantes","120 registros (filtro Valle)","Valle"],["03 oct 15:30","Estefanía","Modificó","Tarifa","P. Gómez $6.50 → $7.00","Quito"],["03 oct 11:20","Coord. Académica","Creó","Curso","Teens B1 Virtual · Valle","Valle"],["02 oct 16:45","Carla M.","Rechazó","Descuento","Solicitud 30% · Luis Torres (retirada)","Quito"],["02 oct 10:05","Secretaría","Modificó","Inventario","Traslado 3 × Adults B1 Quito → Valle","Valle"],["01 oct 09:30","Dir. Comercial","Aprobó","Profesor","M. Castro · $6.50/h","Ambato"],["30 sep 18:00","Estefanía","Eliminó","Curso","Kids 1 Tarde (sin inscritos)","Ambato"]],sede=5),
  pager(sv("4,120","2,210","1,180","730"),50),
  card("Alertas marcadas para revisión", table(["Fecha","Alerta","Usuario","Estado"],[["03 oct 17:05","Exportación masiva: 120 estudiantes (incluye menores)","Secretaría",badge("Revisada","ok")],["03 oct 15:30","Cambio de tarifa de profesor","Estefanía",badge("Pendiente","warn")],["02 oct 11:00","Descuento fuera de regla (42%)","Carla M.",badge("Rechazado","bad")]])+note("Exportaciones masivas, cambios de tarifa y descuentos fuera de regla se marcan automáticamente (LOPDP, datos de menores). Nada se borra.")),
  subtitle="Quién hizo qué, cuándo y desde dónde. Nada se borra."),"Audit log")
@@ -489,8 +527,9 @@ page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
 # 19 Sesiones
 cal="".join(f'<div style="border:1px solid {LINE};min-height:90px;padding:6px;font-size:12px"><b>{d}</b><br>{c}</div>' for d,c in [("Lun 5","B1 Virtual 18:00<br>Kids 2 15:00"),("Mar 6","Teens A2 16:00"),("Mié 7","B1 Virtual 18:00<br>Kids 2 15:00"),("Jue 8","Teens A2 16:00"),("Vie 9","B1 Virtual 18:00"),("Sáb 10","Intensivo A1 09:00"),("Dom 11","")])
 page("Sesiones.html","Sesiones",shell("Registro de sesiones","Cursos",
- filters(sel("Semana",["5–11 oct 2026","28 sep–4 oct 2026","12–18 oct 2026"],w="190px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro"],w="160px"),sel("Estado",["Todas","Confirmada","Pendiente","No dictada"],w="140px"),actions=kv(("Confirmadas","7"),("Pendientes","3"))+btn("Registrar sesión manual",None,True)),
- f'<div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px">{cal}</div>',
+ filters(sel("Semana",["5–11 oct 2026","28 sep–4 oct 2026","12–18 oct 2026"],w="190px",col=False),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro"],w="160px"),sel("Origen",["Todos","Automática (Moodle)","Manual"],w="170px"),sel("Estado",["Todas","Confirmada","Pendiente","No dictada"],w="140px"),actions=kv(("Confirmadas","4"),("Pendientes","3"),("No dictadas","1"))+btn("Registrar sesión manual",None,True)),
+ table(["Fecha","Curso","Sede","Profesor","Horas","Origen","Estado"],[["Lun 5 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Lun 5 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("Confirmada","ok")],["Mar 6 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Confirmada","ok")],["Mié 7 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Confirmada","ok")],["Mié 7 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("No dictada","bad")],["Jue 8 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Pendiente","warn")],["Vie 9 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Sáb 10 · 09:00","Intensivo A1","Quito","L. Vega","4","Manual",badge("Confirmada","ok")]],sede=2),
+ card("Calendario de la semana", f'<div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px">{cal}</div>'),
  two(card("Sesión seleccionada", kv(("Curso","B1 Virtual · Quito"),("Fecha","Lun 5 oct · 18:00–20:00"),("Profesor","P. Gómez"),("Horas","2"),("Origen","Automática (Moodle)"),("Asistencia","12/15"),("Estado",badge("Pendiente","warn")))+row(btn("Confirmar sesión",None,True),btn("Marcar no dictada"))),
      card("Alertas", li(["Sesión fuera del horario programado","Profesor con contrato vencido","Curso sin sesiones registradas esta semana"]))),
  subtitle="Las sesiones confirmadas alimentan progreso y payment sheet"),"Registro de sesiones")
@@ -517,9 +556,18 @@ page("AltaProfesor.html","Alta de profesor",shell("Alta de profesor","Profesores
 
 # 22 Facturas
 page("Facturas.html","Facturas",shell("Facturas","Facturación",
- filters(search("Buscar","Nº de factura o estudiante",w="260px"),sel("Estado de cobro",["Todos","Pagada","Pendiente","Parcial","Nota de crédito"],w="160px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="140px"),dates(),actions=btn("Nueva venta","NuevaVenta.html",True)+btn("Exportar")),
+ filters(search("Buscar","Nº de factura o estudiante",w="260px"),sel("Estado",["Todos","Pagada","Pendiente","Parcial","Vencida","Nota de crédito"],w="160px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="140px"),dates(),actions=btn("Nueva venta","NuevaVenta.html",True)+btn("Exportar")),
  kpis([("Facturado del mes",sv("$43,650","$23,100","$13,200","$7,350"),sv("76 facturas","40 facturas","22 facturas","14 facturas")),("Cobrado",sv("$31,200","$16,900","$9,100","$5,200"),"71%"),("Pendiente",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 facturas","15 facturas","10 facturas","6 facturas")),("Notas de crédito",sv("$140","$45","$50","$45"),"3 emitidas")]),
- table(["Factura","Estudiante","Sede","Niveles","Monto","Estado","Acción"],[["#1234","María Andrade","Quito","B1, B2","$980","Pagada",'<a href="DetalleFactura.html">Ver</a>'],["#1235","Juan Pérez","Valle","A2","$450","Pendiente",'<a href="DetalleFactura.html">Ver</a>'],["#1236","Luis Torres","Ambato","A1","$420","Nota de crédito",'<a href="DetalleFactura.html">Ver</a>'],["#1237","Pedro Mora","Valle","B1","$500","Pagada",'<a href="DetalleFactura.html">Ver</a>'],["#1238","Camila Sánchez","Ambato","A2, B1","$950","Parcial",'<a href="DetalleFactura.html">Ver</a>'],["#1239","Ana Ruiz","Quito","Kids 2","$380","Pendiente",'<a href="DetalleFactura.html">Ver</a>']],sede=2),
+ table(["Factura","Fecha","Estudiante","Sede","Asesor","Niveles","Monto","Saldo","Estado","Acción"],[
+  ["#1234","02 oct","María Andrade","Quito","Carla M.","B1, B2","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1235","03 oct","Juan Pérez","Valle","Diego R.","A2","$450","$450",badge("Pendiente","warn"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1236","03 oct","Luis Torres","Ambato","Sofía L.","A1","$420","$0",badge("Nota de crédito"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1237","04 oct","Pedro Mora","Valle","Diego R.","B1","$500","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1238","04 oct","Camila Sánchez","Ambato","Sofía L.","A2, B1","$950","$475",badge("Parcial","warn"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1239","05 oct","Ana Ruiz","Quito","Carla M.","Kids 2","$380","$380",badge("Pendiente","warn"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1240","05 oct","Valeria Cedeño","Quito","Carla M.","B2","$550","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1241","05 oct","Mateo Salazar","Ambato","Sofía L.","A1","$420","$420",badge("Vencida","bad"),'<a href="DetalleFactura.html">Ver</a>'],
+  ["#1242","06 oct","Gabriela Núñez","Quito","Carla M.","A2","$450","$225",badge("Parcial","warn"),'<a href="DetalleFactura.html">Ver</a>']],sede=3),
  pager(sv(76,40,22,14)),
  subtitle="Una factura por paquete de niveles, con estado de cobro"),"Facturas")
 
@@ -551,15 +599,22 @@ page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Co
 
 # 27 Inventario
 page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
- filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado de stock",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","Movimientos.html",True)),
+ filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","Movimientos.html",True)),
  kpis([("Ítems con stock negativo",sv(3,0,1,2),"requieren pedido"),("Pedidos en camino",sv(2,1,1,0),"#P-041 llega 8 oct"),("Valor en stock",sv("$6,840","$3,900","$1,760","$1,180"),"a precio de compra"),("Comprometido por cursos",sv(12,5,4,3),"libros de cursos por abrir")]),
- table(["Libro","Nivel","Quito","Valle","Ambato","Comprometido","Alerta"],[["Adults B1 Student Book","B1","4","-2","1","5","Pedir 6"],["Kids 2 Workbook","Kids 2","0","3","-1","4","Pedir 4"],["Teens A2","A2","8","2","5","3","—"]]),
+ table(["Libro","Programa","Nivel","Quito","Valle","Ambato","Comprometido","Estado","Acción"],[
+  ["Adults B1 Student Book","Adults","B1","4","-2","1","5",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
+  ["Kids 2 Workbook","Kids","Kids 2","0","3","-1","4",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 4</a>'],
+  ["Teens A2 Student Book","Teens","A2","8","2","5","3",badge("OK","ok"),"—"],
+  ["Adults A1 Student Book","Adults","A1","2","1","0","6",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 5</a>'],
+  ["Adults B2 Student Book","Adults","B2","6","4","2","2",badge("OK","ok"),"—"],
+  ["Kids 1 Workbook","Kids","Kids 1","3","0","-2","4",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
+  ["Teens B1 Student Book","Teens","B1","1","1","1","6",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 4</a>']]),
  subtitle="Reemplaza el email diario de notify@teamdesk con alertas inteligentes"),"Inventario de libros")
 
 # 28 Movimientos
 page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Inventario",
  tabs(["Movimientos","Pedidos a proveedor","Notas de crédito"],"Pedidos a proveedor",{
-  "Movimientos": table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"]],sede=4)+filters(sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),dates(),actions=btn("Registrar movimiento",None,True)+btn("Exportar")),
+  "Movimientos": filters(search("Buscar","Libro, factura o pedido",w="220px"),sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),sel("Usuario",["Todos","Carla M.","Secretaría","Diego R."],w="140px"),dates(),actions=btn("Registrar movimiento",None,True)+btn("Exportar"))+table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2 Student Book","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"],["30 sep","Salida","Adults B2 Student Book","1","Quito","Factura #1240","Carla M."],["29 sep","Salida","Teens A2 Student Book","2","Ambato","Factura #1238","Diego R."],["25 sep","Ingreso","Adults A1 Student Book","10","Quito","Pedido #P-039","Secretaría"]],sede=4),
   "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado"],[["#P-041","Books & Bits","12","$480","02 oct","En camino"],["#P-040","Books & Bits","8","$320","25 sep","Recibido"],["#P-039","Books & Bits","20","$800","10 sep","Recibido"]])+
      two(card("Registrar ingreso", form(["Pedido","Cantidad recibida"])+row(btn("Registrar ingreso",None,True))), card("Forecast de libros (noviembre)", table(["Libro","Cursos por abrir","Cupo","Necesarios","Stock","Pedir"],[["Adults B1 Student Book","2","30","30","3","27"],["Kids 2 Workbook","1","10","10","2","8"],["Teens A2","1","10","10","15","0"]])+note("Cursos que abren el próximo mes × cupo = libros necesarios por sede."))),
   "Notas de crédito": table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[["NC-07","#1234","María Andrade","Libro devuelto","$45","02 oct","Aplicada"],["NC-06","#1180","Juan Pérez","Cambio de modalidad","$50","20 sep","Aplicada"],["NC-05","#1102","Ana Ruiz","Libro con defecto","$45","05 sep","Pendiente"]])+row(btn("Nueva nota de crédito",None,True),btn("Ver facturas","Facturas.html")),
