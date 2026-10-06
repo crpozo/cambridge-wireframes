@@ -78,4 +78,4 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 43. **NuevaRegla.html** (M1/M10). Regla de aprobación: entidad, condición, rol aprobador, notificación, vigencia. ← Configuración. → Configuración.
 44. **DetalleMatricula.html · Detalle de matrícula** (M5/M2). Equivalente al Enrollment de TeamDesk pero por paquete de niveles: estudiante, curso (código), horario, asesor, plan de pago; resumen (subtotal, descuento, total, pagado, saldo); cargos (tuition, niveles, libros); tabs Facturas y pagos, Códigos de libros, Asistencia, Certificados, Comisión. Acciones: cambio de curso, enviar enlace de clase, hoja de asistencia, anular (con aprobación). ← Ficha360, DetalleCurso, NuevaVenta.
 
-Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.
+`index.html` redirige al login; el hub es `Mapa.html`. Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.

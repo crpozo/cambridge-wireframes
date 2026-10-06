@@ -3,7 +3,7 @@ import sys
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W,H=1280,820
 
-INK="#1f2937"; MUTE="#6b7280"; LINE="#9ca3af"; FILL="#e5e7eb"; FILL2="#f3f4f6"; ACC="#1d4ed8"
+INK="#0F1E40"; MUTE="#5B6B8A"; LINE="#D6DCEA"; FILL="#E8EDF7"; FILL2="#F4F6FB"; ACC="#1D3F8F"
 
 def box(label, h=120, extra="", dashed=True, w="100%"):
     b = f"2px {'dashed' if dashed else 'solid'} {LINE}"
@@ -140,14 +140,13 @@ def page(fname, title, inner, lang_title):
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wf-bar"><a href="index.html">← Mapa de pantallas</a><span>{lang_title}</span><span class="wf-tag">WIREFRAME · alto nivel</span></div>
 {inner}
-<dialog id="wf-dialog" style="border:2px solid #1f2937;padding:24px;max-width:480px;font-family:'IBM Plex Sans',sans-serif;color:#1f2937">
+<dialog id="wf-dialog">
   <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
-  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#6b7280"></p>
-  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#fff;color:#1f2937;font:inherit;font-weight:600;cursor:pointer">Cancelar</button><button type="button" id="wf-ok" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#1f2937;color:#fff;font:inherit;font-weight:600;cursor:pointer">Confirmar</button></div>
+  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
+  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" class="btn">Cancelar</button><button type="button" id="wf-ok" class="btn btn-primary">Confirmar</button></div>
 </dialog>
-<div id="wf-toast" role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:12px 20px;font-size:14px;display:none;z-index:10"></div>
+<div id="wf-toast" role="status"></div>
 <script>
 (function(){{
   var dlg=document.getElementById('wf-dialog'),title=document.getElementById('wf-dialog-title'),text=document.getElementById('wf-dialog-text'),toast=document.getElementById('wf-toast'),cur=null;
@@ -217,7 +216,7 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
   var btns=bar.querySelectorAll('[data-tab]');
   btns.forEach(function(b){{
     b.addEventListener('click',function(){{
-      btns.forEach(function(x){{var on=x===b;x.setAttribute('aria-selected',on);x.style.borderBottomColor=on?'{INK}':'transparent';x.style.fontWeight=on?700:400;}});
+      btns.forEach(function(x){{var on=x===b;x.setAttribute('aria-selected',on);x.classList.toggle('on',on);}});
       var el=bar.nextElementSibling;
       while(el&&el.hasAttribute('data-panel')){{el.style.display=(el.getAttribute('data-panel')===b.dataset.tab&&!el.dataset.wfHidden)?'flex':'none';el=el.nextElementSibling;}}
     }});
@@ -385,17 +384,203 @@ def card(title, inner):
 def li(items):
     return '<ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7">'+"".join(f"<li>{i}</li>" for i in items)+'</ul>'
 
+# ================= TEMA MOCKUP · identidad Cambridge (sobrescribe los helpers lo-fi) =================
+NAVY="#1D3F8F"; NAVY2="#152F6B"; RED="#D62839"; YELLOW="#F6C21C"; SKY="#4FA3DC"; OK="#1B9E77"; WARN="#C9900A"
+CH=["#2F55B5","#D62839","#2E8BC9","#C9900A"]  # paleta de gráficos validada (dataviz)
+ICON={"Inicio":"⌂","Estudiantes":"👥","Cursos":"📚","Sesiones":"🗓","Profesores":"🎓","Nueva matrícula":"➕","Facturación":"🧾","Comisiones":"💰","Aprobaciones":"✅","Stock por sede":"📦","Movimientos y pedidos":"🔄","Reportes":"📊","Dashboard ejecutivo":"📈","Usuarios y roles":"🔐","Configuración":"⚙","Audit log":"🧭","Integraciones":"🔌"}
+
+def btn(label, href=None, primary=False, action=None, next=None):
+    if href is None and action is None:
+        a=ACTIONS.get(label)
+        if isinstance(a,str): href=a
+        elif a: action,next=a
+    cls="btn btn-primary" if primary else ("btn btn-danger" if label in ("Rechazar","Anular matrícula","Marcar no dictada") else "btn")
+    if href: return f'<a href="{href}" class="{cls}">{label}</a>'
+    if action is None: raise ValueError(f"Botón sin destino ni acción: {label}")
+    nx=f' data-next="{next}"' if next else ""
+    return f'<button type="button" class="{cls}" data-action="{action}"{nx}>{label}</button>'
+
+def nav(active):
+    active=NAV_ALIAS.get(active,active); out=""
+    for area,items in NAV:
+        items=[(n,h,r) for n,h,r in items if h not in HIDDEN]
+        if not items: continue
+        roles=",".join(sorted({c for _,_,r in items for c in r.split(",")}))
+        links="".join(f'<a href="{h}" data-roles="{r}" class="nav-link{" active" if n==active else ""}"><span class="nav-ico" aria-hidden="true">{ICON.get(n,"•")}</span>{n}</a>' for n,h,r in items)
+        head=f'<div class="nav-area">{area}</div>' if area else ""
+        out+=f'<div data-roles="{roles}" style="display:contents">{head}{links}</div>'
+    return out
+
+def shell(title, active, *parts, subtitle=""):
+    body="".join(parts)
+    return f'''<div class="app">
+<aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true"></span><span><b>CAMBRIDGE</b><small>School of Languages</small></span></div><nav>{nav(active)}</nav><div class="sidebar-foot">Plataforma Cambridge · mockup v1<br><a href="Mapa.html" style="color:rgba(255,255,255,.7)">Mapa de pantallas</a></div></aside>
+<div class="shell-main">
+<header class="topbar">
+  <div class="search"><span aria-hidden="true">🔍</span><label for="gsearch" class="sr">Buscar</label><input id="gsearch" placeholder="Buscar estudiante, curso, profesor…"></div>
+  <div class="topbar-ctl"><label for="sede">Sede</label><select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></div>
+  <div class="topbar-ctl"><label for="rol">Ver como</label><select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></div>
+  <a href="Notificaciones.html" class="icon-btn" aria-label="Notificaciones (3)">🔔<span class="dot">3</span></a>
+  <a href="Chatbot.html" class="icon-btn" aria-label="Asistente">✦</a>
+  <div class="user"><span class="avatar sm">E</span><span id="rol-user">Estefanía · Administrador General</span></div>
+</header>
+<main class="main">
+  <div class="page-head"><h1>{title}</h1>{f'<p>{subtitle}</p>' if subtitle else ''}</div>
+  {body}
+</main>
+</div>
+</div>'''
+
+def table(cols, rows, h=46, sede=None):
+    import json as _j, re as _re
+    hd="".join(f'<div class="th">{c}</div>' for c in cols); body=""
+    for r in rows:
+        cells="".join(f'<div class="td" style="min-height:{h}px">{c}</div>' for c in r)
+        sd=""
+        if sede is not None:
+            m=_re.search(r"Quito|Valle|Ambato|Todas", str(r[sede]))
+            if m: sd=f' data-sede="{m.group(0)}"'
+        body+=f'<div class="wf-row" style="display:contents"{sd}>{cells}</div>'
+    empty='<div class="wf-empty" style="display:none;grid-column:1/-1">Sin resultados con estos filtros</div>'
+    return f'<div class="wf-table tbl" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:repeat({len(cols)}, minmax(0, 1fr))">{hd}{body}{empty}</div>'
+
+def tabs(items, active, panels=None, roles=None):
+    panels=panels or {}; roles=roles or {}; bar=""; body=""
+    for t in items:
+        label,href = t if isinstance(t,tuple) else (t,None); on=label==active
+        rl=f' data-roles="{roles[label]}"' if label in roles else ""
+        if href: bar+=f'<a href="{href}" role="tab"{rl} class="tab{" on" if on else ""}">{label}</a>'
+        else: bar+=f'<button type="button" role="tab" data-tab="{label}"{rl} aria-selected="{"true" if on else "false"}" class="tab{" on" if on else ""}">{label}</button>'
+    for label,content in panels.items():
+        on=label==active; rl=f' data-roles="{roles[label]}"' if label in roles else ""
+        body+=f'<div role="tabpanel" data-panel="{label}"{rl} class="panel" style="display:{"flex" if on else "none"}">{content}</div>'
+    return f'<div class="tabs" role="tablist">{bar}</div>{body}'
+
+def form(fields, cols=2):
+    out="".join(f'<div class="field"><label for="f{i}">{f}</label><input id="f{i}" class="ctl"></div>' for i,f in enumerate(fields))
+    return f'<div class="grid" style="grid-template-columns:repeat({cols}, minmax(0, 1fr))">{out}</div>'
+
+def kpi(label, value, sub="", tone=0):
+    return f'<div class="kpi"><span class="kpi-bar" style="background:{CH[tone%4]}"></span><span class="kpi-label">{label}</span><span class="kpi-value">{value}</span>{f"<span class=kpi-sub>{sub}</span>" if sub else ""}</div>'
+def kpis(items):
+    return '<div class="grid" style="grid-template-columns:repeat(%d, minmax(0, 1fr))">'%len(items)+"".join(kpi(*i,tone=k) for k,i in enumerate(items))+'</div>'
+
+def sel(label, options, w="160px", col=None):
+    i=_nid(); fc="" if col is False else f' data-fcol="{col or label}"'
+    return f'<label class="field" style="width:{w}">{label}<select id="{i}"{fc} class="ctl">{"".join(f"<option>{o}</option>" for o in options)}</select></label>'
+def search(label, placeholder, w="280px"):
+    i=_nid(); return f'<label class="field" style="width:{w}">{label}<input id="{i}" type="search" data-fcol="*" placeholder="{placeholder}" class="ctl"></label>'
+def dates(label="Rango de fechas", a="2026-10-01", b="2026-10-31"):
+    i=_nid(); return f'<div class="field"><label for="{i}">{label}</label><div style="display:flex;gap:6px;align-items:center"><input id="{i}" type="date" value="{a}" class="ctl" style="width:150px"><span>a</span><input type="date" value="{b}" aria-label="Hasta" class="ctl" style="width:150px"></div></div>'
+def filters(*ctrls, actions=""):
+    return '<div class="wf-filters filters">'+"".join(ctrls)+(f'<div class="filters-actions">{actions}</div>' if actions else '')+'</div>'
+
+def note(text, kind="info"):
+    return f'<p class="note note-{kind}">{text}</p>'
+def kv(*pairs):
+    return '<div class="kv">'+"".join(f'<span><span class="k">{k}</span> <b>{v}</b></span>' for k,v in pairs)+'</div>'
+def badge(text, kind="neutral"):
+    return f'<span class="badge badge-{kind}">{text}</span>'
+def progress(pct, label="", color=None):
+    return f'<div class="prog"><div class="prog-head"><span>{label}</span><b>{pct}%</b></div><div class="prog-track"><div class="prog-fill" style="width:{pct}%;background:{color or NAVY}"></div></div></div>'
+def hbars(items, unit=""):
+    mx=max(v for _,v in items) or 1
+    return '<div class="hbars">'+"".join(f'<div class="hbar"><span>{l}</span><div class="hbar-track"><div class="hbar-fill" style="width:{v/mx*100:.0f}%"></div></div><b>{unit}{v:,}{"%" if unit=="" and mx<=100 else ""}</b></div>' for l,v in items)+'</div>'
+def vbars(groups, series, h=150):
+    mx=max(v for _,vs in groups for v in vs) or 1
+    g="".join('<div class="vgroup"><div class="vbars-stack" style="height:%dpx">'%h+"".join(f'<div class="vbar" title="{series[i]}: {v}" style="height:{v/mx*h:.0f}px;background:{CH[i%4]}"><span>{v}</span></div>' for i,v in enumerate(vs))+f'</div><span class="vlabel">{l}</span></div>' for l,vs in groups)
+    leg="".join(f'<span class="leg"><i style="background:{CH[i%4]}"></i>{n}</span>' for i,n in enumerate(series)) if len(series)>1 else ""
+    return f'<div class="chart"><div class="vbars">{g}</div>{f"<div class=legend>{leg}</div>" if leg else ""}</div>'
+def linechart(labels, series, h=160):
+    W=600; mx=max(v for vs in series.values() for v in vs) or 1; n=len(labels); xs=[40+i*(W-60)/(n-1) for i in range(n)]
+    paths="".join(f'<polyline fill="none" stroke="{CH[k%4]}" stroke-width="2.5" stroke-linejoin="round" points="{" ".join(f"{xs[i]:.0f},{h-20-(v/mx)*(h-40):.0f}" for i,v in enumerate(vs))}"/>' for k,(name,vs) in enumerate(series.items()))
+    axis="".join(f'<text x="{xs[i]:.0f}" y="{h-4}" font-size="11" text-anchor="middle" fill="{MUTE}">{l}</text>' for i,l in enumerate(labels))
+    grid="".join(f'<line x1="40" x2="{W-20}" y1="{h-20-(h-40)*f:.0f}" y2="{h-20-(h-40)*f:.0f}" stroke="{LINE}"/><text x="36" y="{h-16-(h-40)*f:.0f}" font-size="10" text-anchor="end" fill="{MUTE}">{mx*f:.0f}</text>' for f in (0,.5,1))
+    leg="".join(f'<span class="leg"><i style="background:{CH[k%4]};height:3px"></i>{n}</span>' for k,n in enumerate(series))
+    return f'<div class="chart"><svg viewBox="0 0 {W} {h}" style="width:100%;height:auto" role="img" aria-label="Gráfico de líneas">{grid}{paths}{axis}</svg><div class="legend">{leg}</div></div>'
+def areachart(labels, values, h=150, color=None, unit="%"):
+    """Una serie con relleno suave, como el gráfico de tendencia de la referencia."""
+    W=600; c=color or CH[0]; mx=max(values) or 1; n=len(labels); xs=[36+i*(W-56)/(n-1) for i in range(n)]
+    pts=[(xs[i], h-24-(v/mx)*(h-44)) for i,v in enumerate(values)]
+    line=" ".join(f"{x:.0f},{y:.0f}" for x,y in pts); area=f"{pts[0][0]:.0f},{h-24} "+line+f" {pts[-1][0]:.0f},{h-24}"
+    gid=_nid()
+    axis="".join(f'<text x="{xs[i]:.0f}" y="{h-6}" font-size="11" text-anchor="middle" fill="{MUTE}">{l}</text>' for i,l in enumerate(labels))
+    grid="".join(f'<line x1="36" x2="{W-20}" y1="{h-24-(h-44)*f:.0f}" y2="{h-24-(h-44)*f:.0f}" stroke="{LINE}"/><text x="32" y="{h-20-(h-44)*f:.0f}" font-size="10" text-anchor="end" fill="{MUTE}">{mx*f:.0f}{unit}</text>' for f in (0,.5,1))
+    last=pts[-1]
+    return f'<svg viewBox="0 0 {W} {h}" style="width:100%;height:auto" role="img" aria-label="Tendencia"><defs><linearGradient id="g{gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{c}" stop-opacity=".35"/><stop offset="1" stop-color="{c}" stop-opacity="0"/></linearGradient></defs>{grid}<polygon points="{area}" fill="url(#g{gid})"/><polyline fill="none" stroke="{c}" stroke-width="2.5" stroke-linejoin="round" points="{line}"/><circle cx="{last[0]:.0f}" cy="{last[1]:.0f}" r="5" fill="{c}" stroke="#fff" stroke-width="2"/>{axis}</svg>'
+def stackbars(labels, series, h=170, unit="h"):
+    """Barras apiladas por día (series: dict nombre -> lista), como 'Learning activity' de la referencia."""
+    names=list(series); tot=[sum(series[n][i] for n in names) for i in range(len(labels))]; mx=max(tot) or 1
+    cols=""
+    for i,l in enumerate(labels):
+        segs="".join(f'<div title="{n}: {series[n][i]}{unit}" style="height:{series[n][i]/mx*h:.0f}px;background:{CH[k%4]}"></div>' for k,n in enumerate(names) if series[n][i])
+        cols+=f'<div class="vgroup"><div class="sbar" style="height:{h}px"><div class="sbar-track"></div><div class="sbar-fill">{segs}</div></div><span class="vlabel">{l}</span></div>'
+    leg="".join(f'<span class="leg"><i style="background:{CH[k%4]}"></i>{n}</span>' for k,n in enumerate(names))
+    return f'<div class="chart"><div class="vbars">{cols}</div><div class="legend">{leg}</div></div>'
+def gauge(pct, label="", color=None):
+    """Medidor semicircular (0–100)."""
+    import math
+    c=color or CH[0]; r=52; cx=70; cy=70
+    def pt(p):
+        a=math.pi*(1-p); return cx+r*math.cos(a), cy-r*math.sin(a)
+    x,y=pt(min(pct,100)/100)
+    return (f'<div class="gauge"><svg viewBox="0 0 140 84" style="width:160px;height:auto" role="img" aria-label="{label} {pct}%"><path d="M18,70 A52,52 0 0 1 122,70" fill="none" stroke="{LINE}" stroke-width="12" stroke-linecap="round"/>'
+            f'<path d="M18,70 A52,52 0 {1 if min(pct,100)>50 else 0} 1 {x:.1f},{y:.1f}" fill="none" stroke="{c}" stroke-width="12" stroke-linecap="round"/>'
+            f'<text x="70" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="{INK}">{pct}%</text></svg><span class="kpi-sub">{label}</span></div>')
+def ring(pct, color=None, size=44):
+    import math
+    c=color or CH[0]; r=16; circ=2*math.pi*r
+    return f'<svg viewBox="0 0 40 40" width="{size}" height="{size}" role="img" aria-label="{pct}%"><circle cx="20" cy="20" r="{r}" fill="none" stroke="{LINE}" stroke-width="5"/><circle cx="20" cy="20" r="{r}" fill="none" stroke="{c}" stroke-width="5" stroke-linecap="round" stroke-dasharray="{circ*pct/100:.1f} {circ:.1f}" transform="rotate(-90 20 20)"/><text x="20" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="{INK}">{pct}%</text></svg>'
+def avatar(initials, size="lg"):
+    return f'<span class="avatar {size}">{initials}</span>'
+def funnel(stages):
+    mx=stages[0][1]; out=""
+    for i,(l,v) in enumerate(stages):
+        conv=f' · {v/stages[i-1][1]*100:.0f}% del paso anterior' if i else ''
+        out+=f'<div class="funnel-row"><div class="funnel-bar" style="width:{v/mx*100:.0f}%;background:{CH[0]}">{v:,}</div><span>{l}{conv}</span></div>'
+    return f'<div class="funnel">{out}</div>'
+def stacked(parts):
+    bar="".join(f'<div title="{l} {p}%" style="width:{p}%;background:{CH[i%4]}"></div>' for i,(l,p) in enumerate(parts))
+    leg="".join(f'<span class="leg"><i style="background:{CH[i%4]}"></i>{l} <b>{p}%</b></span>' for i,(l,p) in enumerate(parts))
+    return f'<div class="chart"><div class="stack">{bar}</div><div class="legend">{leg}</div></div>'
+def upload(label, hint):
+    i=_nid(); return f'<div class="upload"><label for="{i}">{label}</label><input id="{i}" type="file"><span class="kpi-sub">{hint}</span></div>'
+def pager(total, per=20):
+    pages="".join(f'<a href="#" aria-label="Página {n}" class="pg{" on" if n==1 else ""}">{n}</a>' for n in (1,2,3))
+    return f'<div class="wf-pager pager"><span>{total} registros · {per} por página<span class="wf-shown"></span></span><span class="pages">{pages}<a href="#" aria-label="Siguiente" class="pg">›</a></span></div>'
+def logo():
+    return '<div class="brand brand-dark"><span class="brand-mark" aria-hidden="true"></span><span><b>CAMBRIDGE</b><small>School of Languages</small></span></div>'
+def ai(items, ask="¿Qué más quieres saber?"):
+    lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span>{t} <a href="{h}">{l} →</a></span></li>' for t,l,h in items)
+    return f'<section class="ai"><div class="ai-head"><span class="ai-spark" aria-hidden="true">✦</span><h2>Asistente · lo que vale la pena mirar</h2><span class="kpi-sub">generado ahora · solo lectura · según tu rol</span></div><ul>{lis}</ul><div class="ai-ask"><label for="ai-q" class="sr">Pregunta</label><input id="ai-q" class="ctl" placeholder="{ask}">{btn("Preguntar","Chatbot.html",True)}</div></section>'
+def flow(steps):
+    return '<ol class="flow-steps">'+"".join((f'<li>{st}</li>'+('<li class="arr" aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
+def row(*cells, gap=16):
+    return f'<div class="row" style="gap:{gap}px">'+"".join(cells)+'</div>'
+def two(a,b, ratio="1fr 1fr"):
+    return f'<div class="grid" style="grid-template-columns:{ratio}">{a}{b}</div>'
+def card(title, inner, extra=""):
+    return f'<section class="card"><div class="card-head"><h2>{title}</h2>{extra}</div>{inner}</section>'
+def li(items):
+    return '<ul class="list">'+"".join(f"<li>{i}</li>" for i in items)+'</ul>'
+def course_item(name, meta, pct, status, grade, cert, href="DetalleMatricula.html", tone=0):
+    """Fila de curso matriculado con anillo de progreso (como 'Enrolled courses' de la referencia)."""
+    return (f'<div class="course"><span class="course-ico" style="background:{CH[tone%4]}22;color:{CH[tone%4]}">📘</span><div class="course-name"><a href="{href}">{name}</a><small>{meta}</small></div>'
+            f'{ring(pct,CH[tone%4])}{status}<b class="course-grade">{grade}</b><span class="kpi-sub">Certificado: {cert}</span></div>')
+# ================= FIN TEMA =================
+
 # 1 Login
-login=f'''<div style="min-height:{H}px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:{INK};background:{FILL2}">
-<form style="width:100%;max-width:420px;background:#fff;border:2px solid {INK};padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
+login=f'''<div class="auth">
+<form>
   {logo()}
   <h1 style="margin:0;font-size:22px">Ingresar</h1>
-  <label for="email" style="font-size:13px;font-weight:600">Correo</label>
-  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" style="min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">
-  <label for="pass" style="font-size:13px;font-weight:600">Contraseña</label>
-  <input id="pass" type="password" placeholder="••••••••" style="min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">
+  <label for="email">Correo</label>
+  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" class="ctl">
+  <label for="pass">Contraseña</label>
+  <input id="pass" type="password" placeholder="••••••••" class="ctl">
   {btn("Ingresar","Home.html",True)}
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
+  <a href="Mapa.html" style="font-size:12px;text-align:center;color:#5B6B8A">Mapa de pantallas del mockup</a>
   <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>'''
@@ -409,6 +594,7 @@ home=shell("Inicio","Inicio",
  only("ADM,GER,DIR,SUC,SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")]))+
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
  only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$420","$420","$0","$0"),"se paga al cobrar")]))+
+ only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="row" style="gap:16px;margin-top:6px">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos",CH[2])+gauge(109,"Meta de niveles",CH[3]).replace("109%","109%")+'</div>'))) +
  two(only(APROBADORES, card("Pendientes de aprobación", li(["Descuento 42% · estudiante · asesor","Alta de profesor · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
      +only("ASE,SEC", card("Mis pendientes", li(["Solicitud de descuento 42% · María Andrade · esperando a Dir. Comercial","4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
      +only("PRO", card("Mis clases de hoy", li(["B1 Virtual · 19:00–21:00 · Zoom 2 · 12 estudiantes","Adults A2 · 18:00–20:00 · C-5 · 9 estudiantes"])+row(btn("Registrar sesión",None,True),btn("Ver mis cursos","Cursos.html")))),
@@ -438,7 +624,20 @@ page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
 
 # 4 Ficha 360
 ficha=shell("María Andrade","Estudiantes",
- row(kv(("Cédula","1712345678"),("Sede","Quito"),("Estado",badge("Activo","ok")),("Asesor","Carla M."),("Nivel actual","B1 · módulo 7 de 16"),("Alta","12 ene 2026"),("ID legado TeamDesk","Valle · 001-2026xxxxx")),'<div style="margin-left:auto"></div>',btn("Nueva matrícula",None,True),btn("Editar","NuevoEstudiante.html")),
+ f'''<div class="grid" style="grid-template-columns:300px 1fr">
+  <aside class="profile"><div class="profile-cover"></div><div class="profile-body">{avatar("MA")}<div class="chips" style="justify-content:center"><span class="badge">EST-00412</span>{badge("Activa","ok")}</div><h2>María Andrade</h2><span class="kpi-sub">Matriculada desde el 12 ene 2026 · Quito</span>
+    <div class="actions">{btn("Llamar",None,False,"Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.")}{btn("Email",None,False,"Se abre un correo con la plantilla de contacto y queda registrado en el historial.")}{btn("WhatsApp",None,True,"Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).")}</div>
+    <div class="contact"><span><b>Cédula</b>1712345678</span><span><b>Email</b>maria.andrade@example.com</span><span><b>Teléfono</b>099 000 0001</span><span><b>Dirección</b>Quito · La Carolina</span><span><b>Programa · nivel</b>English for Adults · B1 (módulo 7 de 16)</span><span><b>Asesor</b>Carla M.</span><span><b>ID legado TeamDesk</b>Quito · 001-2026xxxxx</span></div>
+    <div class="contact"><span style="font-weight:700">Logros y certificados</span>{li(["Certificado A1 · dic 2025","Certificado A2 · jun 2026 · nota 85","Asistencia perfecta · módulo 5","Referido: trajo a 1 estudiante"])}</div>
+    <div class="actions">{btn("Nueva matrícula",None,True)}{btn("Editar","NuevoEstudiante.html")}</div></div></aside>
+  <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <div class="grid" style="grid-template-columns:1.3fr 1fr">
+      {card("Actividad de aprendizaje", '<div class="row" style="gap:10px;align-items:baseline"><span style="font-size:28px;font-weight:700">6</span><span class="kpi-sub">horas esta semana · 4 sesiones</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual · P. Gómez":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Plataforma Moodle":[0.5,0,0.5,0,1,0,0]},h=150)+'<div class="chips"><span class="chip"><b>8 h</b>B1 Virtual</span><span class="chip"><b>1 h</b>Club de conversación</span><span class="chip"><b>2 h</b>Moodle (tareas)</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="170px",col=False))}
+      {card("Rendimiento", '<div class="row" style="gap:16px;align-items:center;flex-wrap:nowrap">'+gauge(84,"Puntaje del módulo")+'<div class="hbars" style="flex:1">'+hbars([("Participación",92),("Tareas Moodle",80),("Quiz",78),("Examen parcial",85)],"")+'</div></div>'+areachart(["May","Jun","Jul","Ago","Sep","Oct"],[72,78,75,81,83,84],h=130)+'<span class="kpi-sub">Nota mínima para Pass: 70 · asistencia mínima 75% (hoy 90%)</span>', sel("Período",["Últimos 6 meses","Módulo actual","Todo"],w="160px",col=False))}
+    </div>
+    {card("Cursos matriculados", course_item("English for Adults B1 Virtual · 0001-2026-0767","Lu-Ma-Mi-Ju 19:00–21:00 · P. Gómez · módulo 7",60,badge("En curso","ok"),"84 / 100","pendiente",tone=0)+course_item("English for Adults A2 · 0001-2026-0620","Lu-Mi 18:00–20:00 · L. Vega · módulos 3–6",100,badge("Aprobado","ok"),"85 / 100",'<a href="#">A2.pdf</a>',tone=2)+course_item("English for Adults A1 · 0001-2025-0430","Sa 09:00–13:00 · L. Vega · módulos 1–2",100,badge("Aprobado","ok"),"80 / 100",'<a href="#">A1.pdf</a>',tone=3)+course_item("English for Adults B2 · por abrir","Paquete comprado · módulos 11–14 · inicia mar 2027",0,badge("Pendiente","warn"),"—","—",tone=1), filters(search("Buscar","Curso, código…",w="220px"),sel("Estado",["Todos","En curso","Aprobado","Pendiente"],w="130px",col=False),actions='<a href="Cursos.html" class="btn btn-primary">Ver todos</a>'))}
+  </div>
+</div>''',
  tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
   "Datos": two(card("Datos personales", form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede"])),
                card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
@@ -463,7 +662,7 @@ page("Ficha360.html","Ficha estudiante",ficha,"Ficha 360 del estudiante")
 
 # 5 Nueva venta
 steps=["1 Estudiante","2 Niveles y curso","3 Descuento","4 Pago","5 Matrícula"]
-stepper='<div style="display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px">'+"".join(f'<div style="padding:10px;text-align:center;font-size:13px;font-weight:600;border:2px solid {INK};background:{"#1f2937" if i==2 else "#fff"};color:{"#fff" if i==2 else INK}">{s}</div>' for i,s in enumerate(steps))+'</div>'
+stepper='<div class="stepper">'+"".join(f'<div class="step{" on" if i==2 else (" done" if i<2 else "")}">{s}</div>' for i,s in enumerate(steps))+'</div>'
 venta=shell("Nueva matrícula · venta por niveles","Nueva matrícula",
  stepper,
  two(card("Estudiante, niveles y curso", kv(("Estudiante","María Andrade"),("Sede","Quito"),("Asesor (vendor)","Carla M."))+table(["Nivel","Módulos","Modalidad","Precio"],[["B1","7 y 8","Virtual","$500"],["B2","9 y 10","Virtual","$500"]])+filters(sel("Curso para el primer módulo",["0001-2026-0767 · Adults B1 Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · 12/15","0001-2026-0772 · Adults B1 · Sa 09:00–13:00 · 9/12"],w="100%",col=False),sel("Plan de pago",["Contado","2 cuotas","4 cuotas"],w="140px",col=False),sel("Facturar a",["Estudiante","Empresa Andina S.A. (convenio 15%)","Clínica Valle (convenio 10%)","Otra empresa…"],w="260px",col=False))+kv(("Niveles","2 (4 módulos)"),("Precio lista","$1,000"),("Libros","B1 + B2 · $80"),("Inicio","3 nov 2026"))),
@@ -662,11 +861,11 @@ page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
  subtitle="Al crear el curso se descuenta el stock de libros por cupo (inventario)"),"Nuevo curso")
 
 # 19 Sesiones
-cal="".join(f'<div style="border:1px solid {LINE};min-height:90px;padding:6px;font-size:12px"><b>{d}</b><br>{c}</div>' for d,c in [("Lun 5","B1 Virtual 18:00<br>Kids 2 15:00"),("Mar 6","Teens A2 16:00"),("Mié 7","B1 Virtual 18:00<br>Kids 2 15:00"),("Jue 8","Teens A2 16:00"),("Vie 9","B1 Virtual 18:00"),("Sáb 10","Intensivo A1 09:00"),("Dom 11","")])
+cal="".join(f'<div><b>{d}</b><br>{c}</div>' for d,c in [("Lun 5","B1 Virtual 18:00<br>Kids 2 15:00"),("Mar 6","Teens A2 16:00"),("Mié 7","B1 Virtual 18:00<br>Kids 2 15:00"),("Jue 8","Teens A2 16:00"),("Vie 9","B1 Virtual 18:00"),("Sáb 10","Intensivo A1 09:00"),("Dom 11","")])
 page("Sesiones.html","Sesiones",shell("Registro de sesiones","Sesiones",
  filters(sel("Semana",["5–11 oct 2026","28 sep–4 oct 2026","12–18 oct 2026"],w="190px",col=False),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro"],w="160px"),sel("Origen",["Todos","Automática (Moodle)","Manual"],w="170px"),sel("Estado",["Todas","Confirmada","Pendiente","No dictada"],w="140px"),actions=kv(("Confirmadas","4"),("Pendientes","3"),("No dictadas","1"))+btn("Registrar sesión manual",None,True)),
  table(["Fecha","Curso","Sede","Profesor","Horas","Origen","Estado"],[["Lun 5 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Lun 5 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("Confirmada","ok")],["Mar 6 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Confirmada","ok")],["Mié 7 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Confirmada","ok")],["Mié 7 · 15:00","Kids 2 Tarde","Valle","L. Vega","2","Manual",badge("No dictada","bad")],["Jue 8 · 16:00","Teens A2","Ambato","M. Castro","2","Manual",badge("Pendiente","warn")],["Vie 9 · 18:00","B1 Virtual","Quito","P. Gómez","2","Automática (Moodle)",badge("Pendiente","warn")],["Sáb 10 · 09:00","Intensivo A1","Quito","L. Vega","4","Manual",badge("Confirmada","ok")]],sede=2),
- card("Calendario de la semana", f'<div style="display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:4px">{cal}</div>'),
+ card("Calendario de la semana", f'<div class="cal">{cal}</div>'),
  two(card("Sesión seleccionada", kv(("Curso","B1 Virtual · Quito"),("Fecha","Lun 5 oct · 18:00–20:00"),("Profesor","P. Gómez"),("Horas","2"),("Origen","Automática (Moodle)"),("Asistencia","12/15"),("Estado",badge("Pendiente","warn")))+row(btn("Confirmar sesión",None,True),btn("Marcar no dictada"))),
      card("Alertas", li(["Sesión fuera del horario programado","Profesor con contrato vencido","Curso sin sesiones registradas esta semana"]))),
  subtitle="Las sesiones confirmadas alimentan progreso y payment sheet"),"Registro de sesiones")
@@ -674,7 +873,7 @@ page("Sesiones.html","Sesiones",shell("Registro de sesiones","Sesiones",
 # 20 Ficha profesor
 page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
  row(kv(("Cédula","1709876543"),("Contrato",badge("Por horas · vigente hasta dic 2026","ok")),("Tarifa","$7.00/h"),("Sedes","Quito y Valle"),("Especialidad","Adults · B1–C1 · certificación CELTA"),("Desde","feb 2024")),'<div style="margin-left:auto"></div>',only("ADM,GER,SUC,COO",btn("Editar","AltaProfesor.html"),True),only("ADM,GER,SUC,COO",btn("Ver payment sheet","PaymentSheet.html"),True),only("ADM,GER,SUC,COO",btn("Asignar a curso",None,False,"Se elige un curso sin profesor compatible con su disponibilidad; si el contrato no está vigente la asignación va a aprobación."),True)),
- kpis([("Dictando ahora","B1 Virtual · Zoom 2","19:00–21:00 · 12 estudiantes conectados"),("Horas esta semana","14 h","de 20 h máx. del contrato"),("Asistencia de sus cursos","88%","promedio últimas 4 semanas"),("Aprobación (pass)","94%","últimos 3 módulos cerrados")]),
+ '<div class="grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr">'+kpi("Dictando ahora","B1 Virtual · Zoom 2","19:00–21:00 · 12 estudiantes conectados")+'<div class="card" style="align-items:center">'+gauge(70,"Carga · 14 de 20 h")+'</div><div class="card" style="align-items:center">'+gauge(88,"Asistencia de sus cursos",CH[2])+'</div><div class="card" style="align-items:center">'+gauge(94,"Pass últimos 3 módulos",CH[3])+'</div></div>',
  tabs(["Agenda y carga","Datos","Contrato y tarifa","Cursos","Sesiones","Historial de pagos"],"Agenda y carga",roles={"Contrato y tarifa":"ADM,GER,DIR,SUC,COO","Historial de pagos":"ADM,GER,SUC,COO"},panels={
   "Agenda y carga": two(card("Clases de hoy · martes 6 oct", table(["Hora","Curso","Sede / aula","Estudiantes","Sesión"],[["18:00–20:00","0001-2026-0620 · Adults A2","Valle · C-5","9/12",badge("Confirmada","ok")],["19:00–21:00","0001-2026-0767 · Adults B1 Virtual","Quito · Zoom 2","12/15",badge("En curso ahora","warn")]])+note("Mañana: B1 Virtual 19:00. Jueves: A2 18:00 y B1 Virtual 19:00. Sábado libre.")),
      card("Carga semanal (horas)", vbars([("Lu",[4]),("Ma",[4]),("Mi",[2]),("Ju",[4]),("Vi",[0]),("Sa",[0])],["Horas dictadas"],h=120)+kv(("Total","14 h"),("Máximo contrato","20 h"),("Disponible","Lu-Ma-Mi-Ju 17:00–19:00 · Vi · Sa"))))
@@ -722,7 +921,7 @@ page("DetalleFactura.html","Detalle factura",shell("Factura #1234","Facturación
 
 # 24 Solicitud de descuento
 page("SolicitudDescuento.html","Solicitud de descuento",shell("Solicitud de descuento","Nueva matrícula",
- f'<div style="max-width:640px;border:2px solid {INK};padding:24px;display:flex;flex-direction:column;gap:16px">'+kv(("Venta","María Andrade · B1 + B2"),("Precio lista","$1,000"),("Asesor","Carla M."))+form(["Descuento solicitado (%)","Monto resultante"])+form(["Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)"],1)+form(["Justificación"],1)+note("Más de 10% requiere aprobación del Director Comercial. El asesor ve el estado de su solicitud en Notificaciones.","warn")+row(btn("Cancelar","NuevaVenta.html"),btn("Enviar solicitud","Aprobaciones.html",True))+'</div>',
+ f'<div class="card" style="max-width:640px">'+kv(("Venta","María Andrade · B1 + B2"),("Precio lista","$1,000"),("Asesor","Carla M."))+form(["Descuento solicitado (%)","Monto resultante"])+form(["Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)"],1)+form(["Justificación"],1)+note("Más de 10% requiere aprobación del Director Comercial. El asesor ve el estado de su solicitud en Notificaciones.","warn")+row(btn("Cancelar","NuevaVenta.html"),btn("Enviar solicitud","Aprobaciones.html",True))+'</div>',
  subtitle="Reemplaza el campo 'Reason' opcional de TeamDesk"),"Solicitud de descuento")
 
 # 25 Detalle comisión por asesor
@@ -792,12 +991,12 @@ page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo"
  subtitle="Vista gerencial, distinta de la reportería operativa"),"Dashboard ejecutivo")
 
 # 31 Chatbot
-chat=f'<div style="max-width:760px;border:2px solid {INK};display:flex;flex-direction:column;height:520px"><div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto">'+ \
- f'<div style="align-self:flex-end;max-width:70%;padding:10px 14px;background:{INK};color:#fff;font-size:14px">¿Cuántos estudiantes activos tiene Valle en nivel B1?</div>'+ \
- f'<div style="align-self:flex-start;max-width:70%;padding:10px 14px;background:{FILL};font-size:14px">Valle tiene 23 estudiantes activos en B1, repartidos en 2 cursos (P. Gómez y L. Vega). ¿Quieres ver el listado?</div>'+ \
- f'<div style="align-self:flex-end;max-width:70%;padding:10px 14px;background:{INK};color:#fff;font-size:14px">¿Qué pagos a profesores están pendientes de aprobar?</div>'+ \
- f'<div style="align-self:flex-start;max-width:70%;padding:10px 14px;background:{FILL};font-size:14px">La payment sheet de octubre está en borrador con 2 alertas. Solo puedes ver pagos de las sedes que tu rol permite.</div>'+ \
- f'</div><div style="display:flex;gap:8px;padding:12px;border-top:2px solid {LINE}"><label for="msg" style="position:absolute;left:-9999px">Mensaje</label><input id="msg" placeholder="Pregunta sobre estudiantes, cursos, pagos o reportes" style="flex:1;min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">{btn("Enviar",None,True)}</div></div>'
+chat='<div class="chat"><div class="chat-log">'+ \
+ '<div class="msg me">¿Cuántos estudiantes activos tiene Valle en nivel B1?</div>'+ \
+ '<div class="msg bot">Valle tiene 23 estudiantes activos en B1, repartidos en 2 cursos (P. Gómez y L. Vega). ¿Quieres ver el listado?</div>'+ \
+ '<div class="msg me">¿Qué pagos a profesores están pendientes de aprobar?</div>'+ \
+ '<div class="msg bot">La payment sheet de octubre está en borrador con 3 alertas. Solo puedes ver pagos de las sedes que tu rol permite.</div>'+ \
+ f'</div><div class="chat-in"><label for="msg" class="sr">Mensaje</label><input id="msg" class="ctl" placeholder="Pregunta sobre estudiantes, cursos, pagos o reportes">{btn("Enviar",None,True)}</div></div>'
 page("Chatbot.html","Asistente interno",shell("Asistente interno","Inicio",chat,
  two(card("Qué puede responder", li(["Consultas sobre estudiantes, cursos, profesores, facturas y stock","Estado de aprobaciones y payment sheet","Resúmenes: '¿cuántos estudiantes activos tiene Valle en B1?'"])), card("Límites", li(["Responde solo con datos de la plataforma","Respeta el rol y las sedes del usuario (RBAC)","No modifica datos: para eso enlaza a la pantalla correspondiente"]))),
  subtitle="Consulta ágil para el equipo, sin armar un reporte"),"Asistente interno")
@@ -817,13 +1016,13 @@ page("Notificaciones.html","Notificaciones",shell("Notificaciones","Inicio",
 
 # ---------- Pantallas de formulario y acción (todo botón lleva a algún lado) ----------
 # 34 Recuperar contraseña
-rec=f'''<div style="min-height:{H}px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:{INK};background:{FILL2}">
-<form style="width:100%;max-width:420px;background:#fff;border:2px solid {INK};padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
+rec=f'''<div class="auth">
+<form>
   {logo()}
   <h1 style="margin:0;font-size:22px">Recuperar contraseña</h1>
   <p style="margin:0;font-size:14px;color:{MUTE}">Te enviamos un enlace temporal al correo registrado. Caduca en 30 minutos.</p>
-  <label for="email" style="font-size:13px;font-weight:600">Correo</label>
-  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" style="min-height:44px;padding:0 12px;border:2px solid {LINE};font-size:14px">
+  <label for="email">Correo</label>
+  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" class="ctl">
   {btn("Enviar enlace",None,True,"Si el correo existe se envía el enlace de recuperación. El intento queda en el audit log.","Main.html")}
   <a href="Main.html" style="font-size:13px;text-align:center">Volver al login</a>
 </form>
@@ -925,32 +1124,112 @@ idx=f'''<!doctype html>
 </head>
 <body class="hub">
 <header class="hub-head">
-<h1>Plataforma Cambridge · Wireframes</h1>
-<p>Versión de alto nivel para validar el flujo, no el diseño. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar. El selector de sede filtra cifras y tablas, y 'Ver como' cambia el tipo de usuario: menú, pestañas y accesos cambian según el rol.</p>
+<h1>Plataforma Cambridge · Mapa de pantallas</h1>
+<p><a href="Main.html">← Entrar al mockup</a> · Mockup navegable con la identidad de Cambridge y datos ficticios. Cada pantalla es navegable: los botones y enlaces llevan a la siguiente pantalla del flujo. {TOTAL} pantallas que cubren los 11 módulos del contrato. Los botones de acción (guardar, aprobar, exportar…) muestran qué pasaría al confirmar. El selector de sede filtra cifras y tablas, y 'Ver como' cambia el tipo de usuario: menú, pestañas y accesos cambian según el rol.</p>
 </header>
 {sec}
 <footer class="hub-foot">Orkesta · Cambridge School of Languages · Fase 0 Discovery y Diseño</footer>
 </body>
 </html>'''
-open(os.path.join(ROOT,"index.html"),"w").write(idx)
-css=f'''*{{box-sizing:border-box}}
-body{{margin:0;font-family:'IBM Plex Sans',sans-serif;color:{INK};background:#fff}}
-a{{color:{ACC}}}a:hover{{color:#1e40af}}
-.wf-bar{{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:8px 24px;background:#fff7d6;border-bottom:1px solid #e0c66b;font-size:13px}}
-.wf-bar span:nth-child(2){{font-weight:600}}
-.wf-tag{{margin-left:auto;color:#8a6d00;letter-spacing:.06em;font-size:11px}}
-.hub{{max-width:1100px;margin:0 auto;padding:40px 24px}}
-.hub-head p{{color:{MUTE};font-size:15px;line-height:1.6;max-width:820px}}
-.hub section{{margin-top:40px}}
-.hub h2{{margin:0 0 4px;font-size:20px}}
-.hub section p{{margin:0 0 16px;color:{MUTE};font-size:14px;max-width:820px}}
-.flow{{display:flex;flex-wrap:wrap;gap:12px;align-items:center}}
-.card{{display:flex;flex-direction:column;gap:6px;width:200px;min-height:96px;padding:16px;border:2px solid {INK};text-decoration:none;color:{INK};font-weight:600;background:#fff;position:relative}}
-.card .num{{font-size:12px;color:{MUTE};font-weight:400}}
-.card:hover{{background:{FILL2}}}
-.card+.card::before{{content:"→";position:absolute;left:-16px;top:40px;color:{MUTE}}}
-.hub-foot{{margin-top:60px;color:{MUTE};font-size:12px}}
-@media (max-width:640px){{.card+.card::before{{display:none}}}}
+open(os.path.join(ROOT,"Mapa.html"),"w").write(idx)
+open(os.path.join(ROOT,"index.html"),"w").write('''<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=Main.html"><title>Plataforma Cambridge</title><link rel="canonical" href="Main.html"></head>
+<body style="font-family:sans-serif;padding:24px">Abriendo la plataforma… <a href="Main.html">Entrar</a> · <a href="Mapa.html">Mapa de pantallas</a></body></html>''')
+css='''*{box-sizing:border-box}
+:root{--navy:#1D3F8F;--navy2:#152F6B;--red:#D62839;--yellow:#F6C21C;--sky:#4FA3DC;--ink:#0F1E40;--mute:#5B6B8A;--line:#D6DCEA;--fill:#E8EDF7;--bg:#F4F6FB;--ok:#1B9E77;--warn:#C9900A;--r:12px;--sh:0 1px 2px rgba(15,30,64,.06),0 6px 20px rgba(15,30,64,.06)}
+body{margin:0;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+a{color:var(--navy)}a:hover{color:var(--navy2)}
+.sr{position:absolute;left:-9999px}
+.wf-bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:6px 24px;background:#0F1E40;color:#c7d2e8;font-size:12px}
+.wf-bar a{color:#fff}.wf-bar span:nth-child(2){font-weight:600;color:#fff}.wf-tag{margin-left:auto;color:var(--yellow);letter-spacing:.08em;font-size:11px}
+/* layout */
+.app{display:flex;min-height:100vh}
+.sidebar{width:232px;flex:none;background:var(--navy);color:#fff;display:flex;flex-direction:column;padding:16px 12px;gap:8px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;line-height:1.05}.brand b{display:block;font-size:17px;letter-spacing:.1em}.brand small{display:block;font-size:9px;letter-spacing:.18em;text-transform:uppercase;opacity:.8}
+.brand-mark{width:34px;height:26px;border-radius:4px;background:linear-gradient(180deg,var(--red) 0 33%,#fff 33% 66%,var(--navy) 66%);border:2px solid #fff;flex:none}
+.brand-dark{color:var(--navy);justify-content:center}
+.nav-area{padding:14px 12px 4px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:rgba(255,255,255,.85);text-decoration:none;font-size:14px}
+.nav-link:hover{background:rgba(255,255,255,.1);color:#fff}.nav-link.active{background:#fff;color:var(--navy);font-weight:700}
+.nav-ico{width:20px;text-align:center;font-size:14px;opacity:.9}
+.sidebar-foot{margin-top:auto;font-size:11px;opacity:.55;padding:8px 12px}
+.shell-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 28px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.search{display:flex;align-items:center;gap:8px;flex:1;max-width:420px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:0 14px;height:38px;color:var(--mute)}
+.search input{border:0;background:none;font:inherit;flex:1;outline:none;color:var(--ink)}
+.topbar-ctl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
+.topbar-ctl select{height:34px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:13px;color:var(--ink)}
+.icon-btn{position:relative;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);text-decoration:none;color:var(--ink);font-size:15px}
+.icon-btn .dot{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 5px}
+.user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);white-space:nowrap}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--navy);color:#fff;font-weight:700}
+.avatar.sm{width:30px;height:30px;font-size:13px}.avatar.lg{width:88px;height:88px;font-size:30px;border:4px solid #fff;box-shadow:var(--sh)}
+.main{padding:24px 28px 40px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.page-head h1{margin:0;font-size:24px}.page-head p{margin:4px 0 0;color:var(--mute);font-size:14px}
+/* componentes */
+.grid{display:grid;gap:16px}.row{display:flex;flex-wrap:wrap;align-items:center}
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card-head{display:flex;align-items:center;gap:12px}.card-head h2{margin:0;font-size:16px}.card-head>*:last-child:not(h2){margin-left:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:8px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--fill)}.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy2)}.btn-danger{border-color:var(--red);color:var(--red)}.btn-danger:hover{background:#fdecee}
+.tbl{display:grid;background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.th{padding:11px 12px;font-weight:700;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;background:var(--bg);border-bottom:1px solid var(--line)}
+.td{padding:11px 12px;font-size:13px;border-bottom:1px solid var(--fill);display:flex;align-items:center;min-width:0;overflow-wrap:anywhere}
+.wf-row:nth-child(even) .td{background:#fbfcfe}.wf-empty{padding:24px;text-align:center;color:var(--mute)}
+.kpi{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px 14px 20px;display:flex;flex-direction:column;gap:4px;position:relative;min-width:0;overflow:hidden}
+.kpi-bar{position:absolute;left:0;top:0;bottom:0;width:5px}.kpi-label{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.kpi-value{font-size:26px;font-weight:700;line-height:1.1}.kpi-sub{font-size:12px;color:var(--mute)}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}.field label{font-weight:600;color:var(--ink);font-size:13px}
+.ctl{min-height:40px;padding:0 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink);width:100%}.ctl:focus{outline:2px solid var(--sky);outline-offset:1px}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.note{margin:0;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;background:#EEF3FC;border-left:4px solid var(--navy)}.note-warn{background:#FFF7E0;border-left-color:var(--warn)}.note-ok{background:#E6F6F0;border-left-color:var(--ok)}
+.kv{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;align-items:center}.kv .k{color:var(--mute)}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--fill);color:var(--ink);line-height:1.3}
+.badge-ok{background:#E6F6F0;color:#0B6B4F}.badge-warn{background:#FFF3D1;color:#8A5B00}.badge-bad{background:#FDE7EA;color:#A3121F}
+.prog{display:flex;flex-direction:column;gap:4px;font-size:13px}.prog-head{display:flex;justify-content:space-between}.prog-track{height:10px;background:var(--fill);border-radius:999px;overflow:hidden}.prog-fill{height:100%;border-radius:999px}
+.hbars{display:flex;flex-direction:column;gap:8px}.hbar{display:grid;grid-template-columns:150px 1fr 80px;gap:10px;align-items:center;font-size:13px}.hbar-track{height:14px;background:var(--fill);border-radius:999px;overflow:hidden}.hbar-fill{height:100%;background:var(--navy);border-radius:999px}.hbar b{text-align:right}
+.chart{display:flex;flex-direction:column;gap:10px}.vbars{display:flex;gap:8px;border-bottom:1px solid var(--line);padding:18px 0 6px}
+.vgroup{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0}.vbars-stack{display:flex;align-items:flex-end;gap:3px}.vbar{width:22px;border-radius:4px 4px 0 0;position:relative}.vbar span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:11px}
+.vlabel{font-size:12px;color:var(--mute);text-align:center}
+.sbar{position:relative;width:26px}.sbar-track{position:absolute;inset:0;background:var(--fill);border-radius:6px}.sbar-fill{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column-reverse;gap:2px;border-radius:6px;overflow:hidden}.sbar-fill div:last-child{border-radius:6px 6px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px}.leg{display:inline-flex;align-items:center;gap:6px}.leg i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.funnel{display:flex;flex-direction:column;gap:6px}.funnel-row{display:flex;align-items:center;gap:12px;font-size:13px}.funnel-bar{min-width:70px;color:#fff;padding:8px 10px;font-weight:600;border-radius:6px}
+.stack{display:flex;height:22px;border-radius:999px;overflow:hidden;gap:2px;background:var(--fill)}
+.gauge{display:flex;flex-direction:column;align-items:center;gap:2px}
+.upload{border:2px dashed var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:13px;width:100%;background:var(--bg)}.upload label{font-weight:600}
+.pager{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mute)}.pages{margin-left:auto;display:flex;gap:4px}.pg{padding:4px 10px;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--ink);background:#fff}.pg.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}.tab{padding:10px 16px;font:inherit;font-size:14px;color:var(--mute);background:none;border:0;border-bottom:3px solid transparent;cursor:pointer;text-decoration:none}.tab.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:700}
+.panel{flex-direction:column;gap:20px}
+.list{margin:0;padding-left:18px;font-size:14px;line-height:1.7}
+.flow-steps{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}.flow-steps li{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff}.flow-steps .arr{border:0;background:none;color:var(--mute);padding:0}
+.ai{background:linear-gradient(135deg,#EEF3FC,#fff);border:1px solid #C9D6F2;border-radius:var(--r);padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.ai-head{display:flex;align-items:center;gap:8px}.ai-head h2{margin:0;font-size:16px}.ai-head .kpi-sub{margin-left:auto}.ai-spark{color:var(--yellow);font-size:18px}
+.ai ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5}.ai li{display:flex;gap:10px;align-items:flex-start}.ai-dot{flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:var(--navy)}.ai a{white-space:nowrap;font-weight:600}
+.ai-ask{display:flex;gap:8px;align-items:center}.ai-ask .ctl{max-width:520px}
+/* dashboard ficha */
+.profile{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column}
+.profile-cover{height:84px;background:linear-gradient(120deg,var(--navy),var(--sky))}
+.profile-body{padding:0 20px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:-44px;text-align:center}
+.profile h2{margin:4px 0 0;font-size:20px}.profile .contact{width:100%;text-align:left;display:flex;flex-direction:column;gap:8px;margin-top:10px;font-size:13px}.profile .contact span b{display:block;color:var(--mute);font-weight:400;font-size:12px}
+.profile .actions{display:flex;gap:8px;width:100%;margin-top:4px}
+.course{display:grid;grid-template-columns:40px 1.6fr 48px 110px 70px 150px;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--fill);font-size:13px}.course:last-child{border-bottom:0}
+.course-ico{width:40px;height:40px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:18px}.course-name a{font-weight:700;text-decoration:none}.course-name small{display:block;color:var(--mute)}.course-grade{font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:8px 12px;border-radius:10px;font-size:12px;background:var(--bg)}.chip b{display:block;font-size:14px}
+/* diálogo / toast */
+#wf-dialog{border:0;border-radius:var(--r);box-shadow:0 20px 60px rgba(15,30,64,.3);padding:24px;max-width:480px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink)}#wf-dialog::backdrop{background:rgba(15,30,64,.45)}
+#wf-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;display:none;z-index:10;box-shadow:var(--sh)}
+/* login */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,#0F1E40 100%);padding:24px}
+.auth form{width:100%;max-width:420px;background:#fff;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px rgba(0,0,0,.35)}.auth h1{margin:4px 0 0;font-size:22px}.auth label{font-size:13px;font-weight:600}
+.stepper{display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px}.step{padding:10px;text-align:center;font-size:13px;font-weight:600;border-radius:8px;background:#fff;border:1px solid var(--line);color:var(--mute)}.step.done{color:var(--navy);border-color:var(--navy)}.step.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cal{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:6px}.cal div{border:1px solid var(--line);border-radius:8px;min-height:90px;padding:8px;font-size:12px;background:#fff}
+.chat{max-width:760px;background:#fff;border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;height:520px}.chat-log{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto}.msg{max-width:70%;padding:10px 14px;border-radius:14px;font-size:14px}.msg.me{align-self:flex-end;background:var(--navy);color:#fff;border-bottom-right-radius:4px}.msg.bot{align-self:flex-start;background:var(--bg);border-bottom-left-radius:4px}.chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+/* hub */
+.hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub-head p{color:var(--mute);font-size:15px;line-height:1.6;max-width:820px}
+.hub section{margin-top:40px}.hub h2{margin:0 0 4px;font-size:20px;color:var(--navy)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:14px;max-width:820px}
+.flow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.hub .card{display:flex;flex-direction:column;gap:6px;width:200px;min-height:96px;padding:16px;text-decoration:none;color:var(--ink);font-weight:600;position:relative;border-left:4px solid var(--navy)}.hub .card .num{font-size:12px;color:var(--mute);font-weight:400}.hub .card:hover{transform:translateY(-2px)}
+.hub-foot{margin-top:60px;color:var(--mute);font-size:12px}
+@media (max-width:900px){.sidebar{display:none}.course{grid-template-columns:40px 1fr 48px}.course>*:nth-child(n+4){display:none}}
 '''
 open(os.path.join(ROOT,"style.css"),"w").write(css)
 open(os.path.join(ROOT,".nojekyll"),"w").write("")

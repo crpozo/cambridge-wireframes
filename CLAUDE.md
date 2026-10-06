@@ -10,7 +10,8 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 
 ## Estructura
 ```
-index.html              mapa de pantallas por flujo (hub)
+index.html              redirige a Main.html (login): la URL principal abre el mockup
+Mapa.html               mapa de pantallas por área (hub)
 <Pantalla>.html         una página por pantalla (Main.html = login)
 style.css               estilos del hub y la barra amarilla de wireframe
 tools/generar_pantallas.py   generador en Python de TODAS las páginas (fuente de verdad del HTML)
@@ -20,7 +21,7 @@ docs/                   documentación de contexto
 
 ## Cómo trabajar
 - **Las páginas se generan**: edita `tools/generar_pantallas.py` y corre `python3 tools/generar_pantallas.py` desde la raíz del repo (escribe en `ROOT`; ajusta esa constante a la ruta del repo si hace falta). No edites los `.html` a mano si vas a regenerar, se pierden.
-- Nivel de fidelidad: **alto nivel con contenido real**. Nada de cajas grises con etiqueta: KPIs con cifra (`kpis([(label, valor, sub)])`), filtros con `sel()/search()/dates()` dentro de `filters()`, textos explicativos con `note()`, pares clave-valor con `kv()`, estados con `badge()`, gráficos simples con `vbars()/hbars()/linechart()/funnel()/stacked()/progress()`, procesos con `flow()`, carga de archivos con `upload()`, paginación con `pager()`. Tablas con 4-7 filas de ejemplo. Sin diseño visual de marca: el objetivo es validar flujo y contenido con el cliente (Estefanía).
+- Nivel de fidelidad: **mockup con identidad Cambridge** (azul marino #1D3F8F, rojo #D62839, amarillo #F6C21C, celeste #4FA3DC; paleta de gráficos validada `CH`). Los helpers emiten clases CSS (`.card`, `.btn`, `.tbl`, `.kpi`, `.badge`, …) definidas en `style.css` (generado desde `css` en el generador); no agregar estilos en línea nuevos. Componentes de dashboard: `gauge()`, `ring()`, `areachart()`, `stackbars()`, `avatar()`, `course_item()`, `.profile`. Nada de cajas grises con etiqueta: KPIs con cifra (`kpis([(label, valor, sub)])`), filtros con `sel()/search()/dates()` dentro de `filters()`, textos explicativos con `note()`, pares clave-valor con `kv()`, estados con `badge()`, gráficos simples con `vbars()/hbars()/linechart()/funnel()/stacked()/progress()`, procesos con `flow()`, carga de archivos con `upload()`, paginación con `pager()`. Tablas con 4-7 filas de ejemplo. Sin diseño visual de marca: el objetivo es validar flujo y contenido con el cliente (Estefanía).
 - Filtros funcionales: un bloque `filters(...)` filtra la primera `table(...)` que lo sigue. `search()` busca en todas las celdas; `sel("Etiqueta", opciones)` filtra por la columna que se llama igual que la etiqueta (o `col="Columna"`; `col=False` para un selector decorativo como "Semana"). Las opciones deben coincidir con el texto de las celdas ("Todos"/"Todas" no filtra). La tabla muestra "Sin resultados con estos filtros" si nada coincide y el `pager()` indica cuántas filas quedan en pantalla. Los listados tienen 6-10 filas de ejemplo que cubren los distintos escenarios (estados, sedes, alertas).
 - Selector de sede global: filtra los datos de la página. Una cifra que varía por sede se escribe `sv(todas, quito, valle, ambato)`; una tabla con columna de sede se pasa `table(..., sede=<índice de columna>)` y sus filas se ocultan según la sede elegida. La selección se guarda en `localStorage` y se mantiene entre pantallas.
 - Toda pantalla usa la misma shell: barra superior (selector de sede, selector de rol "Ver como", notificaciones, asistente, usuario) + menú lateral agrupado por áreas (`NAV`: Académico, Comercial, Inventario, Dirección, Administración). Nueva pantalla = nueva llamada a `page(...)` + agregarla a `rows` (hub, agrupado por las mismas áreas) y, si aplica, a `NAV` con sus roles.
@@ -40,7 +41,7 @@ docs/                   documentación de contexto
 ```
 python3 tools/generar_pantallas.py
 grep -o 'href="[A-Za-z0-9]*\.html"' *.html | sed 's/.*href="//;s/"//' | sort -u | while read f; do [ -f "$f" ] || echo "ROTO $f"; done
-for f in *.html; do grep -q "href=\"$f\"" index.html || echo "FUERA DEL HUB $f"; done   # solo debe listar index.html y las de HIDDEN
+for f in *.html; do grep -q "href=\"$f\"" Mapa.html || echo "FUERA DEL HUB $f"; done   # solo debe listar index.html, Mapa.html y las de HIDDEN
 ```
 
 ## Publicación

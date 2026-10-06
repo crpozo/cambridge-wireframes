@@ -8,26 +8,26 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wf-bar"><a href="index.html">← Mapa de pantallas</a><span>Login</span><span class="wf-tag">WIREFRAME · alto nivel</span></div>
-<div style="min-height:820px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans',sans-serif;color:#1f2937;background:#f3f4f6">
-<form style="width:100%;max-width:420px;background:#fff;border:2px solid #1f2937;padding:40px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box">
-  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:#6b7280;letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>
+<div class="auth">
+<form>
+  <div class="brand brand-dark"><span class="brand-mark" aria-hidden="true"></span><span><b>CAMBRIDGE</b><small>School of Languages</small></span></div>
   <h1 style="margin:0;font-size:22px">Ingresar</h1>
-  <label for="email" style="font-size:13px;font-weight:600">Correo</label>
-  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" style="min-height:44px;padding:0 12px;border:2px solid #9ca3af;font-size:14px">
-  <label for="pass" style="font-size:13px;font-weight:600">Contraseña</label>
-  <input id="pass" type="password" placeholder="••••••••" style="min-height:44px;padding:0 12px;border:2px solid #9ca3af;font-size:14px">
-  <a href="Home.html" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:2px solid #1f2937;font-size:14px;font-weight:600;text-decoration:none;box-sizing:border-box;cursor:pointer;font-family:inherit;background:#1f2937;color:#fff;">Ingresar</a>
+  <label for="email">Correo</label>
+  <input id="email" type="email" placeholder="nombre@cambridge.edu.ec" class="ctl">
+  <label for="pass">Contraseña</label>
+  <input id="pass" type="password" placeholder="••••••••" class="ctl">
+  <a href="Home.html" class="btn btn-primary">Ingresar</a>
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
-  <p style="margin:0;font-size:12px;color:#6b7280;text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
+  <a href="Mapa.html" style="font-size:12px;text-align:center;color:#5B6B8A">Mapa de pantallas del mockup</a>
+  <p style="margin:0;font-size:12px;color:#5B6B8A;text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>
-<dialog id="wf-dialog" style="border:2px solid #1f2937;padding:24px;max-width:480px;font-family:'IBM Plex Sans',sans-serif;color:#1f2937">
+<dialog id="wf-dialog">
   <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
-  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#6b7280"></p>
-  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#fff;color:#1f2937;font:inherit;font-weight:600;cursor:pointer">Cancelar</button><button type="button" id="wf-ok" style="min-height:44px;padding:0 18px;border:2px solid #1f2937;background:#1f2937;color:#fff;font:inherit;font-weight:600;cursor:pointer">Confirmar</button></div>
+  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
+  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" class="btn">Cancelar</button><button type="button" id="wf-ok" class="btn btn-primary">Confirmar</button></div>
 </dialog>
-<div id="wf-toast" role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2937;color:#fff;padding:12px 20px;font-size:14px;display:none;z-index:10"></div>
+<div id="wf-toast" role="status"></div>
 <script>
 (function(){
   var dlg=document.getElementById('wf-dialog'),title=document.getElementById('wf-dialog-title'),text=document.getElementById('wf-dialog-text'),toast=document.getElementById('wf-toast'),cur=null;
@@ -97,7 +97,7 @@ document.querySelectorAll('.tabs').forEach(function(bar){
   var btns=bar.querySelectorAll('[data-tab]');
   btns.forEach(function(b){
     b.addEventListener('click',function(){
-      btns.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on);x.style.borderBottomColor=on?'#1f2937':'transparent';x.style.fontWeight=on?700:400;});
+      btns.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on);x.classList.toggle('on',on);});
       var el=bar.nextElementSibling;
       while(el&&el.hasAttribute('data-panel')){el.style.display=(el.getAttribute('data-panel')===b.dataset.tab&&!el.dataset.wfHidden)?'flex':'none';el=el.nextElementSibling;}
     });
