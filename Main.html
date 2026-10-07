@@ -22,6 +22,13 @@
   <p style="margin:0;font-size:12px;color:#5B6B8A;text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>
+<button type="button" class="ai-fab" id="ai-fab" aria-label="Abrir asistente"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d='M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z'/></svg></span><span class="ai-fab-dot"></span></button>
+<aside class="ai-panel" id="ai-panel" hidden aria-label="Asistente">
+  <div class="ai-panel-head"><span class="ai-spark">✦</span><div><b>Asistente Cambridge</b><small>Estás en: <span id="ai-ctx">Login</span></small></div><button type="button" class="icon-btn" id="ai-close" aria-label="Cerrar">×</button></div>
+  <div class="ai-log" id="ai-log"><div class="msg bot">Hola. Veo que estás en <b>Login</b>. Puedo responder sobre lo que tienes en pantalla o sobre cualquier dato de la plataforma, siempre según tu rol y sede.</div></div>
+  <div class="ai-chips" id="ai-chips"><button type="button" class="chipq" data-a="Te explico lo que ves aquí y qué acciones tienes según tu rol. También puedo buscar un estudiante, curso o profesor por nombre o código.">¿Qué puedo hacer en esta pantalla?</button><button type="button" class="chipq" data-a="Reviso aprobaciones, sesiones sin confirmar, saldos y alertas de inventario relacionados con esta pantalla y te digo qué es urgente.">¿Hay algo pendiente que deba revisar?</button></div>
+  <form class="ai-in" id="ai-form"><label for="ai-input" class="sr">Pregunta</label><input id="ai-input" class="ctl" placeholder="Pregunta sobre login…" autocomplete="off"><button type="submit" class="btn btn-primary">Enviar</button></form>
+</aside>
 <dialog id="wf-dialog">
   <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
   <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
@@ -47,7 +54,7 @@
     document.querySelectorAll('[data-sv]').forEach(function(e){var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];});
     document.querySelectorAll('.wf-table').forEach(function(t){
       var cols=JSON.parse(t.getAttribute('data-cols'));
-      var f=t.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')) f=f.previousElementSibling;
+      var host=t.closest('.tbl-wrap')||t; var f=host.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')&&!f.classList.contains('tbl-wrap')) f=f.previousElementSibling;
       var ctrls=(f&&f.classList.contains('wf-filters'))?[].slice.call(f.querySelectorAll('[data-fcol]')):[];
       var shown=0;
       t.querySelectorAll('.wf-row').forEach(function(r){
@@ -60,7 +67,7 @@
         r.style.display=ok?'contents':'none'; if(ok) shown++;
       });
       var e=t.querySelector('.wf-empty'); if(e) e.style.display=shown?'none':'block';
-      var pg=t.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}
+      var pg=host.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}
     });
   }
   if(sel){
@@ -83,7 +90,8 @@
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     });
-    document.querySelectorAll('.tabs').forEach(function(bar){
+    document.querySelectorAll('.btn-more').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));});});
+document.querySelectorAll('.tabs').forEach(function(bar){
       var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
       var act=btns.filter(function(b){return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';})[0];
       if(!act){ var first=btns.filter(function(b){return b.style.display!=='none';})[0]; if(first) first.click(); }
@@ -104,6 +112,20 @@ document.querySelectorAll('.tabs').forEach(function(bar){
     });
   });
 });
+(function(){
+  var fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-panel'),log=document.getElementById('ai-log'),form=document.getElementById('ai-form'),inp=document.getElementById('ai-input');
+  if(!fab) return;
+  function open(){panel.hidden=false;fab.classList.add('on');inp.focus();}
+  function close(){panel.hidden=true;fab.classList.remove('on');}
+  fab.addEventListener('click',function(){panel.hidden?open():close();});
+  document.getElementById('ai-close').addEventListener('click',close);
+  function add(cls,html){var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+  function answer(q,a){add('me',q);var t=document.createElement('div');t.className='msg bot typing';t.textContent='…';log.appendChild(t);log.scrollTop=log.scrollHeight;
+    setTimeout(function(){t.remove();add('bot',a||('Sobre <b>'+document.getElementById('ai-ctx').textContent+'</b>: en el producto final respondo con datos reales de la base unificada, filtrados por tu rol y sede. En este mockup puedo responder las preguntas sugeridas.'));},600);}
+  document.querySelectorAll('.chipq').forEach(function(c){c.addEventListener('click',function(){answer(c.textContent,c.getAttribute('data-a'));});});
+  form.addEventListener('submit',function(e){e.preventDefault();var q=inp.value.trim();if(!q)return;inp.value='';var m=[].find.call(document.querySelectorAll('.chipq'),function(c){return q.toLowerCase().split(' ').filter(function(w){return w.length>4}).some(function(w){return c.textContent.toLowerCase().indexOf(w)>=0;});});answer(q,m?m.getAttribute('data-a'):null);});
+  document.querySelectorAll('.btn-ask').forEach(function(b){b.addEventListener('click',function(){open();inp.value=b.getAttribute('data-ask')||'';});});
+})();
 if(window.wfApplyRole) window.wfApplyRole();
 </script>
 </body>

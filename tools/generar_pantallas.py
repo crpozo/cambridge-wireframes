@@ -52,6 +52,8 @@ ACTIONS={
  "Ver matrícula":"DetalleMatricula.html","Ver curso":"DetalleCurso.html","Nueva matrícula":"NuevaVenta.html",
  "Registrar ingreso de proveedor":"NuevoPedido.html",
  "Asignar código":("Se asigna el código de activación del material digital al estudiante y se marca como entregado.",None),
+ "Marcar como atendido":("El insight pasa a 'atendido' con tu usuario y fecha; deja de aparecer en Inicio y en el asistente.",None),
+ "Descartar":("El insight se descarta con un motivo; el asistente aprende a no repetirlo para este caso.",None),
 }
 
 def btn(label, href=None, primary=False, action=None, next=None):
@@ -86,7 +88,7 @@ NAV=[
  ("Académico",[("Estudiantes","Estudiantes.html",ALL),("Cursos","Cursos.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO")]),
  ("Comercial",[("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Facturación","Facturas.html",COMERCIAL),("Comisiones","Comisiones.html","ADM,GER,DIR,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
- ("Dirección",[("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
+ ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
  ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM")]),
 ]
 # alias: nombre antiguo de sección activa → ítem del menú
@@ -129,6 +131,23 @@ def shell(title, active, *parts, subtitle=""):
 </div>
 </div>'''
 
+# Preguntas sugeridas y respuestas de ejemplo del asistente flotante, por pantalla (M9: solo lectura, respeta rol y sede)
+AI_CTX={
+ "Home.html":[("¿Qué debo atender hoy?","Hoy: 3 aprobaciones pendientes (la más antigua de ayer), 3 sesiones sin confirmar y 2 cursos terminados sin calificar. Lo más urgente es el descuento del 42% de María Andrade: la matrícula espera desde ayer."),("¿Cómo va la meta del mes?","Octubre lleva 76 niveles vendidos sobre una meta de 70 (109%). Quito aporta 40, Valle 22 y Ambato 14. Ambato lleva 2 semanas sin matrículas nuevas.")],
+ "Cursos.html":[("¿Qué cursos están por abrir sin profesor?","Dos: Teens A2 (Ambato, Vi 15:00) y Tailored · Inglés corporativo (Ambato, Ma-Ju 07:00). Ambos inician en menos de 3 semanas. P. Gómez y M. Castro tienen horas libres compatibles."),("¿Cuáles tienen estudiantes con saldo?","9 cursos suman $2,840 pendientes. El mayor saldo está en B1 Virtual (0001-2026-0767): 2 estudiantes deben $303. Cuatro de esos cursos terminan en noviembre."),("¿Qué cursos terminaron sin calificar?","Adults A1 Sábados (0001-2026-0430) terminó hace 5 días con 14 estudiantes sin nota, y Teens A2 2025 (Valle). Hasta que se califiquen no se emiten certificados ni pueden matricularse en el siguiente nivel.")],
+ "Estudiantes.html":[("¿Cuántos estudiantes activos hay por sede?","812 activos: Quito 420, Valle 230 y Ambato 162. Este mes entraron 52 nuevos y 14 están en transición entre niveles."),("¿Quiénes tienen asistencia menor a 75%?","14 estudiantes están en riesgo. Los 4 más críticos están en B1 Virtual (Quito) con menos de 60%. Puedo listarlos con su teléfono de contacto si quieres llamarlos."),("¿Hay duplicados entre sedes?","La migración detectó 23 posibles duplicados por cédula entre Quito y Valle. 18 ya están unificados; 5 esperan confirmación de Secretaría.")],
+ "Profesores.html":[("¿Quién puede cubrir Teens B1 Virtual?","P. Gómez: dicta B1 Virtual en Quito con 88% de asistencia, tiene libres Lu-Ma-Mi-Ju 17:00–19:00 y le quedan 6 h antes del máximo de su contrato. S. Jiménez ya está al tope (20 h)."),("¿Qué profesores no tienen contrato vigente?","R. Salas (Ambato) tiene el contrato vencido y 8 h registradas este mes; D. Paredes (Valle) está pendiente de aprobación. Ninguno puede entrar en la payment sheet hasta resolverlo.")],
+ "FichaProfesor.html":[("¿Cuántas horas lleva este mes?","P. Gómez lleva 48 h en octubre (24 sesiones). Su payment sheet suma $336 y coincide con su factura. Tiene 2 sesiones manuales fuera de horario pendientes de confirmar.")],
+ "Ficha360.html":[("¿Qué nivel le toca y cuándo abre?","María está en el módulo 7 (B1). Al aprobarlo pasa al módulo 8 del mismo curso; su siguiente nivel comprado es B2, que abre en marzo de 2027. Tiene 3 niveles pagados y 2 consumidos."),("¿Tiene saldo pendiente?","No. Su matrícula 001-202602794 está pagada ($980). Su descuento del 10% fue por referido y lo aprobó Dirección Comercial.")],
+ "Inventario.html":[("¿Qué libros hay que pedir?","Tres productos con stock negativo: Empower B1+ (Valle −2), Super Minds 3 WB (Ambato −1) y Super Minds 3 SB (Ambato −2). El pedido sugerido a Books & Bits suma 16 libros."),("¿Cuántos códigos de activación quedan?","13 códigos comprados sin asignar: 9 en Valle y 4 en Quito. Uno de Empower A1 venció.")],
+ "PaymentSheet.html":[("¿Por qué no puedo aprobar la payment sheet?","Hay 3 alertas: L. Vega facturó $26 más que las horas registradas, R. Salas tiene contrato vencido con 8 h, y D. Paredes entregó factura sin sesiones. Resueltas esas tres, el total a pagar es $1,145.60.")],
+ "Comisiones.html":[("¿Cuánto gana cada asesor este mes?","Carla M. $420 (14 niveles, bono incluido), Sofía L. $330 (11) y Diego R. $180 (9, no llegó a la meta de 12). Solo se paga la comisión de ventas cobradas.")],
+ "Aprobaciones.html":[("¿Qué pasa si apruebo el descuento del 42%?","La matrícula de María Andrade se cerraría en $580 en lugar de $980 y la comisión de Carla M. bajaría a $23. La regla permite hasta 10% sin aprobación; 42% queda en el audit log con tu justificación.")],
+ "Configuracion.html":[("¿Qué aulas están libres el sábado en la mañana?","En Valle: C-2 (9 estudiantes) y C-7 (5). En Quito, Q-1 está ocupada al 60%. La capacidad se calcula con la norma SETEC.")],
+ "Insights.html":[("¿Qué insight es el más urgente?","El descuento del 42% pendiente desde ayer bloquea una matrícula de $980. Después, los 14 estudiantes de A1 Sábados sin calificar: no pueden pasar a A2 y hay 3 cupos esperándolos.")],
+}
+AI_DEFAULT=[("¿Qué puedo hacer en esta pantalla?","Te explico lo que ves aquí y qué acciones tienes según tu rol. También puedo buscar un estudiante, curso o profesor por nombre o código."),("¿Hay algo pendiente que deba revisar?","Reviso aprobaciones, sesiones sin confirmar, saldos y alertas de inventario relacionados con esta pantalla y te digo qué es urgente.")]
+
 def page(fname, title, inner, lang_title):
     html=f'''<!doctype html>
 <html lang="es">
@@ -141,6 +160,13 @@ def page(fname, title, inner, lang_title):
 </head>
 <body>
 {inner}
+<button type="button" class="ai-fab" id="ai-fab" aria-label="Abrir asistente">{ico("spark","nav-ico")}<span class="ai-fab-dot"></span></button>
+<aside class="ai-panel" id="ai-panel" hidden aria-label="Asistente">
+  <div class="ai-panel-head"><span class="ai-spark">✦</span><div><b>Asistente Cambridge</b><small>Estás en: <span id="ai-ctx">{lang_title}</span></small></div><button type="button" class="icon-btn" id="ai-close" aria-label="Cerrar">×</button></div>
+  <div class="ai-log" id="ai-log"><div class="msg bot">Hola. Veo que estás en <b>{lang_title}</b>. Puedo responder sobre lo que tienes en pantalla o sobre cualquier dato de la plataforma, siempre según tu rol y sede.</div></div>
+  <div class="ai-chips" id="ai-chips">{"".join(f'<button type="button" class="chipq" data-a="{a.replace(chr(34),"&quot;")}">{q}</button>' for q,a in AI_CTX.get(fname,[])+AI_DEFAULT)}</div>
+  <form class="ai-in" id="ai-form"><label for="ai-input" class="sr">Pregunta</label><input id="ai-input" class="ctl" placeholder="Pregunta sobre {lang_title.lower()}…" autocomplete="off"><button type="submit" class="btn btn-primary">Enviar</button></form>
+</aside>
 <dialog id="wf-dialog">
   <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
   <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
@@ -166,7 +192,7 @@ def page(fname, title, inner, lang_title):
     document.querySelectorAll('[data-sv]').forEach(function(e){{var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];}});
     document.querySelectorAll('.wf-table').forEach(function(t){{
       var cols=JSON.parse(t.getAttribute('data-cols'));
-      var f=t.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')) f=f.previousElementSibling;
+      var host=t.closest('.tbl-wrap')||t; var f=host.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')&&!f.classList.contains('tbl-wrap')) f=f.previousElementSibling;
       var ctrls=(f&&f.classList.contains('wf-filters'))?[].slice.call(f.querySelectorAll('[data-fcol]')):[];
       var shown=0;
       t.querySelectorAll('.wf-row').forEach(function(r){{
@@ -179,7 +205,7 @@ def page(fname, title, inner, lang_title):
         r.style.display=ok?'contents':'none'; if(ok) shown++;
       }});
       var e=t.querySelector('.wf-empty'); if(e) e.style.display=shown?'none':'block';
-      var pg=t.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){{var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}}
+      var pg=host.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){{var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}}
     }});
   }}
   if(sel){{
@@ -202,7 +228,8 @@ def page(fname, title, inner, lang_title):
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     }});
-    document.querySelectorAll('.tabs').forEach(function(bar){{
+    document.querySelectorAll('.btn-more').forEach(function(b){{b.addEventListener('click',function(){{var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));}});}});
+document.querySelectorAll('.tabs').forEach(function(bar){{
       var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
       var act=btns.filter(function(b){{return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';}})[0];
       if(!act){{ var first=btns.filter(function(b){{return b.style.display!=='none';}})[0]; if(first) first.click(); }}
@@ -223,6 +250,20 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
     }});
   }});
 }});
+(function(){{
+  var fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-panel'),log=document.getElementById('ai-log'),form=document.getElementById('ai-form'),inp=document.getElementById('ai-input');
+  if(!fab) return;
+  function open(){{panel.hidden=false;fab.classList.add('on');inp.focus();}}
+  function close(){{panel.hidden=true;fab.classList.remove('on');}}
+  fab.addEventListener('click',function(){{panel.hidden?open():close();}});
+  document.getElementById('ai-close').addEventListener('click',close);
+  function add(cls,html){{var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;}}
+  function answer(q,a){{add('me',q);var t=document.createElement('div');t.className='msg bot typing';t.textContent='…';log.appendChild(t);log.scrollTop=log.scrollHeight;
+    setTimeout(function(){{t.remove();add('bot',a||('Sobre <b>'+document.getElementById('ai-ctx').textContent+'</b>: en el producto final respondo con datos reales de la base unificada, filtrados por tu rol y sede. En este mockup puedo responder las preguntas sugeridas.'));}},600);}}
+  document.querySelectorAll('.chipq').forEach(function(c){{c.addEventListener('click',function(){{answer(c.textContent,c.getAttribute('data-a'));}});}});
+  form.addEventListener('submit',function(e){{e.preventDefault();var q=inp.value.trim();if(!q)return;inp.value='';var m=[].find.call(document.querySelectorAll('.chipq'),function(c){{return q.toLowerCase().split(' ').filter(function(w){{return w.length>4}}).some(function(w){{return c.textContent.toLowerCase().indexOf(w)>=0;}});}});answer(q,m?m.getAttribute('data-a'):null);}});
+  document.querySelectorAll('.btn-ask').forEach(function(b){{b.addEventListener('click',function(){{open();inp.value=b.getAttribute('data-ask')||'';}});}});
+}})();
 if(window.wfApplyRole) window.wfApplyRole();
 </script>
 </body>
@@ -362,13 +403,12 @@ def pager(total, per=20):
             f'<span style="margin-left:auto;display:flex;gap:4px">{pages}<a href="#" aria-label="Siguiente" style="padding:4px 10px;border:1px solid {LINE};text-decoration:none;color:{INK}">›</a></span></div>')
 def logo():
     return f'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0"><span style="font-size:22px;font-weight:700;letter-spacing:.12em">CAMBRIDGE</span><span style="font-size:11px;color:{MUTE};letter-spacing:.2em;text-transform:uppercase">School of Languages</span></div>'
-def ai(items, ask="¿Qué más quieres saber?"):
-    """Tarjeta del asistente interno (M9): observaciones generadas sobre la base unificada, solo lectura, respetando el rol. items: [(observación, texto del enlace, href)]"""
-    lis="".join(f'<li style="display:flex;gap:10px;align-items:flex-start"><span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:{ACC}"></span><span>{t} <a href="{h}" style="white-space:nowrap">{l} →</a></span></li>' for t,l,h in items)
-    return (f'<section style="border:2px solid {ACC};padding:16px;display:flex;flex-direction:column;gap:12px;background:#f8fafc"><div style="display:flex;align-items:center;gap:8px"><h2 style="margin:0;font-size:16px">Asistente · lo que vale la pena mirar</h2><span style="font-size:11px;color:{MUTE};margin-left:auto">generado ahora · solo lectura · según tu rol</span></div>'
-            f'<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.5">{lis}</ul>'
-            f'<div style="display:flex;gap:8px;align-items:center"><label for="ai-q" style="position:absolute;left:-9999px">Pregunta</label><input id="ai-q" placeholder="{ask}" style="{CTL};max-width:520px">{btn("Preguntar","Chatbot.html")}</div></section>')
-
+def ai(items, ask="¿Qué más quieres saber?", open_=False):
+    """Acordeón 'Asistente': cerrado muestra el conteo; abierto, hasta 3 observaciones con enlace."""
+    items=items[:3]
+    lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span>{t} <a href="{h}">{l} →</a></span></li>' for t,l,h in items)
+    return (f'<details class="ai"{" open" if open_ else ""}><summary><span class="ai-spark" aria-hidden="true">✦</span><b>Asistente</b><span class="badge badge-navy">{len(items)} observaciones</span><span class="kpi-sub">según tu rol y sede</span><span class="ai-caret" aria-hidden="true">›</span></summary>'
+            f'<ul>{lis}</ul><div class="ai-ask"><button type="button" class="btn btn-ask" data-ask="{ask}">{ico("spark","nav-ico")}&nbsp;Preguntar al asistente</button><a href="Insights.html" class="btn">Ver todos los insights</a></div></details>')
 def flow(steps):
     return '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px">'+"".join((f'<li style="padding:6px 10px;border:1px solid {INK}">{st}</li>'+('<li aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
 
@@ -421,7 +461,7 @@ SVG={
 }
 def ico(name, cls="nav-ico"):
     return f'<span class="{cls}" aria-hidden="true"><svg viewBox="0 0 24 24">{SVG.get(name,"")}</svg></span>'
-ICON={"Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
+ICON={"Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
 _ICON_OLD={"Inicio":"⌂","Estudiantes":"👥","Cursos":"📚","Sesiones":"🗓","Profesores":"🎓","Nueva matrícula":"➕","Facturación":"🧾","Comisiones":"💰","Aprobaciones":"✅","Stock por sede":"📦","Movimientos y pedidos":"🔄","Reportes":"📊","Dashboard ejecutivo":"📈","Usuarios y roles":"🔐","Configuración":"⚙","Audit log":"🧭","Integraciones":"🔌"}
 
 def btn(label, href=None, primary=False, action=None, next=None):
@@ -453,13 +493,11 @@ def shell(title, active, *parts, subtitle=""):
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
     back=parent[1] if parent and parent[0]!=title else "Home.html"
     return f'''<div class="app">
-<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-foot">Plataforma Cambridge · mockup v1<br><a href="Mapa.html">Mapa de pantallas</a></div></aside>
+<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-ctx"><div class="sidebar-ctx-title">Contexto de prueba</div><label>Sede<select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></label><label>Ver como<select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></label></div><div class="sidebar-foot">Mockup v1 · <a href="Mapa.html">Mapa de pantallas</a></div></aside>
 <div class="shell-main">
 <header class="topbar">
   <div class="crumbs"><a href="{back}" class="back" aria-label="Volver">‹</a><div><h1>{title}</h1><div class="path">{path}</div></div></div>
   <div class="topbar-right">
-  <div class="topbar-ctl"><label for="sede">Sede</label><select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></div>
-  <div class="topbar-ctl"><label for="rol">Ver como</label><select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></div>
   <form class="search" action="Estudiantes.html" role="search">{ico("search","nav-ico")}<label for="gsearch" class="sr">Buscar</label><input id="gsearch" name="q" placeholder="Buscar… (Enter)"></form>
   <a href="Notificaciones.html" class="icon-btn" aria-label="Notificaciones (3)">{ico("bell","nav-ico")}<span class="dot">3</span></a>
   <a href="Chatbot.html" class="icon-btn" aria-label="Asistente">{ico("spark","nav-ico")}</a>
@@ -473,18 +511,25 @@ def shell(title, active, *parts, subtitle=""):
 </div>
 </div>'''
 
-def table(cols, rows, h=46, sede=None):
+def c2(main, sub):
+    """Celda de dos líneas: dato principal + detalle secundario en gris."""
+    return f'<span class="c2"><span>{main}</span><small>{sub}</small></span>'
+def table(cols, rows, h=46, sede=None, hide=(), wide=0):
+    """sede: índice de la columna de sede (filtro global). hide: índices que no se muestran pero siguen filtrando. wide: columna principal."""
     import json as _j, re as _re
-    hd="".join(f'<div class="th">{c}</div>' for c in cols); body=""
+    n=len(cols); hide=set(hide)
+    def cls(i): return ' td-hide' if i in hide else ''
+    hd="".join(f'<div class="th{cls(i)}">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
-        cells="".join(f'<div class="td" style="min-height:{h}px">{c}</div>' for c in r)
+        cells="".join(f'<div class="td{cls(i)}" style="min-height:{h}px">{c}</div>' for i,c in enumerate(r))
         sd=""
         if sede is not None:
             m=_re.search(r"Quito|Valle|Ambato|Todas", str(r[sede]))
             if m: sd=f' data-sede="{m.group(0)}"'
         body+=f'<div class="wf-row" style="display:contents"{sd}>{cells}</div>'
     empty='<div class="wf-empty" style="display:none;grid-column:1/-1">Sin resultados con estos filtros</div>'
-    return f'<div class="wf-table tbl" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:repeat({len(cols)}, minmax(0, 1fr))">{hd}{body}{empty}</div>'
+    tpl=" ".join(("minmax(220px,2.2fr)" if i==wide else ("max-content" if cols[i] in ("Acción","Estado") else "minmax(0,1fr)")) for i in range(n) if i not in hide)
+    return f'<div class="tbl-wrap"><div class="wf-table tbl" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:{tpl}">{hd}{body}{empty}</div></div>'
 
 def tabs(items, active, panels=None, roles=None):
     panels=panels or {}; roles=roles or {}; bar=""; body=""
@@ -514,11 +559,17 @@ def search(label, placeholder, w="280px"):
     i=_nid(); return f'<label class="field" style="width:{w}">{label}<input id="{i}" type="search" data-fcol="*" placeholder="{placeholder}" class="ctl"></label>'
 def dates(label="Rango de fechas", a="2026-10-01", b="2026-10-31"):
     i=_nid(); return f'<div class="field"><label for="{i}">{label}</label><div style="display:flex;gap:6px;align-items:center"><input id="{i}" type="date" value="{a}" class="ctl" style="width:150px"><span>a</span><input type="date" value="{b}" aria-label="Hasta" class="ctl" style="width:150px"></div></div>'
-def filters(*ctrls, actions=""):
-    return '<div class="wf-filters filters">'+"".join(ctrls)+(f'<div class="filters-actions">{actions}</div>' if actions else '')+'</div>'
+def filters(*ctrls, actions="", show=3):
+    """Los primeros `show` controles se ven siempre; el resto se pliega bajo 'Más filtros'."""
+    ctrls=[c for c in ctrls if c]
+    main="".join(ctrls[:show]); more=ctrls[show:]
+    i=_nid()
+    extra=(f'<button type="button" class="btn btn-more" aria-expanded="false" aria-controls="{i}">Más filtros ({len(more)})</button>' if more else "")
+    hidden=(f'<div id="{i}" class="filters-more" hidden>{"".join(more)}</div>' if more else "")
+    return f'<div class="wf-filters filters">{main}{extra}'+(f'<div class="filters-actions">{actions}</div>' if actions else '')+f'{hidden}</div>'
 
 def note(text, kind="info"):
-    return f'<p class="note note-{kind}">{text}</p>'
+    return ""  # las notas explicativas se quitaron del mockup a pedido del cliente; la explicación vive en docs/
 def kv(*pairs):
     return '<div class="kv">'+"".join(f'<span><span class="k">{k}</span> <b>{v}</b></span>' for k,v in pairs)+'</div>'
 def badge(text, kind="neutral"):
@@ -598,9 +649,6 @@ def pager(total, per=20):
     return f'<div class="wf-pager pager"><span>{total} registros · {per} por página<span class="wf-shown"></span></span><span class="pages">{pages}<a href="#" aria-label="Siguiente" class="pg">›</a></span></div>'
 def logo():
     return '<div class="brand brand-dark"><img src="assets/logo.webp" alt="Cambridge School of Languages" style="width:240px"></div>'
-def ai(items, ask="¿Qué más quieres saber?"):
-    lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span>{t} <a href="{h}">{l} →</a></span></li>' for t,l,h in items)
-    return f'<section class="ai"><div class="ai-head"><span class="ai-spark" aria-hidden="true">✦</span><h2>Asistente · lo que vale la pena mirar</h2><span class="kpi-sub">generado ahora · solo lectura · según tu rol</span></div><ul>{lis}</ul><div class="ai-ask"><label for="ai-q" class="sr">Pregunta</label><input id="ai-q" class="ctl" placeholder="{ask}">{btn("Preguntar","Chatbot.html",True)}</div></section>'
 def flow(steps):
     return '<ol class="flow-steps">'+"".join((f'<li>{st}</li>'+('<li class="arr" aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
 def row(*cells, gap=16):
@@ -640,18 +688,17 @@ page("Main.html","Login",login,"Login")
 
 # 2 Home
 home=shell("Inicio","Inicio",
- only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
- only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
- only("ASE,SEC", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para María Andrade sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?"))+
  only("ADM,GER,DIR,SUC,SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")]))+
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
- only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$420","$420","$0","$0"),"se paga al cobrar")]))+
- only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="gauges">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos",CH[2])+gauge(109,"Meta de niveles",CH[3])+'</div>'))) +
+ only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$420","$420","$0","$0"),"se paga al cobrar")])),
+ only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="gauges">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos",CH[2])+gauge(109,"Meta de niveles",CH[3])+'</div>'))) ,
  two(only(APROBADORES, card("Pendientes de aprobación", li(["Descuento 42% · estudiante · asesor","Alta de profesor · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
      +only("ASE,SEC", card("Mis pendientes", li(["Solicitud de descuento 42% · María Andrade · esperando a Dir. Comercial","4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
      +only("PRO", card("Mis clases de hoy", li(["B1 Virtual · 19:00–21:00 · Zoom 2 · 12 estudiantes","Adults A2 · 18:00–20:00 · C-5 · 9 estudiantes"])+row(btn("Registrar sesión",None,True),btn("Ver mis cursos","Cursos.html")))),
-     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True))+note("Lo que ves en Inicio, en el menú y en las pestañas depende de tu rol. Cambia 'Ver como' en la barra superior para probar cada tipo de usuario."))),
- only("ADM,GER,DIR,SUC,COO,SEC",card("Actividad reciente (audit log)", table(["Fecha/hora","Usuario","Acción","Detalle","Sede"],[["Hoy 10:12","Carla M.","Creó venta","María Andrade · B1–B2 · 10% desc.","Quito"],["Hoy 09:40","Dir. Comercial","Aprobó descuento","42% rechazado → 10% aprobado","Quito"],["Ayer 17:05","Secretaría","Registró ingreso","Kids 2 Workbook × 8 · pedido #P-040","Valle"],["Ayer 15:30","Coord. Académica","Confirmó sesión","Teens A2 · 2 h · 9/10 asistencia","Ambato"]],sede=4)+row('<a href="AuditLog.html" style="font-size:13px">Ver todo el audit log</a>'))),
+     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True)))),
+ only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
+ only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
+ only("ASE,SEC", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para María Andrade sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?")),
  subtitle="Resumen del día según tu rol")
 page("Home.html","Inicio",home,"Inicio por rol")
 
@@ -660,16 +707,16 @@ est=shell("Estudiantes","Estudiantes",
  filters(search("Buscar","Nombre, cédula o email",w="300px"),sel("Estado",["Todos","Activo","En transición","Inactivo"],w="150px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="120px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="130px"),sel("Vista",["Alumnos activos","Alumnos inactivos","Duplicados entre sedes","Matrículas con saldo","Nuevos este mes"],w="190px",col=False),actions=only(COMERCIAL,btn("Nuevo estudiante",None,True),True)+only("ADM,GER,SUC,SEC",btn("Importar / Exportar"),True)),
  note("Las vistas guardadas reemplazan las de TeamDesk (Alumnos indexados activos / inactivos / x cruzar). Un nivel = 2 módulos; se muestra el nivel comercial y el módulo académico en curso."),
  table(["Nombre","Cédula","Sede","Programa","Nivel","Asesor","Estado","Acción"],[
-  ["María Andrade","1712345678","Quito","Adults","B1 · módulo 7","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Juan Pérez","1723456789","Valle","Adults","A2 · módulo 4","Diego R.","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Luis Torres","1834567890","Ambato","Adults","A1 · módulo 1","Sofía L.","Inactivo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Ana Ruiz (menor)","1745678901","Quito","Kids","Kids 2","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Pedro Mora","1756789012","Valle","Adults","B1 · módulo 8","Diego R.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Camila Sánchez","1867890123","Ambato","Teens","A2 · módulo 10","Sofía L.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Diego Vargas (menor)","1778901234","Valle","Kids","Kids 1","Diego R.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Valeria Cedeño","1789012345","Quito","Adults","B2 · módulo 11","Carla M.","Activo",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Mateo Salazar (menor)","1890123456","Ambato","Teens","A1 · módulo 2","Sofía L.","En transición",'<a href="Ficha360.html">Ver ficha</a>'],
-  ["Gabriela Núñez","1701234567","Quito","Adults","A2 · módulo 3","Carla M.","Inactivo",'<a href="Ficha360.html">Ver ficha</a>']],sede=2),
+  [c2("María Andrade","1712345678 · Quito · English for Adults · asesor Carla M."),"1712345678","Quito","Adults","B1 · módulo 7","Carla M.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Juan Pérez","1723456789 · Valle · English for Adults · asesor Diego R."),"1723456789","Valle","Adults","A2 · módulo 4","Diego R.",badge("En transición","warn"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Luis Torres","1834567890 · Ambato · English for Adults · asesor Sofía L."),"1834567890","Ambato","Adults","A1 · módulo 1","Sofía L.",badge("Inactivo","neutral"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Ana Ruiz (menor)","1745678901 · Quito · English for Kids · asesor Carla M."),"1745678901","Quito","Kids","Kids 2","Carla M.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Pedro Mora","1756789012 · Valle · English for Adults · asesor Diego R."),"1756789012","Valle","Adults","B1 · módulo 8","Diego R.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Camila Sánchez","1867890123 · Ambato · English for Teens · asesor Sofía L."),"1867890123","Ambato","Teens","A2 · módulo 10","Sofía L.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Diego Vargas (menor)","1778901234 · Valle · English for Kids · asesor Diego R."),"1778901234","Valle","Kids","Kids 1","Diego R.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Valeria Cedeño","1789012345 · Quito · English for Adults · asesor Carla M."),"1789012345","Quito","Adults","B2 · módulo 11","Carla M.",badge("Activo","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Mateo Salazar (menor)","1890123456 · Ambato · English for Teens · asesor Sofía L."),"1890123456","Ambato","Teens","A1 · módulo 2","Sofía L.",badge("En transición","warn"),'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Gabriela Núñez","1701234567 · Quito · English for Adults · asesor Carla M."),"1701234567","Quito","Adults","A2 · módulo 3","Carla M.",badge("Inactivo","neutral"),'<a href="Ficha360.html">Ver ficha</a>']],sede=2,hide=(1,2,3),wide=0),
  pager(sv(812,420,230,162)),
  subtitle="Una sola base para Quito, Valle y Ambato · exportar queda registrado en el audit log")
 page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
@@ -754,20 +801,20 @@ page("Aprobaciones.html","Aprobaciones",apr,"Bandeja de aprobaciones")
 # 7 Cursos
 V='<a href="DetalleCurso.html">Ver</a>'
 cursos=shell("Cursos","Cursos",
- filters(search("Buscar","Código, nombre o profesor",w="240px"),sel("Vista",["Todos los cursos","Cursos abiertos por horario","Disponibilidad (cupos libres)","Cursos con saldos de estudiantes","Terminados sin calificar","Próximos a iniciar","Cerrados"],w="230px",col=False),sel("Programa",["Todos","Adults","Teens","Kids","Tailored"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro","(sin asignar)"],w="150px"),sel("Estado",["Todos","En curso","Por abrir","Terminado sin calificar","Cerrado"],w="200px"),actions=only("ADM,GER,SUC,COO",btn("Nuevo curso",None,True),True)),
+ filters(search("Buscar","Código, nombre o profesor",w="240px"),sel("Vista",["Todos los cursos","Cursos abiertos por horario","Disponibilidad (cupos libres)","Cursos con saldos de estudiantes","Terminados sin calificar","Próximos a iniciar","Cerrados"],w="230px",col=False),sel("Programa",["Todos","Adults","Teens","Kids","Tailored"],w="130px"),sel("Nivel",["Todos","A1","A2","B1","B2","Kids 1","Kids 2"],w="110px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Profesor",["Todos","P. Gómez","L. Vega","M. Castro","(sin asignar)"],w="150px"),sel("Estado",["Todos","En curso","Por abrir","Sin calificar","Cerrado"],w="160px"),actions=only("ADM,GER,SUC,COO",btn("Nuevo curso",None,True),True)),
  kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Por abrir",sv(6,2,3,1),"inician en 30 días"),("Con saldos de estudiantes",sv(9,4,3,2),sv("$2,840 pendientes","$1,320","$980","$540")),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados")]),
- table(["Código","Curso","Sede","Programa","Nivel","Modalidad","Horario","Aula","Profesor","Cupo","Avance","Estado","Acción"],[
-  ["0001-2026-0767","English for Adults B1 Virtual","Quito","Adults","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","Zoom 2","P. Gómez","12/15","60%",badge("En curso","ok"),V],
-  ["0001-2026-0328","English for Kids 2 Tarde","Valle","Kids","Kids 2","Presencial","Sa 09:00–13:00","C-3","L. Vega","8/10","55%",badge("En curso","ok"),V],
-  ["0001-2026-0192","English for Teens A2","Ambato","Teens","A2","Presencial","Vi 15:00–19:00","A-1","(sin asignar)","5/10","0%",badge("Por abrir","warn"),V],
-  ["0001-2026-0620","English for Adults A2","Valle","Adults","A2","Presencial","Lu-Mi 18:00–20:00","C-5","P. Gómez","9/12","59%",badge("En curso","ok"),V],
-  ["0001-2026-0518","English for Kids 1 Mañana","Ambato","Kids","Kids 1","Presencial","Lu-Mi 16:00–18:00","A-2","M. Castro","7/10","28%",badge("En curso","ok"),V],
-  ["0001-2026-0538","English for Adults B2 Intensivo","Quito","Adults","B2","Presencial","Sa 09:00–13:00","Q-4","L. Vega","11/12","46%",badge("En curso","ok"),V],
-  ["0001-2026-0430","English for Adults A1 Sábados","Quito","Adults","A1","Presencial","Sa 09:00–13:00","Q-1","L. Vega","14/15","100%",badge("Terminado sin calificar","bad"),V],
-  ["0001-2026-0772","English for Teens B1 Virtual","Valle","Teens","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","Teams 1","P. Gómez","6/12","0%",badge("Por abrir","warn"),V],
-  ["0001-2026-0599","English for Kids 2 Mañana","Quito","Kids","Kids 2","Presencial","Sa 09:00–13:00","Q-2","M. Castro","10/10","53%",badge("En curso","ok"),V],
-  ["0001-2026-0608","Tailored · Inglés corporativo","Ambato","Tailored","B1","Virtual","Ma-Ju 07:00–08:30","Zoom 1","(sin asignar)","3/12","0%",badge("Por abrir","warn"),V],
-  ["0001-2025-0330","English for Teens A2","Valle","Teens","A2","Presencial","Vi 15:00–19:00","C-2","L. Vega","9/10","100%",badge("Cerrado"),V]],sede=2),
+ table(["Curso","Sede","Programa","Modalidad","Nivel","Profesor","Cupo","Avance","Estado","Acción"],[
+  [c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Zoom 2 · Lu-Ma-Mi-Ju 19:00–21:00 · Virtual"),"Quito","Adults","Virtual","B1","P. Gómez","12/15",progress(60),badge("En curso","ok"),V],
+  [c2("English for Kids 2 Tarde","0001-2026-0328 · Valle · C-3 · Sa 09:00–13:00 · Presencial"),"Valle","Kids","Presencial","Kids 2","L. Vega","8/10",progress(55),badge("En curso","ok"),V],
+  [c2("English for Teens A2","0001-2026-0192 · Ambato · A-1 · Vi 15:00–19:00 · Presencial"),"Ambato","Teens","Presencial","A2","(sin asignar)","5/10",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Adults A2","0001-2026-0620 · Valle · C-5 · Lu-Mi 18:00–20:00 · Presencial"),"Valle","Adults","Presencial","A2","P. Gómez","9/12",progress(59),badge("En curso","ok"),V],
+  [c2("English for Kids 1 Mañana","0001-2026-0518 · Ambato · A-2 · Lu-Mi 16:00–18:00 · Presencial"),"Ambato","Kids","Presencial","Kids 1","M. Castro","7/10",progress(28),badge("En curso","ok"),V],
+  [c2("English for Adults B2 Intensivo","0001-2026-0538 · Quito · Q-4 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","B2","L. Vega","11/12",progress(46),badge("En curso","ok"),V],
+  [c2("English for Adults A1 Sábados","0001-2026-0430 · Quito · Q-1 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","A1","L. Vega","14/15",progress(100),badge("Sin calificar","bad"),V],
+  [c2("English for Teens B1 Virtual","0001-2026-0772 · Valle · Teams 1 · Lu-Ma-Mi-Ju 19:00–21:00 · Virtual"),"Valle","Teens","Virtual","B1","P. Gómez","6/12",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Kids 2 Mañana","0001-2026-0599 · Quito · Q-2 · Sa 09:00–13:00 · Presencial"),"Quito","Kids","Presencial","Kids 2","M. Castro","10/10",progress(53),badge("En curso","ok"),V],
+  [c2("Tailored · Inglés corporativo","0001-2026-0608 · Ambato · Zoom 1 · Ma-Ju 07:00–08:30 · Virtual"),"Ambato","Tailored","Virtual","B1","(sin asignar)","3/12",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Teens A2","0001-2025-0330 · Valle · C-2 · Vi 15:00–19:00 · Presencial"),"Valle","Teens","Presencial","A2","L. Vega","9/10",progress(100),badge("Cerrado"),V]],sede=1,hide=(1,2,3),wide=0),
  pager(sv(58,29,18,11)),
  note("El código de curso conserva el formato de TeamDesk (0001-AAAA-NNNN) para la migración y la reconciliación. Avance = % de horas dictadas sobre el total."),
  only("ADM,GER,SUC,COO", ai([("Adults A1 Sábados terminó hace 5 días sin calificar: 14 estudiantes no pueden matricularse en A2 y hay 3 cupos esperándolos en 0001-2026-0620.","Calificar","DetalleCurso.html"),("Dos cursos 'por abrir' en Ambato tienen menos de 5 inscritos a 2 semanas del inicio. Históricamente no abren con menos de 6.","Ver cursos de Ambato","Cursos.html"),("El aula Q-1 está al 60% de ocupación y C-2 (Valle) al 0%: el nuevo Kids 2 podría ir a C-2 el sábado.","Ver aulas","Configuracion.html")],"Pregunta: ¿qué cursos abren en noviembre y cuántos libros necesitan?")),
@@ -792,13 +839,13 @@ page("DetalleCurso.html","Detalle curso",det,"Detalle de curso y sesiones")
 prof=shell("Profesores","Profesores",
  filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Pendiente de aprobación","Inactivo"],w="200px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),sel("Vista",["Todos","Dictando ahora","Con horas libres","Sin contrato vigente"],w="170px",col=False),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")),
  kpis([("Profesores activos",sv(36,18,11,7),"de 100 registrados"),("Dictando ahora",sv(5,3,1,1),"sesiones en curso"),("Horas esta semana",sv(412,210,124,78),"programadas"),("Sin contrato vigente con clases",sv(1,0,0,1),"bloquea pago")]),
- table(["Profesor","Sede","Contrato","Tarifa/h","Cursos activos","Clases hoy","Horas / semana","Asistencia de sus cursos","Estado","Acción"],[
-  ["P. Gómez","Quito","Por horas · vigente","$7.00","3","2 · B1 Virtual 19:00, A2 18:00","14 h","88%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
-  ["L. Vega","Valle","Por horas · vigente","$6.50","2","1 · Kids 2 Tarde 15:00","10 h","91%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
-  ["R. Salas","Ambato","Vencido","$5.70","0","—","0 h","—",badge("Inactivo","bad"),'<a href="FichaProfesor.html">Ver perfil</a>'],
-  ["M. Castro","Ambato","Por horas · vigente","$6.50","2","1 · Kids 1 Mañana 16:00","8 h","84%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
-  ["S. Jiménez","Quito","Nómina","—","4","2 · A1 Sábados, B2 Intensivo","20 h","93%",badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
-  ["D. Paredes","Valle","Por horas · pendiente","$6.00","0","—","0 h","—",badge("Pendiente de aprobación","warn"),'<a href="FichaProfesor.html">Ver perfil</a>']],sede=1),
+ table(["Profesor","Sede","Contrato","Cursos activos","Clases hoy","Horas / semana","Asistencia","Estado","Acción"],[
+  [c2("P. Gómez","Quito · Por horas · vigente · $7.00/h"),"Quito","Por horas · vigente","3",c2("2","B1 Virtual 19:00, A2 18:00"),"14 h",progress(88),badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  [c2("L. Vega","Valle · Por horas · vigente · $6.50/h"),"Valle","Por horas · vigente","2",c2("1","Kids 2 Tarde 15:00"),"10 h",progress(91),badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  [c2("R. Salas","Ambato · Vencido · $5.70/h"),"Ambato","Vencido","0",c2("0","sin clases hoy"),"0 h","—",badge("Inactivo","bad"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  [c2("M. Castro","Ambato · Por horas · vigente · $6.50/h"),"Ambato","Por horas · vigente","2",c2("1","Kids 1 Mañana 16:00"),"8 h",progress(84),badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  [c2("S. Jiménez","Quito · Nómina · —/h"),"Quito","Nómina","4",c2("2","A1 Sábados, B2 Intensivo"),"20 h",progress(93),badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
+  [c2("D. Paredes","Valle · Por horas · pendiente · $6.00/h"),"Valle","Por horas · pendiente","0",c2("0","sin clases hoy"),"0 h","—",badge("Pendiente de aprobación","warn"),'<a href="FichaProfesor.html">Ver perfil</a>']],sede=1,hide=(1,2),wide=0),
  ai([("Teens B1 Virtual (Valle) abre en 2 semanas sin profesor. P. Gómez dicta B1 Virtual en Quito con 88% de asistencia y tiene libres Lu-Ma-Mi-Ju 17:00–19:00.","Ver perfil","FichaProfesor.html"),("S. Jiménez está en 20 h/semana, el máximo de su contrato de nómina. No asignarle el curso nuevo de sábado.","Ver carga","FichaProfesor.html"),("R. Salas tiene contrato vencido y 8 h registradas este mes: la payment sheet no se puede aprobar hasta renovar o anular esas sesiones.","Renovar contrato","AltaProfesor.html")],"Pregunta: ¿quién puede cubrir Kids 2 Tarde el miércoles?"),
  card("Alta de profesor (flujo)", flow(["Formulario de alta","Pendiente de aprobación","Dirección aprueba","Puede recibir cursos","Aparece en payment sheet"])+note("Nadie puede crear un profesor que cobre sin pasar por aprobación. Hoy hay 1 alta pendiente (D. Paredes).")),
  subtitle="Nadie crea un profesor que pueda cobrar sin aprobación (el caso del profesor falso)")
@@ -831,6 +878,31 @@ com=shell("Comisiones · Octubre 2026","Comisiones",
      card("Reglas activas", li(["Rango 1–5 niveles: 2% virtual · 3% presencial","Rango 6–10 niveles: 3% virtual · 4% presencial","Rango 11+ niveles: 4% virtual · 5% presencial","Bono $50 por cumplir meta mensual"])+row('<a href="ReglasComision.html" style="font-size:13px">Editar reglas</a>'))),
  subtitle="Cálculo automático al cierre de mes, con historial y detalle exportable")
 page("Comisiones.html","Comisiones",com,"Motor de comisiones")
+
+# 11b Insights de IA (M9 + M8): todas las observaciones del asistente, por área, con prioridad y acción
+def insight(area, sev, title, text, link, href, when="hoy"):
+    k={"alta":"bad","media":"warn","baja":"neutral"}[sev]
+    return (f'<div class="insight"><div class="insight-side"><span class="badge badge-{k}">{sev}</span><small>{when}</small></div><div class="insight-body"><small class="insight-area">{area}</small><b>{title}</b><p>{text}</p>'
+            f'<div class="insight-actions"><a href="{href}" class="btn btn-primary">{link}</a>{btn("Marcar como atendido")}{btn("Descartar")}</div></div></div>')
+INSIGHTS=[
+ ("Comercial","alta","Descuento del 42% bloquea una matrícula de $980","La solicitud de Carla M. para María Andrade espera desde ayer. Con 10% la matrícula cierra hoy; con 42% la comisión baja a $23 y requiere justificación.","Resolver en Aprobaciones","Aprobaciones.html","hace 1 día"),
+ ("Académico","alta","14 estudiantes de A1 Sábados sin calificar","El curso 0001-2026-0430 terminó hace 5 días. Sin notas no se emiten certificados y los estudiantes no pueden matricularse en A2, donde hay 3 cupos esperándolos.","Calificar curso","DetalleCurso.html","hace 5 días"),
+ ("Pagos a profesores","alta","Payment sheet de octubre con 3 alertas","L. Vega facturó $26 más que sus horas; R. Salas tiene contrato vencido con 8 h; D. Paredes entregó factura sin sesiones. Bloquean la aprobación.","Revisar payment sheet","PaymentSheet.html","hoy"),
+ ("Académico","media","Teens B1 Virtual abre en 2 semanas sin profesor","P. Gómez tiene libres Lu-Ma-Mi-Ju 17:00–19:00, dicta B1 con 88% de asistencia y le quedan 6 h de contrato. Es el mejor candidato.","Ver perfil y asignar","FichaProfesor.html","hoy"),
+ ("Cobranza","media","$12,450 en matrículas con saldo; el 60% vence con cursos que terminan en noviembre","4 cursos concentran $7,470. Conviene contactar antes del cierre: después del fin de curso la recuperación cae a la mitad.","Ver matrículas con saldo","Cursos.html","hoy"),
+ ("Inventario","media","Stock negativo en 3 libros de cursos en marcha","Empower B1+ (Valle −2), Super Minds 3 WB y SB (Ambato). 4 estudiantes están sin material. Pedido sugerido a Books & Bits: 16 libros.","Crear pedido","NuevoPedido.html","hoy"),
+ ("Comercial","media","Ambato lleva 2 semanas sin matrículas nuevas","Tiene 2 cursos por abrir con menos de 5 inscritos. Históricamente no abren con menos de 6. Hay 5 leads de Kommo sin contactar en esa sede.","Ver cursos de Ambato","Cursos.html","hace 3 días"),
+ ("Académico","media","4 estudiantes de B1 Virtual con asistencia menor a 60%","Riesgo de perder el módulo 7. Dos de ellos nunca habían faltado antes de la semana pasada.","Ver estudiantes del curso","DetalleCurso.html","hoy"),
+ ("Operación","baja","Aula Q-1 al 60% y C-2 (Valle) al 0% el sábado","El nuevo Kids 2 de sábado podría ir a C-2 sin chocar con otro curso.","Ver aulas","Configuracion.html","hoy"),
+ ("Dirección","baja","Octubre va 9% sobre la meta de niveles","76 niveles vendidos sobre 70. Quito empuja (+15%); Ambato es la única sede bajo meta.","Ver dashboard ejecutivo","DashboardEjecutivo.html","hoy"),
+]
+_ins_rows="".join(insight(*i) for i in INSIGHTS)
+page("Insights.html","Insights de IA",shell("Insights de IA","Insights de IA",
+ kpis([("Insights abiertos","10","3 de prioridad alta"),("Atendidos esta semana","7","tiempo medio de atención: 1.4 días"),("Impacto estimado","$21,300","matrículas y cobros en juego"),("Cobertura","5 áreas","académico · comercial · pagos · inventario · dirección")]),
+ two(card("Insights por área", hbars([("Académico",3),("Comercial",2),("Pagos a profesores",1),("Cobranza",1),("Inventario",1),("Operación",1),("Dirección",1)],"")), card("Evolución (últimas 8 semanas)", linechart(["S1","S2","S3","S4","S5","S6","S7","S8"],{"Nuevos":[6,8,7,9,8,11,9,10],"Atendidos":[4,7,6,8,9,9,8,7]},h=150)+'<span class="kpi-sub">El asistente analiza cada noche la base unificada y propone acciones. Solo lectura: nada cambia sin que alguien lo confirme.</span>')),
+ filters(sel("Área",["Todas","Académico","Comercial","Pagos a profesores","Cobranza","Inventario","Operación","Dirección"],w="180px",col=False),sel("Prioridad",["Todas","alta","media","baja"],w="130px",col=False),sel("Estado",["Abiertos","Atendidos","Descartados"],w="140px",col=False),actions=btn("Preguntar al asistente",None,False,action="",next=None) if False else '<button type="button" class="btn btn-ask" data-ask="¿Qué insight es el más urgente?">✦&nbsp;Preguntar al asistente</button>'),
+ f'<div class="insights">{_ins_rows}</div>',
+ subtitle="Todo lo que el asistente detectó en la base unificada, por área y prioridad"),"Insights de IA")
 
 # 12 Reportes · las tres vistas comparten la misma barra de pestañas (cada una es una pantalla)
 def rep_tabs(active):
@@ -994,28 +1066,28 @@ page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Co
 page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
  filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","NuevoPedido.html",True)+btn("Registrar ingreso de proveedor")),
  kpis([("Ítems con stock negativo",sv(3,0,1,2),"requieren pedido"),("Pedidos en camino",sv(2,1,1,0),"#P-041 llega 8 oct"),("Valor en stock",sv("$6,840","$3,900","$1,760","$1,180"),"a costo del último ingreso"),("Códigos de activación pendientes",sv(13,4,9,0),"comprados, sin asignar")]),
- table(["Código","ISBN","Producto","Programa","Nivel","Quito","Valle","Ambato","Comprometido","Códigos pendientes","Estado","Acción"],[
-  ["1141","9781108961523","Empower B1+ Intermediate Combo B (digital pack)","Adults","B1+","4","-2","1","5","1",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
-  ["1293","9781108909303","Super Minds 2Ed Level 3 WB with Digital Pack","Kids","Kids 2","0","3","-1","4","0",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 4</a>'],
-  ["1115","9781009029780","Prepare 3 SB with eBook 2E","Teens","A2","8","2","5","3","0",badge("OK","ok"),"—"],
-  ["1132","9781108961691","Empower A1 Starter SB with digital pack","Adults","A1","2","1","0","6","2",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 5</a>'],
-  ["1271","9781009293891","Four Corners 2ED L4 ESB with DP","Adults","B2","6","4","2","2","0",badge("OK","ok"),"—"],
-  ["1292","9781108812276","Super Minds 2Ed Level 3 SB with eBook","Kids","Kids 2","3","0","-2","4","0",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
-  ["1116","9781009030502","Prepare 3 WB with Digital Pack 2E","Teens","A2","1","1","1","6","10",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 4</a>'],
-  ["1999","—","Libreta Superpower","—","—","25","10","8","0","—",badge("OK","ok"),"—"]]),
+ table(["Producto","Programa","Nivel","Stock por sede","Comprometido","Códigos pendientes","Estado","Acción"],[
+  [c2("Empower B1+ Intermediate Combo B (digital pack)","Cód. 1141 · ISBN 9781108961523 · Adults B1+"),"Adults","B1+",c2("4 / -2 / 1","Quito / Valle / Ambato"),"5","1",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
+  [c2("Super Minds 2Ed Level 3 WB with Digital Pack","Cód. 1293 · ISBN 9781108909303 · Kids Kids 2"),"Kids","Kids 2",c2("0 / 3 / -1","Quito / Valle / Ambato"),"4","0",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 4</a>'],
+  [c2("Prepare 3 SB with eBook 2E","Cód. 1115 · ISBN 9781009029780 · Teens A2"),"Teens","A2",c2("8 / 2 / 5","Quito / Valle / Ambato"),"3","0",badge("OK","ok"),'—'],
+  [c2("Empower A1 Starter SB with digital pack","Cód. 1132 · ISBN 9781108961691 · Adults A1"),"Adults","A1",c2("2 / 1 / 0","Quito / Valle / Ambato"),"6","2",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 5</a>'],
+  [c2("Four Corners 2ED L4 ESB with DP","Cód. 1271 · ISBN 9781009293891 · Adults B2"),"Adults","B2",c2("6 / 4 / 2","Quito / Valle / Ambato"),"2","0",badge("OK","ok"),'—'],
+  [c2("Super Minds 2Ed Level 3 SB with eBook","Cód. 1292 · ISBN 9781108812276 · Kids Kids 2"),"Kids","Kids 2",c2("3 / 0 / -2","Quito / Valle / Ambato"),"4","0",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
+  [c2("Prepare 3 WB with Digital Pack 2E","Cód. 1116 · ISBN 9781009030502 · Teens A2"),"Teens","A2",c2("1 / 1 / 1","Quito / Valle / Ambato"),"6","10",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 4</a>'],
+  [c2("Libreta Superpower","Cód. 1999 · ISBN — · — —"),"—","—",c2("25 / 10 / 8","Quito / Valle / Ambato"),"0","—",badge("OK","ok"),'—']],hide=(1,2),wide=0),
  note("Equivale a Inventory Management + Products/Services de TeamDesk. 'Códigos pendientes' = códigos de activación de material digital comprados y aún no asignados a un estudiante (hoy 'Pending codes')."),
  subtitle="Reemplaza el email diario de notify@teamdesk con alertas inteligentes"),"Inventario de libros")
 
 # 28 Movimientos
 page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos y pedidos",
  tabs(["Ingresos de proveedor","Movimientos","Pedidos a proveedor","Códigos de activación","Notas de crédito"],"Ingresos de proveedor",{
-  "Ingresos de proveedor": filters(search("Buscar","Nº de factura del proveedor",w="220px"),sel("Proveedor",["Todos","Books & Bits","Otro"],w="150px"),sel("Estado",["Todos","Recibido","Con pendientes"],w="150px"),dates(),actions=btn("Registrar ingreso de proveedor",None,True))+table(["Fecha","Ingreso","Factura proveedor","Proveedor","Sede","Ítems","Total","Libros pendientes","Códigos pendientes","Comprobante","Estado"],[
-     ["04 oct","IM202610-02","000815787","Books & Bits","Valle","4","$145.30","0","0","comprobante_books_and_bits_2026-10-04.pdf",badge("Recibido","ok")],
-     ["01 oct","IM202610-01","000814675","Books & Bits","Valle","14","$456.71","0","0","comprobante_books_and_bits_2026-10-01.pdf",badge("Recibido","ok")],
-     ["30 sep","IM202609-12","000813312","Books & Bits","Quito","22","$772.29","0","0","comprobante_2026-09-30.pdf",badge("Recibido","ok")],
-     ["30 sep","IM202609-11","Anulación 002-002-000020971","Books & Bits","Quito","1","$85.00","1","0","—",badge("Con pendientes","warn")],
-     ["25 sep","IM202609-10","Libretas Superpower","Otro","Ambato","10","$79.92","10","0","—",badge("Con pendientes","warn")],
-     ["24 sep","IM202609-09","000809715","Books & Bits","Ambato","9","$333.03","0","0","comprobante_2026-09-24.pdf",badge("Recibido","ok")]],sede=4)
+  "Ingresos de proveedor": filters(search("Buscar","Nº de factura del proveedor",w="220px"),sel("Proveedor",["Todos","Books & Bits","Otro"],w="150px"),sel("Estado",["Todos","Recibido","Con pendientes"],w="150px"),dates(),actions=btn("Registrar ingreso de proveedor",None,True))+table(["Ingreso","Proveedor","Sede","Ítems y total","Pendientes","Estado"],[
+     [c2("IM202610-02","04 oct · factura 000815787 · Books & Bits · Valle"),"Books & Bits","Valle",c2("4 ítems · $145.30","Comprobante: comprobante_2026-10-04.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
+     [c2("IM202610-01","01 oct · factura 000814675 · Books & Bits · Valle"),"Books & Bits","Valle",c2("14 ítems · $456.71","Comprobante: comprobante_2026-10-01.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
+     [c2("IM202609-12","30 sep · factura 000813312 · Books & Bits · Quito"),"Books & Bits","Quito",c2("22 ítems · $772.29","Comprobante: comprobante_2026-09-30.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
+     [c2("IM202609-11","30 sep · factura Anulación 002-002-000020971 · Books & Bits · Quito"),"Books & Bits","Quito",c2("1 ítems · $85.00","sin comprobante"),c2("1 libros · 0 códigos","pendientes de entrega"),badge("Con pendientes","warn")],
+     [c2("IM202609-10","25 sep · factura Libretas Superpower · Otro · Ambato"),"Otro","Ambato",c2("10 ítems · $79.92","sin comprobante"),c2("10 libros · 0 códigos","pendientes de entrega"),badge("Con pendientes","warn")],
+     [c2("IM202609-09","24 sep · factura 000809715 · Books & Bits · Ambato"),"Books & Bits","Ambato",c2("9 ítems · $333.03","Comprobante: comprobante_2026-09-24.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")]],sede=2,hide=(1,2),wide=0)
      +card("Detalle del ingreso IM202610-01", kv(("Fecha","1 oct 2026"),("Proveedor","Books & Bits"),("Factura","000814675"),("Subtotal","$456.71"),("Descuento","$0.00"),("Total","$456.71"),("Comprobante","comprobante_books_and_bits_2026-10-01.pdf"))+table(["Código","ISBN","Ítem","Cantidad","Precio","Subtotal"],[["1115","9781009029780","Prepare 3 SB with eBook 2E","3","$34.89","$104.67"],["1116","9781009030502","Prepare 3 WB with Digital Pack 2E","3","$20.03","$60.09"],["1132","9781108961691","Empower A1 Starter SB with digital pack 2nd Ed","1","$62.15","$62.15"],["1141","9781108961523","Empower B1+ Intermediate Combo B with digital pack","1","$35.98","$35.98"],["1292","9781108812276","Super Minds 2Ed Level 3 SB with eBook","1","$31.37","$31.37"],["1271","9781009293891","Four Corners 2ED L4 ESB with DP","2","$35.46","$70.92"]])+kv(("Ítems","14"),("Total","$456.71"))+note("Equivale a 'Inventory Management' de TeamDesk: cada ingreso del proveedor con su factura, comprobante de pago, ítems por ISBN y los libros o códigos que quedaron pendientes de entrega.")),
   "Movimientos": filters(search("Buscar","Libro, factura o pedido",w="220px"),sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),sel("Usuario",["Todos","Carla M.","Secretaría","Diego R."],w="140px"),dates(),actions=btn("Registrar movimiento",None,True)+btn("Exportar"))+table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2 Student Book","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"],["30 sep","Salida","Adults B2 Student Book","1","Quito","Factura #1240","Carla M."],["29 sep","Salida","Teens A2 Student Book","2","Ambato","Factura #1238","Diego R."],["25 sep","Ingreso","Adults A1 Student Book","10","Quito","Pedido #P-039","Secretaría"]],sede=4),
   "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado"],[["#P-041","Books & Bits","12","$480","02 oct","En camino"],["#P-040","Books & Bits","8","$320","25 sep","Recibido"],["#P-039","Books & Bits","20","$800","10 sep","Recibido"]])+
@@ -1151,7 +1223,7 @@ rows=[
  ("Académico · Coordinación, profesores, secretaría",[("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta con aprobación"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
  ("Comercial · Asesores, Dirección Comercial, secretaría",[("NuevaVenta.html","Nueva matrícula (venta por niveles)"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
  ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
- ("Dirección · Gerencia, Dirección Comercial",[("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
+ ("Dirección · Gerencia, Dirección Comercial",[("Insights.html","Insights de IA"),("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
  ("Administración · Administrador General",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones")],"RBAC, catálogos (sedes, aulas, programas, productos, empresas), reglas configurables, trazabilidad completa e integraciones."),
 ]
 rows=[(t,[(f,n) for f,n in files if f not in HIDDEN],d) for t,files,d in rows]
@@ -1203,9 +1275,9 @@ h1,h2,h3{font-weight:600}
 .nav-link{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--mute);text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav-link:hover{background:var(--bg);color:var(--ink)}.nav-link.active{background:var(--tint-navy);color:var(--navy);font-weight:600}
 .nav-ico{width:20px;height:20px;flex:none;display:inline-flex}.nav-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.sidebar nav{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin}.sidebar-foot{margin-top:8px;font-size:11px;color:var(--mute);padding:8px 12px;line-height:1.5;white-space:nowrap;flex:none}.sidebar-foot a{color:var(--mute)}
+.sidebar nav{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin}.sidebar-ctx{margin-top:8px;padding:12px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;flex:none}.sidebar-ctx-title{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}.sidebar-ctx label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mute)}.sidebar-ctx select{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12.5px;color:var(--ink);padding:0 6px}.sidebar-foot{margin-top:8px;font-size:11px;color:var(--mute);padding:8px 12px;line-height:1.5;white-space:nowrap;flex:none}.sidebar-foot a{color:var(--mute)}
 .shell-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-x:clip}
-.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:14px 28px;background:var(--bg);position:sticky;top:0;z-index:5}.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex:none}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:18px 32px 8px;background:var(--bg);position:sticky;top:0;z-index:5}.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex:none}
 .crumbs{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0;flex:1 1 220px}.crumbs>div{min-width:0}.back{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);font-size:18px}
 .crumbs h1{margin:0;font-size:20px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(38vw,460px)}.crumbs .path{font-size:12.5px;color:var(--mute);margin-top:2px;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crumbs .path a{color:var(--navy);text-decoration:none}
 .search{display:flex;align-items:center;gap:8px;width:220px;flex:0 1 220px;min-width:140px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 14px;height:42px;color:var(--mute)}
@@ -1218,7 +1290,7 @@ h1,h2,h3{font-weight:600}
 .user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);white-space:nowrap;min-width:0}.user #rol-user{overflow:hidden;text-overflow:ellipsis;max-width:180px}.user #rol-user{display:flex;flex-direction:column;line-height:1.2}.user #rol-user small{color:var(--mute);font-size:12px}
 .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--sky));color:#fff;font-weight:600}
 .avatar.sm{width:38px;height:38px;font-size:14px}.avatar.lg{width:96px;height:96px;font-size:32px;border:5px solid #fff;box-shadow:0 6px 20px rgba(26,33,66,.12)}
-.main{padding:8px 32px 48px;display:flex;flex-direction:column;gap:22px;min-width:0}
+.main{padding:12px 32px 56px;display:flex;flex-direction:column;gap:26px;min-width:0}
 .page-head{display:none}
 /* componentes */
 .grid{display:grid;gap:20px}.row{display:flex;flex-wrap:wrap;align-items:center}
@@ -1226,20 +1298,20 @@ h1,h2,h3{font-weight:600}
 .card-head{display:flex;align-items:center;gap:12px}.card-head h2{margin:0;font-size:17px}.card-head>*:last-child:not(h2){margin-left:auto}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font:inherit;font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap}
 a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy);color:var(--navy)}.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}a.btn-primary:hover,.btn-primary:hover{background:var(--navy2);border-color:var(--navy2);color:#fff}.btn-danger{color:var(--red)}a.btn-danger:hover,.btn-danger:hover{background:var(--tint-red);border-color:var(--tint-red);color:var(--red)}
-.tbl{display:grid;background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);box-shadow:var(--sh);background:#fff}.tbl{display:grid;background:#fff;border-radius:var(--r);min-width:min(100%,640px)}.td-hide{display:none!important}.c2{display:flex;flex-direction:column;gap:2px;min-width:0}.c2>span{font-weight:500}.c2 small{color:var(--mute);font-size:12px;line-height:1.35}
 .th{padding:13px 14px;font-weight:600;font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}
-.td{padding:13px 14px;font-size:13px;border-bottom:1px solid var(--fill);display:flex;align-items:center;min-width:0;overflow-wrap:anywhere}
-.wf-row:hover .td{background:#F8F9FE}.wf-row:last-of-type .td{border-bottom:0}.td>a:only-child{padding:5px 12px;border-radius:999px;background:var(--tint-navy);text-decoration:none;font-weight:500;font-size:12.5px;white-space:nowrap}.td>a:only-child:hover{background:var(--navy);color:#fff}.wf-empty{padding:24px;text-align:center;color:var(--mute)}
+.td{padding:14px 16px;font-size:13.5px;border-bottom:1px solid var(--fill);display:flex;align-items:center;min-width:0;overflow-wrap:anywhere}
+.wf-row:hover .td{background:#F8F9FE}.wf-row:last-of-type .td{border-bottom:0}.td>a:only-child{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);text-decoration:none;font-weight:600;font-size:12.5px;white-space:nowrap}.td>a:only-child::after{content:'›';font-size:15px;line-height:1}.td>a:only-child:hover{background:var(--navy);color:#fff}.wf-empty{padding:24px;text-align:center;color:var(--mute)}
 .kpi{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;display:flex;flex-direction:column;gap:4px;position:relative;min-width:0;overflow:hidden}
 .kpi-bar{position:absolute;left:0;top:18px;bottom:18px;width:4px;border-radius:0 4px 4px 0}.kpi-label{font-size:12px;color:var(--mute);font-weight:500}.kpi-value{font-size:26px;font-weight:600;line-height:1.15}.kpi-sub{font-size:12px;color:var(--mute)}
 .field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mute)}.field label{font-weight:500;color:var(--ink);font-size:13px}
 .ctl{min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:14px;background:#fff;color:var(--ink);width:100%}.ctl:focus{outline:2px solid var(--sky);outline-offset:1px}
-.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.note{margin:0;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.55;background:var(--tint-navy)}.note-warn{background:var(--tint-yellow)}.note-ok{background:var(--tint-green)}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-more{flex-basis:100%;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding-top:4px}.btn-more{align-self:flex-end;color:var(--mute);border-style:dashed}.btn-more[aria-expanded=true]{color:var(--navy)}.filters-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.note{margin:0;padding:2px 0 2px 12px;border-left:3px solid var(--line);font-size:12.5px;line-height:1.5;color:var(--mute);background:none}.note-warn{border-left-color:var(--yellow)}.note-ok{border-left-color:var(--ok)}
 .kv{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;align-items:center}.kv .k{color:var(--mute)}
 .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:500;background:var(--fill);color:var(--ink);line-height:1.3;overflow-wrap:normal;word-break:normal;text-align:center}
 .badge-ok{background:var(--tint-green);color:#15803D}.badge-warn{background:var(--tint-yellow);color:#B45309}.badge-bad{background:var(--tint-red);color:#B91C1C}.badge-navy{background:var(--tint-navy);color:var(--navy)}
-.prog{display:flex;flex-direction:column;gap:4px;font-size:13px}.prog-head{display:flex;justify-content:space-between}.prog-track{height:10px;background:var(--fill);border-radius:999px;overflow:hidden}.prog-fill{height:100%;border-radius:999px}
+.prog{display:flex;flex-direction:column;gap:4px;font-size:13px}.prog-head{display:flex;justify-content:space-between}.td .prog{min-width:90px;width:100%}.td .prog-head{font-size:12px}.prog-track{height:10px;background:var(--fill);border-radius:999px;overflow:hidden}.prog-fill{height:100%;border-radius:999px}
 .hbars{display:flex;flex-direction:column;gap:10px}.hbar{display:grid;grid-template-columns:140px 1fr 56px;gap:12px;align-items:center;font-size:13px}.hbar-track{height:8px;background:var(--fill);border-radius:999px;overflow:hidden}.hbar-fill{height:100%;background:var(--navy);border-radius:999px}.hbar b{text-align:right;font-weight:500}
 .chart{display:flex;flex-direction:column;gap:10px}.vbars{display:flex;gap:8px;padding:18px 0 6px;position:relative;align-items:flex-end}
 .yaxis{position:absolute;left:0;top:18px;bottom:28px;display:flex;flex-direction:column;justify-content:space-between;font-size:11px;color:var(--mute)}.vbars.axed{padding-left:30px}
@@ -1252,13 +1324,13 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .gauge{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.gauge svg{max-width:100%}.gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px}
 .upload{border:2px dashed var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:13px;width:100%;background:var(--bg)}.upload label{font-weight:500}
 .pager{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mute)}.pages{margin-left:auto;display:flex;gap:4px}.pg{padding:5px 11px;border:1px solid var(--line);border-radius:8px;text-decoration:none;color:var(--ink);background:#fff}.pg.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.tabs{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border-radius:14px;padding:6px;box-shadow:var(--sh);width:fit-content;max-width:100%}.tab{padding:9px 16px;font:inherit;font-size:13.5px;color:var(--mute);background:none;border:0;border-radius:10px;cursor:pointer;text-decoration:none;font-weight:500}.tab.on{color:var(--navy);background:var(--tint-navy);font-weight:600}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border-radius:14px;padding:6px;box-shadow:var(--sh);width:fit-content;max-width:100%;box-sizing:border-box}.tab{padding:9px 16px;font:inherit;font-size:13.5px;color:var(--mute);background:none;border:0;border-radius:10px;cursor:pointer;text-decoration:none;font-weight:500}.tab.on{color:var(--navy);background:var(--tint-navy);font-weight:600}
 .panel{flex-direction:column;gap:20px}
 .list{margin:0;padding-left:18px;font-size:14px;line-height:1.8}
 .flow-steps{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}.flow-steps li{padding:7px 14px;border-radius:999px;background:var(--tint-navy);color:var(--navy);font-weight:500}.flow-steps .arr{background:none;color:var(--mute);padding:0}
-.ai{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:22px 24px;display:flex;flex-direction:column;gap:12px;border:1px solid #DCE6FF;background:linear-gradient(135deg,#F3F6FF,#fff 55%)}
-.ai-head{display:flex;align-items:center;gap:10px}.ai-head h2{margin:0;font-size:17px}.ai-head .kpi-sub{margin-left:auto}.ai-spark{width:30px;height:30px;border-radius:10px;background:var(--tint-yellow);color:#B45309;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
-.ai ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;line-height:1.55}.ai li{display:flex;gap:10px;align-items:flex-start}.ai-dot{flex:none;width:8px;height:8px;margin-top:8px;border-radius:50%;background:var(--navy)}.ai a{white-space:nowrap;font-weight:600;text-decoration:none}
+.ai{border-radius:var(--r);padding:0;border:1px solid #DCE6FF;background:linear-gradient(135deg,#F3F6FF,#fff 55%)}.ai summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 20px;font-size:15px}.ai summary::-webkit-details-marker{display:none}.ai summary .kpi-sub{margin-left:auto}.ai-caret{font-size:20px;color:var(--mute);transition:transform .2s}.ai[open] .ai-caret{transform:rotate(90deg)}.ai ul,.ai .ai-ask{padding-left:20px;padding-right:20px}.ai .ai-ask{padding-bottom:16px;padding-top:12px}
+.ai-spark{width:30px;height:30px;border-radius:10px;background:var(--tint-yellow);color:#B45309;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
+.ai ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;font-size:13.5px;line-height:1.5}.ai li{display:flex;gap:10px;align-items:flex-start}.ai-dot{flex:none;width:8px;height:8px;margin-top:8px;border-radius:50%;background:var(--navy)}.ai a{white-space:nowrap;font-weight:600;text-decoration:none}
 .ai-ask{display:flex;gap:8px;align-items:center}.ai-ask .ctl{max-width:520px}
 /* dashboard ficha */
 .profile{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column}
@@ -1279,6 +1351,24 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .course-meta{display:flex;gap:14px;color:var(--mute);font-size:12.5px}.course-meta span{display:inline-flex;align-items:center;gap:5px}.course-meta svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
 .course-grade{font-size:16px;font-weight:600}.course-grade small{color:var(--mute);font-weight:400;font-size:12px}
 .cert{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:12.5px}.cert .badge{padding:3px 10px}
+/* asistente flotante */
+.ai-fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;box-shadow:0 10px 30px rgba(29,63,143,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40}
+.ai-fab .nav-ico,.ai-fab .nav-ico svg{width:24px;height:24px}.ai-fab:hover{background:var(--navy2)}.ai-fab.on{background:var(--ink)}
+.ai-fab-dot{position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--yellow);border:2px solid #fff}
+.ai-panel{position:fixed;right:28px;bottom:96px;width:380px;max-width:calc(100vw - 40px);max-height:min(620px,calc(100vh - 120px));background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(26,33,66,.25);display:flex;flex-direction:column;z-index:40;overflow:hidden;border:1px solid var(--line)}
+.ai-panel[hidden]{display:none}.filters-more[hidden]{display:none}
+.ai-panel-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#F3F6FF,#fff)}.ai-panel-head b{display:block;font-size:14px}.ai-panel-head small{color:var(--mute);font-size:12px}.ai-panel-head .icon-btn{margin-left:auto;width:34px;height:34px;font-size:20px}
+.ai-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:160px}.ai-log .msg{max-width:88%;font-size:13.5px}.typing{color:var(--mute)}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}.chipq{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;color:var(--navy);cursor:pointer;text-align:left}.chipq:hover{background:var(--tint-navy);border-color:var(--tint-navy)}
+.ai-in{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}.ai-in .btn{padding:0 14px}
+.btn-ask{border-style:dashed}
+/* insights */
+.insights{display:flex;flex-direction:column;gap:12px}
+.insight{display:grid;grid-template-columns:110px 1fr;gap:16px;background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px}
+.insight-side{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.insight-side small{color:var(--mute);font-size:12px}
+.insight-area{display:block;color:var(--mute);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.insight-body b{display:block;font-size:15px;margin-bottom:4px}.insight-body p{margin:0 0 12px;color:#3B4663;font-size:13.5px;line-height:1.55}
+.insight-actions{display:flex;flex-wrap:wrap;gap:8px}.insight-actions .btn{min-height:36px;padding:0 14px;font-size:13px}
 /* diálogo / toast */
 #wf-dialog{border:0;border-radius:var(--r);box-shadow:0 20px 60px rgba(26,33,66,.3);padding:26px;max-width:480px;font-family:'Poppins',sans-serif;color:var(--ink)}#wf-dialog::backdrop{background:rgba(26,33,66,.45)}
 #wf-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;display:none;z-index:10;box-shadow:var(--sh)}
@@ -1295,7 +1385,7 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .hub .card{display:flex;flex-direction:column;gap:6px;width:200px;min-height:96px;padding:16px;text-decoration:none;color:var(--ink);font-weight:500;position:relative}.hub .card .num{font-size:12px;color:var(--mute);font-weight:400}.hub .card:hover{transform:translateY(-2px)}
 .hub-foot{margin-top:60px;color:var(--mute);font-size:12px}
 .crumbs .path{max-width:300px}
-@media (max-width:1400px){.search{width:160px;flex-basis:160px}.topbar-ctl label{display:none}.topbar-ctl{padding-left:6px}}
+@media (max-width:1400px){.search{width:200px;flex-basis:200px}}
 @media (max-width:1180px){.search{display:none}.user #rol-user{display:none}.crumbs .path{display:none}}
 @media (max-width:900px){.sidebar{display:none}.course{grid-template-columns:52px 1fr 70px}.course>*:nth-child(n+4){display:none}.search{display:none}}
 '''

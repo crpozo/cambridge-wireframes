@@ -1,4 +1,4 @@
-# Pantallas de la Plataforma Cambridge (44 · 40 visibles en el hub)
+# Pantallas de la Plataforma Cambridge (45 · 41 visibles en el hub)
 
 Todas comparten la misma **shell**: barra superior con nombre de la plataforma, selector de sede global (Todas / Quito / Valle / Ambato), notificaciones, asistente y usuario con rol; menú lateral: Inicio, Estudiantes, Cursos, Profesores, Facturación, Comisiones, Inventario, Reportes, Aprobaciones, Configuración. Lo que cada rol ve depende del RBAC (M1).
 
@@ -79,3 +79,5 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 44. **DetalleMatricula.html · Detalle de matrícula** (M5/M2). Equivalente al Enrollment de TeamDesk pero por paquete de niveles: estudiante, curso (código), horario, asesor, plan de pago; resumen (subtotal, descuento, total, pagado, saldo); cargos (tuition, niveles, libros); tabs Facturas y pagos, Códigos de libros, Asistencia, Certificados, Comisión. Acciones: cambio de curso, enviar enlace de clase, hoja de asistencia, anular (con aprobación). ← Ficha360, DetalleCurso, NuevaVenta.
 
 `index.html` redirige al login; el hub es `Mapa.html`. Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.
+
+45. **Insights.html · Insights de IA** (M9/M8). Tablero con todas las observaciones del asistente por área y prioridad: KPIs, distribución por área, evolución semanal y lista de insights con acción directa, marcar como atendido o descartar. En todas las pantallas hay además un asistente flotante contextual (sabe en qué pantalla estás y sugiere preguntas).
