@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Login · Wireframes Plataforma Cambridge</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -75,7 +75,7 @@
   var rs=document.getElementById('rol'); if(!rs) return;
   function apply(){
     var r=rs.value, opt=rs.options[rs.selectedIndex];
-    var u=document.getElementById('rol-user'); if(u) u.textContent=opt.getAttribute('data-user')+' · '+opt.textContent;
+    var u=document.getElementById('rol-user'); if(u) u.innerHTML=opt.getAttribute('data-user')+'<small>'+opt.textContent+'</small>';
     document.querySelectorAll('[data-roles]').forEach(function(e){
       var ok=e.getAttribute('data-roles').split(',').indexOf(r)>=0;
       if(e.hasAttribute('data-panel')){ if(!ok){e.dataset.wfHidden='1';e.style.display='none';} else {delete e.dataset.wfHidden;} return; }
