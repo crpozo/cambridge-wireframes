@@ -18,7 +18,6 @@
   <input id="pass" type="password" placeholder="••••••••" class="ctl">
   <a href="Home.html" class="btn btn-primary">Ingresar</a>
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
-  <a href="Mapa.html" style="font-size:12px;text-align:center;color:#5B6B8A">Mapa de pantallas del mockup</a>
   <p style="margin:0;font-size:12px;color:#5B6B8A;text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>
@@ -90,7 +89,8 @@
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     });
-    document.querySelectorAll('.btn-more').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));});});
+    (function(){var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);});document.addEventListener('click',function(e){if(!np.hidden&&!np.contains(e.target))np.hidden=true;});document.addEventListener('keydown',function(e){if(e.key==='Escape')np.hidden=true;});})();
+document.querySelectorAll('.btn-more').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));});});
 document.querySelectorAll('.tabs').forEach(function(bar){
       var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
       var act=btns.filter(function(b){return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';})[0];

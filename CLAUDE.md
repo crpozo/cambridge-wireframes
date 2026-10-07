@@ -11,7 +11,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 ## Estructura
 ```
 index.html              redirige a Main.html (login): la URL principal abre el mockup
-Mapa.html               mapa de pantallas por área (hub)
+Mapa.html               mapa de pantallas por área (hub interno; no está enlazado desde la UI, se abre por URL)
 <Pantalla>.html         una página por pantalla (Main.html = login)
 style.css               tema completo (generado desde `css` en el generador)
 tools/generar_pantallas.py   generador en Python de TODAS las páginas (fuente de verdad del HTML)
@@ -27,6 +27,7 @@ docs/                   documentación de contexto
 - Selector de sede global: filtra los datos de la página. Una cifra que varía por sede se escribe `sv(todas, quito, valle, ambato)`; una tabla con columna de sede se pasa `table(..., sede=<índice de columna>)` y sus filas se ocultan según la sede elegida. La selección se guarda en `localStorage` y se mantiene entre pantallas.
 - Toda pantalla usa la misma shell: barra superior (selector de sede, selector de rol "Ver como", notificaciones, asistente, usuario) + menú lateral agrupado por áreas (`NAV`: Académico, Comercial, Inventario, Dirección, Administración). Nueva pantalla = nueva llamada a `page(...)` + agregarla a `rows` (hub, agrupado por las mismas áreas) y, si aplica, a `NAV` con sus roles.
 - Tipos de usuario (RBAC): códigos en `ROLES` (ADM, GER, DIR, SUC, COO, ASE, SEC, PRO) y conjuntos `ALL`, `COMERCIAL`, `ACADEMICO`, `APROBADORES`. Cada ítem de `NAV` lleva los roles que lo ven; `only(roles, html, inline=False)` oculta cualquier bloque para los demás roles; `tabs(..., roles={"Pestaña": roles})` oculta pestañas y su panel (si la activa queda oculta se abre la primera visible). El rol elegido se guarda en `localStorage` y se mantiene entre pantallas. Regla: un académico (COO, PRO) no ve nada comercial (matrícula/venta, comisiones, facturación); un asesor no ve Profesores, Inventario, Configuración ni payment sheet.
+- Notificaciones: la campana abre un popover con las últimas 4 (ver todas → Notificaciones.html). El botón atrás no se muestra en Inicio.
 - Asistente (M9), tres piezas: (1) `ai([(observación, enlace, href)], pregunta)` es un **acordeón** cerrado por defecto con hasta 3 observaciones y botones "Preguntar al asistente" / "Ver todos los insights"; (2) el **asistente flotante** (botón abajo a la derecha en todas las pantallas) sabe en qué pantalla estás: `AI_CTX[archivo]` define preguntas sugeridas y respuestas de ejemplo por pantalla, más `AI_DEFAULT`; (3) `Insights.html` reúne todas las observaciones (`INSIGHTS`) por área y prioridad con acciones. Todo de solo lectura, derivado de datos visibles y respetando el rol.
 - Tablas: `table(cols, rows, sede=, hide=(índices), wide=0)`. La columna `wide` es la principal y usa `c2(principal, detalle)` para dos líneas; las columnas en `hide` no se muestran pero sus celdas existen y siguen filtrando. Máximo ~7 columnas visibles; nada de tablas de 12 columnas. Las acciones ("Ver ficha") se renderizan como botones con chevrón.
 - `filters(..., show=3)`: los primeros 3 controles se ven, el resto va bajo "Más filtros (n)". `note()` devuelve vacío: no hay cajas explicativas en el mockup; la explicación vive en docs/.

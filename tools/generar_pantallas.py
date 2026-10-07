@@ -228,7 +228,8 @@ def page(fname, title, inner, lang_title):
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     }});
-    document.querySelectorAll('.btn-more').forEach(function(b){{b.addEventListener('click',function(){{var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));}});}});
+    (function(){{var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){{e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);}});document.addEventListener('click',function(e){{if(!np.hidden&&!np.contains(e.target))np.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')np.hidden=true;}});}})();
+document.querySelectorAll('.btn-more').forEach(function(b){{b.addEventListener('click',function(){{var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));}});}});
 document.querySelectorAll('.tabs').forEach(function(bar){{
       var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
       var act=btns.filter(function(b){{return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';}})[0];
@@ -406,9 +407,9 @@ def logo():
 def ai(items, ask="¿Qué más quieres saber?", open_=False):
     """Acordeón 'Asistente': cerrado muestra el conteo; abierto, hasta 3 observaciones con enlace."""
     items=items[:3]
-    lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span>{t} <a href="{h}">{l} →</a></span></li>' for t,l,h in items)
-    return (f'<details class="ai"{" open" if open_ else ""}><summary><span class="ai-spark" aria-hidden="true">✦</span><b>Asistente</b><span class="badge badge-navy">{len(items)} observaciones</span><span class="kpi-sub">según tu rol y sede</span><span class="ai-caret" aria-hidden="true">›</span></summary>'
-            f'<ul>{lis}</ul><div class="ai-ask"><button type="button" class="btn btn-ask" data-ask="{ask}">{ico("spark","nav-ico")}&nbsp;Preguntar al asistente</button><a href="Insights.html" class="btn">Ver todos los insights</a></div></details>')
+    lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span class="ai-text">{t}</span><a class="ai-link" href="{h}">{l}</a></li>' for t,l,h in items)
+    return (f'<details class="ai"{" open" if open_ else ""}><summary><span class="ai-spark" aria-hidden="true">✦</span><span class="ai-title"><b>Asistente</b><small>{len(items)} observaciones para ti · según tu rol y sede</small></span><span class="ai-caret" aria-hidden="true">›</span></summary>'
+            f'<ul>{lis}</ul><div class="ai-ask"><button type="button" class="btn btn-primary btn-ask" data-ask="{ask}">{ico("spark","nav-ico")}&nbsp;Preguntar al asistente</button><a href="Insights.html" class="btn">Ver todos los insights</a></div></details>')
 def flow(steps):
     return '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px">'+"".join((f'<li style="padding:6px 10px;border:1px solid {INK}">{st}</li>'+('<li aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
 
@@ -493,13 +494,19 @@ def shell(title, active, *parts, subtitle=""):
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
     back=parent[1] if parent and parent[0]!=title else "Home.html"
     return f'''<div class="app">
-<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-ctx"><div class="sidebar-ctx-title">Contexto de prueba</div><label>Sede<select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></label><label>Ver como<select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></label></div><div class="sidebar-foot">Mockup v1 · <a href="Mapa.html">Mapa de pantallas</a></div></aside>
+<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-ctx"><div class="sidebar-ctx-title">Contexto de prueba</div><label>Sede<select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></label><label>Ver como<select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></label></div><div class="sidebar-foot">Plataforma Cambridge · mockup v1</div></aside>
 <div class="shell-main">
 <header class="topbar">
-  <div class="crumbs"><a href="{back}" class="back" aria-label="Volver">‹</a><div><h1>{title}</h1><div class="path">{path}</div></div></div>
+  <div class="crumbs">{'' if active=="Inicio" else f'<a href="{back}" class="back" aria-label="Volver">‹</a>'}<div><h1>{title}</h1><div class="path">{path}</div></div></div>
   <div class="topbar-right">
   <form class="search" action="Estudiantes.html" role="search">{ico("search","nav-ico")}<label for="gsearch" class="sr">Buscar</label><input id="gsearch" name="q" placeholder="Buscar… (Enter)"></form>
-  <a href="Notificaciones.html" class="icon-btn" aria-label="Notificaciones (3)">{ico("bell","nav-ico")}<span class="dot">3</span></a>
+  <div class="notif"><button type="button" class="icon-btn" id="notif-btn" aria-label="Notificaciones (3)" aria-expanded="false">{ico("bell","nav-ico")}<span class="dot">3</span></button>
+    <div class="notif-pop" id="notif-pop" hidden><div class="notif-head"><b>Notificaciones</b><a href="Notificaciones.html">Ver todas</a></div>
+      <a href="Aprobaciones.html" class="notif-item"><span class="notif-ico" style="background:var(--tint-yellow);color:#B45309">!</span><span><b>Descuento 42% pendiente de tu aprobación</b><small>María Andrade · Carla M. · hace 1 día</small></span></a>
+      <a href="Inventario.html" class="notif-item"><span class="notif-ico" style="background:var(--tint-red);color:#B91C1C">−</span><span><b>Stock negativo: Empower B1+ en Valle</b><small>Inventario · hoy 08:10</small></span></a>
+      <a href="PaymentSheet.html" class="notif-item"><span class="notif-ico" style="background:var(--tint-navy);color:var(--navy)">$</span><span><b>Payment sheet de octubre lista para revisión</b><small>3 alertas · ayer 17:30</small></span></a>
+      <a href="Profesores.html" class="notif-item read"><span class="notif-ico" style="background:var(--tint-green);color:#15803D">✓</span><span><b>Profesor M. Castro aprobado</b><small>Ya puede recibir cursos · ayer 11:05</small></span></a>
+    </div></div>
   <a href="Chatbot.html" class="icon-btn" aria-label="Asistente">{ico("spark","nav-ico")}</a>
   <div class="user"><span class="avatar sm">E</span><span id="rol-user">Estefanía<small>Administrador General</small></span></div>
   </div>
@@ -680,7 +687,6 @@ login=f'''<div class="auth">
   <input id="pass" type="password" placeholder="••••••••" class="ctl">
   {btn("Ingresar","Home.html",True)}
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
-  <a href="Mapa.html" style="font-size:12px;text-align:center;color:#5B6B8A">Mapa de pantallas del mockup</a>
   <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>'''
@@ -1258,7 +1264,7 @@ idx=f'''<!doctype html>
 open(os.path.join(ROOT,"Mapa.html"),"w").write(idx)
 open(os.path.join(ROOT,"index.html"),"w").write('''<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=Main.html"><title>Plataforma Cambridge</title><link rel="canonical" href="Main.html"></head>
-<body style="font-family:sans-serif;padding:24px">Abriendo la plataforma… <a href="Main.html">Entrar</a> · <a href="Mapa.html">Mapa de pantallas</a></body></html>''')
+<body style="font-family:sans-serif;padding:24px">Abriendo la plataforma… <a href="Main.html">Entrar</a></body></html>''')
 css='''*{box-sizing:border-box}
 :root{--navy:#1D3F8F;--navy2:#152F6B;--red:#D62839;--yellow:#F6C21C;--sky:#4FA3DC;--ink:#1A2142;--mute:#6B7280;--line:#E6E9F2;--fill:#EEF1F8;--bg:#F6F7FB;--ok:#16A34A;--warn:#D97706;--tint-navy:#E8EEFF;--tint-red:#FDE8EC;--tint-yellow:#FFF4D6;--tint-sky:#E3F2FC;--tint-green:#E7F7EE;--r:16px;--sh:0 1px 2px rgba(26,33,66,.04),0 8px 24px rgba(26,33,66,.05)}
 body{margin:0;font-family:'Poppins','IBM Plex Sans',sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
@@ -1290,7 +1296,7 @@ h1,h2,h3{font-weight:600}
 .user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);white-space:nowrap;min-width:0}.user #rol-user{overflow:hidden;text-overflow:ellipsis;max-width:180px}.user #rol-user{display:flex;flex-direction:column;line-height:1.2}.user #rol-user small{color:var(--mute);font-size:12px}
 .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--sky));color:#fff;font-weight:600}
 .avatar.sm{width:38px;height:38px;font-size:14px}.avatar.lg{width:96px;height:96px;font-size:32px;border:5px solid #fff;box-shadow:0 6px 20px rgba(26,33,66,.12)}
-.main{padding:12px 32px 56px;display:flex;flex-direction:column;gap:26px;min-width:0}
+.main{padding:12px 32px 120px;display:flex;flex-direction:column;gap:26px;min-width:0}
 .page-head{display:none}
 /* componentes */
 .grid{display:grid;gap:20px}.row{display:flex;flex-wrap:wrap;align-items:center}
@@ -1328,9 +1334,9 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .panel{flex-direction:column;gap:20px}
 .list{margin:0;padding-left:18px;font-size:14px;line-height:1.8}
 .flow-steps{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}.flow-steps li{padding:7px 14px;border-radius:999px;background:var(--tint-navy);color:var(--navy);font-weight:500}.flow-steps .arr{background:none;color:var(--mute);padding:0}
-.ai{border-radius:var(--r);padding:0;border:1px solid #DCE6FF;background:linear-gradient(135deg,#F3F6FF,#fff 55%)}.ai summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 20px;font-size:15px}.ai summary::-webkit-details-marker{display:none}.ai summary .kpi-sub{margin-left:auto}.ai-caret{font-size:20px;color:var(--mute);transition:transform .2s}.ai[open] .ai-caret{transform:rotate(90deg)}.ai ul,.ai .ai-ask{padding-left:20px;padding-right:20px}.ai .ai-ask{padding-bottom:16px;padding-top:12px}
-.ai-spark{width:30px;height:30px;border-radius:10px;background:var(--tint-yellow);color:#B45309;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
-.ai ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;font-size:13.5px;line-height:1.5}.ai li{display:flex;gap:10px;align-items:flex-start}.ai-dot{flex:none;width:8px;height:8px;margin-top:8px;border-radius:50%;background:var(--navy)}.ai a{white-space:nowrap;font-weight:600;text-decoration:none}
+.ai{border-radius:var(--r);padding:0;border:1px solid #DCE6FF;background:linear-gradient(135deg,#F3F6FF,#fff 55%);box-shadow:var(--sh)}.ai summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:16px 22px;border-radius:var(--r)}.ai summary:hover{background:rgba(29,63,143,.04)}.ai summary::-webkit-details-marker{display:none}.ai-title{display:flex;flex-direction:column;line-height:1.2}.ai-title b{font-size:15px}.ai-title small{color:var(--mute);font-size:12.5px}.ai-caret{margin-left:auto;width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:18px;color:var(--mute);transition:transform .2s}.ai[open] .ai-caret{transform:rotate(90deg)}.ai ul{padding:4px 22px 0}.ai .ai-ask{padding:14px 22px 18px}
+.ai-spark{width:38px;height:38px;border-radius:12px;background:var(--navy);color:var(--yellow);display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.ai ul{margin:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.5}.ai li{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.ai-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--navy)}.ai li:nth-child(2) .ai-dot{background:var(--sky)}.ai li:nth-child(3) .ai-dot{background:var(--yellow)}.ai-text{flex:1;min-width:0;color:#2B3555}.ai-link{flex:none;white-space:nowrap;font-weight:600;text-decoration:none;font-size:12.5px;padding:7px 12px;border-radius:10px;background:var(--tint-navy);color:var(--navy)}.ai-link::after{content:' ›'}.ai-link:hover{background:var(--navy);color:#fff}
 .ai-ask{display:flex;gap:8px;align-items:center}.ai-ask .ctl{max-width:520px}
 /* dashboard ficha */
 .profile{background:#fff;border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column}
@@ -1369,6 +1375,12 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .insight-area{display:block;color:var(--mute);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
 .insight-body b{display:block;font-size:15px;margin-bottom:4px}.insight-body p{margin:0 0 12px;color:#3B4663;font-size:13.5px;line-height:1.55}
 .insight-actions{display:flex;flex-wrap:wrap;gap:8px}.insight-actions .btn{min-height:36px;padding:0 14px;font-size:13px}
+/* notificaciones */
+.notif{position:relative}.notif-pop{position:absolute;right:0;top:50px;width:360px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(26,33,66,.2);border:1px solid var(--line);z-index:30;overflow:hidden}.notif-pop[hidden]{display:none}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);font-size:14px}.notif-head a{font-size:12.5px;text-decoration:none;font-weight:600}
+.notif-item{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;text-decoration:none;color:var(--ink);border-bottom:1px solid var(--fill)}.notif-item:last-child{border-bottom:0}.notif-item:hover{background:var(--bg)}.notif-item.read{opacity:.6}
+.notif-item b{display:block;font-size:13px;font-weight:600;line-height:1.35}.notif-item small{color:var(--mute);font-size:12px}
+.notif-ico{flex:none;width:30px;height:30px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
 /* diálogo / toast */
 #wf-dialog{border:0;border-radius:var(--r);box-shadow:0 20px 60px rgba(26,33,66,.3);padding:26px;max-width:480px;font-family:'Poppins',sans-serif;color:var(--ink)}#wf-dialog::backdrop{background:rgba(26,33,66,.45)}
 #wf-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;display:none;z-index:10;box-shadow:var(--sh)}
