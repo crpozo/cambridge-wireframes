@@ -66,6 +66,7 @@
     sel.addEventListener('change',function(){try{localStorage.setItem('wf-sede',sel.value);}catch(e){}refresh();});
   }
   document.querySelectorAll('[data-fcol]').forEach(function(c){c.addEventListener('input',refresh);c.addEventListener('change',refresh);});
+  try{var q=new URLSearchParams(location.search).get('q');var sb=document.querySelector('input[data-fcol="*"]');if(q&&sb){sb.value=q;}}catch(e){}
   refresh();
 })();
 (function(){

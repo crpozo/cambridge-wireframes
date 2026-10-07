@@ -13,12 +13,14 @@
 <div class="shell-main">
 <header class="topbar">
   <div class="crumbs"><a href="Estudiantes.html" class="back" aria-label="Volver">‹</a><div><h1>María Andrade</h1><div class="path"><a href="Estudiantes.html">Estudiantes</a> / María Andrade</div></div></div>
+  <div class="topbar-right">
   <div class="topbar-ctl"><label for="sede">Sede</label><select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></div>
   <div class="topbar-ctl"><label for="rol">Ver como</label><select id="rol"><option value="ADM" data-user="Estefanía">Administrador General</option><option value="GER" data-user="Gerencia">Gerente General</option><option value="DIR" data-user="Dir. Comercial">Director Comercial</option><option value="SUC" data-user="Admin. Valle">Administrador de Sucursal</option><option value="COO" data-user="Coord. Académica">Coordinador Académico</option><option value="ASE" data-user="Carla M.">Asesor Comercial</option><option value="SEC" data-user="Secretaría">Secretaría</option><option value="PRO" data-user="P. Gómez">Profesor (consulta)</option></select></div>
-  <div class="search"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg></span><label for="gsearch" class="sr">Buscar</label><input id="gsearch" placeholder="Buscar…"></div>
+  <form class="search" action="Estudiantes.html" role="search"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg></span><label for="gsearch" class="sr">Buscar</label><input id="gsearch" name="q" placeholder="Buscar… (Enter)"></form>
   <a href="Notificaciones.html" class="icon-btn" aria-label="Notificaciones (3)"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/><path d='M10 21h4'/></svg></span><span class="dot">3</span></a>
   <a href="Chatbot.html" class="icon-btn" aria-label="Asistente"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d='M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z'/></svg></span></a>
   <div class="user"><span class="avatar sm">E</span><span id="rol-user">Estefanía<small>Administrador General</small></span></div>
+  </div>
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Ficha 360°: todo lo del estudiante en una sola vista</p>
@@ -86,6 +88,7 @@
     sel.addEventListener('change',function(){try{localStorage.setItem('wf-sede',sel.value);}catch(e){}refresh();});
   }
   document.querySelectorAll('[data-fcol]').forEach(function(c){c.addEventListener('input',refresh);c.addEventListener('change',refresh);});
+  try{var q=new URLSearchParams(location.search).get('q');var sb=document.querySelector('input[data-fcol="*"]');if(q&&sb){sb.value=q;}}catch(e){}
   refresh();
 })();
 (function(){
