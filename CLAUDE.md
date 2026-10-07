@@ -15,6 +15,7 @@ Mapa.html               mapa de pantallas por área (hub)
 <Pantalla>.html         una página por pantalla (Main.html = login)
 style.css               tema completo (generado desde `css` en el generador)
 tools/generar_pantallas.py   generador en Python de TODAS las páginas (fuente de verdad del HTML)
+assets/logo.webp        logo oficial de Cambridge (menú lateral y login)
 docs/                   documentación de contexto
 .nojekyll               para que Pages sirva tal cual
 ```

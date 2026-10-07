@@ -7,7 +7,7 @@ h1,h2,h3{font-weight:600}
 /* layout */
 .app{display:flex;min-height:100vh}
 .sidebar{width:232px;overflow-y:auto;flex:none;background:#fff;color:var(--ink);display:flex;flex-direction:column;padding:20px 14px;gap:4px;position:sticky;top:0;height:100vh;border-right:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;line-height:1.05}.brand b{display:block;font-size:16px;letter-spacing:.08em;color:var(--navy)}.brand small{display:block;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.brand{display:flex;align-items:center;padding:6px 8px 18px;text-decoration:none}.brand img{width:100%;max-width:196px;height:auto;display:block}.brand b{display:block;font-size:16px;letter-spacing:.08em;color:var(--navy)}.brand small{display:block;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .brand-mark{width:34px;height:26px;border-radius:5px;background:linear-gradient(180deg,var(--red) 0 33%,#fff 33% 66%,var(--navy) 66%);border:2px solid var(--navy);flex:none}
 .brand-dark{justify-content:center}
 .nav-area{padding:16px 12px 6px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}

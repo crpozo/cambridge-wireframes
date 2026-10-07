@@ -453,7 +453,7 @@ def shell(title, active, *parts, subtitle=""):
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
     back=parent[1] if parent and parent[0]!=title else "Home.html"
     return f'''<div class="app">
-<aside class="sidebar"><div class="brand"><span class="brand-mark" aria-hidden="true"></span><span><b>CAMBRIDGE</b><small>School of Languages</small></span></div><nav>{nav(active)}</nav><div class="sidebar-foot">Plataforma Cambridge · mockup v1<br><a href="Mapa.html">Mapa de pantallas</a></div></aside>
+<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-foot">Plataforma Cambridge · mockup v1<br><a href="Mapa.html">Mapa de pantallas</a></div></aside>
 <div class="shell-main">
 <header class="topbar">
   <div class="crumbs"><a href="{back}" class="back" aria-label="Volver">‹</a><div><h1>{title}</h1><div class="path">{path}</div></div></div>
@@ -568,7 +568,7 @@ def gauge(pct, label="", color=None, segments=False):
         a=math.pi*(1-p); return cx+r*math.cos(a), cy-r*math.sin(a)
     def arc(p0,p1,col,w=12):
         x0,y0=pt(p0); x1,y1=pt(p1)
-        return f'<path d="M{x0:.1f},{y0:.1f} A52,52 0 {1 if p1-p0>0.5 else 0} 1 {x1:.1f},{y1:.1f}" fill="none" stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>'
+        return f'<path d="M{x0:.1f},{y0:.1f} A52,52 0 0 1 {x1:.1f},{y1:.1f}" fill="none" stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>'
     if segments:
         cols=["#16A34A","#F6C21C","#F59E0B","#D62839"]; base="".join(arc(i*0.25+0.01,(i+1)*0.25-0.01,c) for i,c in enumerate(cols))
         x,y=pt(v/100); needle=f'<circle cx="{x:.1f}" cy="{y:.1f}" r="7" fill="#fff" stroke="{INK}" stroke-width="3"/>'
@@ -597,7 +597,7 @@ def pager(total, per=20):
     pages="".join(f'<a href="#" aria-label="Página {n}" class="pg{" on" if n==1 else ""}">{n}</a>' for n in (1,2,3))
     return f'<div class="wf-pager pager"><span>{total} registros · {per} por página<span class="wf-shown"></span></span><span class="pages">{pages}<a href="#" aria-label="Siguiente" class="pg">›</a></span></div>'
 def logo():
-    return '<div class="brand brand-dark"><span class="brand-mark" aria-hidden="true"></span><span><b>CAMBRIDGE</b><small>School of Languages</small></span></div>'
+    return '<div class="brand brand-dark"><img src="assets/logo.webp" alt="Cambridge School of Languages" style="width:240px"></div>'
 def ai(items, ask="¿Qué más quieres saber?"):
     lis="".join(f'<li><span class="ai-dot" aria-hidden="true"></span><span>{t} <a href="{h}">{l} →</a></span></li>' for t,l,h in items)
     return f'<section class="ai"><div class="ai-head"><span class="ai-spark" aria-hidden="true">✦</span><h2>Asistente · lo que vale la pena mirar</h2><span class="kpi-sub">generado ahora · solo lectura · según tu rol</span></div><ul>{lis}</ul><div class="ai-ask"><label for="ai-q" class="sr">Pregunta</label><input id="ai-q" class="ctl" placeholder="{ask}">{btn("Preguntar","Chatbot.html",True)}</div></section>'
@@ -1196,7 +1196,7 @@ h1,h2,h3{font-weight:600}
 /* layout */
 .app{display:flex;min-height:100vh}
 .sidebar{width:232px;overflow-y:auto;flex:none;background:#fff;color:var(--ink);display:flex;flex-direction:column;padding:20px 14px;gap:4px;position:sticky;top:0;height:100vh;border-right:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;line-height:1.05}.brand b{display:block;font-size:16px;letter-spacing:.08em;color:var(--navy)}.brand small{display:block;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.brand{display:flex;align-items:center;padding:6px 8px 18px;text-decoration:none}.brand img{width:100%;max-width:196px;height:auto;display:block}.brand b{display:block;font-size:16px;letter-spacing:.08em;color:var(--navy)}.brand small{display:block;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .brand-mark{width:34px;height:26px;border-radius:5px;background:linear-gradient(180deg,var(--red) 0 33%,#fff 33% 66%,var(--navy) 66%);border:2px solid var(--navy);flex:none}
 .brand-dark{justify-content:center}
 .nav-area{padding:16px 12px 6px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
