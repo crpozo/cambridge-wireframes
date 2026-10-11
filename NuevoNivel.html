@@ -28,7 +28,7 @@
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Catálogo configurable sin desarrollador</p>
-  <div class="grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><label for="f0">Programa (Adults / Kids / Teens)</label><input id="f0" class="ctl"></div><div class="field"><label for="f1">Nivel</label><input id="f1" class="ctl"></div><div class="field"><label for="f2">Módulos que lo componen</label><input id="f2" class="ctl"></div><div class="field"><label for="f3">Horas totales</label><input id="f3" class="ctl"></div><div class="field"><label for="f4">Precio virtual</label><input id="f4" class="ctl"></div><div class="field"><label for="f5">Precio presencial</label><input id="f5" class="ctl"></div><div class="field"><label for="f6">Libro asociado</label><input id="f6" class="ctl"></div><div class="field"><label for="f7">Vigencia del precio</label><input id="f7" class="ctl"></div></div><div class="row" style="gap:16px"><a href="Configuracion.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="El nivel queda disponible para nuevas ventas y cursos. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Configuracion.html">Guardar nivel</button></div>
+  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="grid form-grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f124">Programa</label></div><select id="f124" class="ctl"><option>Seleccionar…</option><option selected>Adults</option><option>Kids</option><option>Teens</option></select></div><div class="field"><div class="field-head"><label for="f125">Nivel</label></div><input id="f125" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f126">Módulos que lo componen</label></div><input id="f126" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f127">Horas totales</label></div><input id="f127" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f128">Precio virtual</label></div><input id="f128" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f129">Precio presencial</label></div><input id="f129" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f130">Libro asociado</label></div><input id="f130" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f131">Vigencia del precio</label></div><input id="f131" type="date" class="ctl" placeholder=""></div></div></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="El nivel queda disponible para nuevas ventas y cursos. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Configuracion.html">Guardar nivel</button><a href="Configuracion.html" class="btn">Cancelar</a></div>
 </main>
 </div>
 </div>
@@ -55,6 +55,13 @@
   document.getElementById('wf-ok').addEventListener('click',function(){
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
   });
 })();
 (function(){

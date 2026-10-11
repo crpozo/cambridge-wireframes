@@ -1,3 +1,4 @@
+import re
 import json, os
 import sys
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -183,6 +184,13 @@ def page(fname, title, inner, lang_title):
   document.getElementById('wf-ok').addEventListener('click',function(){{
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){{toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;}},1100);
+  }});
+}})();
+(function(){{
+  document.querySelectorAll('.wf-row').forEach(function(r){{
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){{c.addEventListener('click',function(ev){{ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); }});}});
   }});
 }})();
 (function(){{
@@ -528,14 +536,14 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0):
     def cls(i): return ' td-hide' if i in hide else ''
     hd="".join(f'<div class="th{cls(i)}">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
-        cells="".join(f'<div class="td{cls(i)}" style="min-height:{h}px">{c}</div>' for i,c in enumerate(r))
+        cells="".join(f'<div class="td{cls(i)}{" td-wide" if i==wide else ""}" style="min-height:{h}px">{c}</div>' for i,c in enumerate(r))
         sd=""
         if sede is not None:
             m=_re.search(r"Quito|Valle|Ambato|Todas", str(r[sede]))
             if m: sd=f' data-sede="{m.group(0)}"'
         body+=f'<div class="wf-row" style="display:contents"{sd}>{cells}</div>'
     empty='<div class="wf-empty" style="display:none;grid-column:1/-1">Sin resultados con estos filtros</div>'
-    tpl=" ".join(("minmax(220px,2.2fr)" if i==wide else ("max-content" if cols[i] in ("Acción","Estado") else "minmax(0,1fr)")) for i in range(n) if i not in hide)
+    tpl=" ".join(("minmax(200px,2.2fr)" if i==wide else ("max-content" if cols[i] in ("Acción","Estado") else "minmax(min-content,1fr)")) for i in range(n) if i not in hide)
     return f'<div class="tbl-wrap"><div class="wf-table tbl" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:{tpl}">{hd}{body}{empty}</div></div>'
 
 def tabs(items, active, panels=None, roles=None):
@@ -550,9 +558,47 @@ def tabs(items, active, panels=None, roles=None):
         body+=f'<div role="tabpanel" data-panel="{label}"{rl} class="panel" style="display:{"flex" if on else "none"}">{content}</div>'
     return f'<div class="tabs" role="tablist">{bar}</div>{body}'
 
-def form(fields, cols=2):
-    out="".join(f'<div class="field"><label for="f{i}">{f}</label><input id="f{i}" class="ctl"></div>' for i,f in enumerate(fields))
-    return f'<div class="grid" style="grid-template-columns:repeat({cols}, minmax(0, 1fr))">{out}</div>'
+_FID=[0]
+def field(label, value="", kind="text", options=None, req=False, hint=""):
+    """Un campo de formulario. kind: text|select|date|time|email|tel|number|file|textarea. value = valor de ejemplo o placeholder."""
+    _FID[0]+=1; i=f"f{_FID[0]}"
+    lab=f'<label for="{i}">{label}{"<em>*</em>" if req else ""}</label>'
+    if kind=="select":
+        opts="".join(f'<option{" selected" if o==value else ""}>{o}</option>' for o in (options or []))
+        ctl=f'<select id="{i}" class="ctl">{opts}</select>'
+    elif kind=="textarea":
+        ctl=f'<textarea id="{i}" class="ctl" rows="3" placeholder="{value}"></textarea>'
+    elif kind=="file":
+        ctl=f'<label class="ctl ctl-file" for="{i}"><span>{value or "Seleccionar archivo…"}</span><b>Examinar</b><input id="{i}" type="file" hidden></label>'
+    else:
+        ctl=f'<input id="{i}" type="{kind}" class="ctl" placeholder="{value}">'
+    return f'<div class="field"><div class="field-head">{lab}{f"<small>{hint}</small>" if hint else ""}</div>{ctl}</div>'
+def _auto_field(f):
+    """Convierte 'Etiqueta (pista)' en un campo con tipo, placeholder u opciones deducidas de la pista."""
+    if isinstance(f, tuple): return field(*f) if not isinstance(f[-1], dict) else field(*f[:-1], **f[-1])
+    m=re.match(r"^(.*?)\s*\((.*)\)\s*$", f); label, hint = (m.group(1), m.group(2)) if m else (f, "")
+    low=(label+" "+hint).lower(); hl=hint.lower()
+    if hint and " / " in hint and not hl.startswith(("ej.","valida","automático","calculad","desde","se valida","lead")):
+        opts=[o.strip() for o in hint.split(" / ")]
+        if label.lower().startswith("cómo"): opts=opts
+        return field(label, opts[0], "select", ["Seleccionar…"]+[o[0].upper()+o[1:] for o in opts] if len(opts)>2 else [o[0].upper()+o[1:] for o in opts])
+    if hl.startswith("automático") or hl.startswith("calculad"):
+        return field(label, hint.split(":")[-1].strip() if ":" in hint else "Se calcula al guardar", "text", hint="Automático")
+    if label.lower()=="estado" and not hint: return field(label, "Activo", "select", ["Activo","Inactivo"])
+    if label.lower()=="sede" or label.lower().startswith("sede"): return field(label, "Quito", "select", ["Quito","Valle de los Chillos","Ambato"] if "(s)" not in label else ["Quito","Valle de los Chillos","Ambato","Todas"])
+    if "fecha" in low or "vigencia" in low: return field(label, "", "date", hint=hint)
+    if label.lower().startswith("hora "): return field(label, "", "time")
+    if "email" in low or "correo" in low: return field(label, "nombre@ejemplo.com", "email", hint=hint)
+    if "teléfono" in low: return field(label, "099 000 0000", "tel")
+    if "archivo" in low or "comprobante" in label.lower(): return field(label, "", "file", hint=hint if "archivo" not in hl else "")
+    if any(k in low for k in ("monto","precio","cantidad","horas","cupo","tarifa","%","días de","umbral","aulas")) and "horario" not in low: return field(label, "0", "number", hint=hint)
+    if label.lower().startswith(("observación","motivo","condición","columnas","descripción")): return field(label, hint or "Escribe aquí…", "textarea")
+    return field(label, hint, "text")
+def form(fields, cols=2, title="", extra=""):
+    out="".join(_auto_field(f) for f in fields)
+    grid=f'<div class="grid form-grid" style="grid-template-columns:repeat({cols}, minmax(0, 1fr))">{out}</div>'
+    if title or extra: return card(title, grid+extra)
+    return grid
 
 def kpi(label, value, sub="", tone=0):
     return f'<div class="kpi"><span class="kpi-bar" style="background:{CH[tone%4]}"></span><span class="kpi-label">{label}</span><span class="kpi-value">{value}</span>{f"<span class=kpi-sub>{sub}</span>" if sub else ""}</div>'
@@ -660,6 +706,9 @@ def flow(steps):
     return '<ol class="flow-steps">'+"".join((f'<li>{st}</li>'+('<li class="arr" aria-hidden="true">→</li>' if i<len(steps)-1 else '')) for i,st in enumerate(steps))+'</ol>'
 def row(*cells, gap=16):
     return f'<div class="row" style="gap:{gap}px">'+"".join(cells)+'</div>'
+def foot(*buttons):
+    """Pie de formulario fijo abajo: acción principal primero, luego secundarias."""
+    return '<div class="form-foot">'+"".join(buttons)+'</div>'
 def two(a,b, ratio="1fr 1fr"):
     return f'<div class="grid" style="grid-template-columns:{ratio}">{a}{b}</div>'
 def card(title, inner, extra=""):
@@ -678,7 +727,7 @@ def course_item(name, meta, pct, status, grade, cert, href="DetalleMatricula.htm
     return (f'<div class="course"><span class="course-ico" style="background:{tints[tone%4]};color:{inks[tone%4]}"><svg viewBox="0 0 24 24">{SVG["book"]}</svg></span>'
             f'<div class="course-name"><a href="{href}">{name}</a><small>{meta}</small></div>'
             f'<div class="course-meta"><span><svg viewBox="0 0 24 24">{SVG["play"]}</svg>{sessions}</span><span><svg viewBox="0 0 24 24">{SVG["clock"]}</svg>{hours}</span></div>'
-            f'{ring(pct,inks[tone%4])}{status}<span class="course-grade">{g[0].strip()}{f"<small>/{g[1].strip()}</small>" if g[1] else ""}</span><span class="cert">Certificado: {cert}</span></div>')
+            f'{ring(pct,inks[tone%4])}<span class="course-state">{status}<small>Certificado</small>{cert}</span><span class="course-grade">{g[0].strip()}{f"<small>/{g[1].strip()}</small>" if g[1] else ""}</span></div>')
 # ================= FIN TEMA =================
 
 # 1 Login
@@ -751,11 +800,11 @@ ficha=shell("María Andrade","Estudiantes",
  tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
   "Datos": two(card("Datos personales", form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede"])),
                card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
-  "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],[
-     ["001-202602794","0001-2026-0767 · English for Adults B1 Virtual","Lu-Ma-Mi-Ju 19:00–21:00","7","$230","$230","$0","90%","—",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
-     ["001-202601245","0001-2026-0620 · English for Adults A2","Lu-Mi 18:00–20:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
-     ["001-202601102","0001-2026-0512 · English for Adults A2","Lu-Mi 18:00–20:00","3","$240","$240","$0","92%","88 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
-     ["001-202500811","0001-2025-0430 · English for Adults A1","Sa 09:00–13:00","2","$495","$455","$0","88%","80 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>']])
+  "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],hide=(0,2,4,5),wide=1,rows=[
+     ["001-202602794",c2('<a href="DetalleMatricula.html">English for Adults B1 Virtual</a>',"001-202602794 · 0001-2026-0767 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$230","$230","$0","90%","—",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202601245",c2('<a href="DetalleMatricula.html">English for Adults A2</a>',"001-202601245 · 0001-2026-0620 · Lu-Mi 18:00–20:00"),"Lu-Mi 18:00–20:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202601102",c2('<a href="DetalleMatricula.html">English for Adults A2</a>',"001-202601102 · 0001-2026-0512 · Lu-Mi 18:00–20:00"),"Lu-Mi 18:00–20:00","3","$240","$240","$0","92%","88 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202500811",c2('<a href="DetalleMatricula.html">English for Adults A1</a>',"001-202500811 · 0001-2025-0430 · Sa 09:00–13:00"),"Sa 09:00–13:00","2","$495","$455","$0","88%","80 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>']])
      +kv(("Matrículas","4"),("Módulos aprobados","6"),("Asistencia promedio","91%"),("Saldo total","$0"))
      +note("Cada matrícula conserva su número y código de curso de TeamDesk (migración). Notas y asistencia se sincronizan desde Moodle cada noche; nota mínima para Pass: 70."),
   "Niveles / crédito": two(card("Niveles comprados vs consumidos", kv(("Comprados","4 niveles (A1, A2, B1, B2)"),("Consumidos","2"),("En curso","1 (B1)"),("Pendiente","1 (B2)"))+progress(56,"Avance del paquete · 9 de 16 módulos")+table(["Nivel","Estado","Curso","Cierre"],[["A1",badge("Pass","ok"),"Adults A1 · L. Vega","dic 2025"],["A2",badge("Pass","ok"),"Adults A2 · L. Vega","jun 2026"],["B1",badge("En curso"),"Adults B1 Virtual · P. Gómez","—"],["B2",badge("Pendiente","warn"),"Sin asignar","—"]])),
@@ -961,7 +1010,7 @@ page("Configuracion.html","Configuración",shell("Configuración","Configuració
      ["Q-1","Quito","Física","5.00 × 4.00 m","20.00 m²","12 estudiantes","36 h / 60 h","3",badge("Alta ocupación","warn")],
      ["A-1","Ambato","Física","4.00 × 3.50 m","14.00 m²","8 estudiantes","8 h / 60 h","1",badge("Disponible","ok")],
      ["Zoom 2","Quito","Virtual","—","—","15 estudiantes","8 h / 60 h","1",badge("Disponible","ok")]],sede=1)+note("Capacidad SETEC: 2 m² para el instructor y 1.5 m² por estudiante. Al crear un curso, el cupo no puede superar la capacidad del aula y el horario no puede chocar con otro curso en la misma aula."),
-  "Programas y niveles": two(card("Programas", table(["Programa","Edades","Módulos","Horas por módulo","Estado"],[["English for Adults","18+","16 (A1–C1)","18 h","Activo"],["English for Teens","12–17","12","18 h","Activo"],["English for Kids","6–11","8","16 h","Activo"],["Tailored (corporativo / individual)","—","a medida","a medida","Activo"]])),
+  "Programas y niveles": two(card("Programas", table(["Programa","Módulos","Estado"],[[c2("English for Adults","18+ años · 18 h por módulo"),"16 (A1–C1)",badge("Activo","ok")],[c2("English for Teens","12–17 años · 18 h por módulo"),"12",badge("Activo","ok")],[c2("English for Kids","6–11 años · 16 h por módulo"),"8",badge("Activo","ok")],[c2("Tailored","Corporativo / individual · a medida"),"a medida",badge("Activo","ok")]])),
      card("Regla nivel ↔ módulo", note("1 nivel comercial = 2 módulos académicos. Se vende y factura por nivel; se dicta y califica por módulo. Un módulo aprobado consume medio nivel del paquete del estudiante.")+table(["Nivel","Módulos","Libro"],[["A1","1–2","Empower A1 Starter"],["A2","3–6","Empower A2 Elementary"],["B1","7–8","Empower B1 Pre-intermediate"],["B1+","9–10","Empower B1+ Intermediate"],["B2","11–14","Empower B2 Upper-intermediate"]])))+
      table(["Programa","Nivel","Módulos","Precio virtual","Precio presencial","Vigencia","Estado"],[["Adults","A1","1–2","$450","$500","2026","Activo"],["Adults","A2","3–6","$460","$500","2026","Activo"],["Adults","B1","7–8","$500","$550","2026","Activo"],["Adults","B1+","9–10","$500","$550","2026","Activo"],["Teens","A2","9–10","$420","$470","2026","Activo"],["Kids","Kids 2","3–4","$380","$420","2026","Activo"]])+row(btn("Nuevo nivel",None,True),btn("Editar precios")),
   "Productos y materiales": filters(search("Buscar","Código, ISBN o título",w="260px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Tipo",["Todos","Student Book","Workbook","Digital pack","Otro"],w="150px"),actions=btn("Nuevo producto",None,True,"Se crea el producto con código, ISBN, precio de compra y de venta, y el nivel al que corresponde.","Configuracion.html"))+table(["Código","ISBN","Producto","Programa","Nivel","Tipo","Costo","Precio venta","Estado"],[
@@ -976,14 +1025,14 @@ page("Configuracion.html","Configuración",shell("Configuración","Configuració
   "Reglas de aprobación": table(["Regla","Condición","Aprueba","Estado"],[["Descuento fuera de regla","> 10%","Director Comercial","Activa"],["Alta de profesor","Siempre","Dirección","Activa"],["Asignación sin contrato","Profesor sin contrato vigente","Coordinación Académica","Activa"],["Exportar base completa","Siempre","Administrador General","Activa"]])+row(btn("Nueva regla",None,True)),
   "Parámetros": form(["Moneda","Zona horaria","Días de vencimiento de factura","Umbral de alerta de stock","Email de notificaciones","Proveedor de libros por defecto"]),
  }),
- row(btn("Guardar cambios",None,True)),
+ foot(btn("Guardar cambios",None,True)),
  subtitle="Todo lo que hoy está hardcodeado en TeamDesk, configurable sin desarrollador"),"Configuración")
 
 # 16 Nuevo estudiante
 page("NuevoEstudiante.html","Nuevo estudiante",shell("Nuevo estudiante","Estudiantes",
- form(["Nombres","Apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Dirección","Sede","Ocupación / empresa","Cómo nos conoció (lead Kommo)"]),
+ form(title="Datos del estudiante", fields=[("Nombres","María",'text',None,True),("Apellidos","Andrade",'text',None,True),("Cédula / ID","1712345678",'text',None,True,"Valida duplicados en las 3 sedes"),"Fecha de nacimiento","Email","Teléfono","Dirección (calle y sector)","Sede",("Ocupación / empresa","Ej. Analista · Banco Pichincha"),("Cómo nos conoció","Instagram",'select',["Instagram","Facebook","Referido","Google","Empresa / convenio","Lead Kommo"])]),
  card("Si es menor de edad", form(["Nombre del representante","Cédula del representante","Teléfono del representante","Autorización firmada (archivo)"])+note("Marcador automático de dato sensible: menor de edad · discapacidad. Estos registros exigen autorización firmada y se marcan en toda exportación (LOPDP).","warn")),
- row(btn("Cancelar","Estudiantes.html"),btn("Guardar estudiante","Ficha360.html",True)),
+ foot(btn("Guardar estudiante","Ficha360.html",True),btn("Cancelar","Estudiantes.html")),
  subtitle="Un solo formulario para las 3 sedes, con validación de duplicados por cédula"),"Nuevo estudiante")
 
 # 17 Importar / exportar
@@ -994,9 +1043,9 @@ page("ImportExport.html","Importar / exportar",shell("Importar / exportar estudi
 
 # 18 Nuevo curso
 page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
- form(["Código (automático: 0001-2026-0773)","Programa (English for Adults / Teens / Kids / Tailored)","Nivel (módulos que cubre)","Modalidad (virtual / presencial)","Tipo (grupo / individual / corporativo)","Sede","Aula (valida capacidad SETEC) o enlace virtual","Fecha inicio","Fecha fin (calculada por horas)","Días y horario","Total de horas","Cupo máximo (≤ capacidad del aula)","Libro / material del nivel","Precio del nivel (desde catálogo)"]),
+ form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',["English for Adults","English for Teens","English for Kids","Tailored"],True),("Nivel","B1 · módulos 7–8",'select',["A1 · módulos 1–2","A2 · módulos 3–6","B1 · módulos 7–8","B1+ · módulos 9–10","B2 · módulos 11–14"],True),"Modalidad (virtual / presencial)","Tipo (grupo / individual / corporativo)","Sede",("Aula o enlace virtual","Zoom 2",'select',["Zoom 2 (virtual)","Teams 1 (virtual)","Q-1 · 15 pers.","Q-4 · 12 pers.","C-3 · 10 pers."],True,"Valida capacidad SETEC"),"Fecha inicio","Fecha fin (calculada por horas)",("Días y horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Total de horas","36",'number',None,True),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
  card("Profesor", filters(sel("Seleccionar profesor",["P. Gómez · contrato activo","L. Vega · contrato activo","M. Castro · pendiente de aprobación","R. Salas · contrato vencido"],w="320px"),actions=kv(("Validación",badge("Contrato activo ✓","ok"))))+note("Si el profesor no tiene contrato activo, la asignación queda pendiente de aprobación de Coordinación y el curso se crea sin profesor.")),
- row(btn("Cancelar","Cursos.html"),btn("Crear curso","DetalleCurso.html",True)),
+ foot(btn("Crear curso","DetalleCurso.html",True),btn("Cancelar","Cursos.html")),
  subtitle="Al crear el curso se descuenta el stock de libros por cupo (inventario)"),"Nuevo curso")
 
 # 19 Sesiones
@@ -1031,9 +1080,9 @@ page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
 
 # 21 Alta profesor
 page("AltaProfesor.html","Alta de profesor",shell("Alta de profesor","Profesores",
- form(["Nombres y apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Sede(s)","Tipo de contrato","Tarifa por hora","Vigencia del contrato","Contrato firmado (archivo)"]),
+ form(title="Datos", fields=["Nombres y apellidos","Cédula / ID","Fecha de nacimiento","Email","Teléfono","Sede(s)","Tipo de contrato","Tarifa por hora","Vigencia del contrato","Contrato firmado (archivo)"]),
  card("Qué pasa al guardar", flow(["Se crea 'Pendiente de aprobación'","Notificación a Dirección","Dirección aprueba o rechaza","Puede recibir cursos y aparecer en payment sheet"])),
- row(btn("Cancelar","Profesores.html"),btn("Enviar a aprobación","Aprobaciones.html",True)),
+ foot(btn("Enviar a aprobación","Aprobaciones.html",True),btn("Cancelar","Profesores.html")),
  subtitle="Control preventivo contra el caso del profesor falso"),"Alta de profesor")
 
 # 22 Facturas
@@ -1057,7 +1106,7 @@ page("Facturas.html","Facturas",shell("Facturas","Facturación",
 page("DetalleFactura.html","Detalle factura",shell("Factura #1234","Facturación",
  two(card("Datos", kv(("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Sede","Quito"),("Fecha","02 oct 2026"),("Asesor","Carla M."),("Vence","17 oct 2026"))+table(["Concepto","Cant.","Precio","Total"],[["Nivel B1 (2 módulos)","1","$500","$500"],["Nivel B2 (2 módulos)","1","$500","$500"],["Descuento 10% (aprobado por Dir. Comercial)","","","-$100"],["Libros B1 + B2","2","$40","$80"]])+kv(("Total","$980"),("Pagado","$980"),("Saldo","$0"),("Estado",badge("Pagada","ok")))),
      card("Pagos, notas de crédito y cambios", table(["Fecha","Tipo","Detalle","Monto"],[["02 oct","Pago","Transferencia · ref. 884512","$980"],["—","Nota de crédito","Ninguna emitida","—"]])+row(btn("Emitir nota de crédito"),btn("Cambio de curso"))+note("Una devolución o cambio de curso genera una nota de crédito vinculada a esta factura y revierte el libro al stock de la sede."))),
- row(btn("Volver","Facturas.html"),btn("Descargar PDF"),btn("Registrar pago",None,True)),
+ foot(btn("Registrar pago",None,True),btn("Descargar PDF"),btn("Volver","Facturas.html")),
  subtitle="Factura consolidada con su trazabilidad completa"),"Detalle de factura")
 
 # 24 Solicitud de descuento
@@ -1105,7 +1154,7 @@ page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos
      [c2("IM202609-11","30 sep · factura Anulación 002-002-000020971 · Books & Bits · Quito"),"Books & Bits","Quito",c2("1 ítems · $85.00","sin comprobante"),c2("1 libros · 0 códigos","pendientes de entrega"),badge("Con pendientes","warn")],
      [c2("IM202609-10","25 sep · factura Libretas Superpower · Otro · Ambato"),"Otro","Ambato",c2("10 ítems · $79.92","sin comprobante"),c2("10 libros · 0 códigos","pendientes de entrega"),badge("Con pendientes","warn")],
      [c2("IM202609-09","24 sep · factura 000809715 · Books & Bits · Ambato"),"Books & Bits","Ambato",c2("9 ítems · $333.03","Comprobante: comprobante_2026-09-24.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")]],sede=2,hide=(1,2),wide=0)
-     +card("Detalle del ingreso IM202610-01", kv(("Fecha","1 oct 2026"),("Proveedor","Books & Bits"),("Factura","000814675"),("Subtotal","$456.71"),("Descuento","$0.00"),("Total","$456.71"),("Comprobante","comprobante_books_and_bits_2026-10-01.pdf"))+table(["Código","ISBN","Ítem","Cantidad","Precio","Subtotal"],[["1115","9781009029780","Prepare 3 SB with eBook 2E","3","$34.89","$104.67"],["1116","9781009030502","Prepare 3 WB with Digital Pack 2E","3","$20.03","$60.09"],["1132","9781108961691","Empower A1 Starter SB with digital pack 2nd Ed","1","$62.15","$62.15"],["1141","9781108961523","Empower B1+ Intermediate Combo B with digital pack","1","$35.98","$35.98"],["1292","9781108812276","Super Minds 2Ed Level 3 SB with eBook","1","$31.37","$31.37"],["1271","9781009293891","Four Corners 2ED L4 ESB with DP","2","$35.46","$70.92"]])+kv(("Ítems","14"),("Total","$456.71"))+note("Equivale a 'Inventory Management' de TeamDesk: cada ingreso del proveedor con su factura, comprobante de pago, ítems por ISBN y los libros o códigos que quedaron pendientes de entrega.")),
+     +card("Detalle del ingreso IM202610-01", kv(("Fecha","1 oct 2026"),("Proveedor","Books & Bits"),("Factura","000814675"),("Subtotal","$456.71"),("Descuento","$0.00"),("Total","$456.71"),("Comprobante","comprobante_books_and_bits_2026-10-01.pdf"))+table(["Código","ISBN","Ítem","Cantidad","Precio","Subtotal"],[["1115","9781009029780","Prepare 3 SB with eBook 2E","3","$34.89","$104.67"],["1116","9781009030502","Prepare 3 WB with Digital Pack 2E","3","$20.03","$60.09"],["1132","9781108961691","Empower A1 Starter SB with digital pack 2nd Ed","1","$62.15","$62.15"],["1141","9781108961523","Empower B1+ Intermediate Combo B with digital pack","1","$35.98","$35.98"],["1292","9781108812276","Super Minds 2Ed Level 3 SB with eBook","1","$31.37","$31.37"],["1271","9781009293891","Four Corners 2ED L4 ESB with DP","2","$35.46","$70.92"]],wide=2)+kv(("Ítems","14"),("Total","$456.71"))+note("Equivale a 'Inventory Management' de TeamDesk: cada ingreso del proveedor con su factura, comprobante de pago, ítems por ISBN y los libros o códigos que quedaron pendientes de entrega.")),
   "Movimientos": filters(search("Buscar","Libro, factura o pedido",w="220px"),sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),sel("Usuario",["Todos","Carla M.","Secretaría","Diego R."],w="140px"),dates(),actions=btn("Registrar movimiento",None,True)+btn("Exportar"))+table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2 Student Book","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"],["30 sep","Salida","Adults B2 Student Book","1","Quito","Factura #1240","Carla M."],["29 sep","Salida","Teens A2 Student Book","2","Ambato","Factura #1238","Diego R."],["25 sep","Ingreso","Adults A1 Student Book","10","Quito","Pedido #P-039","Secretaría"]],sede=4),
   "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado"],[["#P-041","Books & Bits","12","$480","02 oct","En camino"],["#P-040","Books & Bits","8","$320","25 sep","Recibido"],["#P-039","Books & Bits","20","$800","10 sep","Recibido"]])+
      two(card("Registrar ingreso", form(["Pedido","Cantidad recibida"])+row(btn("Registrar ingreso",None,True))), card("Forecast de libros (noviembre)", table(["Libro","Cursos por abrir","Cupo","Necesarios","Stock","Pedir"],[["Adults B1 Student Book","2","30","30","3","27"],["Kids 2 Workbook","1","10","10","2","8"],["Teens A2","1","10","10","15","0"]])+note("Cursos que abren el próximo mes × cupo = libros necesarios por sede."))),
@@ -1172,67 +1221,67 @@ page("RecuperarContrasena.html","Recuperar contraseña",rec,"Recuperar contrase�
 
 # 35 Registrar sesión manual
 page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual","Sesiones",
- form(["Curso","Profesor (se valida contrato activo)","Fecha","Hora inicio","Hora fin","Horas (calculado)","Modalidad","Aula / enlace"]),
+ form(title="Sesión", fields=[("Curso","0001-2026-0767 · Adults B1 Virtual",'select',["0001-2026-0767 · Adults B1 Virtual","0001-2026-0620 · Adults A2","0001-2026-0328 · Kids 2 Tarde"],True),("Profesor","P. Gómez · contrato activo",'select',["P. Gómez · contrato activo","L. Vega · contrato activo","R. Salas · contrato vencido"],True,"Se valida contrato activo"),("Fecha","",'date',None,True),("Hora inicio","",'time',None,True),("Hora fin","",'time',None,True),"Horas (calculado)","Modalidad (presencial / virtual / reposición / individual)",("Aula / enlace","Zoom 2")]),
  card("Asistencia", table(["Estudiante","Presente","Observación"],[["María Andrade","☑","—"],["Juan Pérez","☑","—"],["Luis Torres","☐","Aviso previo"]])),
  note("Si la fecha u hora no coinciden con el horario del curso, la sesión se marca 'fuera de horario' y pide confirmación de Coordinación.","warn"),
- row(btn("Cancelar","Sesiones.html"),btn("Guardar sesión",None,True,"La sesión queda registrada como manual, pendiente de confirmación. Al confirmarse suma horas a la payment sheet.","Sesiones.html")),
+ foot(btn("Guardar sesión",None,True,"La sesión queda registrada como manual, pendiente de confirmación. Al confirmarse suma horas a la payment sheet.","Sesiones.html"),btn("Cancelar","Sesiones.html")),
  subtitle="Para clases que no entran por Moodle: presenciales, reposiciones, individuales"),"Registrar sesión manual")
 
 # 36 Registrar pago
 page("RegistrarPago.html","Registrar pago",shell("Registrar pago · Factura #1235","Facturación",
  kv(("Estudiante","Juan Pérez"),("Sede","Valle"),("Factura","#1235 · Nivel A2"),("Total","$450"),("Pagado","$0"),("Saldo","$450"),("Vence","20 oct 2026")),
- form(["Monto","Fecha de pago","Método (efectivo / transferencia / tarjeta)","Referencia / comprobante","Comprobante (archivo)","Observación"]),
+ form(title="Datos", fields=["Monto","Fecha de pago","Método (efectivo / transferencia / tarjeta)","Referencia / comprobante","Comprobante (archivo)","Observación"]),
  card("Resultado", flow(["Pago registrado","Cubre el saldo → Pagada","Parcial → Pendiente con nuevo saldo","Notificación al asesor"])),
- row(btn("Cancelar","DetalleFactura.html"),btn("Registrar pago",None,True,"Se registra el pago, se actualiza el estado de cobro y queda en el audit log.","DetalleFactura.html")),
+ foot(btn("Registrar pago",None,True,"Se registra el pago, se actualiza el estado de cobro y queda en el audit log.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Estado de cobro por factura, no por módulo"),"Registrar pago")
 
 # 37 Nota de crédito
 page("NotaCredito.html","Nota de crédito",shell("Nueva nota de crédito","Facturación",
- form(["Factura origen","Estudiante (automático)","Motivo (devolución / cambio de curso / libro con defecto / otro)","Monto","Devolver libro al stock (sí / no)","Justificación"]),
+ form(title="Datos", fields=["Factura origen","Estudiante (automático)","Motivo (devolución / cambio de curso / libro con defecto / otro)","Monto","Devolver libro al stock (sí / no)","Justificación"]),
  card("Qué pasa al emitir", flow(["Se vincula a la factura origen","Ajusta saldo o genera devolución","Libro vuelve al stock (si aplica)","Audit log"])),
- row(btn("Cancelar","DetalleFactura.html"),btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html")),
+ foot(btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Toda devolución o cambio deja rastro contable"),"Nota de crédito")
 
 # 38 Registrar movimiento de inventario
 page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Movimientos y pedidos",
- form(["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
+ form(title="Datos", fields=["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
  note("Una salida sin factura o curso vinculado pide justificación y se marca para revisión.","warn"),
- row(btn("Cancelar","Movimientos.html"),btn("Registrar movimiento",None,True,"Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario.","Movimientos.html")),
+ foot(btn("Registrar movimiento",None,True,"Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario.","Movimientos.html"),btn("Cancelar","Movimientos.html")),
  subtitle="Reemplaza los ajustes a mano en TeamDesk"),"Registrar movimiento")
 
 # 39 Nuevo pedido a proveedor
 page("NuevoPedido.html","Nuevo pedido",shell("Nuevo pedido a proveedor","Movimientos y pedidos",
- form(["Proveedor (Books & Bits)","Sede destino","Fecha estimada de entrega"]),
+ form(title="Datos", fields=["Proveedor (Books & Bits)","Sede destino","Fecha estimada de entrega"]),
  card("Ítems", table(["Libro","Stock actual","Comprometido","Sugerido","Cantidad a pedir"],[["Adults B1 Student Book","-2","5","6","6"],["Kids 2 Workbook","-1","4","4","4"],["Teens A2","5","3","—","0"]])+note("Sugerido = comprometido por cursos que abren − stock disponible.")),
- row(btn("Cancelar","Movimientos.html"),btn("Enviar pedido",None,True,"El pedido queda En camino y se notifica a Secretaría de la sede para registrar el ingreso cuando llegue.","Movimientos.html")),
+ foot(btn("Enviar pedido",None,True,"El pedido queda En camino y se notifica a Secretaría de la sede para registrar el ingreso cuando llegue.","Movimientos.html"),btn("Cancelar","Movimientos.html")),
  subtitle="Pedido con cantidades sugeridas por el forecast de cursos"),"Nuevo pedido a proveedor")
 
 # 40 Nuevo usuario
 page("NuevoUsuario.html","Nuevo usuario",shell("Nuevo usuario","Usuarios y roles",
- form(["Nombres y apellidos","Email","Rol (Admin / Dir. Comercial / Coord. Académica / Asesor / Secretaría / Profesor)","Sedes visibles","Estado","2FA obligatorio (sí / no)"]),
+ form(title="Datos", fields=["Nombres y apellidos","Email","Rol (Admin / Dir. Comercial / Coord. Académica / Asesor / Secretaría / Profesor)","Sedes visibles","Estado","2FA obligatorio (sí / no)"]),
  card("Permisos del rol elegido", li(["Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede","No puede: aprobar profesores, exportar base completa, ver otras sedes"])+note("La matriz completa se edita en Usuarios y roles → Matriz de permisos.")),
- row(btn("Cancelar","Usuarios.html"),btn("Guardar usuario",None,True,"Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log.","Usuarios.html")),
+ foot(btn("Guardar usuario",None,True,"Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log.","Usuarios.html"),btn("Cancelar","Usuarios.html")),
  subtitle="Un usuario, un rol, las sedes que le corresponden"),"Nuevo usuario")
 
 # 41 Nueva sede
 page("NuevaSede.html","Nueva sede",shell("Nueva sede","Configuración",
- form(["Nombre","Ciudad","Dirección","Teléfono","Aulas","Responsable","Estado (activa / próxima)"]),
+ form(title="Datos", fields=["Nombre","Ciudad","Dirección","Teléfono","Aulas","Responsable","Estado (activa / próxima)"]),
  note("Al crear la sede aparece en el selector global, en filtros y en la matriz de visibilidad por rol. Inventario arranca en cero."),
- row(btn("Cancelar","Configuracion.html"),btn("Guardar sede",None,True,"La sede queda disponible en toda la plataforma. "+AUDIT,"Configuracion.html")),
+ foot(btn("Guardar sede",None,True,"La sede queda disponible en toda la plataforma. "+AUDIT,"Configuracion.html"),btn("Cancelar","Configuracion.html")),
  subtitle="Preparado para Quito Norte y las que vengan"),"Nueva sede")
 
 # 42 Nuevo nivel
 page("NuevoNivel.html","Nuevo nivel",shell("Nuevo nivel del catálogo","Configuración",
- form(["Programa (Adults / Kids / Teens)","Nivel","Módulos que lo componen","Horas totales","Precio virtual","Precio presencial","Libro asociado","Vigencia del precio"]),
+ form(title="Datos", fields=["Programa (Adults / Kids / Teens)","Nivel","Módulos que lo componen","Horas totales","Precio virtual","Precio presencial","Libro asociado","Vigencia del precio"]),
  note("Los precios tienen vigencia: una venta usa el precio vigente a su fecha. Cambiar el precio no altera facturas emitidas."),
- row(btn("Cancelar","Configuracion.html"),btn("Guardar nivel",None,True,"El nivel queda disponible para nuevas ventas y cursos. "+AUDIT,"Configuracion.html")),
+ foot(btn("Guardar nivel",None,True,"El nivel queda disponible para nuevas ventas y cursos. "+AUDIT,"Configuracion.html"),btn("Cancelar","Configuracion.html")),
  subtitle="Catálogo configurable sin desarrollador"),"Nuevo nivel")
 
 # 43 Nueva regla de aprobación
 page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configuración",
- form(["Nombre de la regla","Entidad (descuento / profesor / asignación / exportación / tarifa)","Condición (ej. descuento > 10%)","Quién aprueba (rol)","Notificar a","Vigencia","Estado"]),
+ form(title="Datos", fields=["Nombre de la regla","Entidad (descuento / profesor / asignación / exportación / tarifa)","Condición (ej. descuento > 10%)","Quién aprueba (rol)","Notificar a","Vigencia","Estado"]),
  note("Toda acción que cumpla la condición queda bloqueada hasta que el rol aprobador decida en la bandeja de aprobaciones."),
- row(btn("Cancelar","Configuracion.html"),btn("Guardar regla",None,True,"La regla queda activa y se aplica desde ahora. "+AUDIT,"Configuracion.html")),
+ foot(btn("Guardar regla",None,True,"La regla queda activa y se aplica desde ahora. "+AUDIT,"Configuracion.html"),btn("Cancelar","Configuracion.html")),
  subtitle="Las reglas de negocio viven en configuración, no en código"),"Nueva regla de aprobación")
 
 rows=[
@@ -1317,11 +1366,11 @@ h1,h2,h3{font-weight:600}
 a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy);color:var(--navy)}.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}a.btn-primary:hover,.btn-primary:hover{background:var(--navy2);border-color:var(--navy2);color:#fff}.btn-danger{color:var(--red)}a.btn-danger:hover,.btn-danger:hover{background:var(--tint-red);border-color:var(--tint-red);color:var(--red)}
 .tbl-wrap{overflow-x:auto;border-radius:var(--r);box-shadow:var(--sh);background:#fff}.tbl{display:grid;background:#fff;border-radius:var(--r);min-width:min(100%,640px)}.td-hide{display:none!important}.c2{display:flex;flex-direction:column;gap:2px;min-width:0}.c2>span{font-weight:500}.c2 small{color:var(--mute);font-size:12px;line-height:1.35}
 .th{padding:13px 14px;font-weight:600;font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}
-.td{padding:14px 16px;font-size:13.5px;border-bottom:1px solid var(--fill);display:flex;align-items:center;min-width:0;overflow-wrap:anywhere}
+.td{padding:14px 16px;font-size:13.5px;border-bottom:1px solid var(--fill);display:flex;align-items:center;min-width:0;overflow-wrap:normal;word-break:normal}.td.td-wide{overflow-wrap:anywhere}.wf-row[data-href] .td{cursor:pointer}
 .wf-row:hover .td{background:#F8F9FE}.wf-row:last-of-type .td{border-bottom:0}.td>a:only-child{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);text-decoration:none;font-weight:600;font-size:12.5px;white-space:nowrap}.td>a:only-child::after{content:'›';font-size:15px;line-height:1}.td>a:only-child:hover{background:var(--navy);color:#fff}.wf-empty{padding:24px;text-align:center;color:var(--mute)}
 .kpi{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px;display:flex;flex-direction:column;gap:4px;position:relative;min-width:0;overflow:hidden}
 .kpi-bar{position:absolute;left:0;top:18px;bottom:18px;width:4px;border-radius:0 4px 4px 0}.kpi-label{font-size:12px;color:var(--mute);font-weight:500}.kpi-value{font-size:26px;font-weight:600;line-height:1.15}.kpi-sub{font-size:12px;color:var(--mute)}
-.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mute)}.field label{font-weight:500;color:var(--ink);font-size:13px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--mute);min-width:0}.field-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.field-head small{font-size:11.5px;color:var(--mute)}.field label em{color:var(--red);font-style:normal;margin-left:2px}.ctl-file{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:var(--mute)}.ctl-file b{font-weight:500;color:var(--navy);font-size:13px}textarea.ctl{padding:10px 12px;resize:vertical;min-height:80px}select.ctl{appearance:auto}.form-card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:22px 24px}.form-foot{display:flex;gap:10px;align-items:center;position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:14px 0;z-index:3}.field label{font-weight:500;color:var(--ink);font-size:13px}
 .ctl{min-height:42px;padding:0 12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:14px;background:#fff;color:var(--ink);width:100%}.ctl:focus{outline:2px solid var(--sky);outline-offset:1px}
 .filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-more{flex-basis:100%;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding-top:4px}.btn-more{align-self:flex-end;color:var(--mute);border-style:dashed}.btn-more[aria-expanded=true]{color:var(--navy)}.filters-actions{margin-left:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .note{margin:0;padding:2px 0 2px 12px;border-left:3px solid var(--line);font-size:12.5px;line-height:1.5;color:var(--mute);background:none}.note-warn{border-left-color:var(--yellow)}.note-ok{border-left-color:var(--ok)}
@@ -1366,7 +1415,7 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .perf{display:flex;gap:18px;align-items:center}.perf-legend{display:flex;flex-direction:column;gap:8px;font-size:13px;flex:1}.perf-legend div{display:flex;align-items:center;gap:8px}.perf-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}.perf-legend b{margin-left:auto;font-weight:500;color:var(--mute)}
 .trend{position:relative;background:#F7F8FF;border-radius:12px;padding:44px 8px 0}.trend .big{position:absolute;left:50%;top:14px;transform:translateX(-50%);text-align:center;font-size:12px;color:var(--mute)}.trend .big b{display:block;font-size:22px;color:var(--ink)}.trend .big .up{background:var(--tint-green);color:#15803D;border-radius:6px;padding:1px 6px;font-size:11px;margin-left:6px}
 .quote{background:var(--tint-yellow);border-radius:12px;padding:12px 16px;font-size:13.5px;line-height:1.5}
-.course{display:grid;grid-template-columns:52px 1.5fr 150px 70px 110px 70px 150px;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--fill);font-size:13px}.course:last-child{border-bottom:0}
+.course{display:grid;grid-template-columns:52px minmax(170px,2fr) 80px 56px max-content 64px;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--fill);font-size:13px}.course-state{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.course-state small{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}.course-meta{flex-direction:column;gap:4px}.course:last-child{border-bottom:0}
 .course-ico{width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center}.course-ico svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .course-name a{font-weight:600;text-decoration:none;font-size:14px}.course-name small{display:block;color:var(--mute);margin-top:2px}
 .course-meta{display:flex;gap:14px;color:var(--mute);font-size:12.5px}.course-meta span{display:inline-flex;align-items:center;gap:5px}.course-meta svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}

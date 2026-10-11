@@ -28,7 +28,7 @@
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Reemplaza el campo 'Reason' opcional de TeamDesk</p>
-  <div class="card" style="max-width:640px"><div class="kv"><span><span class="k">Venta</span> <b>María Andrade · B1 + B2</b></span><span><span class="k">Precio lista</span> <b>$1,000</b></span><span><span class="k">Asesor</span> <b>Carla M.</b></span></div><div class="grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><label for="f0">Descuento solicitado (%)</label><input id="f0" class="ctl"></div><div class="field"><label for="f1">Monto resultante</label><input id="f1" class="ctl"></div></div><div class="grid" style="grid-template-columns:repeat(1, minmax(0, 1fr))"><div class="field"><label for="f0">Motivo (obligatorio, lista cerrada: referido, promoción, convenio, otro)</label><input id="f0" class="ctl"></div></div><div class="grid" style="grid-template-columns:repeat(1, minmax(0, 1fr))"><div class="field"><label for="f0">Justificación</label><input id="f0" class="ctl"></div></div><div class="row" style="gap:16px"><a href="NuevaVenta.html" class="btn">Cancelar</a><a href="Aprobaciones.html" class="btn btn-primary">Enviar solicitud</a></div></div>
+  <div class="card" style="max-width:640px"><div class="kv"><span><span class="k">Venta</span> <b>María Andrade · B1 + B2</b></span><span><span class="k">Precio lista</span> <b>$1,000</b></span><span><span class="k">Asesor</span> <b>Carla M.</b></span></div><div class="grid form-grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f65">Descuento solicitado</label><small>%</small></div><input id="f65" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f66">Monto resultante</label></div><input id="f66" type="number" class="ctl" placeholder="0"></div></div><div class="grid form-grid" style="grid-template-columns:repeat(1, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f67">Motivo</label></div><textarea id="f67" class="ctl" rows="3" placeholder="obligatorio, lista cerrada: referido, promoción, convenio, otro"></textarea></div></div><div class="grid form-grid" style="grid-template-columns:repeat(1, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f68">Justificación</label></div><input id="f68" type="text" class="ctl" placeholder=""></div></div><div class="row" style="gap:16px"><a href="NuevaVenta.html" class="btn">Cancelar</a><a href="Aprobaciones.html" class="btn btn-primary">Enviar solicitud</a></div></div>
 </main>
 </div>
 </div>
@@ -55,6 +55,13 @@
   document.getElementById('wf-ok').addEventListener('click',function(){
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
   });
 })();
 (function(){

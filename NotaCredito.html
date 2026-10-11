@@ -28,7 +28,7 @@
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Toda devolución o cambio deja rastro contable</p>
-  <div class="grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><label for="f0">Factura origen</label><input id="f0" class="ctl"></div><div class="field"><label for="f1">Estudiante (automático)</label><input id="f1" class="ctl"></div><div class="field"><label for="f2">Motivo (devolución / cambio de curso / libro con defecto / otro)</label><input id="f2" class="ctl"></div><div class="field"><label for="f3">Monto</label><input id="f3" class="ctl"></div><div class="field"><label for="f4">Devolver libro al stock (sí / no)</label><input id="f4" class="ctl"></div><div class="field"><label for="f5">Justificación</label><input id="f5" class="ctl"></div></div><section class="card"><div class="card-head"><h2>Qué pasa al emitir</h2></div><ol class="flow-steps"><li>Se vincula a la factura origen</li><li class="arr" aria-hidden="true">→</li><li>Ajusta saldo o genera devolución</li><li class="arr" aria-hidden="true">→</li><li>Libro vuelve al stock (si aplica)</li><li class="arr" aria-hidden="true">→</li><li>Audit log</li></ol></section><div class="row" style="gap:16px"><a href="DetalleFactura.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza." data-next="DetalleFactura.html">Emitir nota de crédito</button></div>
+  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="grid form-grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f95">Factura origen</label></div><input id="f95" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f96">Estudiante</label><small>Automático</small></div><input id="f96" type="text" class="ctl" placeholder="Se calcula al guardar"></div><div class="field"><div class="field-head"><label for="f97">Motivo</label></div><select id="f97" class="ctl"><option>Seleccionar…</option><option>Devolución</option><option>Cambio de curso</option><option>Libro con defecto</option><option>Otro</option></select></div><div class="field"><div class="field-head"><label for="f98">Monto</label></div><input id="f98" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f99">Devolver libro al stock</label></div><select id="f99" class="ctl"><option>Sí</option><option>No</option></select></div><div class="field"><div class="field-head"><label for="f100">Justificación</label></div><input id="f100" type="text" class="ctl" placeholder=""></div></div></section><section class="card"><div class="card-head"><h2>Qué pasa al emitir</h2></div><ol class="flow-steps"><li>Se vincula a la factura origen</li><li class="arr" aria-hidden="true">→</li><li>Ajusta saldo o genera devolución</li><li class="arr" aria-hidden="true">→</li><li>Libro vuelve al stock (si aplica)</li><li class="arr" aria-hidden="true">→</li><li>Audit log</li></ol></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza." data-next="DetalleFactura.html">Emitir nota de crédito</button><a href="DetalleFactura.html" class="btn">Cancelar</a></div>
 </main>
 </div>
 </div>
@@ -55,6 +55,13 @@
   document.getElementById('wf-ok').addEventListener('click',function(){
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
   });
 })();
 (function(){

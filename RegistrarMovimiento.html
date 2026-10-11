@@ -28,7 +28,7 @@
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Reemplaza los ajustes a mano en TeamDesk</p>
-  <div class="grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><label for="f0">Tipo (ingreso / salida / traslado / devolución)</label><input id="f0" class="ctl"></div><div class="field"><label for="f1">Libro</label><input id="f1" class="ctl"></div><div class="field"><label for="f2">Cantidad</label><input id="f2" class="ctl"></div><div class="field"><label for="f3">Sede origen</label><input id="f3" class="ctl"></div><div class="field"><label for="f4">Sede destino (solo traslado)</label><input id="f4" class="ctl"></div><div class="field"><label for="f5">Vinculado a (factura / curso / pedido / nota de crédito)</label><input id="f5" class="ctl"></div><div class="field"><label for="f6">Observación</label><input id="f6" class="ctl"></div></div><div class="row" style="gap:16px"><a href="Movimientos.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario." data-next="Movimientos.html">Registrar movimiento</button></div>
+  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="grid form-grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f101">Tipo</label></div><select id="f101" class="ctl"><option>Seleccionar…</option><option>Ingreso</option><option>Salida</option><option>Traslado</option><option>Devolución</option></select></div><div class="field"><div class="field-head"><label for="f102">Libro</label></div><input id="f102" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f103">Cantidad</label></div><input id="f103" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f104">Sede origen</label></div><select id="f104" class="ctl"><option selected>Quito</option><option>Valle de los Chillos</option><option>Ambato</option></select></div><div class="field"><div class="field-head"><label for="f105">Sede destino</label></div><select id="f105" class="ctl"><option selected>Quito</option><option>Valle de los Chillos</option><option>Ambato</option></select></div><div class="field"><div class="field-head"><label for="f106">Vinculado a</label></div><select id="f106" class="ctl"><option>Seleccionar…</option><option>Factura</option><option>Curso</option><option>Pedido</option><option>Nota de crédito</option></select></div><div class="field"><div class="field-head"><label for="f107">Observación</label></div><textarea id="f107" class="ctl" rows="3" placeholder="Escribe aquí…"></textarea></div></div></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="Se actualiza el stock de la sede y el movimiento queda en el historial con tu usuario." data-next="Movimientos.html">Registrar movimiento</button><a href="Movimientos.html" class="btn">Cancelar</a></div>
 </main>
 </div>
 </div>
@@ -55,6 +55,13 @@
   document.getElementById('wf-ok').addEventListener('click',function(){
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
   });
 })();
 (function(){

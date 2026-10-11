@@ -28,7 +28,7 @@
 </header>
 <main class="main">
   <p class="kpi-sub" style="margin:0">Las reglas de negocio viven en configuración, no en código</p>
-  <div class="grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><label for="f0">Nombre de la regla</label><input id="f0" class="ctl"></div><div class="field"><label for="f1">Entidad (descuento / profesor / asignación / exportación / tarifa)</label><input id="f1" class="ctl"></div><div class="field"><label for="f2">Condición (ej. descuento > 10%)</label><input id="f2" class="ctl"></div><div class="field"><label for="f3">Quién aprueba (rol)</label><input id="f3" class="ctl"></div><div class="field"><label for="f4">Notificar a</label><input id="f4" class="ctl"></div><div class="field"><label for="f5">Vigencia</label><input id="f5" class="ctl"></div><div class="field"><label for="f6">Estado</label><input id="f6" class="ctl"></div></div><div class="row" style="gap:16px"><a href="Configuracion.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="La regla queda activa y se aplica desde ahora. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Configuracion.html">Guardar regla</button></div>
+  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="grid form-grid" style="grid-template-columns:repeat(2, minmax(0, 1fr))"><div class="field"><div class="field-head"><label for="f132">Nombre de la regla</label></div><input id="f132" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f133">Entidad</label></div><select id="f133" class="ctl"><option>Seleccionar…</option><option>Descuento</option><option>Profesor</option><option>Asignación</option><option>Exportación</option><option>Tarifa</option></select></div><div class="field"><div class="field-head"><label for="f134">Condición</label><small>ej. descuento > 10%</small></div><input id="f134" type="number" class="ctl" placeholder="0"></div><div class="field"><div class="field-head"><label for="f135">Quién aprueba</label></div><input id="f135" type="text" class="ctl" placeholder="rol"></div><div class="field"><div class="field-head"><label for="f136">Notificar a</label></div><input id="f136" type="text" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f137">Vigencia</label></div><input id="f137" type="date" class="ctl" placeholder=""></div><div class="field"><div class="field-head"><label for="f138">Estado</label></div><select id="f138" class="ctl"><option selected>Activo</option><option>Inactivo</option></select></div></div></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="La regla queda activa y se aplica desde ahora. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Configuracion.html">Guardar regla</button><a href="Configuracion.html" class="btn">Cancelar</a></div>
 </main>
 </div>
 </div>
@@ -55,6 +55,13 @@
   document.getElementById('wf-ok').addEventListener('click',function(){
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
   });
 })();
 (function(){
