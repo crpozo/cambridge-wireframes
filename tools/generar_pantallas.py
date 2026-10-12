@@ -71,7 +71,7 @@ def btn(label, href=None, primary=False, action=None, next=None):
 
 # Pantallas ocultas: se generan (los enlaces siguen funcionando) pero no aparecen en el menú ni en el hub.
 # Para volver a mostrar Facturación, vaciar este set.
-HIDDEN={"Facturas.html","DetalleFactura.html","RegistrarPago.html","NotaCredito.html"}
+HIDDEN=set()  # vacío: Facturación visible. Para ocultar un módulo: {"Facturas.html","DetalleFactura.html","RegistrarPago.html","NotaCredito.html"}
 
 # Tipos de usuario (RBAC). Código → (nombre del rol, usuario de ejemplo)
 ROLES=[("ADM","Administrador General","Estefanía"),("GER","Gerente General","Gerencia"),("DIR","Director Comercial","Dir. Comercial"),("SUC","Administrador de Sucursal","Admin. Valle"),("COO","Coordinador Académico","Coord. Académica"),("ASE","Asesor Comercial","Carla M."),("SEC","Secretaría","Secretaría"),("PRO","Profesor (consulta)","P. Gómez")]
