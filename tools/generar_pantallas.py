@@ -28,6 +28,11 @@ ACTIONS={
  "Exportar PDF":("Se genera el reporte en PDF. "+AUDIT,None),
  "Exportar CSV":("Se exportan los estudiantes filtrados en CSV. Si incluye datos de menores se marca como exportación sensible. "+AUDIT,None),
  "Descargar PDF":("Se descarga la factura en PDF.",None),
+ "Descargar certificado":("Se descarga el certificado del nivel en PDF con código de verificación.",None),
+ "Descargar factura":("Se descarga la factura electrónica (PDF + XML) autorizada por el SRI.",None),
+ "Actualizar mis datos":("Se envía la solicitud de cambio a Secretaría de tu sede; verás el cambio aplicado cuando lo validen.",None),
+ "Unirse a la clase":("Se abre el enlace de la sesión virtual (Zoom) del curso en una pestaña nueva.",None),
+ "Escribir a mi asesor":("Se abre un mensaje por WhatsApp a tu asesor comercial.",None),
  "Descargar XML":("Se descarga el XML autorizado por el SRI de la factura.",None),
  "Descargar XML del día":("Se descargan en un ZIP los XML autorizados de las facturas del período filtrado.",None),
  "Enviar comprobante":("Se envía por correo al cliente el PDF y el XML autorizados por el SRI y la factura queda marcada como enviada. "+AUDIT,None),
@@ -153,9 +158,36 @@ AI_CTX={
  "Configuracion.html":[("¿Qué aulas están libres el sábado en la mañana?","En Valle: C-2 (9 estudiantes) y C-7 (5). En Quito, Q-1 está ocupada al 60%. La capacidad se calcula con la norma SETEC.")],
  "Insights.html":[("¿Qué insight es el más urgente?","El descuento del 42% pendiente desde ayer bloquea una matrícula de $980. Después, los 14 estudiantes de A1 Sábados sin calificar: no pueden pasar a A2 y hay 3 cupos esperándolos.")],
 }
+NO_FAB={"Main.html","RecuperarContrasena.html","PortalEstudiante.html"}
+def analizar_pantalla(title, inner):
+    """Análisis automático de la pantalla a partir de lo que se ve: KPIs, alertas (badges rojos/amarillos), tablas y acciones."""
+    import re as _r, html as _h
+    txt=lambda x: _h.unescape(_r.sub(r"<[^>]+>"," ",x)).strip()
+    kp=[(txt(l),txt(v)) for l,v in _r.findall(r'<span class="kpi-label">(.*?)</span><span class="kpi-value">(.*?)</span>', inner, _r.S)][:4]
+    bad=[txt(b) for b in _r.findall(r'<span class="badge badge-bad">(.*?)</span>', inner)]
+    warn=[txt(b) for b in _r.findall(r'<span class="badge badge-warn">(.*?)</span>', inner)]
+    ntab=len(_r.findall(r'class="wf-table tbl"', inner)); nrows=len(_r.findall(r'class="wf-row"', inner))
+    acts=[txt(b) for b in _r.findall(r'class="btn btn-primary[^"]*"[^>]*>(.*?)</button>', inner, _r.S)][:3]
+    out=[f"<b>Análisis de {title}</b>."]
+    if kp: out.append("Indicadores: "+"; ".join(f"{l} <b>{v}</b>" for l,v in kp)+".")
+    if nrows: out.append(f"Hay {ntab} listado{'s' if ntab!=1 else ''} con {nrows} registros en pantalla (según sede y filtros).")
+    from collections import Counter
+    if bad: c=Counter(bad); out.append("<b>Alertas críticas:</b> "+", ".join(f"{k} ×{n}" if n>1 else k for k,n in c.most_common(4))+".")
+    if warn: c=Counter(warn); out.append("Por revisar: "+", ".join(f"{k} ×{n}" if n>1 else k for k,n in c.most_common(4))+".")
+    if acts: out.append("Acción principal disponible: "+" · ".join(acts)+".")
+    if not (kp or bad or warn or nrows): out.append("Es una pantalla de captura o detalle; puedo explicarte cada campo y qué pasa al guardar.")
+    out.append("Recomendación: atiende primero lo marcado en rojo, luego lo amarillo; el resto está al día.")
+    return " ".join(out)
 AI_DEFAULT=[("¿Qué puedo hacer en esta pantalla?","Te explico lo que ves aquí y qué acciones tienes según tu rol. También puedo buscar un estudiante, curso o profesor por nombre o código."),("¿Hay algo pendiente que deba revisar?","Reviso aprobaciones, sesiones sin confirmar, saldos y alertas de inventario relacionados con esta pantalla y te digo qué es urgente.")]
 
 def page(fname, title, inner, lang_title):
+    fab='' if fname in NO_FAB else f'''<button type="button" class="ai-fab" id="ai-fab" aria-label="Abrir asistente">{ico("spark","nav-ico")}<span class="ai-fab-dot"></span></button>
+<aside class="ai-panel" id="ai-panel" hidden aria-label="Asistente">
+  <div class="ai-panel-head"><span class="ai-spark">✦</span><div><b>Asistente Cambridge</b><small>Estás en: <span id="ai-ctx">{lang_title}</span></small></div><button type="button" class="icon-btn" id="ai-close" aria-label="Cerrar">×</button></div>
+  <div class="ai-log" id="ai-log"><div class="msg bot">Hola. Veo que estás en <b>{lang_title}</b>. Puedo responder sobre lo que tienes en pantalla o sobre cualquier dato de la plataforma, siempre según tu rol y sede.</div></div>
+  <div class="ai-chips" id="ai-chips"><button type="button" class="chipq chipq-main" data-a="{analizar_pantalla(lang_title, inner).replace(chr(34),"&quot;")}">{ico("spark","nav-ico")} Analizar esta pantalla</button>{"".join(f'<button type="button" class="chipq" data-a="{a.replace(chr(34),"&quot;")}">{q}</button>' for q,a in AI_CTX.get(fname,[])+AI_DEFAULT)}</div>
+  <form class="ai-in" id="ai-form"><label for="ai-input" class="sr">Pregunta</label><input id="ai-input" class="ctl" placeholder="Pregunta sobre {lang_title.lower()}…" autocomplete="off"><button type="submit" class="btn btn-primary">Enviar</button></form>
+</aside>'''
     html=f'''<!doctype html>
 <html lang="es">
 <head>
@@ -167,13 +199,7 @@ def page(fname, title, inner, lang_title):
 </head>
 <body>
 {inner}
-<button type="button" class="ai-fab" id="ai-fab" aria-label="Abrir asistente">{ico("spark","nav-ico")}<span class="ai-fab-dot"></span></button>
-<aside class="ai-panel" id="ai-panel" hidden aria-label="Asistente">
-  <div class="ai-panel-head"><span class="ai-spark">✦</span><div><b>Asistente Cambridge</b><small>Estás en: <span id="ai-ctx">{lang_title}</span></small></div><button type="button" class="icon-btn" id="ai-close" aria-label="Cerrar">×</button></div>
-  <div class="ai-log" id="ai-log"><div class="msg bot">Hola. Veo que estás en <b>{lang_title}</b>. Puedo responder sobre lo que tienes en pantalla o sobre cualquier dato de la plataforma, siempre según tu rol y sede.</div></div>
-  <div class="ai-chips" id="ai-chips">{"".join(f'<button type="button" class="chipq" data-a="{a.replace(chr(34),"&quot;")}">{q}</button>' for q,a in AI_CTX.get(fname,[])+AI_DEFAULT)}</div>
-  <form class="ai-in" id="ai-form"><label for="ai-input" class="sr">Pregunta</label><input id="ai-input" class="ctl" placeholder="Pregunta sobre {lang_title.lower()}…" autocomplete="off"><button type="submit" class="btn btn-primary">Enviar</button></form>
-</aside>
+{fab}
 <dialog id="wf-dialog">
   <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
   <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
@@ -284,7 +310,7 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
   function add(cls,html){{var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;}}
   function answer(q,a){{add('me',q);var t=document.createElement('div');t.className='msg bot typing';t.textContent='…';log.appendChild(t);log.scrollTop=log.scrollHeight;
     setTimeout(function(){{t.remove();add('bot',a||('Sobre <b>'+document.getElementById('ai-ctx').textContent+'</b>: en el producto final respondo con datos reales de la base unificada, filtrados por tu rol y sede. En este mockup puedo responder las preguntas sugeridas.'));}},600);}}
-  document.querySelectorAll('.chipq').forEach(function(c){{c.addEventListener('click',function(){{answer(c.textContent,c.getAttribute('data-a'));}});}});
+  document.querySelectorAll('.chipq').forEach(function(c){{c.addEventListener('click',function(){{answer(c.textContent.trim(),c.getAttribute('data-a'));}});}});
   form.addEventListener('submit',function(e){{e.preventDefault();var q=inp.value.trim();if(!q)return;inp.value='';var m=[].find.call(document.querySelectorAll('.chipq'),function(c){{return q.toLowerCase().split(' ').filter(function(w){{return w.length>4}}).some(function(w){{return c.textContent.toLowerCase().indexOf(w)>=0;}});}});answer(q,m?m.getAttribute('data-a'):null);}});
   document.querySelectorAll('.btn-ask').forEach(function(b){{b.addEventListener('click',function(){{open();inp.value=b.getAttribute('data-ask')||'';}});}});
 }})();
@@ -763,10 +789,36 @@ login=f'''<div class="auth">
   <input id="pass" type="password" placeholder="••••••••" class="ctl">
   {btn("Ingresar","Home.html",True)}
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
+  <a href="PortalEstudiante.html" class="btn" style="justify-content:center">Soy estudiante · ver mi portal</a>
   <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>'''
 page("Main.html","Login",login,"Login")
+# 1b Portal del estudiante (propuesta fuera del alcance contractual)
+portal=f'''<div class="portal">
+<header class="portal-top"><a href="PortalEstudiante.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="portal-title"><b>Portal del estudiante</b><small>Propuesta · fuera del alcance del contrato actual</small></div>
+ <div class="portal-user">{avatar("MA","sm")}<span>María Andrade<small>EST-00412 · Quito</small></span><a href="Main.html" class="btn">Cerrar sesión</a></div></header>
+<main class="portal-main">
+ {hero([("Curso actual",'English for Adults B1 Virtual'),("Horario","Lu-Ma-Mi-Ju 19:00–21:00 · Zoom 2"),("Profesor","P. Gómez"),("Módulo","7 de 16 · nivel B1"),("Próxima clase","Hoy 19:00"),("Asesor","Carla M. · 099 000 0010")],
+   btn("Unirse a la clase",None,True)+btn("Escribir a mi asesor"),
+   progress(60,"Avance del nivel B1 · 22 de 36 horas · termina el 20 nov"),
+   tag='<span class="hero-code">Hola, María</span>'+badge("Activa","ok")+badge("B1 · módulo 7","navy"))}
+ {kpis([("Asistencia","90%","en este curso"),("Puntaje","84 / 100","participación, quiz y examen"),("Niveles aprobados","2","A1 y A2 con certificado"),("Saldo pendiente","$0","todo al día")])}
+ {tabs(["Mis cursos","Asistencia","Notas y certificados","Pagos y facturas","Mis datos"],"Mis cursos",panels={
+  "Mis cursos": card("Cursos", course_item("English for Adults B1 Virtual","Adults · B1 · módulo 7 · P. Gómez",60,badge("En curso","warn"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
+     +course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),href="PortalEstudiante.html",tone=2,sessions="36",hours="72 h")
+     +course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),href="PortalEstudiante.html",tone=3,sessions="18",hours="36 h")
+     +course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),href="PortalEstudiante.html",tone=1,sessions="0",hours="0 h")),
+  "Asistencia": two(card("Esta semana", stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"Clase":[2,2,2,2,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)),
+     card("Últimas sesiones", table(["Sesión","Fecha","Asistí"],[["Sesión 11 · módulo 7","Mié 7 oct · 19:00",badge("Sí","ok")],["Sesión 10 · módulo 7","Mar 6 oct · 19:00",badge("Sí","ok")],["Sesión 9 · módulo 7","Lun 5 oct · 19:00",badge("No · aviso previo","warn")],["Sesión 8 · módulo 7","Jue 1 oct · 19:00",badge("Sí","ok")],["Sesión 7 · módulo 7","Mié 30 sep · 19:00",badge("Sí","ok")]])+kv(("Asistencia del curso","90%"),("Mínimo para certificado","75%")))),
+  "Notas y certificados": two(card("Puntaje actual · B1", '<div class="perf">'+gauge(84,"Puntaje total",segments=True)+'<div class="perf-legend"><div><i style="background:#16A34A"></i>Participación<b>55%</b></div><div><i style="background:#F6C21C"></i>Quiz en clase<b>15%</b></div><div><i style="background:#F59E0B"></i>Examen<b>10%</b></div><div><i style="background:#D62839"></i>Ausencias<b>10%</b></div></div></div>'),
+     card("Certificados", table(["Nivel","Nota","Emitido","Acción"],[["A2","85 · Pass","jun 2026",btn("Descargar certificado")],["A1","80 · Pass","dic 2025",btn("Descargar certificado")],["B1","En curso","al aprobar el módulo 8","—"]]))),
+  "Pagos y facturas": two(card("Mi paquete", kv(("Niveles comprados","B1 y B2 (módulos 7 a 10)"),("Consumido","módulo 7 de 4 comprados"),("Plan de pago","Contado"),("Saldo","$0"))+progress(25,"Paquete · 1 de 4 módulos consumidos")),
+     card("Facturas", table(["Factura","Total","Acción"],[[c2("000021090","12 oct 2026 · B1–B2 · pagada"),"$980.00",btn("Descargar factura")],[c2("000020411","15 jun 2026 · A2 · pagada"),"$450.00",btn("Descargar factura")],[c2("000019872","10 ene 2026 · A1 · pagada"),"$450.00",btn("Descargar factura")]]))),
+  "Mis datos": card("Datos personales", kv(("Nombres","María Andrade"),("Cédula","1712345678"),("Email","maria.andrade@ejemplo.com"),("Teléfono","099 000 0001"),("Dirección","Quito · La Carolina"),("Sede","Quito"),("Representante","— (mayor de edad)"))+row(btn("Actualizar mis datos"))),
+ })}
+</main></div>'''
+page("PortalEstudiante.html","Portal del estudiante",portal,"Portal del estudiante")
 
 # 2 Home
 home=shell("Inicio","Inicio",
@@ -810,7 +862,7 @@ ficha=shell("María Andrade","Estudiantes",
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Dirección</b>Quito · La Carolina</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
     <div class="section"><h3>Logros y certificados</h3><div class="awards"><div><i>🏅</i>Certificado A1 · dic 2025</div><div><i>🏅</i>Certificado A2 · jun 2026 · nota 85</div><div><i>🏅</i>Asistencia perfecta · módulo 5</div><div><i>🏅</i>Mejor progreso del grupo · módulo 6</div><div><i>🏅</i>Referido: trajo a 1 estudiante</div></div></div>
-    <div class="actions">{btn("Nueva matrícula",None,True)}<a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a></div></div></aside>
+    <div class="actions">{btn("Nueva matrícula",None,True)}<a href="PortalEstudiante.html" class="btn">Ver como estudiante</a><a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a></div></div></aside>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div class="grid" style="grid-template-columns:1.25fr 1fr">
       {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip" style="background:var(--tint-navy)"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip" style="background:var(--tint-red)"><b>1 h</b>Club de conversación</span><span class="chip" style="background:var(--tint-sky)"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
@@ -1329,7 +1381,7 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
  subtitle="Las reglas de negocio viven en configuración, no en código"),"Nueva regla de aprobación")
 
 rows=[
- ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
+ ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("PortalEstudiante.html","Portal del estudiante (propuesta fuera de alcance)"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
  ("Académico · Coordinación, profesores, secretaría",[("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta con aprobación"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
  ("Comercial · Asesores, Dirección Comercial, secretaría",[("NuevaVenta.html","Nueva matrícula (venta por niveles)"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
  ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
@@ -1466,7 +1518,7 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .course-grade{font-size:16px;font-weight:600}.course-grade small{color:var(--mute);font-weight:400;font-size:12px}
 .cert{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:12.5px}.cert .badge{padding:3px 10px}
 /* asistente flotante */
-.ai-fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;box-shadow:0 10px 30px rgba(29,63,143,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40}
+.chipq-main{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important;display:inline-flex;align-items:center;gap:6px}.chipq-main .nav-ico,.chipq-main .nav-ico svg{width:14px;height:14px}.ai-fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;box-shadow:0 10px 30px rgba(29,63,143,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40}
 .ai-fab .nav-ico,.ai-fab .nav-ico svg{width:24px;height:24px}.ai-fab:hover{background:var(--navy2)}.ai-fab.on{background:var(--ink)}
 .ai-fab-dot{position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--yellow);border:2px solid #fff}
 .ai-panel{position:fixed;right:28px;bottom:96px;width:380px;max-width:calc(100vw - 40px);max-height:min(620px,calc(100vh - 120px));background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(26,33,66,.25);display:flex;flex-direction:column;z-index:40;overflow:hidden;border:1px solid var(--line)}
@@ -1493,7 +1545,7 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 #wf-dialog{border:0;border-radius:var(--r);box-shadow:0 20px 60px rgba(26,33,66,.3);padding:26px;max-width:480px;font-family:'Poppins',sans-serif;color:var(--ink)}#wf-dialog::backdrop{background:rgba(26,33,66,.45)}
 #wf-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;display:none;z-index:10;box-shadow:var(--sh)}
 /* login */
-.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E8EEFF 0%,#F6F7FB 50%,#E3F2FC 100%);padding:24px}
+.portal{min-height:100vh;background:var(--bg)}.portal-top{display:flex;align-items:center;gap:16px;padding:12px 32px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.portal-top img{height:40px;display:block}.portal-title{display:flex;flex-direction:column}.portal-title b{font-size:15px}.portal-title small{font-size:11.5px;color:var(--mute)}.portal-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}.portal-user span{display:flex;flex-direction:column;line-height:1.2}.portal-user small{color:var(--mute);font-size:11.5px}.portal-main{max-width:1120px;margin:0 auto;padding:24px 32px 80px;display:flex;flex-direction:column;gap:22px}.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#E8EEFF 0%,#F6F7FB 50%,#E3F2FC 100%);padding:24px}
 .auth form{width:100%;max-width:420px;background:#fff;border-radius:20px;padding:36px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px rgba(26,33,66,.12)}.auth h1{margin:4px 0 0;font-size:22px}.auth label{font-size:13px;font-weight:500}
 .stepper{display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px}.step{padding:10px;text-align:center;font-size:13px;font-weight:500;border-radius:12px;background:#fff;border:1px solid var(--line);color:var(--mute)}.step.done{color:var(--navy);border-color:var(--navy)}.step.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .cal{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:8px}.cal div{border-radius:12px;min-height:90px;padding:10px;font-size:12px;background:var(--bg)}

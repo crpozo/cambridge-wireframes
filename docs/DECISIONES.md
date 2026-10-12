@@ -14,7 +14,7 @@
 - **Comisiones** se calculan desde las ventas del período con reglas configurables; estados draft → revisión → aprobado.
 - **Inventario** se compromete al crear un curso (cupo) y se revierte con notas de crédito.
 - **Integraciones** (Kommo, Moodle, Dora) se muestran como pantalla de estado/configuración; el alcance real depende de las APIs de esos proveedores.
-- **Fuera de este set**: pantallas de facturación electrónica SRI, portal para estudiantes/padres, app móvil, migración de datos (es un servicio, no una pantalla; podría necesitar un panel de reconciliación en Fase 1).
+- **Fuera de este set**: app móvil, migración de datos (es un servicio, no una pantalla; podría necesitar un panel de reconciliación en Fase 1). La autorización SRI se muestra dentro de Facturación como estado y acciones (enviar comprobante, XML), no como módulo aparte. El **portal del estudiante** (PortalEstudiante.html) se incluye como propuesta explícitamente marcada fuera del alcance contractual, para validar interés con el cliente.
 - Los 12 primeros wireframes se publicaron también como canvas en Claude (Design); la fuente de verdad desde ahora es este repo.
 
 ## Mapeo TeamDesk → Plataforma Cambridge (revisado con capturas del sistema actual, oct 2026)

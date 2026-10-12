@@ -81,3 +81,4 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 `index.html` redirige al login; el hub es `Mapa.html`. Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.
 
 45. **Insights.html · Insights de IA** (M9/M8). Tablero con todas las observaciones del asistente por área y prioridad: KPIs, distribución por área, evolución semanal y lista de insights con acción directa, marcar como atendido o descartar. En todas las pantallas hay además un asistente flotante contextual (sabe en qué pantalla estás y sugiere preguntas).
+46. **PortalEstudiante.html · Portal del estudiante** (propuesta, fuera del alcance de los 11 módulos). Vista de solo lectura para el estudiante: curso actual y próxima clase, avance del nivel, asistencia, puntaje y certificados descargables, paquete de niveles y facturas, datos personales con solicitud de cambio. ← Main ("Soy estudiante"), Ficha360 ("Ver como estudiante"). → Main.
