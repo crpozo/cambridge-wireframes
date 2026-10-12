@@ -230,12 +230,21 @@ def page(fname, title, inner, lang_title):
   function apply(){{
     var r=rs.value, opt=rs.options[rs.selectedIndex];
     var u=document.getElementById('rol-user'); if(u) u.innerHTML=opt.getAttribute('data-user')+'<small>'+opt.textContent+'</small>';
+    var av=document.querySelector('.user .avatar'); if(av) av.textContent=opt.getAttribute('data-user').replace(/^(Dir\.|Admin\.|Coord\.)\s*/,'').charAt(0).toUpperCase();
     document.querySelectorAll('[data-roles]').forEach(function(e){{
       var ok=e.getAttribute('data-roles').split(',').indexOf(r)>=0;
       if(e.hasAttribute('data-panel')){{ if(!ok){{e.dataset.wfHidden='1';e.style.display='none';}} else {{delete e.dataset.wfHidden;}} return; }}
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     }});
+    (function(){{var nav=document.getElementById('sidenav'),sb=nav&&nav.parentElement;if(!nav)return;
+      nav.querySelectorAll('details.nav-group').forEach(function(d){{var k='wf-nav-'+d.getAttribute('data-area');try{{if(localStorage.getItem(k)==='0'&&!d.hasAttribute('data-active'))d.open=false;}}catch(e){{}}
+        d.addEventListener('toggle',function(){{try{{localStorage.setItem(k,d.open?'1':'0');}}catch(e){{}}more();}});}});
+      function more(){{var m=nav.scrollHeight-nav.clientHeight-nav.scrollTop>8;sb.classList.toggle('has-more',m);}}
+      nav.addEventListener('scroll',more);window.addEventListener('resize',more);more();setTimeout(more,300);
+      var a=nav.querySelector('.nav-link.active');if(a&&a.scrollIntoView)a.scrollIntoView({{block:'nearest'}});
+    }})();
+    (function(){{var ub=document.getElementById('user-btn'),up=document.getElementById('user-pop');if(!ub)return;ub.addEventListener('click',function(e){{e.stopPropagation();var o=up.hidden;up.hidden=!o;ub.setAttribute('aria-expanded',o);}});up.addEventListener('click',function(e){{e.stopPropagation();}});document.addEventListener('click',function(e){{if(!up.hidden&&!up.contains(e.target))up.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')up.hidden=true;}});}})();
     (function(){{var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){{e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);}});document.addEventListener('click',function(e){{if(!np.hidden&&!np.contains(e.target))np.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')np.hidden=true;}});}})();
 document.querySelectorAll('.btn-more').forEach(function(b){{b.addEventListener('click',function(){{var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));}});}});
 document.querySelectorAll('.tabs').forEach(function(bar){{
@@ -491,8 +500,11 @@ def nav(active):
         if not items: continue
         roles=",".join(sorted({c for _,_,r in items for c in r.split(",")}))
         links="".join(f'<a href="{h}" data-roles="{r}" class="nav-link{" active" if n==active else ""}">{ico(ICON.get(n,"doc"))}{n}</a>' for n,h,r in items)
-        head=f'<div class="nav-area">{area}</div>' if area else ""
-        out+=f'<div data-roles="{roles}" style="display:contents">{head}{links}</div>'
+        if not area:
+            out+=f'<div data-roles="{roles}" class="nav-group-root">{links}</div>'; continue
+        has_active=any(n==active for n,_,_ in items)
+        out+=(f'<details class="nav-group" data-roles="{roles}" data-area="{area}"{" open" if True else ""}{" data-active" if has_active else ""}>'
+              f'<summary class="nav-area"><span>{area}</span><span class="nav-caret">›</span></summary>{links}</details>')
     return out
 
 def shell(title, active, *parts, subtitle=""):
@@ -502,11 +514,12 @@ def shell(title, active, *parts, subtitle=""):
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
     back=parent[1] if parent and parent[0]!=title else "Home.html"
     return f'''<div class="app">
-<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav>{nav(active)}</nav><div class="sidebar-ctx"><div class="sidebar-ctx-title">Contexto de prueba</div><label>Sede<select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></label><label>Ver como<select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></label></div><div class="sidebar-foot">Plataforma Cambridge · mockup v1</div></aside>
+<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav id="sidenav">{nav(active)}</nav><div class="sidebar-more" aria-hidden="true"></div></aside>
 <div class="shell-main">
 <header class="topbar">
   <div class="crumbs">{'' if active=="Inicio" else f'<a href="{back}" class="back" aria-label="Volver">‹</a>'}<div><h1>{title}</h1><div class="path">{path}</div></div></div>
   <div class="topbar-right">
+  <label class="ctx-sede" title="Sede">{ico("pin","nav-ico")}<span class="sr">Sede</span><select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option></select></label>
   <form class="search" action="Estudiantes.html" role="search">{ico("search","nav-ico")}<label for="gsearch" class="sr">Buscar</label><input id="gsearch" name="q" placeholder="Buscar… (Enter)"></form>
   <div class="notif"><button type="button" class="icon-btn" id="notif-btn" aria-label="Notificaciones (3)" aria-expanded="false">{ico("bell","nav-ico")}<span class="dot">3</span></button>
     <div class="notif-pop" id="notif-pop" hidden><div class="notif-head"><b>Notificaciones</b><a href="Notificaciones.html">Ver todas</a></div>
@@ -516,7 +529,8 @@ def shell(title, active, *parts, subtitle=""):
       <a href="Profesores.html" class="notif-item read"><span class="notif-ico" style="background:var(--tint-green);color:#15803D">✓</span><span><b>Profesor M. Castro aprobado</b><small>Ya puede recibir cursos · ayer 11:05</small></span></a>
     </div></div>
   <a href="Chatbot.html" class="icon-btn" aria-label="Asistente">{ico("spark","nav-ico")}</a>
-  <div class="user"><span class="avatar sm">E</span><span id="rol-user">Estefanía<small>Administrador General</small></span></div>
+  <div class="user-menu"><button type="button" class="user" id="user-btn" aria-expanded="false" aria-label="Cuenta"><span class="avatar sm">E</span><span id="rol-user">Estefanía<small>Administrador General</small></span><span class="nav-caret">›</span></button>
+    <div class="user-pop" id="user-pop" hidden><div class="user-pop-title">Contexto de prueba</div><label>Ver como<select id="rol">{"".join(f'<option value="{c}" data-user="{u}">{n}</option>' for c,n,u in ROLES)}</select></label><a href="Usuarios.html">Mi cuenta</a><a href="Main.html">Cerrar sesión</a><div class="user-pop-foot">Plataforma Cambridge · mockup v1</div></div></div>
   </div>
 </header>
 <main class="main">
@@ -1333,15 +1347,15 @@ a{color:var(--navy)}a:hover{color:var(--navy2)}
 h1,h2,h3{font-weight:600}
 /* layout */
 .app{display:flex;min-height:100vh}
-.sidebar{width:232px;overflow-y:auto;flex:none;background:#fff;color:var(--ink);display:flex;flex-direction:column;padding:20px 14px;gap:4px;position:sticky;top:0;height:100vh;border-right:1px solid var(--line)}
+.sidebar{width:232px;overflow:hidden;position:relative;flex:none;background:#fff;color:var(--ink);display:flex;flex-direction:column;padding:20px 14px;gap:4px;position:sticky;top:0;height:100vh;border-right:1px solid var(--line)}
 .brand{display:flex;align-items:center;padding:6px 8px 18px;text-decoration:none}.brand img{width:100%;max-width:196px;height:auto;display:block}.brand b{display:block;font-size:16px;letter-spacing:.08em;color:var(--navy)}.brand small{display:block;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
 .brand-mark{width:34px;height:26px;border-radius:5px;background:linear-gradient(180deg,var(--red) 0 33%,#fff 33% 66%,var(--navy) 66%);border:2px solid var(--navy);flex:none}
 .brand-dark{justify-content:center}
-.nav-area{padding:16px 12px 6px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
-.nav-link{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--mute);text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-area{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600;cursor:pointer;list-style:none;user-select:none}.nav-area::-webkit-details-marker{display:none}.nav-area:hover{color:var(--ink)}.nav-caret{font-size:16px;line-height:1;transform:rotate(90deg);transition:transform .15s;color:var(--mute);font-weight:400}details.nav-group:not([open]) .nav-caret{transform:rotate(0)}.nav-group{display:block}.nav-group-root{display:block}details.nav-group:not([open]) .nav-area{opacity:.75}
+.nav-link{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;color:var(--mute);text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav-link:hover{background:var(--bg);color:var(--ink)}.nav-link.active{background:var(--tint-navy);color:var(--navy);font-weight:600}
 .nav-ico{width:20px;height:20px;flex:none;display:inline-flex}.nav-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.sidebar nav{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin}.sidebar-ctx{margin-top:8px;padding:12px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;flex:none}.sidebar-ctx-title{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}.sidebar-ctx label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mute)}.sidebar-ctx select{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12.5px;color:var(--ink);padding:0 6px}.sidebar-foot{margin-top:8px;font-size:11px;color:var(--mute);padding:8px 12px;line-height:1.5;white-space:nowrap;flex:none}.sidebar-foot a{color:var(--mute)}
+.sidebar nav{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin;padding-bottom:12px}.sidebar{position:sticky}.sidebar-more{position:absolute;left:0;right:0;bottom:0;height:64px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;color:var(--mute)}.sidebar-more::after{content:"Más opciones ▾"}.sidebar.has-more .sidebar-more{opacity:1}.sidebar-ctx{margin-top:8px;padding:12px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;flex:none}.sidebar-ctx-title{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}.sidebar-ctx label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mute)}.sidebar-ctx select{height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12.5px;color:var(--ink);padding:0 6px}.sidebar-foot{margin-top:8px;font-size:11px;color:var(--mute);padding:8px 12px;line-height:1.5;white-space:nowrap;flex:none}.sidebar-foot a{color:var(--mute)}
 .shell-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-x:clip}
 .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:18px 32px 8px;background:var(--bg);position:sticky;top:0;z-index:5}.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex:none}
 .crumbs{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0;flex:1 1 220px}.crumbs>div{min-width:0}.back{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);font-size:18px}
@@ -1353,7 +1367,7 @@ h1,h2,h3{font-weight:600}
 .icon-btn{position:relative;width:42px;height:42px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink)}
 .icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .icon-btn .dot{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 5px}
-.user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);white-space:nowrap;min-width:0}.user #rol-user{overflow:hidden;text-overflow:ellipsis;max-width:180px}.user #rol-user{display:flex;flex-direction:column;line-height:1.2}.user #rol-user small{color:var(--mute);font-size:12px}
+.user{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink);white-space:nowrap;min-width:0;background:none;border:0;font:inherit;cursor:pointer;padding:4px 8px;border-radius:12px}.user:hover{background:#fff}.user .nav-caret{transform:rotate(90deg)}.user-menu{position:relative}.user-pop{position:absolute;right:0;top:calc(100% + 8px);width:260px;background:#fff;border-radius:14px;box-shadow:0 12px 32px rgba(26,33,66,.16);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;z-index:30;font-size:13px}.user-pop[hidden]{display:none}.user-pop-title{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}.user-pop label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mute)}.user-pop select{height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:13px;color:var(--ink);padding:0 8px}.user-pop a{color:var(--ink);text-decoration:none;padding:8px 6px;border-radius:8px}.user-pop a:hover{background:var(--bg)}.user-pop-foot{font-size:11px;color:var(--mute);padding:4px 6px 0;border-top:1px solid var(--line)}.ctx-sede{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 8px 0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;color:var(--mute)}.ctx-sede select{border:0;background:transparent;font:inherit;font-size:13.5px;color:var(--ink);height:40px;padding-right:4px}.ctx-sede select:focus{outline:none}.user #rol-user{overflow:hidden;text-overflow:ellipsis;max-width:180px}.user #rol-user{display:flex;flex-direction:column;line-height:1.2}.user #rol-user small{color:var(--mute);font-size:12px}
 .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--sky));color:#fff;font-weight:600}
 .avatar.sm{width:38px;height:38px;font-size:14px}.avatar.lg{width:96px;height:96px;font-size:32px;border:5px solid #fff;box-shadow:0 6px 20px rgba(26,33,66,.12)}
 .main{padding:12px 32px 120px;display:flex;flex-direction:column;gap:26px;min-width:0}

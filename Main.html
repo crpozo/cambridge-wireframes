@@ -90,12 +90,21 @@
   function apply(){
     var r=rs.value, opt=rs.options[rs.selectedIndex];
     var u=document.getElementById('rol-user'); if(u) u.innerHTML=opt.getAttribute('data-user')+'<small>'+opt.textContent+'</small>';
+    var av=document.querySelector('.user .avatar'); if(av) av.textContent=opt.getAttribute('data-user').replace(/^(Dir\.|Admin\.|Coord\.)\s*/,'').charAt(0).toUpperCase();
     document.querySelectorAll('[data-roles]').forEach(function(e){
       var ok=e.getAttribute('data-roles').split(',').indexOf(r)>=0;
       if(e.hasAttribute('data-panel')){ if(!ok){e.dataset.wfHidden='1';e.style.display='none';} else {delete e.dataset.wfHidden;} return; }
       if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
       e.style.display=ok?e.dataset.wfD:'none';
     });
+    (function(){var nav=document.getElementById('sidenav'),sb=nav&&nav.parentElement;if(!nav)return;
+      nav.querySelectorAll('details.nav-group').forEach(function(d){var k='wf-nav-'+d.getAttribute('data-area');try{if(localStorage.getItem(k)==='0'&&!d.hasAttribute('data-active'))d.open=false;}catch(e){}
+        d.addEventListener('toggle',function(){try{localStorage.setItem(k,d.open?'1':'0');}catch(e){}more();});});
+      function more(){var m=nav.scrollHeight-nav.clientHeight-nav.scrollTop>8;sb.classList.toggle('has-more',m);}
+      nav.addEventListener('scroll',more);window.addEventListener('resize',more);more();setTimeout(more,300);
+      var a=nav.querySelector('.nav-link.active');if(a&&a.scrollIntoView)a.scrollIntoView({block:'nearest'});
+    })();
+    (function(){var ub=document.getElementById('user-btn'),up=document.getElementById('user-pop');if(!ub)return;ub.addEventListener('click',function(e){e.stopPropagation();var o=up.hidden;up.hidden=!o;ub.setAttribute('aria-expanded',o);});up.addEventListener('click',function(e){e.stopPropagation();});document.addEventListener('click',function(e){if(!up.hidden&&!up.contains(e.target))up.hidden=true;});document.addEventListener('keydown',function(e){if(e.key==='Escape')up.hidden=true;});})();
     (function(){var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);});document.addEventListener('click',function(e){if(!np.hidden&&!np.contains(e.target))np.hidden=true;});document.addEventListener('keydown',function(e){if(e.key==='Escape')np.hidden=true;});})();
 document.querySelectorAll('.btn-more').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));});});
 document.querySelectorAll('.tabs').forEach(function(bar){
