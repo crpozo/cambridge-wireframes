@@ -24,8 +24,8 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 9. **NuevaVenta.html · Nueva venta por niveles**. Wizard: Estudiante → Niveles → Descuento → Pago → Factura. Reemplaza la facturación por módulo; genera una factura consolidada. → SolicitudDescuento, Aprobaciones, Ficha360.
 10. **SolicitudDescuento.html**. Porcentaje, monto resultante, motivo de lista cerrada, justificación. Regla ilustrativa: >10% requiere Director Comercial. → Aprobaciones.
 11. **Aprobaciones.html · Bandeja de aprobaciones** (M1). Tabs: descuentos, profesores, asignaciones. Aprobar/rechazar con trazabilidad y notificación al solicitante.
-12. **Facturas.html · Listado de facturas**. KPIs de facturado/cobrado/pendiente, tabla con estado de cobro. → DetalleFactura, NuevaVenta.
-13. **DetalleFactura.html**. Líneas por nivel, descuento aprobado, libros, total, método y estado; notas de crédito y cambio de curso; registrar pago.
+12. **Facturas.html · Facturación**. KPIs (facturado hoy, cobrado, por cobrar a crédito, sin autorizar SRI); pestañas Facturas (filtros estado, SRI, asesor, crédito; enviar comprobantes pendientes, descargar XML), Calendario de crédito (vencimientos) y Notas de crédito. → DetalleFactura, NuevaVenta, NotaCredito.
+13. **DetalleFactura.html**. Cabecera (número, estado de cobro, estado SRI, matrícula, venta multi-módulo, crédito y vencimiento), datos de facturación del cliente (CED/RUC/PAS, RUC especial), autorización SRI (clave de acceso, comprobante enviado), ítems (servicio/producto, % descuento, IVA), pagos múltiples, efecto en el saldo de la matrícula e historial. Acciones: registrar pago, enviar comprobante, PDF, XML, nota de crédito, anular.
 
 ## Flujo académico (M3)
 14. **Cursos.html · Listado**. Filtros programa/nivel/modalidad/estado, ocupación, profesor. → DetalleCurso, NuevoCurso.
