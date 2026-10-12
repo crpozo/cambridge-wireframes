@@ -103,13 +103,13 @@ def only(roles, html, inline=False):
 NAV=[
  ("",[("Inicio","Home.html",ALL)]),
  ("Académico",[("Estudiantes","Estudiantes.html",ALL),("Cursos","Cursos.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO")]),
- ("Comercial",[("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Facturación","Facturas.html",COMERCIAL),("Comisiones","Comisiones.html","ADM,GER,DIR,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
+ ("Comercial",[("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Facturación","Facturas.html",COMERCIAL),("Comisiones y descuentos","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
  ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
  ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM")]),
 ]
 # alias: nombre antiguo de sección activa → ítem del menú
-NAV_ALIAS={"Inventario":"Stock por sede","Facturación":"Facturación"}
+NAV_ALIAS={"Inventario":"Stock por sede","Facturación":"Facturación","Comisiones":"Comisiones y descuentos"}
 def nav(active):
     active=NAV_ALIAS.get(active,active)
     out=""
@@ -158,7 +158,7 @@ AI_CTX={
  "Ficha360.html":[("¿Qué nivel le toca y cuándo abre?","María está en el módulo 7 (B1). Al aprobarlo pasa al módulo 8 del mismo curso; su siguiente nivel comprado es B2, que abre en marzo de 2027. Tiene 3 niveles pagados y 2 consumidos."),("¿Tiene saldo pendiente?","No. Su matrícula 001-202602794 está pagada ($980). Su descuento del 10% fue por referido y lo aprobó Dirección Comercial.")],
  "Inventario.html":[("¿Qué libros hay que pedir?","Tres productos con stock negativo: Empower B1+ (Valle −2), Super Minds 3 WB (Ambato −1) y Super Minds 3 SB (Ambato −2). El pedido sugerido a Books & Bits suma 16 libros."),("¿Cuántos códigos de activación quedan?","13 códigos comprados sin asignar: 9 en Valle y 4 en Quito. Uno de Empower A1 venció.")],
  "PaymentSheet.html":[("¿Por qué no puedo aprobar la payment sheet?","Hay 3 alertas: L. Vega facturó $26 más que las horas registradas, R. Salas tiene contrato vencido con 8 h, y D. Paredes entregó factura sin sesiones. Resueltas esas tres, el total a pagar es $1,145.60.")],
- "Comisiones.html":[("¿Cuánto gana cada asesor este mes?","Carla M. $420 (14 niveles, bono incluido), Sofía L. $330 (11) y Diego R. $180 (9, no llegó a la meta de 12). Solo se paga la comisión de ventas cobradas.")],
+ "Comisiones.html":[("¿Qué descuentos dio cada asesor este mes?","Carla M. dio descuento en 12 ventas (promedio 9%), Sofía L. en 9 (8%) y Diego R. en 8 (6%). Total descontado: $1,860, el 5.6% de lo facturado. 3 ventas pasaron el límite del 10%: 1 aprobada, 1 pendiente (42% de Gabriela Núñez) y 1 rechazada."),("¿Cuánto gana cada asesor este mes?","Carla M. $420 (14 niveles, bono incluido), Sofía L. $330 (11) y Diego R. $180 (9, no llegó a la meta de 12). Solo se paga la comisión de ventas cobradas.")],
  "Aprobaciones.html":[("¿Qué pasa si apruebo el descuento del 42%?","La matrícula de María Andrade se cerraría en $580 en lugar de $980 y la comisión de Carla M. bajaría a $23. La regla permite hasta 10% sin aprobación; 42% queda en el audit log con tu justificación.")],
  "Configuracion.html":[("¿Qué aulas están libres el sábado en la mañana?","En Valle: C-2 (9 estudiantes) y C-7 (5). En Quito, Q-1 está ocupada al 60%. La capacidad se calcula con la norma SETEC.")],
  "Insights.html":[("¿Qué insight es el más urgente?","El descuento del 42% pendiente desde ayer bloquea una matrícula de $980. Después, los 14 estudiantes de A1 Sábados sin calificar: no pueden pasar a A2 y hay 3 cupos esperándolos.")],
@@ -909,7 +909,7 @@ stepper='<div class="stepper">'+"".join(f'<div class="step{" on" if i==2 else ("
 venta=shell("Nueva matrícula · venta por niveles","Nueva matrícula",
  stepper,
  two(card("Estudiante, niveles y curso", kv(("Estudiante","María Andrade"),("Sede","Quito"),("Asesor (vendor)","Carla M."))+table(["Nivel","Módulos","Modalidad","Precio"],[["B1","7 y 8","Virtual","$500"],["B2","9 y 10","Virtual","$500"]])+filters(sel("Curso para el primer módulo",["0001-2026-0767 · Adults B1 Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · 12/15","0001-2026-0772 · Adults B1 · Sa 09:00–13:00 · 9/12"],w="100%",col=False),sel("Plan de pago",["Contado","2 cuotas","4 cuotas"],w="140px",col=False),sel("Facturar a",["Estudiante","Empresa Andina S.A. (convenio 15%)","Clínica Valle (convenio 10%)","Otra empresa…"],w="260px",col=False))+kv(("Niveles","2 (4 módulos)"),("Precio lista","$1,000"),("Libros","B1 + B2 · $80"),("Inicio","3 nov 2026"))),
-     card("Descuento", filters(sel("Descuento %",["0%","5%","10%","15%","20%"],w="120px"),sel("Motivo (obligatorio)",["Referido","Promoción","Convenio empresa","Otro"],w="220px"))+note("Hasta 10% lo aplica el asesor. Más de 10% pasa a aprobación del Director Comercial y la venta queda en espera.","warn")+row(btn("Solicitar aprobación","SolicitudDescuento.html")))),
+     card("Descuento", filters(sel("Descuento %",["10%","5%","0%","15%","20%","Otro…"],w="120px"),sel("Motivo (obligatorio)",["Referido","Promoción octubre","Convenio empresa","Hermano matriculado","Otro"],w="220px"))+kv(("Tu límite sin aprobación","10%"),("Aplicado","10% · -$100"),("Queda registrado","con tu nombre, motivo y fecha; Dirección lo ve en Comisiones → Descuentos otorgados"))+progress(100,"10% de 10% permitido sin aprobación",CH[3])+row(btn("Solicitar aprobación","SolicitudDescuento.html")),extra=badge("Dentro de tu límite","ok"))),
  card("Resultado", table(["Concepto","Cant.","Precio","Descuento","Total"],[["Matrícula (tuition fee)","1","$0","—","$0"],["Nivel B1 (módulos 7–8)","1","$500","10% · referido","$450"],["Nivel B2 (módulos 9–10)","1","$500","10% · referido","$450"],["Libros / materiales B1 + B2","2","$40","—","$80"]])+filters(sel("Método de pago",["Transferencia","Efectivo","Tarjeta","Crédito directo"],w="180px"),actions=kv(("Subtotal","$1,080"),("Descuento","-$100"),("Total","$980")))+note("Una sola matrícula y una factura consolidada por el paquete (en TeamDesk hoy son 4 enrollments y 4 facturas por módulo). Al confirmar: el estudiante queda en el curso elegido, se comprometen 2 libros y se registra la comisión del asesor en estado pendiente.")+row(btn("Atrás"),btn("Confirmar matrícula y emitir factura","DetalleMatricula.html",True))),
  subtitle="Reemplaza la facturación 1:1 por módulo")
 page("NuevaVenta.html","Nueva matrícula",venta,"Nueva matrícula (venta por niveles)")
@@ -1015,16 +1015,33 @@ ps=shell("Payment sheet · Octubre 2026","Profesores",
 page("PaymentSheet.html","Payment sheet",ps,"Payment sheet de profesores")
 
 # 11 Comisiones
-com=shell("Comisiones · Octubre 2026","Comisiones",
- filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))+btn("Reglas de comisión")+btn("Exportar")+btn("Aprobar período",None,True)),
- flow(["Borrador (cálculo automático)","En revisión (Dir. Comercial)","Aprobado (se paga)"]),
- table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
-  ["Carla M.","14","6 / 8","12","14","$420",'<a href="DetalleComision.html">Ver detalle</a>'],
-  ["Diego R.","9","4 / 5","12","9","$180",'<a href="DetalleComision.html">Ver detalle</a>'],
-  ["Sofía L.","11","7 / 4","10","11","$330",'<a href="DetalleComision.html">Ver detalle</a>']]),
- two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
-     card("Reglas activas", li(["Rango 1–5 niveles: 2% virtual · 3% presencial","Rango 6–10 niveles: 3% virtual · 4% presencial","Rango 11+ niveles: 4% virtual · 5% presencial","Bono $50 por cumplir meta mensual"])+row('<a href="ReglasComision.html" style="font-size:13px">Editar reglas</a>'))),
- subtitle="Cálculo automático al cierre de mes, con historial y detalle exportable")
+V3='<a href="DetalleMatricula.html">Ver</a>'
+descuentos=table(["Fecha","Estudiante","Asesor","Venta","Precio lista","% dcto.","Descuento","Motivo","Aprobación","Acción"],[
+  ["12 oct",c2('<a href="Ficha360.html">María Andrade</a>',"Quito · B1–B2 (2 niveles)"),"Carla M.","B1–B2","$1,000","10%","-$100","Referido",badge("Dentro del límite","ok"),V3],
+  ["12 oct",c2('<a href="Ficha360.html">Valeria Cedeño</a>',"Quito · B2"),"Carla M.","B2","$550","10%","-$55","Promoción octubre",badge("Dentro del límite","ok"),V3],
+  ["11 oct",c2('<a href="Ficha360.html">Camila Sánchez</a>',"Ambato · A2–B1"),"Sofía L.","A2–B1","$1,000","15%","-$150","Convenio empresa",badge("Aprobado · Dir. Comercial","navy"),V3],
+  ["10 oct",c2('<a href="Ficha360.html">Ana Ruiz (menor)</a>',"Quito · Kids 2"),"Carla M.","Kids 2","$387.50","0%","$0","—",badge("Sin descuento","neutral"),V3],
+  ["09 oct",c2('<a href="Ficha360.html">Juan Pérez</a>',"Valle · A2"),"Diego R.","A2","$500","5%","-$25","Referido",badge("Dentro del límite","ok"),V3],
+  ["08 oct",c2('<a href="Ficha360.html">Pedro Mora</a>',"Valle · B1"),"Diego R.","B1","$500","20%","-$100","Otro",badge("Rechazado · sin motivo válido","bad"),V3],
+  ["06 oct",c2('<a href="Ficha360.html">Mateo Salazar (menor)</a>',"Ambato · A1"),"Sofía L.","A1","$420","10%","-$42","Hermano matriculado",badge("Dentro del límite","ok"),V3],
+  ["03 oct",c2('<a href="Ficha360.html">Gabriela Núñez</a>',"Quito · A2"),"Carla M.","A2","$450","42%","-$189","Referido",badge("Pendiente de aprobación","warn"),V3]],hide=(3,),wide=1)
+com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
+ tabs(["Comisiones","Descuentos otorgados"],"Comisiones",roles={"Descuentos otorgados":"ADM,GER,DIR,SUC"},panels={
+  "Comisiones": filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))+btn("Reglas de comisión")+btn("Exportar")+btn("Aprobar período",None,True))
+   +flow(["Borrador (cálculo automático)","En revisión (Dir. Comercial)","Aprobado (se paga)"])
+   +table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
+    ["Carla M.","14","6 / 8","12","14","$420",'<a href="DetalleComision.html">Ver detalle</a>'],
+    ["Diego R.","9","4 / 5","12","9","$180",'<a href="DetalleComision.html">Ver detalle</a>'],
+    ["Sofía L.","11","7 / 4","10","11","$330",'<a href="DetalleComision.html">Ver detalle</a>']])
+   +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
+        card("Reglas activas", li(["Rango 1–5 niveles: 2% virtual · 3% presencial","Rango 6–10 niveles: 3% virtual · 4% presencial","Rango 11+ niveles: 4% virtual · 5% presencial","Bono $50 por cumplir meta mensual"])+row('<a href="ReglasComision.html" style="font-size:13px">Editar reglas</a>'))),
+  "Descuentos otorgados": kpis([("Ventas con descuento",sv("23 de 34","12 de 18","6 de 9","5 de 7"),"68% de las ventas del mes"),("Total descontado",sv("$1,860","$940","$425","$495"),"5.6% de lo facturado"),("Descuento promedio",sv("8.4%","9.1%","6.2%","9.8%"),"límite del asesor: 10%"),("Fuera del límite",sv("3","1","1","1"),"1 aprobado · 1 pendiente · 1 rechazado")])
+   +filters(search("Buscar","Estudiante o venta",w="220px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="140px"),sel("Aprobación",["Todos","Dentro del límite","Aprobado","Pendiente","Rechazado","Sin descuento"],w="170px"),sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="160px",col=False),actions=btn("Exportar"))
+   +descuentos+pager(sv(34,18,9,7))
+   +two(card("Descuento promedio por asesor", hbars([("Carla M. · 12 ventas",9),("Sofía L. · 9 ventas",8),("Diego R. · 8 ventas",6)],unit="")+kv(("Límite sin aprobación","10% (Configuración → Reglas de aprobación)"),("Más de 10%","requiere aprobación del Director Comercial"))),
+        card("Motivos del mes", hbars([("Referido",11),("Promoción octubre",6),("Convenio empresa",3),("Hermano matriculado",2),("Otro",1)],unit="")+row(btn("Editar motivos permitidos","Configuracion.html")))),
+ }),
+ subtitle="Comisiones calculadas al cierre de mes; descuentos de cada asesor visibles para Dirección")
 page("Comisiones.html","Comisiones",com,"Motor de comisiones")
 
 # 11b Insights de IA (M9 + M8): todas las observaciones del asistente, por área, con prioridad y acción
@@ -1033,6 +1050,7 @@ def insight(area, sev, title, text, link, href, when="hoy"):
     return (f'<div class="insight"><div class="insight-side"><span class="badge badge-{k}">{sev}</span><small>{when}</small></div><div class="insight-body"><small class="insight-area">{area}</small><b>{title}</b><p>{text}</p>'
             f'<div class="insight-actions"><a href="{href}" class="btn btn-primary">{link}</a>{btn("Marcar como atendido")}{btn("Descartar")}</div></div></div>')
 INSIGHTS=[
+ ("Comercial","media","Carla M. aplicó descuento en 10 de sus 12 ventas (promedio 9%)","Está dentro del límite del 10%, pero el 83% de sus ventas con descuento es el doble que el resto del equipo. Vale revisar si el motivo 'Referido' se está usando bien.","Ver descuentos otorgados","Comisiones.html","hoy"),
  ("Comercial","alta","Descuento del 42% bloquea una matrícula de $980","La solicitud de Carla M. para María Andrade espera desde ayer. Con 10% la matrícula cierra hoy; con 42% la comisión baja a $23 y requiere justificación.","Resolver en Aprobaciones","Aprobaciones.html","hace 1 día"),
  ("Académico","alta","14 estudiantes de A1 Sábados sin calificar","El curso 0001-2026-0430 terminó hace 5 días. Sin notas no se emiten certificados y los estudiantes no pueden matricularse en A2, donde hay 3 cupos esperándolos.","Calificar curso","DetalleCurso.html","hace 5 días"),
  ("Pagos a profesores","alta","Payment sheet de octubre con 3 alertas","L. Vega facturó $26 más que sus horas; R. Salas tiene contrato vencido con 8 h; D. Paredes entregó factura sin sesiones. Bloquean la aprobación.","Revisar payment sheet","PaymentSheet.html","hoy"),
@@ -1073,6 +1091,7 @@ PREG_AREAS=[("Estudiantes y matrículas",[
       ("¿Quiénes nos deben dinero?","Facturas con saldo, días de atraso y asesor","coin"),
       ("¿Qué facturas faltan por autorizar o enviar?","Estado SRI y comprobantes sin enviar","check"),
       ("¿Cómo van las ventas de cada asesor?","Niveles vendidos, meta y comisión","chart"),
+      ("¿Qué descuentos dio cada asesor?","Porcentaje, monto, motivo y si fue aprobado","coin"),
       ("¿Este mes vs el anterior?","Ventas, matrículas y cobros comparados","trend"),
       ("Facturas y XML del SRI de un período","Para contabilidad: lista y archivos descargables","swap")]),
    ("Inventario",[
@@ -1147,7 +1166,7 @@ page("Configuracion.html","Configuración",shell("Configuración","Configuració
      ["1271","9781009293891","Four Corners 2ED L4 ESB with DP","Adults","B2","Digital pack","$35.46","$40.00",badge("Activo","ok")],
      ["1999","—","Libreta Superpower","—","—","Otro","$7.99","$10.00",badge("Activo","ok")]])+note("Equivale a la tabla Products/Services de TeamDesk. El costo viene del último ingreso del proveedor; el precio de venta se usa en la matrícula."),
   "Tarifas de profesores": table(["Tipo de contrato","Tarifa base / hora","Modalidad","Vigencia","Estado"],[["Por horas","$7.00","Presencial","2026","Activa"],["Por horas","$6.50","Virtual","2026","Activa"],["Nómina","Salario mensual","Ambas","2026","Activa"]])+note("La tarifa individual se fija en la ficha del profesor y requiere aprobación de Dirección."),
-  "Reglas de aprobación": table(["Regla","Condición","Aprueba","Estado"],[["Descuento fuera de regla","> 10%","Director Comercial","Activa"],["Alta de profesor","Siempre","Dirección","Activa"],["Asignación sin contrato","Profesor sin contrato vigente","Coordinación Académica","Activa"],["Exportar base completa","Siempre","Administrador General","Activa"]])+row(btn("Nueva regla",None,True)),
+  "Reglas de aprobación": table(["Regla","Condición","Aprueba","Estado"],[["Descuento del asesor sin aprobación","Hasta 10% · con motivo obligatorio","Nadie (se registra y Dirección lo ve)","Activa"],["Descuento fuera de regla","> 10%","Director Comercial","Activa"],["Alta de profesor","Siempre","Dirección","Activa"],["Asignación sin contrato","Profesor sin contrato vigente","Coordinación Académica","Activa"],["Exportar base completa","Siempre","Administrador General","Activa"]])+row(btn("Nueva regla",None,True)),
   "Parámetros": form(["Moneda","Zona horaria","Días de vencimiento de factura","Umbral de alerta de stock","Email de notificaciones","Proveedor de libros por defecto"]),
  }),
  foot(btn("Guardar cambios",None,True)),
@@ -1323,6 +1342,7 @@ guardados=[("Estudiantes nuevos por mes","Cuántos entraron, por sede y asesor",
            ("Facturación del mes","Facturas, pagos, notas de crédito y XML por sede","Contabilidad · fin de mes","Today's Invoices · Download XML Files · List of Payments"),
            ("Facturas sin autorizar o sin enviar","Estado SRI y comprobantes pendientes","Secretaría · diario","sin enviar"),
            ("Ventas por asesor","Niveles vendidos vs meta y comisión","Dirección Comercial · fin de mes","Commissions Report · Sales Summary"),
+           ("Descuentos por asesor","% promedio, monto, motivos y aprobaciones","Dirección Comercial · semanal","Discount (campo Reason de Invoice)"),
            ("Este mes vs el anterior","Ventas, matrículas y cobros comparados","Gerencia · fin de mes","Current Month vs Last Month"),
            ("Cursos terminados sin calificar","Bloquean certificados y rematrícula","Coordinación · semanal","Finished courses with ungraded students"),
            ("Horas y pago por profesor","Sesiones confirmadas y payment sheet","Coordinación · fin de mes","Teachers payment sheet"),

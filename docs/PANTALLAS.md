@@ -40,7 +40,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 21. **PaymentSheet.html**. Mes, sede, estado (borrador/aprobado). Por profesor: sesiones, horas, tarifa, a pagar, factura del profesor, alerta de diferencia o contrato vencido. Aprobar pagos, exportar.
 
 ## Comisiones (M6)
-22. **Comisiones.html · Período**. Estado draft → revisión → aprobado; tabla por asesor (niveles, modalidad, meta, real, comisión); gráfico meta vs real; reglas activas. → DetalleComision, ReglasComision.
+22. **Comisiones.html · Período**. Estado draft → revisión → aprobado; tabla por asesor (niveles, modalidad, meta, real, comisión); gráfico meta vs real; reglas activas. → DetalleComision, ReglasComision. Pestaña **Descuentos otorgados** (solo Admin, Gerencia, Dir. Comercial, Admin. de sucursal): cada venta con descuento, asesor, % y monto, motivo y estado de aprobación; KPIs y promedio por asesor.
 23. **DetalleComision.html · Detalle por asesor**. Cada venta con la regla que la generó, bonos, historial, exportar.
 24. **ReglasComision.html**. Tabla de reglas (rangos, modalidad, bono meta, vigencia), nueva regla, simulador contra ventas pasadas. Cambios al audit log.
 
