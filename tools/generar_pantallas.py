@@ -47,6 +47,8 @@ ACTIONS={
  "Guardar regla":("La regla queda activa desde su vigencia y se aplica en el próximo cálculo. "+AUDIT,None),
  "Guardar como reporte":("El reporte se guarda con sus filtros y columnas para volver a ejecutarlo desde 'Reportes guardados'.",None),
  "Generar":("Se ejecuta el reporte con los filtros elegidos y el resultado se muestra abajo.",None),
+ "Ver resultado":("Se arma el reporte con la pregunta, el período y la sede elegidos y se muestra abajo en palabras, gráfico y tabla.",None),
+ "Enviar por correo":("Se envía el reporte (Excel + PDF) por correo a quien elijas; puedes dejarlo programado para que llegue cada semana o cada mes.",None),
  "Importar":("Se importan las filas válidas. Duplicados y errores se descartan y se muestran en un resumen. "+AUDIT,None),
  "Enviar":("El asistente responde solo con datos que tu rol y sede permiten ver.",None),
  "Confirmar sesión":("La sesión queda confirmada: suma horas a la payment sheet del profesor y avance a los estudiantes.",None),
@@ -220,6 +222,10 @@ def page(fname, title, inner, lang_title):
     dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
     setTimeout(function(){{toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;}},1100);
   }});
+}})();
+(function(){{
+  document.querySelectorAll('.picker-areas, .picker:not(.picker-areas .picker)').forEach(function(g){{g.querySelectorAll('.pick').forEach(function(b){{b.addEventListener('click',function(){{g.querySelectorAll('.pick').forEach(function(x){{x.classList.remove('on');x.setAttribute('aria-checked','false');}});b.classList.add('on');b.setAttribute('aria-checked','true');}});}});}});
+  document.querySelectorAll('.pills').forEach(function(g){{var multi=g.hasAttribute('data-multi');g.querySelectorAll('.pill').forEach(function(b){{b.addEventListener('click',function(){{if(!multi)g.querySelectorAll('.pill').forEach(function(x){{x.classList.remove('on');x.setAttribute('aria-pressed','false');}});var on=multi?!b.classList.contains('on'):true;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);}});}});}});
 }})();
 (function(){{
   document.querySelectorAll('.wf-row').forEach(function(r){{
@@ -763,7 +769,8 @@ def foot(*buttons):
 def two(a,b, ratio="1fr 1fr"):
     return f'<div class="grid" style="grid-template-columns:{ratio}">{a}{b}</div>'
 def card(title, inner, extra=""):
-    return f'<section class="card"><div class="card-head"><h2>{title}</h2>{extra}</div>{inner}</section>'
+    head=f'<div class="card-head"><h2>{title}</h2>{extra}</div>' if (title or extra) else ""
+    return f'<section class="card">{head}{inner}</section>'
 def hero(pairs, actions="", extra="", tag=""):
     """Cabecera de página de detalle: tarjeta con datos clave en cuadrícula, acciones a la derecha y contenido extra (p. ej. progreso)."""
     facts="".join(f'<div class="fact"><small>{k}</small><b>{v}</b></div>' for k,v in pairs)
@@ -1046,6 +1053,47 @@ page("Insights.html","Insights de IA",shell("Insights de IA","Insights de IA",
  subtitle="Todo lo que el asistente detectó en la base unificada, por área y prioridad"),"Insights de IA")
 
 # 12 Reportes · las tres vistas comparten la misma barra de pestañas (cada una es una pantalla)
+# 29 Constructor de reportes (guiado, para usuarios no técnicos)
+PREG=[("¿Cuántos estudiantes nuevos tuvimos?","Por mes y por sede, con quién los trajo","users"),
+      ("¿Quiénes nos deben dinero?","Matrículas con saldo, cuánto y desde cuándo","coin"),
+      ("¿Cómo van las ventas de cada asesor?","Niveles vendidos, meta y comisión","chart"),
+      ("¿Qué facturamos y cobramos este mes?","Facturas, pagos, notas de crédito y XML del SRI","doc")]
+PREG_AREAS=[("Estudiantes y matrículas",[
+      ("¿Cuántos estudiantes nuevos tuvimos?","Por mes y por sede, con quién los trajo","users"),
+      ("¿Quiénes están activos, inactivos o en transición?","El consolidado de las 3 sedes, sin cruzar listas","users"),
+      ("¿Quiénes están por terminar su nivel?","Para ofrecerles el siguiente a tiempo","spark"),
+      ("¿Cuántos aprobaron y cuántos perdieron el nivel?","Por programa, nivel y profesor","medal")]),
+   ("Cursos y profesores",[
+      ("¿Qué cursos están por abrir o sin profesor?","Con cupo, fecha de inicio y aula","book"),
+      ("¿Qué cursos terminaron sin calificar?","Bloquean certificados y rematrícula","cal"),
+      ("¿Cuántas horas dictó cada profesor?","Sesiones confirmadas y payment sheet del mes","grad"),
+      ("¿Qué aulas y horarios están disponibles?","Ocupación por sede y franja","home")]),
+   ("Ventas y facturación",[
+      ("¿Qué facturamos y cobramos este mes?","Facturas, pagos y notas de crédito por sede","doc"),
+      ("¿Quiénes nos deben dinero?","Facturas con saldo, días de atraso y asesor","coin"),
+      ("¿Qué facturas faltan por autorizar o enviar?","Estado SRI y comprobantes sin enviar","check"),
+      ("¿Cómo van las ventas de cada asesor?","Niveles vendidos, meta y comisión","chart"),
+      ("¿Este mes vs el anterior?","Ventas, matrículas y cobros comparados","trend"),
+      ("Facturas y XML del SRI de un período","Para contabilidad: lista y archivos descargables","swap")]),
+   ("Inventario",[
+      ("¿Qué libros faltan en stock?","Por sede, con pedidos en camino","box"),
+      ("¿Qué compramos a cada proveedor?","Ingresos, egresos y notas de crédito por proveedor","swap"),
+      ("¿Qué códigos de activación están sin asignar?","Comprados vs entregados","lock")]),
+   ("Otra pregunta",[("Escríbela con tus palabras","El asistente arma el reporte y lo puedes guardar","chat")])]
+def picker_areas(areas, on=(0,0)):
+    out=""
+    for gi,(area,items) in enumerate(areas):
+        cards="".join(f'<button type="button" class="pick{" on" if (gi,i)==on else ""}" role="radio" aria-checked="{"true" if (gi,i)==on else "false"}">{ico(ic,"pick-ico")}<b>{t}</b><small>{d}</small></button>' for i,(t,d,ic) in enumerate(items))
+        out+=f'<div class="pick-area"><h4>{area}</h4><div class="picker">{cards}</div></div>'
+    return f'<div class="picker-areas" role="radiogroup">{out}</div>'
+def picker(items, on=0):
+    out="".join(f'<button type="button" class="pick{" on" if i==on else ""}" role="radio" aria-checked="{"true" if i==on else "false"}">{ico(ic,"pick-ico")}<b>{t}</b><small>{d}</small></button>' for i,(t,d,ic) in enumerate(items))
+    return f'<div class="picker" role="radiogroup">{out}</div>'
+def pills(items, on=0, multi=False):
+    out="".join(f'<button type="button" class="pill{" on" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else ""}" aria-pressed="{"true" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else "false"}">{t}</button>' for i,t in enumerate(items))
+    return f'<div class="pills"{" data-multi" if multi else ""}>{out}</div>'
+def step(n, title, inner, sub=""):
+    return f'<div class="step"><span class="step-n">{n}</span><div class="step-body"><h3>{title}{f"<small>{sub}</small>" if sub else ""}</h3>{inner}</div></div>'
 def rep_tabs(active):
     return tabs([("Dashboard por rol","Reportes.html"),("Reportes self-service","ConstructorReportes.html"),("Dashboard ejecutivo","DashboardEjecutivo.html")],active)
 rep=shell("Reportes y dashboards","Reportes",
@@ -1053,7 +1101,7 @@ rep=shell("Reportes y dashboards","Reportes",
  kpis([("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70 · 109%"),("Matrículas del mes",sv(52,28,15,9),"+8% vs sep"),("Cobrado / pendiente",sv("$31,200 / $12,450","$16,900 / $6,200","$9,100 / $4,100","$5,200 / $2,150"),"71% cobrado"),("Ocupación de cursos",sv("82%","86%","78%","75%"),sv("41 cursos activos","22 cursos","12 cursos","7 cursos"))]),
  two(card("Ventas por sede y modalidad (niveles, octubre)", vbars([("Quito",[24,16]),("Valle",[14,8]),("Ambato",[9,5])],["Presencial","Virtual"])),
      card("Pipeline comercial (Kommo → venta → matrícula)", funnel([("Leads Kommo",310),("Contactados",205),("Cotizaciones",120),("Ventas",76),("Matriculados",52)]))),
- card("Reportes self-service", filters(sel("Entidad",["Estudiantes","Ventas","Cursos","Profesores","Comisiones"],w="180px"),sel("Agrupar por",["Mes","Sede","Nivel","Asesor"],w="140px"),dates(),actions=btn("Generar",None,True)+btn("Exportar"))+note("Cada exportación queda registrada en el audit log. Los reportes con datos de menores se marcan como sensibles (LOPDP).")+row('<a href="ConstructorReportes.html" style="font-size:13px">Abrir el constructor completo</a>')),
+ card("¿Qué quieres saber hoy?", picker(PREG[:4],None)+row(btn("Armar mi reporte","ConstructorReportes.html",True),btn("Ver reportes guardados","ConstructorReportes.html")),extra='<small class="card-hint">Elige una pregunta y te la respondemos en palabras, gráfico y tabla</small>'),
  subtitle="Estefanía arma sus propios reportes sin pedirle nada a un desarrollador")
 page("Reportes.html","Reportes",rep,"Reportes y dashboards")
 
@@ -1270,13 +1318,30 @@ page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos
  }),
  subtitle="Entradas, salidas y devoluciones vinculadas a cursos y facturas"),"Movimientos de inventario")
 
-# 29 Constructor de reportes
-page("ConstructorReportes.html","Reportes self-service",shell("Constructor de reportes","Reportes",
+guardados=[("Estudiantes nuevos por mes","Cuántos entraron, por sede y asesor","Dirección Comercial · cada lunes","New Students Report"),
+           ("Quiénes deben dinero","Facturas con saldo y días de atraso","Secretaría · diario","Matrículas con saldos · Saldos negativos"),
+           ("Facturación del mes","Facturas, pagos, notas de crédito y XML por sede","Contabilidad · fin de mes","Today's Invoices · Download XML Files · List of Payments"),
+           ("Facturas sin autorizar o sin enviar","Estado SRI y comprobantes pendientes","Secretaría · diario","sin enviar"),
+           ("Ventas por asesor","Niveles vendidos vs meta y comisión","Dirección Comercial · fin de mes","Commissions Report · Sales Summary"),
+           ("Este mes vs el anterior","Ventas, matrículas y cobros comparados","Gerencia · fin de mes","Current Month vs Last Month"),
+           ("Cursos terminados sin calificar","Bloquean certificados y rematrícula","Coordinación · semanal","Finished courses with ungraded students"),
+           ("Horas y pago por profesor","Sesiones confirmadas y payment sheet","Coordinación · fin de mes","Teachers payment sheet"),
+           ("Libros que faltan","Stock por sede y pedidos en camino","Secretaría · semanal","Inventory Management"),
+           ("Compras por proveedor","Ingresos, egresos y notas de crédito","Administración · mensual","Product revenue query")]
+saved_cards="".join(f'<a class="saved" href="ConstructorReportes.html"><b>{t}</b><small>{d}</small><span class="saved-meta">{ico("user","nav-ico")} {u}</span><span class="saved-old">Antes en TeamDesk: {o}</span></a>' for t,d,u,o in guardados)
+page("ConstructorReportes.html","Reportes self-service",shell("Arma tu reporte","Reportes",
  rep_tabs("Reportes self-service"),
- two(card("Definir reporte", form(["Entidad (estudiantes / matrículas / cursos / profesores / comisiones / inventario)","Columnas"],1)+form(["Filtro sede","Filtro estado","Desde","Hasta"])+row(btn("Generar",None,True),btn("Guardar como reporte"))),
-     card("Reportes guardados (reemplazan las vistas de TeamDesk)", table(["Reporte","Vista TeamDesk que reemplaza","Entidad"],[["Nuevos estudiantes por mes","New Students Report · New Students Enrolled Monthly 1-3","Estudiantes"],["Alumnos activos / inactivos consolidados","Alumnos indexados activos / inactivos / x cruzar","Estudiantes"],["Matrículas con saldo","Matrículas con saldos · Saldos negativos","Matrículas"],["Matrículas sin pago en cursos activos","Matrículas sin pago en cursos activos","Matrículas"],["Mes actual vs mes anterior","Current Month vs Last Month · Now vs Then","Ventas"],["Inscripciones por año","Inscripciones Año Actual / Año Pasado","Matrículas"],["Aprobación vs pérdida de niveles","Aprobación VS Pérdida de niveles","Cursos"],["Comisiones por asesor","Commissions Report","Comisiones"],["Cursos terminados sin calificar","Finished courses with ungraded students","Cursos"],["Disponibilidad de cursos","Disponibilidad de Cursos · Open courses grouped by schedule","Cursos"],["Egresos de productos por proveedor","Reporte de egresos de productos · Product revenue query","Inventario"]]))),
- card("Resultado", table(["Mes","Quito","Valle","Ambato","Total"],[["Ago","32","18","11","61"],["Sep","40","22","14","76"],["Oct","28","15","9","52"]])+row(btn("Exportar Excel"),btn("Exportar PDF"))),
- subtitle="El reporte que hoy hay que pedirle al desarrollador, en minutos"),"Constructor de reportes")
+ card("", step(1,"¿Qué quieres saber?",picker_areas(PREG_AREAS,(0,0)),"Elige una pregunta; no necesitas saber nombres de tablas ni columnas")
+  +step(2,"¿De cuándo y de dónde?",'<div class="pill-row"><span>Período</span>'+pills(["Este mes","Mes pasado","Últimos 3 meses","Este año","Elegir fechas…"],0)+'</div><div class="pill-row"><span>Sede</span>'+pills(["Todas","Quito","Valle","Ambato"],0)+'</div>')
+  +step(3,"¿Cómo lo quieres ver?",'<div class="pill-row"><span>Vista</span>'+pills(["Por mes","Por sede","Por asesor","Lista de estudiantes"],0)+'</div><div class="pill-row"><span>Agregar</span>'+pills(["Teléfono de contacto","Asesor","Programa y nivel","Saldo"],[1],multi=True)+'</div>',"Puedes cambiarlo después sin volver a empezar")
+  +row(btn("Ver resultado",None,True),btn("Guardar como reporte"))),
+ card("Resultado · Estudiantes nuevos · este mes · todas las sedes",
+   '<p class="plain">Este mes entraron <b>52 estudiantes nuevos</b>: 28 en Quito, 15 en Valle y 9 en Ambato. Es <b>8% más</b> que el mes pasado. Carla M. trajo 21, Diego R. 17 y Sofía L. 14.</p>'
+   +two(vbars([("Ago",[32,18,11]),("Sep",[40,22,14]),("Oct",[28,15,9])],["Quito","Valle","Ambato"],h=160),
+        table(["Mes","Quito","Valle","Ambato","Total"],[["Agosto","32","18","11","61"],["Septiembre","40","22","14","76"],["Octubre (en curso)","28","15","9","52"]]))
+   +row(btn("Exportar Excel"),btn("Exportar PDF"),btn("Enviar por correo"),btn("Ver la lista de estudiantes","Estudiantes.html"))),
+ card("Reportes guardados", '<div class="saved-grid">'+saved_cards+'</div>',extra=btn("Nuevo reporte","ConstructorReportes.html")),
+ subtitle="Pregunta en tus palabras, elige período y sede, y listo"),"Arma tu reporte")
 
 # 30 Dashboard ejecutivo
 page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Dashboard ejecutivo",
@@ -1529,7 +1594,12 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .course-grade{font-size:16px;font-weight:600}.course-grade small{color:var(--mute);font-weight:400;font-size:12px}
 .cert{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:12.5px}.cert .badge{padding:3px 10px}
 /* asistente flotante */
-.chipq-main{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important;display:inline-flex;align-items:center;gap:6px}.chipq-main .nav-ico,.chipq-main .nav-ico svg{width:14px;height:14px}.ai-fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;box-shadow:0 10px 30px rgba(29,63,143,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40}
+.chipq-main{background:var(--navy)!important;color:#fff!important;border-color:var(--navy)!important;display:inline-flex;align-items:center;gap:6px}.chipq-main .nav-ico,.chipq-main .nav-ico svg{width:14px;height:14px}.picker-areas{display:flex;flex-direction:column;gap:14px}.pick-area h4{margin:0 0 8px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.pick{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font:inherit;cursor:pointer;color:var(--ink);min-height:112px}.pick b{font-size:14px;line-height:1.3}.pick small{font-size:12px;color:var(--mute);line-height:1.4}.pick:hover{border-color:var(--sky)}.pick.on{border-color:var(--navy);background:var(--tint-navy);box-shadow:inset 0 0 0 1px var(--navy)}.pick-ico{width:22px;height:22px;color:var(--navy)}.pick-ico svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pills{display:flex;flex-wrap:wrap;gap:8px}.pill{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}.pill:hover{border-color:var(--sky)}.pill.on{background:var(--navy);border-color:var(--navy);color:#fff}.pill-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px}.pill-row>span{font-size:13px;color:var(--mute);min-width:64px}
+.step{display:flex;gap:14px;padding:18px 0;border-top:1px solid var(--line)}.step:first-child{border-top:0;padding-top:0}.step-n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-size:14px}.step-body{flex:1;min-width:0}.step-body h3{margin:0 0 12px;font-size:16px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.step-body h3 small{font-size:12.5px;color:var(--mute);font-weight:400}
+.plain{margin:0;font-size:15px;line-height:1.6;background:var(--tint-yellow);border-radius:12px;padding:14px 16px}.card-hint{font-size:12.5px;color:var(--mute);margin-left:auto}
+.saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.saved{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:14px;border:1px solid var(--line);text-decoration:none;color:var(--ink);background:#fff}.saved:hover{border-color:var(--navy);box-shadow:var(--sh)}.saved b{font-size:14px}.saved small{font-size:12.5px;color:var(--mute)}.saved-meta{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--navy);margin-top:6px}.saved-meta .nav-ico,.saved-meta .nav-ico svg{width:14px;height:14px}.saved-old{font-size:11px;color:var(--mute)}
+.ai-fab{position:fixed;right:28px;bottom:28px;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;box-shadow:0 10px 30px rgba(29,63,143,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40}
 .ai-fab .nav-ico,.ai-fab .nav-ico svg{width:24px;height:24px}.ai-fab:hover{background:var(--navy2)}.ai-fab.on{background:var(--ink)}
 .ai-fab-dot{position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--yellow);border:2px solid #fff}
 .ai-panel{position:fixed;right:28px;bottom:96px;width:380px;max-width:calc(100vw - 40px);max-height:min(620px,calc(100vh - 120px));background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(26,33,66,.25);display:flex;flex-direction:column;z-index:40;overflow:hidden;border:1px solid var(--line)}

@@ -42,6 +42,10 @@
   });
 })();
 (function(){
+  document.querySelectorAll('.picker-areas, .picker:not(.picker-areas .picker)').forEach(function(g){g.querySelectorAll('.pick').forEach(function(b){b.addEventListener('click',function(){g.querySelectorAll('.pick').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-checked','false');});b.classList.add('on');b.setAttribute('aria-checked','true');});});});
+  document.querySelectorAll('.pills').forEach(function(g){var multi=g.hasAttribute('data-multi');g.querySelectorAll('.pill').forEach(function(b){b.addEventListener('click',function(){if(!multi)g.querySelectorAll('.pill').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false');});var on=multi?!b.classList.contains('on'):true;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});});});
+})();
+(function(){
   document.querySelectorAll('.wf-row').forEach(function(r){
     var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
     r.setAttribute('data-href',a.getAttribute('href'));

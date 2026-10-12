@@ -50,7 +50,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 
 ## Reportes y dashboards (M8 + M10)
 27. **Reportes.html · Dashboard por rol**. KPIs (ventas por nivel real, matrículas, cobros, ocupación), gráficos por sede/modalidad y pipeline comercial, bloque de reportes self-service. → ConstructorReportes, DashboardEjecutivo.
-28. **ConstructorReportes.html**. Entidad, columnas, filtros, rango; reportes guardados (reemplazo del "New Students Report"); resultado y exportación.
+28. **ConstructorReportes.html · Arma tu reporte** (M8). Flujo guiado en 3 pasos para usuarios no técnicos: (1) ¿Qué quieres saber? (preguntas en lenguaje natural por área: estudiantes y matrículas, cursos y profesores, ventas y facturación incl. estado SRI y XML, inventario, otra pregunta al asistente), (2) período y sede, (3) vista y datos extra. Resultado en una frase + gráfico + tabla, con exportar Excel/PDF, enviar por correo (programable) y guardar. Reportes guardados como tarjetas con quién los usa y la vista TeamDesk que reemplazan. ← Reportes. → Estudiantes, Facturas.
 29. **DashboardEjecutivo.html** (M10). Ingresos YTD, estudiantes activos, ticket promedio, margen por sede; ingresos por mes/sede, mix programa/modalidad, funnel comercial, retención por nivel.
 
 ## Administración y gobierno (M1 + M11)
