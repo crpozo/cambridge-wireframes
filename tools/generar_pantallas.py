@@ -238,11 +238,11 @@ def page(fname, title, inner, lang_title):
       e.style.display=ok?e.dataset.wfD:'none';
     }});
     (function(){{var nav=document.getElementById('sidenav'),sb=nav&&nav.parentElement;if(!nav)return;
-      nav.querySelectorAll('details.nav-group').forEach(function(d){{var k='wf-nav-'+d.getAttribute('data-area');try{{if(localStorage.getItem(k)==='0'&&!d.hasAttribute('data-active'))d.open=false;}}catch(e){{}}
+      nav.querySelectorAll('details.nav-group').forEach(function(d){{var k='wf-nav-'+d.getAttribute('data-area');
         d.addEventListener('toggle',function(){{try{{localStorage.setItem(k,d.open?'1':'0');}}catch(e){{}}more();}});}});
       function more(){{var m=nav.scrollHeight-nav.clientHeight-nav.scrollTop>8;sb.classList.toggle('has-more',m);}}
       nav.addEventListener('scroll',more);window.addEventListener('resize',more);more();setTimeout(more,300);
-      var a=nav.querySelector('.nav-link.active');if(a&&a.scrollIntoView)a.scrollIntoView({{block:'nearest'}});
+      var a=nav.querySelector('.nav-link.active');if(a){{var r=a.getBoundingClientRect(),n=nav.getBoundingClientRect();if(r.bottom>n.bottom||r.top<n.top)nav.scrollTop=a.offsetTop-nav.clientHeight/2;}}
     }})();
     (function(){{var ub=document.getElementById('user-btn'),up=document.getElementById('user-pop');if(!ub)return;ub.addEventListener('click',function(e){{e.stopPropagation();var o=up.hidden;up.hidden=!o;ub.setAttribute('aria-expanded',o);}});up.addEventListener('click',function(e){{e.stopPropagation();}});document.addEventListener('click',function(e){{if(!up.hidden&&!up.contains(e.target))up.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')up.hidden=true;}});}})();
     (function(){{var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){{e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);}});document.addEventListener('click',function(e){{if(!np.hidden&&!np.contains(e.target))np.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')np.hidden=true;}});}})();
@@ -514,7 +514,7 @@ def shell(title, active, *parts, subtitle=""):
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
     back=parent[1] if parent and parent[0]!=title else "Home.html"
     return f'''<div class="app">
-<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav id="sidenav">{nav(active)}</nav><div class="sidebar-more" aria-hidden="true"></div></aside>
+<aside class="sidebar"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><nav id="sidenav">{nav(active)}</nav><script>(function(){{try{{document.querySelectorAll('#sidenav details.nav-group').forEach(function(d){{if(localStorage.getItem('wf-nav-'+d.getAttribute('data-area'))==='0'&&!d.hasAttribute('data-active'))d.removeAttribute('open');}});}}catch(e){{}}}})();</script><div class="sidebar-more" aria-hidden="true"></div></aside>
 <div class="shell-main">
 <header class="topbar">
   <div class="crumbs">{'' if active=="Inicio" else f'<a href="{back}" class="back" aria-label="Volver">‹</a>'}<div><h1>{title}</h1><div class="path">{path}</div></div></div>
