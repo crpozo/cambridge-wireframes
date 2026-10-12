@@ -36,12 +36,12 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 ## Flujo profesores (M4)
 18. **Profesores.html · Listado**. Contrato, tarifa, cursos activos, estado. Alta de profesor y acceso a payment sheet. → AltaProfesor, FichaProfesor, PaymentSheet.
 19. **AltaProfesor.html · Alta con aprobación**. Datos, contrato, tarifa, vigencia, archivo firmado. Queda "pendiente de aprobación" hasta que Dirección apruebe; recién entonces puede recibir cursos y pagos. → Aprobaciones.
-20. **FichaProfesor.html · Perfil del profesor**. KPIs (dictando ahora, horas de la semana vs. contrato, asistencia de sus cursos, pass), tabs: Agenda y carga (clases de hoy, carga semanal, cursos que dicta, asistente), Datos, Contrato y tarifa, Cursos (histórico con asistencia y pass), Sesiones, Historial de pagos. Acción Asignar a curso. → PaymentSheet, DetalleCurso.
+20. **FichaProfesor.html · Ficha del profesor** (M4). Perfil con foto, contacto, educación y certificaciones, tarifa y datos de pago (roles administrativos), indicadores (carga, asistencia, pass rate) y pestañas: Agenda y carga, Desempeño (gauges, evolución, comparación con la sede, reconocimientos/observaciones), Datos y educación, Contrato tarifa y pago, Cursos, Sesiones, Historial de pagos. → AltaProfesor, PaymentSheet, DetalleCurso.
 21. **PaymentSheet.html**. Mes, sede, estado (borrador/aprobado). Por profesor: sesiones, horas, tarifa, a pagar, factura del profesor, alerta de diferencia o contrato vencido. Aprobar pagos, exportar.
 
 ## Comisiones (M6)
 22. **Comisiones.html · Período**. Estado draft → revisión → aprobado; tabla por asesor (niveles, modalidad, meta, real, comisión); gráfico meta vs real; reglas activas. → DetalleComision, ReglasComision. Pestaña **Descuentos otorgados** (solo Admin, Gerencia, Dir. Comercial, Admin. de sucursal): cada venta con descuento, asesor, % y monto, motivo y estado de aprobación; KPIs y promedio por asesor.
-23. **DetalleComision.html · Detalle por asesor**. Cada venta con la regla que la generó, bonos, historial, exportar.
+23. **DetalleComision.html · Mi comisión** (M6). Cálculo paso a paso para el asesor: niveles vendidos y rango, % por modalidad, bono por meta, retenido hasta cobro, total y fecha de pago; meta del mes y cuánto ganaría con una venta más; ventas del mes con su comisión; historial y preguntas frecuentes. ← Comisiones, Inicio (asesor).
 24. **ReglasComision.html**. Tabla de reglas (rangos, modalidad, bono meta, vigencia), nueva regla, simulador contra ventas pasadas. Cambios al audit log.
 
 ## Inventario (M7)
@@ -82,3 +82,4 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 
 45. **Insights.html · Insights de IA** (M9/M8). Tablero con todas las observaciones del asistente por área y prioridad: KPIs, distribución por área, evolución semanal y lista de insights con acción directa, marcar como atendido o descartar. En todas las pantallas hay además un asistente flotante contextual (sabe en qué pantalla estás y sugiere preguntas).
 46. **PortalEstudiante.html · Portal del estudiante** (propuesta, fuera del alcance de los 11 módulos). Vista de solo lectura para el estudiante: curso actual y próxima clase, avance del nivel, asistencia, puntaje y certificados descargables, paquete de niveles y facturas, datos personales con solicitud de cambio. ← Main ("Soy estudiante"), Ficha360 ("Ver como estudiante"). → Main.
+47. **DetalleProducto.html · Detalle de producto o servicio** (M7/M5). Equivale al registro Product/Service de TeamDesk: tipo, categoría, ISBN, precio e IVA, costo del último ingreso, stock por sede con mínimos y pedido en camino, parámetros de matrícula (programa, nivel, módulos, modalidades), códigos de activación comprados, historial de precios y movimientos. ← Configuración → Productos y servicios, Inventario. → NuevoPedido, Movimientos.
