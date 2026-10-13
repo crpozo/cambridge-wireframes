@@ -4,7 +4,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 
 ## Antes de tocar nada, lee
 - `docs/PROYECTO.md`: qué es el proyecto, el cliente, los dolores, los 11 módulos del contrato, fases y plazos.
-- `docs/PANTALLAS.md`: las 47 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
+- `docs/PANTALLAS.md`: las 48 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
 - `docs/DECISIONES.md`: decisiones y supuestos tomados en los wireframes, y el **mapeo TeamDesk → Plataforma** (tablas, vistas y campos del sistema actual y a qué pantalla van). Al modelar una pantalla, respeta ese mapeo y los identificadores legados (código de curso 0001-AAAA-NNNN, matrícula 001-AAAANNNNN).
 - `docs/fuentes/`: propuesta comercial, análisis técnico-comercial y contrato (PDF). Fuente de verdad del alcance.
 
@@ -43,7 +43,7 @@ docs/                   documentación de contexto
 - Accesibilidad mínima aunque sea wireframe: `<button>`, `<a href>`, `<input>` con `<label>`.
 - Datos de ejemplo siempre ficticios: nunca copiar nombres, cédulas, teléfonos ni correos reales de capturas de TeamDesk u otros sistemas del cliente.
 - No inventar funcionalidades fuera del contrato (Cláusula Tercera). Si algo no está en los 11 módulos, va como "fuera de alcance" o se pregunta.
-- `PortalEstudiante.html` es una **propuesta fuera del alcance contractual** (vista del estudiante: curso actual, asistencia, notas y certificados, pagos, datos); lleva la etiqueta "Propuesta · fuera del alcance del contrato actual" en su cabecera, tiene su propia shell (`.portal`, sin menú interno) y se llega desde el login ("Soy estudiante") y desde la Ficha 360° ("Ver como estudiante").
+- `PortalEstudiante.html` es una **propuesta fuera del alcance contractual** (vista del estudiante: curso actual, asistencia, notas y certificados, pagos, datos); lleva la etiqueta "Propuesta · fuera del alcance del contrato actual" en su cabecera, tiene su propia shell (`.portal`, sin menú interno) y se llega desde `LoginEstudiante.html` (usuario = correo o cédula + contraseña; enlazado desde el login principal con "Soy estudiante") y desde la Ficha 360° ("Ver como estudiante"). "Cerrar sesión" del portal vuelve a ese login.
 
 ## Verificación rápida
 ```

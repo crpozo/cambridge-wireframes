@@ -167,7 +167,7 @@ AI_CTX={
  "Configuracion.html":[("¿Qué aulas están libres el sábado en la mañana?","En Valle: C-2 (9 estudiantes) y C-7 (5). En Quito, Q-1 está ocupada al 60%. La capacidad se calcula con la norma SETEC.")],
  "Insights.html":[("¿Qué insight es el más urgente?","El descuento del 42% pendiente desde ayer bloquea una matrícula de $980. Después, los 14 estudiantes de A1 Sábados sin calificar: no pueden pasar a A2 y hay 3 cupos esperándolos.")],
 }
-NO_FAB={"Main.html","RecuperarContrasena.html","PortalEstudiante.html"}
+NO_FAB={"Main.html","RecuperarContrasena.html","LoginEstudiante.html","PortalEstudiante.html"}
 def analizar_pantalla(title, inner):
     """Análisis automático de la pantalla a partir de lo que se ve: KPIs, alertas (badges rojos/amarillos), tablas y acciones."""
     import re as _r, html as _h
@@ -803,15 +803,34 @@ login=f'''<div class="auth">
   <input id="pass" type="password" placeholder="••••••••" class="ctl">
   {btn("Ingresar","Home.html",True)}
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
-  <a href="PortalEstudiante.html" class="btn" style="justify-content:center">Soy estudiante · ver mi portal</a>
+  <a href="LoginEstudiante.html" class="btn" style="justify-content:center">Soy estudiante · ingresar al portal</a>
   <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">2FA opcional · el rol define qué módulos y sedes se ven al entrar</p>
 </form>
 </div>'''
 page("Main.html","Login",login,"Login")
+# 1a Login del estudiante (portal, propuesta fuera de alcance)
+login_est=f'''<div class="auth">
+<form>
+  {logo()}
+  <h1 style="margin:0;font-size:22px">Portal del estudiante</h1>
+  <p style="margin:0;font-size:13px;color:{MUTE}">Ingresa con tu correo o número de cédula y la contraseña que te envió Secretaría</p>
+  <label for="est-user">Correo o cédula</label>
+  <input id="est-user" type="text" placeholder="maria.andrade@ejemplo.com o 1712345678" class="ctl" autocomplete="username">
+  <label for="est-pass">Contraseña</label>
+  <input id="est-pass" type="password" placeholder="••••••••" class="ctl" autocomplete="current-password">
+  <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input type="checkbox" checked> Recordarme en este dispositivo</label>
+  {btn("Ingresar al portal","PortalEstudiante.html",True)}
+  <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
+  <a href="Main.html" style="font-size:13px;text-align:center;color:{MUTE}">Soy parte del equipo de Cambridge</a>
+  <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">Propuesta · fuera del alcance del contrato actual. Primer ingreso con la contraseña temporal del correo de bienvenida; se pide cambiarla.</p>
+</form>
+</div>'''
+page("LoginEstudiante.html","Login estudiante",login_est,"Ingreso al portal del estudiante")
+
 # 1b Portal del estudiante (propuesta fuera del alcance contractual)
 portal=f'''<div class="portal">
 <header class="portal-top"><a href="PortalEstudiante.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="portal-title"><b>Portal del estudiante</b><small>Propuesta · fuera del alcance del contrato actual</small></div>
- <div class="portal-user">{avatar("MA","sm")}<span>María Andrade<small>EST-00412 · Quito</small></span><a href="Main.html" class="btn">Cerrar sesión</a></div></header>
+ <div class="portal-user">{avatar("MA","sm")}<span>María Andrade<small>EST-00412 · Quito</small></span><a href="LoginEstudiante.html" class="btn">Cerrar sesión</a></div></header>
 <main class="portal-main">
  {hero([("Curso actual",'English for Adults B1 Virtual'),("Horario","Lu-Ma-Mi-Ju 19:00–21:00 · Zoom 2"),("Profesor","P. Gómez"),("Módulo","7 de 16 · nivel B1"),("Próxima clase","Hoy 19:00"),("Asesor","Carla M. · 099 000 0010")],
    btn("Unirse a la clase",None,True)+btn("Escribir a mi asesor"),
@@ -1550,7 +1569,7 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
  subtitle="Las reglas de negocio viven en configuración, no en código"),"Nueva regla de aprobación")
 
 rows=[
- ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("PortalEstudiante.html","Portal del estudiante (propuesta fuera de alcance)"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
+ ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("LoginEstudiante.html","Login del estudiante (propuesta fuera de alcance)"),("PortalEstudiante.html","Portal del estudiante (propuesta fuera de alcance)"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
  ("Académico · Coordinación, profesores, secretaría",[("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta con aprobación"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
  ("Comercial · Asesores, Dirección Comercial, secretaría",[("NuevaVenta.html","Nueva matrícula (venta por niveles)"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
  ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
