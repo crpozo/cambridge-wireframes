@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificar certificado · Wireframes Plataforma Cambridge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="auth">
+<form>
+  <div class="brand brand-dark"><img src="assets/logo.webp" alt="Cambridge School of Languages" style="width:240px"></div>
+  <h1 style="margin:0;font-size:22px">Verificar un certificado</h1>
+  <label for="cod">Código de verificación</label>
+  <input id="cod" type="text" placeholder="CSL-B1-2026-7K2Q" class="ctl">
+  <button type="button" class="btn btn-primary" data-action="Se busca el código: si existe, se muestran el titular, el nivel, el programa y la fecha de emisión; si no, aparece 'Certificado no encontrado'.">Verificar</button>
+  <div class="card"><div class="kv"><span><span class="k">Resultado</span> <b><span class="badge badge-ok">Certificado válido</span></b></span><span><span class="k">Titular</span> <b>María Andrade</b></span><span><span class="k">Nivel</span> <b>A2 · módulos 3–6</b></span><span><span class="k">Programa</span> <b>English for Adults (ESL)</b></span><span><span class="k">Emitido</span> <b>30 jun 2026 · Quito</b></span></div></div>
+  <a href="Main.html" style="font-size:13px;text-align:center">Volver al ingreso</a>
+</form>
+</div>
+
+<dialog id="wf-dialog">
+  <h2 id="wf-dialog-title" style="margin:0 0 8px;font-size:18px"></h2>
+  <p id="wf-dialog-text" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#5B6B8A"></p>
+  <div style="display:flex;gap:12px;justify-content:flex-end"><button type="button" id="wf-cancel" class="btn">Cancelar</button><button type="button" id="wf-ok" class="btn btn-primary">Confirmar</button></div>
+</dialog>
+<div id="wf-toast" role="status"></div>
+<script>
+(function(){
+  var dlg=document.getElementById('wf-dialog'),title=document.getElementById('wf-dialog-title'),text=document.getElementById('wf-dialog-text'),toast=document.getElementById('wf-toast'),cur=null;
+  document.querySelectorAll('[data-action]').forEach(function(b){
+    b.addEventListener('click',function(){cur=b;title.textContent=b.textContent.trim();text.textContent=b.dataset.action;dlg.showModal();});
+  });
+  document.getElementById('wf-cancel').addEventListener('click',function(){dlg.close();});
+  document.getElementById('wf-ok').addEventListener('click',function(){
+    dlg.close();toast.textContent='✓ '+cur.textContent.trim()+' · hecho';toast.style.display='block';
+    setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
+  });
+})();
+(function(){
+  document.querySelectorAll('.picker-areas, .picker:not(.picker-areas .picker)').forEach(function(g){g.querySelectorAll('.pick').forEach(function(b){b.addEventListener('click',function(){g.querySelectorAll('.pick').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-checked','false');});b.classList.add('on');b.setAttribute('aria-checked','true');});});});
+  document.querySelectorAll('.pills').forEach(function(g){var multi=g.hasAttribute('data-multi');g.querySelectorAll('.pill').forEach(function(b){b.addEventListener('click',function(){if(!multi)g.querySelectorAll('.pill').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false');});var on=multi?!b.classList.contains('on'):true;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});});});
+})();
+(function(){
+  document.querySelectorAll('.wf-row').forEach(function(r){
+    var last=r.lastElementChild; var a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;
+    r.setAttribute('data-href',a.getAttribute('href'));
+    [].forEach.call(r.children,function(c){c.addEventListener('click',function(ev){ if(ev.target.closest('a,button,select,input,label')) return; location.href=a.getAttribute('href'); });});
+  });
+})();
+(function(){
+  var sel=document.getElementById('sede');
+  function refresh(){
+    var v=sel?sel.value:'Todas';
+    document.querySelectorAll('[data-sv]').forEach(function(e){var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];});
+    document.querySelectorAll('.wf-table').forEach(function(t){
+      var cols=JSON.parse(t.getAttribute('data-cols'));
+      var host=t.closest('.tbl-wrap')||t; var f=host.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')&&!f.classList.contains('tbl-wrap')) f=f.previousElementSibling;
+      var ctrls=(f&&f.classList.contains('wf-filters'))?[].slice.call(f.querySelectorAll('[data-fcol]')):[];
+      var shown=0;
+      t.querySelectorAll('.wf-row').forEach(function(r){
+        var rs=r.getAttribute('data-sede'); var ok=(!rs||v==='Todas'||rs==='Todas'||rs===v);
+        var cells=[].map.call(r.children,function(c){return c.textContent.trim().toLowerCase();});
+        ctrls.forEach(function(c){ if(!ok) return; var q=c.value.trim().toLowerCase(); if(!q||/^tod[oa]s$/.test(q)) return;
+          var col=c.getAttribute('data-fcol');
+          if(col==='*'){ ok=cells.some(function(x){return x.indexOf(q)>=0;}); }
+          else { var i=cols.indexOf(col); if(i>=0) ok=cells[i].indexOf(q)>=0; } });
+        r.style.display=ok?'contents':'none'; if(ok) shown++;
+      });
+      var e=t.querySelector('.wf-empty'); if(e) e.style.display=shown?'none':'block';
+      var pg=host.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}
+    });
+  }
+  if(sel){
+    var saved=null; try{saved=localStorage.getItem('wf-sede');}catch(e){}
+    if(saved&&[].some.call(sel.options,function(o){return o.value===saved;})) sel.value=saved;
+    sel.addEventListener('change',function(){try{localStorage.setItem('wf-sede',sel.value);}catch(e){}refresh();});
+  }
+  document.querySelectorAll('[data-fcol]').forEach(function(c){c.addEventListener('input',refresh);c.addEventListener('change',refresh);});
+  try{var q=new URLSearchParams(location.search).get('q');var sb=document.querySelector('input[data-fcol="*"]');if(q&&sb){sb.value=q;}}catch(e){}
+  refresh();
+})();
+(function(){
+  var rs=document.getElementById('rol'); if(!rs) return;
+  function apply(){
+    var r=rs.value, opt=rs.options[rs.selectedIndex];
+    var u=document.getElementById('rol-user'); if(u) u.innerHTML=opt.getAttribute('data-user')+'<small>'+opt.textContent+'</small>';
+    var av=document.querySelector('.user .avatar'); if(av) av.textContent=opt.getAttribute('data-user').replace(/^(Dir\.|Admin\.|Coord\.)\s*/,'').charAt(0).toUpperCase();
+    document.querySelectorAll('[data-roles]').forEach(function(e){
+      var ok=e.getAttribute('data-roles').split(',').indexOf(r)>=0;
+      if(e.hasAttribute('data-panel')){ if(!ok){e.dataset.wfHidden='1';e.style.display='none';} else {delete e.dataset.wfHidden;} return; }
+      if(e.dataset.wfD===undefined) e.dataset.wfD=e.style.display||'';
+      e.style.display=ok?e.dataset.wfD:'none';
+    });
+    (function(){var nav=document.getElementById('sidenav'),sb=nav&&nav.parentElement;if(!nav)return;
+      nav.querySelectorAll('details.nav-group').forEach(function(d){var k='wf-nav-'+d.getAttribute('data-area');
+        d.addEventListener('toggle',function(){try{localStorage.setItem(k,d.open?'1':'0');}catch(e){}more();});});
+      function more(){var m=nav.scrollHeight-nav.clientHeight-nav.scrollTop>8;sb.classList.toggle('has-more',m);}
+      nav.addEventListener('scroll',more);window.addEventListener('resize',more);more();setTimeout(more,300);
+      var a=nav.querySelector('.nav-link.active');if(a){var r=a.getBoundingClientRect(),n=nav.getBoundingClientRect();if(r.bottom>n.bottom||r.top<n.top)nav.scrollTop=a.offsetTop-nav.clientHeight/2;}
+    })();
+    (function(){var ub=document.getElementById('user-btn'),up=document.getElementById('user-pop');if(!ub)return;ub.addEventListener('click',function(e){e.stopPropagation();var o=up.hidden;up.hidden=!o;ub.setAttribute('aria-expanded',o);});up.addEventListener('click',function(e){e.stopPropagation();});document.addEventListener('click',function(e){if(!up.hidden&&!up.contains(e.target))up.hidden=true;});document.addEventListener('keydown',function(e){if(e.key==='Escape')up.hidden=true;});})();
+    (function(){var nb=document.getElementById('notif-btn'),np=document.getElementById('notif-pop');if(!nb)return;nb.addEventListener('click',function(e){e.stopPropagation();var o=np.hidden;np.hidden=!o;nb.setAttribute('aria-expanded',o);});document.addEventListener('click',function(e){if(!np.hidden&&!np.contains(e.target))np.hidden=true;});document.addEventListener('keydown',function(e){if(e.key==='Escape')np.hidden=true;});})();
+document.querySelectorAll('.btn-more').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('aria-controls'));var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!open);t.hidden=open;b.textContent=(open?'Más filtros':'Menos filtros')+b.textContent.slice(b.textContent.indexOf(' ('));});});
+document.querySelectorAll('.tabs').forEach(function(bar){
+      var btns=[].slice.call(bar.querySelectorAll('[data-tab]'));
+      var act=btns.filter(function(b){return b.getAttribute('aria-selected')==='true'&&b.style.display!=='none';})[0];
+      if(!act){ var first=btns.filter(function(b){return b.style.display!=='none';})[0]; if(first) first.click(); }
+    });
+  }
+  var saved=null; try{saved=localStorage.getItem('wf-rol');}catch(e){}
+  if(saved&&[].some.call(rs.options,function(o){return o.value===saved;})) rs.value=saved;
+  rs.addEventListener('change',function(){try{localStorage.setItem('wf-rol',rs.value);}catch(e){}apply();});
+  window.wfApplyRole=apply;
+})();
+document.querySelectorAll('.tabs').forEach(function(bar){
+  var btns=bar.querySelectorAll('[data-tab]');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on);x.classList.toggle('on',on);});
+      var el=bar.nextElementSibling;
+      while(el&&el.hasAttribute('data-panel')){el.style.display=(el.getAttribute('data-panel')===b.dataset.tab&&!el.dataset.wfHidden)?'flex':'none';el=el.nextElementSibling;}
+    });
+  });
+});
+(function(){
+  var fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-panel'),log=document.getElementById('ai-log'),form=document.getElementById('ai-form'),inp=document.getElementById('ai-input');
+  if(!fab) return;
+  function open(){panel.hidden=false;fab.classList.add('on');inp.focus();}
+  function close(){panel.hidden=true;fab.classList.remove('on');}
+  fab.addEventListener('click',function(){panel.hidden?open():close();});
+  document.getElementById('ai-close').addEventListener('click',close);
+  function add(cls,html){var d=document.createElement('div');d.className='msg '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+  function answer(q,a){add('me',q);var t=document.createElement('div');t.className='msg bot typing';t.textContent='…';log.appendChild(t);log.scrollTop=log.scrollHeight;
+    setTimeout(function(){t.remove();add('bot',a||('Sobre <b>'+document.getElementById('ai-ctx').textContent+'</b>: en el producto final respondo con datos reales de la base unificada, filtrados por tu rol y sede. En este mockup puedo responder las preguntas sugeridas.'));},600);}
+  document.querySelectorAll('.chipq').forEach(function(c){c.addEventListener('click',function(){answer(c.textContent.trim(),c.getAttribute('data-a'));});});
+  form.addEventListener('submit',function(e){e.preventDefault();var q=inp.value.trim();if(!q)return;inp.value='';var m=[].find.call(document.querySelectorAll('.chipq'),function(c){return q.toLowerCase().split(' ').filter(function(w){return w.length>4}).some(function(w){return c.textContent.toLowerCase().indexOf(w)>=0;});});answer(q,m?m.getAttribute('data-a'):null);});
+  document.querySelectorAll('.btn-ask').forEach(function(b){b.addEventListener('click',function(){open();inp.value=b.getAttribute('data-ask')||'';});});
+})();
+if(window.wfApplyRole) window.wfApplyRole();
+</script>
+</body>
+</html>

@@ -10,10 +10,10 @@ Fecha de corte: 2026-10-19. Repo: `crpozo/cambridge-wireframes`, rama `main`. Pu
 
 Mockup navegable (HTML/CSS puro, sin build) de la **Plataforma Cambridge**: el sistema administrativo a medida que Orkesta construye para Cambridge School of Languages (sedes Quito, Valle de los Chillos, Ambato). Reemplaza TeamDesk. Sirve para validar flujo, contenido y look & feel con la cliente (Estefanía) antes de desarrollar.
 
-- 50 pantallas + login + índice + mapa (52 archivos HTML).
+- 52 pantallas + login + índice + mapa (54 archivos HTML).
 - Todo se genera desde `tools/generar_pantallas.py` (fuente de verdad). `style.css` también sale del generador.
 - GitHub Pages desde `main` / root, con workflow `.github/workflows/pages.yml` (enablement automático).
-- Documentación de contexto en `docs/`: `PROYECTO.md` (cliente, dolores, 11 módulos del contrato), `PANTALLAS.md` (las 50 pantallas y sus flujos), `DECISIONES.md` (decisiones y mapeo TeamDesk → Plataforma), `fuentes/` (propuesta, análisis y contrato en PDF).
+- Documentación de contexto en `docs/`: `PROYECTO.md` (cliente, dolores, 11 módulos del contrato), `PANTALLAS.md` (las 52 pantallas y sus flujos), `DECISIONES.md` (decisiones y mapeo TeamDesk → Plataforma), `fuentes/` (propuesta, análisis y contrato en PDF).
 - Reglas de trabajo en `CLAUDE.md` (leerlo primero; es la guía operativa del generador).
 
 ## 2. Los 11 módulos del contrato (alcance)
@@ -104,3 +104,11 @@ Inventario: `Inventario`, `Movimientos`, `NuevoPedido`, `RegistrarMovimiento`, `
 Dirección: `Reportes`, `ConstructorReportes`, `DashboardEjecutivo`.
 Administración: `Usuarios`, `NuevoUsuario`, `Configuracion`, `NuevaSede`, `NuevoNivel`, `NuevaRegla`, `AuditLog`, `Integraciones`.
 Interno: `Mapa` (hub por URL), `index` (redirige a Main).
+
+## 8. Revisión contra TeamDesk (19 oct 2026, rama `revision-teamdesk`)
+- Se recorrió TeamDesk en vivo (solo lectura): 25 tablas, vistas, dashboards, botones de cada ficha y formularios de Enrollment e Invoice. Resultado en `revision-teamdesk-vs-mockup.md` (fuera del repo).
+- Matrícula rehecha como en TeamDesk: una por módulo, factura multi-módulo, cuotas, valores con descuento por concepto, canal de contacto, matrícula firmada, acciones de TeamDesk.
+- Caso María Andrade coherente en todas las pantallas (ver DECISIONES). Rematrícula ya no cobra módulos pagados.
+- Nuevas pantallas: CalificarCurso, ExamenesInternacionales (propuesta). Nuevas pestañas en Facturas: Cartera, Caja del día, Sin vincular. Portal: sección "Mi progreso general" con la ruta A1 → C1.
+- Un agente revisó el mockup por rol; quedan pendientes los de la lista en DECISIONES (revisión automática).
+- Para regenerar en Windows: `python -X utf8 tools/generar_pantallas.py`.
