@@ -71,6 +71,9 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 - Facturas suma las pestañas **Cartera** (cuotas vencidas y por vencer con días y seguimiento; reemplaza Portfolio), **Caja del día** (cobros por método, recibos, cierre de caja; reemplaza 1. Cash / List of Payments) y **Sin vincular** (facturas sin matrícula; reemplaza Unlinked invoices / LINK UP).
 - Otros agregados: walk-ins en Leads, correo masivo en Estudiantes y Profesores, profesores Standby y Anteriores, papelera en Audit log, multisucursal y tarifa especial en Nuevo curso, tipo de sesión / profesor sustituto / minutos de atraso en Sesión manual, calificar profesor en Detalle de curso, reportes guardados con el nombre de las vistas de TeamDesk, progreso general del programa en el Portal.
 
+- **VerificarCertificado.html** (público, desde el login): verificar un certificado por su código (reemplaza la validación de Issued Certificates de TeamDesk).
+- Flujos cerrados en la segunda pasada: ciclo de vida de la matrícula (congelar, reactivar, cambio de curso, retiro, transferencia de saldo) en Detalle de matrícula; lista de espera en Nueva matrícula y Detalle de curso; alta completa en Nuevo estudiante (identificación, facturación, examen de ubicación, consentimiento LOPDP, representante) con "Guardar y matricular"; firma digital de la matrícula; plantillas de correo en Configuración; en el Portal, rematrícula con pago en línea o comprobante, justificar ausencia, pedir reposición y cambiar contraseña.
+
 ## Pantallas de formulario y acción (agregadas para cerrar todos los flujos)
 34. **RecuperarContrasena.html** (M1). Envío de enlace temporal al correo. ← Main. → Main.
 35. **RegistrarSesion.html · Sesión manual** (M3). Curso, profesor con validación de contrato, fecha y horas, asistencia por estudiante; alerta si está fuera de horario. ← Sesiones, DetalleCurso, FichaProfesor. → Sesiones.
