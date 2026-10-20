@@ -4,7 +4,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 
 ## Antes de tocar nada, lee
 - `docs/PROYECTO.md`: qué es el proyecto, el cliente, los dolores, los 11 módulos del contrato, fases y plazos.
-- `docs/PANTALLAS.md`: las 50 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
+- `docs/PANTALLAS.md`: las 52 pantallas, qué muestra cada una, a qué módulo pertenece y cómo se enlazan (flujos).
 - `docs/DECISIONES.md`: decisiones y supuestos tomados en los wireframes, y el **mapeo TeamDesk → Plataforma** (tablas, vistas y campos del sistema actual y a qué pantalla van). Al modelar una pantalla, respeta ese mapeo y los identificadores legados (código de curso 0001-AAAA-NNNN, matrícula 001-AAAANNNNN).
 - `docs/fuentes/`: propuesta comercial, análisis técnico-comercial y contrato (PDF). Fuente de verdad del alcance.
 - `docs/CONTEXTO_SESION.md`: traspaso completo de la sesión de trabajo (cronología de pedidos, estado del repo, pendientes).

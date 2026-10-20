@@ -21,7 +21,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 8. **ImportExport.html**. Carga CSV/Excel con vista previa y detección de duplicados; exportación filtrada y auditada.
 
 ## Flujo comercial (M5 + M1 aprobaciones)
-9. **NuevaVenta.html · Nueva venta por niveles**. Wizard: Estudiante → Niveles → Descuento → Pago → Factura. Reemplaza la facturación por módulo; genera una factura consolidada. → SolicitudDescuento, Aprobaciones, Ficha360.
+9. **NuevaVenta.html · Nueva matrícula** (M5). Sigue el flujo del Enrollment de TeamDesk en 5 pasos numerados: (1) estudiante y origen (buscar o crear, tipo nuevo/antiguo, asesor, canal de contacto, ¿paga la empresa?); (2) programa, nivel y curso **por módulo** (una matrícula por módulo, solo cursos con cupo y sin choque); (3) valores y descuentos (derecho de matrícula, valor del curso y libros, cada uno con su %; motivo de lista cerrada; observaciones; matrícula firmada adjunta); (4) factura y pago (cliente CED/RUC/PAS, RUC especial, plan de pago 1 a 3 cuotas, pagos mixtos con comprobante, etiquetas de libros); (5) confirmación (matrículas creadas, factura multi-módulo al SRI, cuotas en cartera, libros, Teams, comisión pendiente). → SolicitudDescuento, DetalleMatricula.
 10. **SolicitudDescuento.html**. Porcentaje, monto resultante, motivo de lista cerrada, justificación. Regla ilustrativa: >10% requiere Director Comercial. → Aprobaciones.
 11. **Aprobaciones.html · Bandeja de aprobaciones** (M1). Tabs: descuentos, profesores, asignaciones. Aprobar/rechazar con trazabilidad y notificación al solicitante.
 12. **Facturas.html · Facturación**. KPIs (facturado hoy, cobrado, por cobrar a crédito, sin autorizar SRI); pestañas Facturas (filtros estado, SRI, asesor, crédito; enviar comprobantes pendientes, descargar XML), Calendario de crédito (vencimientos), Por estudiante (elegir un estudiante, ver sus facturas con saldo y descargarlas en ZIP o enviárselas por correo con el total adeudado) y Notas de crédito. → DetalleFactura, NuevaVenta, NotaCredito.
@@ -60,10 +60,16 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 33. **Integraciones.html** (M11). Estado de Kommo, Moodle y Dora; API keys, webhooks, documentación; log de sincronización.
 
 ## Flujos principales (para validar con el cliente)
-- **Venta**: Estudiantes → Ficha360 → NuevaVenta → (SolicitudDescuento → Aprobaciones) → DetalleFactura.
+- **Matrícula (como TeamDesk)**: Leads / Estudiantes → NuevaVenta (una matrícula por módulo, factura multi-módulo, plan de cuotas) → (SolicitudDescuento → Aprobaciones si > 10%) → DetalleMatricula → DetalleFactura → Facturas › Cartera → DetalleCurso → CalificarCurso → certificado → rematrícula al terminar lo comprado.
 - **Curso**: Cursos → NuevoCurso (valida profesor) → DetalleCurso → Sesiones.
 - **Profesor**: Profesores → AltaProfesor → Aprobaciones → FichaProfesor → PaymentSheet.
 - **Cierre de mes**: Sesiones → PaymentSheet; ventas → Comisiones → DetalleComision; todo → Reportes / DashboardEjecutivo.
+
+## Pantallas agregadas en la revisión contra TeamDesk (oct 2026)
+51. **CalificarCurso.html · Calificar curso** (M3). Cierre de módulo: notas por estudiante (participación 40%, quiz 30%, examen 30%, escala 0–10, aprueba con 7), bloqueo por asistencia < 75%, importar notas del Muro, cerrar módulo y emitir certificados con código de verificación. ← DetalleCurso. → DetalleCurso.
+52. **ExamenesInternacionales.html · Exámenes internacionales** (propuesta, fuera de los 11 módulos). Candidatos Cambridge/Oxford/TOEFL/Anglia, factura, estado (inscrito → esperando resultados → listo para retirar → entregado), puntaje y nivel. Reemplaza la tabla International Exams de TeamDesk.
+- Facturas suma las pestañas **Cartera** (cuotas vencidas y por vencer con días y seguimiento; reemplaza Portfolio), **Caja del día** (cobros por método, recibos, cierre de caja; reemplaza 1. Cash / List of Payments) y **Sin vincular** (facturas sin matrícula; reemplaza Unlinked invoices / LINK UP).
+- Otros agregados: walk-ins en Leads, correo masivo en Estudiantes y Profesores, profesores Standby y Anteriores, papelera en Audit log, multisucursal y tarifa especial en Nuevo curso, tipo de sesión / profesor sustituto / minutos de atraso en Sesión manual, calificar profesor en Detalle de curso, reportes guardados con el nombre de las vistas de TeamDesk, progreso general del programa en el Portal.
 
 ## Pantallas de formulario y acción (agregadas para cerrar todos los flujos)
 34. **RecuperarContrasena.html** (M1). Envío de enlace temporal al correo. ← Main. → Main.
@@ -76,7 +82,7 @@ Regla: ninguna acción queda muerta. Los botones de navegación llevan a su pant
 41. **NuevaSede.html** (M10). Alta de sede: aparece en selector global, filtros y visibilidad por rol. ← Configuración. → Configuración.
 42. **NuevoNivel.html** (M10). Programa, nivel, módulos, horas, precios con vigencia, libro asociado. ← Configuración. → Configuración.
 43. **NuevaRegla.html** (M1/M10). Regla de aprobación: entidad, condición, rol aprobador, notificación, vigencia. ← Configuración. → Configuración.
-44. **DetalleMatricula.html · Detalle de matrícula** (M5/M2). Equivalente al Enrollment de TeamDesk pero por paquete de niveles: estudiante, curso (código), horario, asesor, plan de pago; resumen (subtotal, descuento, total, pagado, saldo); cargos (tuition, niveles, libros); tabs Facturas y pagos, Códigos de libros, Asistencia, Certificados, Comisión. Acciones: cambio de curso, enviar enlace de clase, hoja de asistencia, anular (con aprobación). ← Ficha360, DetalleCurso, NuevaVenta.
+44. **DetalleMatricula.html · Detalle de matrícula** (M5/M2). Equivalente al Enrollment de TeamDesk: **una matrícula por módulo** (nivel = módulo N). Cabecera con estudiante, curso, programa, módulo, horario, asesor y plan de pago; acciones de TeamDesk (cambio de curso, enviar enlace de clase, hoja de asistencia, imprimir matrícula, comentario, reversar y anular). Resumen (subtotal, descuento, total, pagado, saldo, venta multi-módulo, canal, matrícula firmada) y valores con descuento por concepto. Pestañas: Matrículas de la venta, Facturas y pagos, Cartera (cuotas), Códigos de libros, Asistencia, Certificados, Comisión, Historial.
 
 `index.html` redirige al login; el hub es `Mapa.html`. Pantallas ocultas del hub (set `HIDDEN`): Facturas, DetalleFactura, RegistrarPago, NotaCredito.
 

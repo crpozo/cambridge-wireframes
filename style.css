@@ -50,6 +50,16 @@ a.btn:hover,.btn:hover{background:var(--tint-navy);border-color:var(--tint-navy)
 .kv{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;align-items:center}.kv .k{color:var(--mute)}
 .hero{gap:16px}.hero-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}.hero-tag{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.hero-code{font-weight:600;font-size:16px;color:var(--navy)}
 .hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}.hero-actions .btn{white-space:nowrap}
+.journey{display:flex;gap:6px;margin-bottom:14px}
+.journey-seg{display:flex;flex-direction:column;gap:3px;min-width:0}
+.journey-bar{height:10px;border-radius:999px;background:var(--fill);overflow:hidden;margin-bottom:4px}
+.journey-bar i{display:block;height:100%;background:var(--navy);border-radius:999px}
+.journey-seg.done .journey-bar i{background:var(--ok)}
+.journey-seg b{font-size:13px}
+.journey-seg small{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journey-seg.now b{color:var(--navy)}
+.journey-stats .kv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.journey-stats .kv{grid-template-columns:1fr 1fr}}
 .facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.fact{background:var(--fill);border-radius:12px;padding:10px 12px;min-width:0}.fact small{display:block;font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}.fact b{font-weight:500;font-size:14px;display:block;overflow-wrap:anywhere}.fact a{color:var(--navy)}
 .hero .prog{margin-top:2px}
 .badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:500;background:var(--fill);color:var(--ink);line-height:1.3;overflow-wrap:normal;word-break:normal;text-align:center}
