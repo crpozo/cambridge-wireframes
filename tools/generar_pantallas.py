@@ -155,6 +155,14 @@ ACTIONS={
  "Marcar Teacher of the Month":("Se marca al profesor del mes de la sede: recibe 5% adicional sobre su payment sheet y queda en su historial de desempeño. "+AUDIT,None),
  # activos fijos (propuesta)
  "Nueva solicitud de activo":("Se llena el formulario de solicitud (qué, para qué, sede, responsable, costo estimado). Pasa a aprobación de Gerencia; luego 2 o 3 cotizaciones, orden de compra, acta de entrega y registro en el inventario.",None),
+ # reclutamiento administrativo (propuesta)
+ "Nuevo postulante":("Se registra el postulante con su hoja de vida y la vacante; entra en 'Filtración y preselección' y Administración programa el pre-screen telefónico.",None),
+ "Publicar vacante administrativa":("Se genera el texto del Anexo 1 (puesto, sede, funciones, requisitos, perfil, qué ofrecemos y aviso de protección de datos) y se registra el presupuesto de publicación para aprobación de Gerencia.",None),
+ "Enviar aviso de no selección":("Se envía el correo de agradecimiento y aviso de no selección; el postulante queda como 'Descartado' y su expediente se conserva para futuras vacantes.",None),
+ "Enviar oferta laboral":("Se envía la propuesta laboral (cargo, horario, remuneración menos aporte IESS, beneficios de ley, fecha de ingreso y documentación requerida). El postulante tiene un plazo para aceptar. "+AUDIT,None),
+ "Solicitar exámenes":("Se envía al profesional externo la solicitud de evaluación psicológica y exámenes médicos preocupacionales con la hoja de vida y las funciones del cargo, bajo confidencialidad.",None),
+ "Enviar correo de inicio de labores":("Tras la firma del contrato se envía el correo con misión y visión, reglamentos, funciones departamentales, organigrama, consentimiento de datos y manual de funciones.",None),
+ "Comunicar ingreso al personal":("Se envía al personal el correo institucional con el nombre, cargo, funciones y datos de contacto del nuevo colaborador.",None),
  "Registrar traspaso":("Se registra el traspaso interno del activo entre sedes o responsables (acta C.T.I.): fecha de salida, fecha de ingreso, nueva ubicación y custodio. "+AUDIT,None),
 }
 
@@ -191,7 +199,7 @@ NAV=[
  ("Comercial",[("Leads","Leads.html",COMERCIAL),("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Empresas","Empresas.html","ADM,GER,DIR,SUC,ASE"),("Tienda en línea","Pedidos.html",COMERCIAL+",SEC"),("Tablero comercial","TableroComercial.html","ADM,GER,DIR,SUC,ASE,CON"),("Facturación","Facturas.html",COMERCIAL+",CON"),("Comisiones","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
  ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
- ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM")]),
+ ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM"),("Reclutamiento","ReclutamientoAdministrativo.html","ADM,GER,SUC")]),
 ]
 # alias: nombre antiguo de sección activa → ítem del menú
 NAV_ALIAS={"Inventario":"Stock por sede","Facturación":"Facturación"}
@@ -244,6 +252,7 @@ AI_CTX={
  "Inventario.html":[("¿Qué libros hay que pedir?","Tres productos con stock negativo: Empower B1+ (Valle −2), Super Minds 3 WB (Ambato −1) y Super Minds 3 SB (Ambato −2). El pedido sugerido a Books & Bits suma 16 libros."),("¿Cuántos códigos de activación quedan?","13 códigos comprados sin asignar: 9 en Valle y 4 en Quito. Uno de Empower A1 venció.")],
  "ContratacionProfesores.html":[("¿Qué candidatos están trabados?","Dos llevan más de 3 días en la misma etapa: Jorge Andrade espera el pay scale de Coord. Administrativa (3 días) y Paula Cevallos tiene 1 de 3 referencias (5 días). Esteban Ruiz no cumple el mínimo del MOCK (B1) y debería descartarse con retroalimentación."),("¿Quién está listo para crear el perfil?","María José Vinueza (Quito, Adults B2 Intensivo): contratación aprobada hoy y documentos completos. Al crear el perfil empieza su hoja de ruta de inducción con primer día el 3 nov.")],
  "DetalleCandidato.html":[("¿Qué le falta a Daniela para la aprobación?","El resultado del MOCK (mínimo B2), antecedentes penales y RUC. La demo es el 24 oct; con MOCK aprobado el pay scale sugerido es $6.50/h para Valle.")],
+ "ReclutamientoAdministrativo.html":[("¿Qué postulante necesita respuesta hoy?","Mónica Terán (asesora comercial, Ambato) tiene la oferta laboral enviada y responde hasta el 28 oct; Valentina Rojas tiene entrevista con Gerencia el 27 oct y le faltan antecedentes penales y una carta de recomendación."),("¿Qué vacantes siguen sin cubrir?","Cuatro: Secretaría administrativa-académica (Quito), Asistente contable (Valle), Asesora comercial (Ambato) y Recepción (Quito). Coordinación académica ya se cubrió e inicia el 3 nov.")],
  "PaymentSheet.html":[("¿Por qué no puedo aprobar la payment sheet?","Hay 3 alertas: L. Vega facturó $26 más que las horas registradas, R. Salas tiene contrato vencido con 8 h, y D. Paredes entregó factura sin sesiones. Resueltas esas tres, el total a pagar es $875.60 (P. Gómez $336, L. Vega $234, R. Salas $45.60 y M. Castro $260).")],
  "Comisiones.html":[("¿Qué descuentos dio cada asesor este mes?","Carla M. dio descuento en 12 ventas (promedio 9%), Sofía L. en 9 (8%) y Diego R. en 8 (6%). Total descontado: $1,860, el 5.6% de lo facturado. 3 ventas pasaron el límite del 10%: 1 aprobada, 1 pendiente (42% de Gabriela Núñez) y 1 rechazada."),("¿Cuánto gana cada asesor este mes?","Carla M. $420 (14 niveles, bono incluido), Sofía L. $330 (11) y Diego R. $180 (9, no llegó a la meta de 12). Solo se paga la comisión de ventas cobradas.")],
  "Aprobaciones.html":[("¿Qué pasa si apruebo el descuento del 42%?","La matrícula de Gabriela Núñez (A2) se cerraría en $261 en lugar de $450 y la comisión de Carla M. bajaría a $10. La regla permite hasta 10% sin aprobación; 42% queda en el audit log con tu justificación.")],
@@ -683,7 +692,7 @@ SVG={
 }
 def ico(name, cls="nav-ico"):
     return f'<span class="{cls}" aria-hidden="true"><svg viewBox="0 0 24 24">{SVG.get(name,"")}</svg></span>'
-ICON={"Contratación":"id","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
+ICON={"Contratación":"id","Reclutamiento":"users","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
 
 def btn(label, href=None, primary=False, action=None, next=None, kind=None, disabled_reason=None):
     if href is None and action is None:
@@ -2179,6 +2188,62 @@ page("DetalleCandidato.html","Detalle candidato",shell("Daniela Paredes · candi
      card("Documentos habilitantes", table(["Documento","Estado"],[["Hoja de vida",badge("Recibido","ok")],["Cédula",badge("Recibido","ok")],["Título universitario",badge("Recibido","ok")],["Antecedentes penales",badge("Pendiente","warn")],["RUC",badge("Pendiente","warn")],["Resultado del MOCK",badge("Pendiente","warn")],["Pay scale firmado",badge("Después de la aprobación","neutral")]],wide=0))),
  subtitle="Expediente del candidato: entrevista, referencias, clase demostrativa, MOCK, pay scale y documentos"),"Detalle de candidato")
 
+
+# ===== Reclutamiento de personal administrativo (proceso ISO 9001) · propuesta fuera del alcance =====
+VR='<a href="ReclutamientoAdministrativo.html">Ver</a>'
+ETAPAS_RECLUTAMIENTO=[
+ ("Vacante aprobada","Necesidad nueva o existente, aprobada por Gerencia General","Gerencia General · Administración","done"),
+ ("Perfil del cargo","Funciones, competencias, experiencia y modalidad según el manual de funciones","Administración · Área solicitante","done"),
+ ("Publicación de la vacante","LinkedIn, Indeed y sitio web, con presupuesto de publicación aprobado (Anexo 1)","Administración","done"),
+ ("Filtración y preselección","Revisión de hojas de vida y pre-screen telefónico de 10 minutos (Anexo 2)","Administración · Talento Humano","done"),
+ ("Entrevistas","Presenciales o virtuales: conocimientos, competencias, disponibilidad y encaje","Administración · Gerencia","now"),
+ ("Documentación","CV, cédula, papeleta de votación, certificados, cartas de recomendación, antecedentes penales (Anexo 3)","Administración",""),
+ ("Verificación de referencias","Referencias personales y laborales: cargo, período, conducta (Anexo 4)","Administración",""),
+ ("Evaluaciones y exámenes","Pruebas de habilidades, evaluación psicológica y exámenes médicos preocupacionales (Anexo 5)","Administración · Profesional externo",""),
+ ("Oferta laboral y aceptación","Correo de propuesta: cargo, horario, remuneración, beneficios de ley y fecha de ingreso (Anexo 6)","Administración",""),
+ ("Inducción","Misión y visión, reglamentos, organigrama, manual de funciones; entrega de equipos con acta","Administración · Área solicitante",""),
+ ("Firma del contrato","Contrato bajo relación de dependencia conforme a la legislación vigente","Gerencia General · Administración",""),
+ ("Comunicación institucional","Correo al personal con funciones y datos de contacto del nuevo colaborador","Administración",""),
+]
+postulantes_tbl=table(["Postulante","Sede","Vacante","Etapa","Último paso","Responsable","Hace","Acción"],[
+ [c2("Valentina Rojas","Lic. en Administración · 4 años"),"Quito","Secretaría administrativa-académica","Entrevistas",badge("Entrevista con Gerencia · 27 oct 10:00","navy"),"Administración","hoy",VR],
+ [c2("Kevin Suárez","Tecnólogo en contabilidad"),"Valle","Asistente contable","Evaluaciones y exámenes",badge("Evaluación psicológica solicitada","warn"),"Profesional externo","2 días",VR],
+ [c2("Mónica Terán","Lic. en Marketing · 2 años"),"Ambato","Asesora comercial","Oferta laboral y aceptación",badge("Oferta enviada · responde hasta 28 oct","warn"),"Administración","1 día",VR],
+ [c2("Pablo Cárdenas","Bachiller · atención al cliente"),"Quito","Recepción","Filtración y preselección",badge("Pre-screen pendiente","neutral"),"Talento Humano","4 días",VR],
+ [c2("Gabriela Ponce","MSc. en Educación · 6 años"),"Valle","Coordinación académica","Inducción",badge("Contrato firmado · inicia 3 nov","ok"),"Administración · Área solicitante","hoy",VR],
+ [c2("Diego Rivas","Lic. en Administración"),"Quito","Secretaría administrativa-académica","Verificación de referencias",badge("1 de 4 referencias verificadas","warn"),"Administración","3 días",VR],
+ [c2("Carla Moreno","Ing. en Sistemas"),"Ambato","Asistente de administración","Descartado",badge("No seleccionada · correo enviado","neutral"),"—","8 días",VR]],sede=1,hide=(1,),wide=0)
+docs_admin=table(["Documento","Obligatorio","Estado · Valentina Rojas"],[
+ ["Hoja de vida actualizada",badge("Sí","navy"),badge("Recibido","ok")],["Copia a color de la cédula",badge("Sí","navy"),badge("Recibido","ok")],["Papeleta de votación",badge("Sí","navy"),badge("Recibido","ok")],
+ ["Títulos y certificados habilitantes",badge("Sí","navy"),badge("Recibido","ok")],["Cartas de recomendación (2 personales + 2 laborales)",badge("Sí","navy"),badge("3 de 4","warn")],["Certificado de antecedentes penales",badge("Sí","navy"),badge("Pendiente","warn")],
+ ["Planilla de servicios básicos",badge("Sí","navy"),badge("Pendiente","warn")],["Exámenes médicos preocupacionales",badge("Según el cargo","neutral"),badge("Después de la oferta","neutral")],["Evaluación psicológica",badge("Según el cargo","neutral"),badge("Después de la oferta","neutral")]],wide=0)
+correos_recl=table(["Momento","Correo","Qué incluye","Acción"],[
+ [c2("Al descartar","Anexo · aviso no seleccionado"),"Aviso de no selección","Agradecimiento, decisión de avanzar con otro perfil y disposición a futuras oportunidades",btn("Enviar aviso de no selección")],
+ [c2("Al seleccionar","Anexo 6"),"Propuesta laboral y bienvenida","Cargo, horario, almuerzo, jornadas adicionales, remuneración menos aporte IESS, décimos, fondos de reserva, utilidades y documentación requerida",btn("Enviar oferta laboral")],
+ [c2("Según el cargo","Anexo 5"),"Solicitud de exámenes médicos y psicológicos","Pedido al profesional externo con CV y funciones del cargo, bajo confidencialidad",btn("Solicitar exámenes")],
+ [c2("Tras la firma","Inicio de labores"),"Inicio de labores","Misión y visión, reglamentos interno y de estudiantes, funciones, organigrama, consentimiento de datos y manual de funciones",btn("Enviar correo de inicio de labores")],
+ [c2("Primer día","Comunicación institucional"),"Comunicación al personal","Nombre, cargo, funciones y datos de contacto del nuevo colaborador",btn("Comunicar ingreso al personal")]],wide=2)
+page("ReclutamientoAdministrativo.html","Reclutamiento administrativo",shell("Reclutamiento de personal administrativo","Reclutamiento",
+ '<p class="chips">'+badge("Propuesta · fuera del alcance del contrato actual")+'</p>',
+ stages('<b>'+sv(7,3,2,2,0)+' postulantes en proceso</b><span class="sync-ok">Proceso de contratación de nuevo personal · ISO 9001</span>',[
+   ("Selección",sv(2,1,0,1,0),"vacante, publicación, pre-screen","var(--info)","Selección"),
+   ("Entrevistas y documentos",sv(2,1,1,0,0),"entrevistas, referencias","var(--warn)","Entrevistas"),
+   ("Evaluaciones y oferta",sv(2,0,1,1,0),"exámenes, oferta laboral","var(--warn)","Oferta"),
+   ("Inducción y contrato",sv(1,0,1,0,0),"inducción, firma, comunicación","var(--ok)","Inducción")]),
+ tabs(["Postulantes","Etapas del proceso","Documentación","Correos del proceso","Vacantes"],"Postulantes",counts={"Postulantes":7},panels={
+  "Postulantes": filters(search("Buscar","Nombre, título o vacante",w="240px"),sel("Etapa",["Todas","Filtración y preselección","Entrevistas","Verificación de referencias","Evaluaciones y exámenes","Oferta laboral y aceptación","Inducción","Descartado"],w="210px"),sel("Vacante",["Todas","Secretaría administrativa-académica","Asistente contable","Asesora comercial","Recepción","Coordinación académica","Asistente de administración"],w="230px"),actions='<span class="result-count" aria-live="polite"></span>'+btn("Nuevo postulante",None,True)+btn("Publicar vacante administrativa"))+postulantes_tbl+pager(7),
+  "Etapas del proceso": card("De la vacante a la incorporación", flow(ETAPAS_RECLUTAMIENTO)+kv(("Gerencia General","aprueba vacantes y contrataciones; firma contratos"),("Administración / Talento Humano","ejecuta el proceso, gestiona documentación y coordina evaluaciones"),("Área solicitante","define el perfil, apoya entrevistas y facilita la inducción"),("Diferencia con profesores","los docentes van por el proceso de servicios profesionales en "+'<a href="ContratacionProfesores.html">Contratación de profesores</a>'))),
+  "Documentación": card("Documentación habilitante · formulario de solicitud de empleo", docs_admin+kv(("Formulario","datos personales, formación, experiencia, referencias personales y laborales, documentación entregada"),("Protección de datos","la información se usa solo para el proceso y, si hay contratación, para la relación laboral; no se comparte con terceros"))),
+  "Correos del proceso": card("Plantillas del proceso", correos_recl+kv(("Pre-screen telefónico","10 minutos: apertura, contexto, filtros excluyentes (formación, idioma, disponibilidad, expectativa salarial), experiencia, manejo de situaciones, motivación y cierre"))),
+  "Vacantes": card("Vacantes abiertas", table(["Vacante","Sede","Publicada en","Postulantes","Presupuesto de publicación","Estado"],[
+    [c2("Secretaría administrativa-académica","perfil según manual de funciones"),"Quito","LinkedIn · web","2","$40 · aprobado",badge("En entrevistas","navy")],
+    [c2("Asistente contable","medio tiempo"),"Valle","Indeed","1","$0",badge("En evaluaciones","warn")],
+    [c2("Asesora comercial","comisión por metas"),"Ambato","LinkedIn · Indeed","1","$40 · aprobado",badge("Oferta enviada","warn")],
+    [c2("Recepción","jornada completa"),"Quito","web","1","$0",badge("Recibiendo CV","neutral")],
+    [c2("Coordinación académica","reemplazo"),"Valle","LinkedIn","1","$40 · aprobado",badge("Cubierta · inicia 3 nov","ok")]],sede=1,hide=(1,),wide=0)+kv(("Anexo 1","texto de publicación: puesto, sede, funciones, requisitos, perfil, qué ofrecemos y aviso de protección de datos"))),
+ }),
+ subtitle="Proceso de contratación de nuevo personal (ISO 9001): vacante, publicación, pre-screen, entrevistas, documentos, referencias, exámenes, oferta, inducción y contrato"),"Reclutamiento de personal administrativo")
+
 # 22 Facturas
 V2='<a href="DetalleFactura.html">Ver</a>'
 credito=table(["Vence","Factura","Estudiante","Plazo","Saldo","Estado","Acción"],[
@@ -2540,7 +2605,7 @@ rows=[
  ("Comercial · Asesores, Dirección Comercial, secretaría",[("Leads.html","Leads y conversión (Kommo)"),("Pedidos.html","Tienda en línea · pedidos WooCommerce"),("TableroComercial.html","Tablero comercial (diario y mensual)"),("DetalleVenta.html","Detalle de venta (compra completa)"),("MatriculaContinuidad.html","Matrícula de continuidad (saldo a favor)"),("NuevaInscripcionExamen.html","Inscripción a examen internacional"),("VentaMercaderia.html","Venta de mercadería"),("InformeComisiones.html","Informe de comisiones del asesor"),("NuevaVenta.html","Nueva matrícula (por módulo)"),("MatriculaLead.html","Matrícula desde un lead (datos precargados)"),("Empresas.html","Empresas y grupos B2B"),("DetalleEmpresa.html","Detalle de empresa B2B"),("NuevaEmpresa.html","Nueva empresa y convenio"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
  ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
  ("Dirección · Gerencia, Dirección Comercial",[("Insights.html","Insights de IA"),("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
- ("Administración · Administrador General",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("DetalleProducto.html","Detalle de producto o servicio"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones")],"RBAC, catálogos (sedes, aulas, programas, productos, empresas), reglas configurables, trazabilidad completa e integraciones."),
+ ("Administración · Administrador General",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("DetalleProducto.html","Detalle de producto o servicio"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones"),("ReclutamientoAdministrativo.html","Reclutamiento de personal administrativo (propuesta)")],"RBAC, catálogos (sedes, aulas, programas, productos, empresas), reglas configurables, trazabilidad completa e integraciones."),
 ]
 rows=[(t,[(f,n) for f,n in files if f not in HIDDEN],d) for t,files,d in rows]
 rows=[r for r in rows if r[1]]
