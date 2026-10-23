@@ -89,6 +89,9 @@ Lo que no está en los 11 módulos se marca como **propuesta fuera de alcance** 
 - Toda pantalla nueva: `page(...)` + entrada en `rows` (hub) + `NAV` con roles si va en el menú + `ACTIONS` para cada botón nuevo (una etiqueta sin entrada hace fallar el generador a propósito).
 - Tablas: máx. ~7 columnas visibles, celdas de dos líneas con `c2()`, nada de tablas de 12 columnas.
 
+### 23 oct 2026 · Manual de Procesos del cliente
+El usuario subió el manual de ecommerce (ya reflejado en `Pedidos.html`), el contrato de servicios del estudiante, el formato de referencias, el BPMN de contratación docente, dos checklists (hoja de ruta y finalización) y el ZIP "MANUAL DE PROCESOS" (académico y administrativo). Resultado: `ContratacionProfesores.html` + `DetalleCandidato.html` (pipeline con aprobaciones y alta al final), tarjetas de seguimiento e indexados en DetalleCurso, reaperturas en Cursos, reglas de cierre en CalificarCurso, novedades/Teacher of the Month/correo en PaymentSheet, reglas del contrato en NotaCredito, activos fijos (propuesta) en Inventario. Resumen en `docs/PROCESOS_INTERNOS.md`; los originales con datos personales no se subieron. La carpeta de Drive compartida sigue sin poder leerse desde el entorno (el conector ve la carpeta pero no sus archivos); el usuario subió los documentos directamente.
+
 ## 6. Pendientes y temas abiertos
 
 - Acceso a TeamDesk desde el entorno (bloqueado por política de red). Alternativas: permitir `teamdesk.net` en la política del entorno o exportar el esquema/vistas.

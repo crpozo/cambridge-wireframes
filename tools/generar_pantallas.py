@@ -135,6 +135,27 @@ ACTIONS={
  "Asignar código":("Se asigna el código de activación del material digital al estudiante y se marca como entregado.",None),
  "Marcar como atendido":("El insight pasa a 'atendido' con tu usuario y fecha; deja de aparecer en Inicio y en el asistente.",None),
  "Descartar":("El insight se descarta con un motivo; el asistente aprende a no repetirlo para este caso.",None),
+ # contratación de profesores
+ "Nuevo candidato":("Se registra el candidato con su CV, la vacante y la sede; entra en la etapa 'Revisión de CV' y Coordinación Académica recibe el aviso.",None),
+ "Publicar vacante":("Se genera el texto del anuncio (perfil, horario, sede, tipo de contrato) para publicar en LinkedIn y la web; la carpeta de CV de la sede queda enlazada al proceso.",None),
+ "Registrar resultado de clase demostrativa":("Se llena la rúbrica D-SGC-002 (6 aspectos de 1 a 5) con observaciones. Si el promedio es 3.5 o más, el candidato pasa al MOCK; si no, queda descartado con la retroalimentación escrita.",None),
+ "Agendar MOCK":("Se agenda el MOCK C1 (fecha, sede y evaluador). El resultado mínimo para dictar es B2.",None),
+ "Descartar candidato":("El candidato sale del proceso con un motivo (perfil, referencias, demo, MOCK, no acepta la oferta). Se envía el correo de aviso y el expediente se conserva 12 meses. "+AUDIT,"ContratacionProfesores.html"),
+ "Reprogramar demo":("Se elige nueva fecha y hora para la clase demostrativa y se avisa al candidato.",None),
+ "Descargar expediente":("Se descarga un PDF con el informe de entrevista, referencias, rúbrica de la demo, resultado del MOCK, pay scale y documentos habilitantes.",None),
+ "Aprobar pay scale":("Coordinación Administrativa aprueba la tarifa por hora según la tabla de la sede, el título y el MOCK. Con el pay scale firmado el candidato pasa a Dirección Administrativa para la aprobación de la contratación. "+AUDIT,None),
+ # seguimiento, cierre e indexados
+ "Marcar tarea cumplida":("La tarea de seguimiento del curso queda marcada con tu usuario y fecha; si tenía plazo (72 h, 48 h, 20%, 50%, 75%) deja de aparecer como pendiente.",None),
+ "Solicitar indexado":("Se pide agregar un estudiante a este curso. Regular: con 48 h o más de anticipación; urgente: menos de 24 h, solo con autorización de Coordinación. El sistema envía el correo con asunto |REGULAR| o |URGENTE| INDEXO ESTUDIANTES y avisa al grupo de coordinación.",None),
+ "Registrar contacto de reapertura":("Se registra el intento (WhatsApp, llamada o nota de voz), la respuesta del estudiante y el motivo si no continúa. Si confirma, queda 'Pendiente de pago' para que Secretaría lo matricule.",None),
+ "Enviar reporte semanal de reaperturas":("Se genera el cuadro de reaperturas de la semana (cursos al 75%, estudiantes contactados, confirmados, perdidos y motivos) y se envía a Dirección Académica antes de la reunión del jueves.",None),
+ # payment sheet
+ "Registrar novedad":("Se registra un atraso (minutos), una cancelación con observación o un reemplazo (profesor que cubre, con 48 h de aviso). La novedad afecta el cálculo de la payment sheet del mes.",None),
+ "Enviar correo de payment sheet":("Cada profesor recibe su resumen del mes: horas, valor hora, descuentos, subtotal, factura requerida y cuenta de pago. Tiene 3 días para observar antes de la consolidación. "+AUDIT,None),
+ "Marcar Teacher of the Month":("Se marca al profesor del mes de la sede: recibe 5% adicional sobre su payment sheet y queda en su historial de desempeño. "+AUDIT,None),
+ # activos fijos (propuesta)
+ "Nueva solicitud de activo":("Se llena el formulario de solicitud (qué, para qué, sede, responsable, costo estimado). Pasa a aprobación de Gerencia; luego 2 o 3 cotizaciones, orden de compra, acta de entrega y registro en el inventario.",None),
+ "Registrar traspaso":("Se registra el traspaso interno del activo entre sedes o responsables (acta C.T.I.): fecha de salida, fecha de ingreso, nueva ubicación y custodio. "+AUDIT,None),
 }
 
 def btn(label, href=None, primary=False, action=None, next=None):
@@ -166,7 +187,7 @@ def only(roles, html, inline=False):
 # Menú lateral agrupado por áreas. Cada ítem: (nombre, archivo, roles que lo ven). Un área desaparece si el rol no ve ninguno de sus ítems.
 NAV=[
  ("",[("Inicio","Home.html",ALL)]),
- ("Académico",[("Programas","Programas.html",ALL),("Cursos","Cursos.html",ALL),("Estudiantes","Estudiantes.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO"),("Exámenes","ExamenesInternacionales.html","ADM,GER,SUC,COO,SEC")]),
+ ("Académico",[("Programas","Programas.html",ALL),("Cursos","Cursos.html",ALL),("Estudiantes","Estudiantes.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO"),("Contratación","ContratacionProfesores.html","ADM,GER,DIR,SUC,COO"),("Exámenes","ExamenesInternacionales.html","ADM,GER,SUC,COO,SEC")]),
  ("Comercial",[("Leads","Leads.html",COMERCIAL),("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Empresas","Empresas.html","ADM,GER,DIR,SUC,ASE"),("Tienda en línea","Pedidos.html",COMERCIAL+",SEC"),("Tablero comercial","TableroComercial.html","ADM,GER,DIR,SUC,ASE,CON"),("Facturación","Facturas.html",COMERCIAL+",CON"),("Comisiones","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
  ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
@@ -221,6 +242,8 @@ AI_CTX={
  "FichaProfesor.html":[("¿Cuántas horas lleva este mes?","P. Gómez lleva 48 h en octubre (24 sesiones). Su payment sheet suma $336 y coincide con su factura. Tiene 2 sesiones manuales fuera de horario pendientes de confirmar.")],
  "Ficha360.html":[("¿Qué nivel le toca y cuándo abre?","María está en el módulo 7 (B1). Al aprobarlo pasa al módulo 8 del mismo grupo (ya pagado, desde el 3 nov); después siguen los módulos 9 y 10 (B1+), presenciales los sábados desde enero de 2027. Compró los módulos 7 a 10 y aún no consume ninguno."),("¿Tiene saldo pendiente?","No. Su matrícula 001-202602794 está pagada ($980). Su descuento del 10% fue por referido y lo aplicó Carla M. dentro de su límite.")],
  "Inventario.html":[("¿Qué libros hay que pedir?","Tres productos con stock negativo: Empower B1+ (Valle −2), Super Minds 3 WB (Ambato −1) y Super Minds 3 SB (Ambato −2). El pedido sugerido a Books & Bits suma 16 libros."),("¿Cuántos códigos de activación quedan?","13 códigos comprados sin asignar: 9 en Valle y 4 en Quito. Uno de Empower A1 venció.")],
+ "ContratacionProfesores.html":[("¿Qué candidatos están trabados?","Dos llevan más de 3 días en la misma etapa: Jorge Andrade espera el pay scale de Coord. Administrativa (3 días) y Paula Cevallos tiene 1 de 3 referencias (5 días). Esteban Ruiz no cumple el mínimo del MOCK (B1) y debería descartarse con retroalimentación."),("¿Quién está listo para crear el perfil?","María José Vinueza (Quito, Adults B2 Intensivo): contratación aprobada hoy y documentos completos. Al crear el perfil empieza su hoja de ruta de inducción con primer día el 3 nov.")],
+ "DetalleCandidato.html":[("¿Qué le falta a Daniela para la aprobación?","El resultado del MOCK (mínimo B2), antecedentes penales y RUC. La demo es el 24 oct; con MOCK aprobado el pay scale sugerido es $6.50/h para Valle.")],
  "PaymentSheet.html":[("¿Por qué no puedo aprobar la payment sheet?","Hay 3 alertas: L. Vega facturó $26 más que las horas registradas, R. Salas tiene contrato vencido con 8 h, y D. Paredes entregó factura sin sesiones. Resueltas esas tres, el total a pagar es $875.60 (P. Gómez $336, L. Vega $234, R. Salas $45.60 y M. Castro $260).")],
  "Comisiones.html":[("¿Qué descuentos dio cada asesor este mes?","Carla M. dio descuento en 12 ventas (promedio 9%), Sofía L. en 9 (8%) y Diego R. en 8 (6%). Total descontado: $1,860, el 5.6% de lo facturado. 3 ventas pasaron el límite del 10%: 1 aprobada, 1 pendiente (42% de Gabriela Núñez) y 1 rechazada."),("¿Cuánto gana cada asesor este mes?","Carla M. $420 (14 niveles, bono incluido), Sofía L. $330 (11) y Diego R. $180 (9, no llegó a la meta de 12). Solo se paga la comisión de ventas cobradas.")],
  "Aprobaciones.html":[("¿Qué pasa si apruebo el descuento del 42%?","La matrícula de Gabriela Núñez (A2) se cerraría en $261 en lugar de $450 y la comisión de Carla M. bajaría a $10. La regla permite hasta 10% sin aprobación; 42% queda en el audit log con tu justificación.")],
@@ -660,7 +683,7 @@ SVG={
 }
 def ico(name, cls="nav-ico"):
     return f'<span class="{cls}" aria-hidden="true"><svg viewBox="0 0 24 24">{SVG.get(name,"")}</svg></span>'
-ICON={"Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
+ICON={"Contratación":"id","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
 
 def btn(label, href=None, primary=False, action=None, next=None, kind=None, disabled_reason=None):
     if href is None and action is None:
@@ -1541,7 +1564,9 @@ page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-
    [c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871"),"70%","7.5","6.8","6.4","7.0",badge("Bloqueado · asistencia","bad")],
    [c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875"),"45%","5.0","4.5","—","—",badge("Reprobado","bad")]],wide=0)
    +kv(("Aprobados","10 de 12"),("Bloqueados por asistencia","1 · decide Coordinación"),("Reprobados","1 · repite el módulo"))),
- card("Al cerrar el módulo", flow(["Notas finales","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación","Reprobados: rematrícula del mismo módulo"])),
+ two(card("Al cerrar el módulo", flow(["Speaking mock y notas en GradeKeeper (48 h)","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación y End of level report","Reprobados: rematrícula del mismo módulo"])),
+     card("Reglas del proceso de cierre", table(["Nota final","Qué pasa"],[['<span class="mono">≥ 7.00</span>',"Aprueba · Student Report en PDF a su expediente"],['<span class="mono">6.50 – 6.99</span>',"Tutorías y examen de recuperación antes de decidir"],['<span class="mono">≤ 6.49</span>',"Pierde el módulo · repite con descuento para repetir"],["Cualquiera · con deuda","No se envía la nota ni el certificado hasta regularizar el saldo"],["Menor a 7.00","Coordinación llama al estudiante o representante antes de publicar"]],wide=0)
+       +kv(("Plazo","72 h después de la última clase"),("Encuesta","se envía al cerrar; el informe trimestral consolida resultados por sede")))),
  foot(btn("Cerrar módulo y emitir certificados",None,True),btn("Guardar borrador de notas"),btn("Cancelar","DetalleCurso.html")),
  subtitle="Reemplaza la vista 'Finished courses with ungraded students' de TeamDesk: el curso no se cierra sin notas"),"Calificar curso")
 
@@ -1682,6 +1707,13 @@ cursos=shell("Cursos","Cursos",
   [c2("Tailored · Inglés corporativo","0001-2026-0608 · Ambato · Zoom 1 · Ma-Ju 07:00–08:30 · Virtual"),"Ambato","Tailored","Virtual","B1","(sin asignar)","3/12",progress(0),badge("Por abrir","warn"),V],
   [c2("English for Teens A2","0001-2025-0330 · Valle · C-2 · Vi 15:00–19:00 · Presencial"),"Valle","Teens","Presencial","A2","L. Vega","9/10",progress(100),badge("Cerrado"),V]],sede=1,hide=(1,2,3),wide=0),
  pager(sv(58,29,18,11)),
+ only("ADM,GER,DIR,SUC,COO,ASE,SEC", card("Reaperturas · cursos al 75% que terminan en las próximas semanas", filters(sel("Semana",["Esta semana","Próxima semana"],w="150px",col=False),actions=btn("Registrar contacto de reapertura",None,True)+btn("Enviar reporte semanal de reaperturas"))
+   +table(["Curso que termina","Sede","Siguiente curso","Estudiantes","Contactados","Confirmados","Perdidos · motivo","Acción"],[
+    [c2("English for Adults B1 Virtual · módulo 8","0001-2026-0767 · termina 20 nov"),"Quito",c2("B1+ Virtual · módulos 9–10","0001-2026-0801 · upcoming · Lu-Ju 19:00"),"12","10","7",c2("2","precio 1 · horario 1"),btn("Registrar contacto de reapertura")],
+    [c2("English for Kids 2 Tarde","0001-2026-0328 · termina 28 nov"),"Valle",c2("Kids 3 Tarde","0001-2026-0812 · upcoming · Sa 09:00"),"8","8","6",c2("1","se muda"),btn("Registrar contacto de reapertura")],
+    [c2("English for Adults A2","0001-2026-0620 · termina 4 dic"),"Valle",c2("B1 Presencial","por crear · Lu-Mi 14:00"),"9","3","1",c2("0","—"),btn("Registrar contacto de reapertura")],
+    [c2("English for Kids 1 Mañana","0001-2026-0518 · termina 12 dic"),"Ambato",c2("Kids 2 Mañana","por crear"),"7","0","0",c2("0","aún no inicia el contacto"),btn("Registrar contacto de reapertura")]],sede=1,hide=(1,),wide=0)
+   +kv(("Protocolo","al 75% del curso: mensaje de WhatsApp → llamada → nota de voz; 10% de descuento al pagar 2 módulos"),("Cuándo","se crean los cursos de continuidad como 'upcoming' y se revisa el cuadro cada jueves"),("Control","Dirección Académica audita entre el 10% y el 20% de los contactos registrados")))),
  note("El código de curso conserva el formato de TeamDesk (0001-AAAA-NNNN) para la migración y la reconciliación. Avance = % de horas dictadas sobre el total."),
  only("ADM,GER,SUC,COO", ai([("Adults A1 Sábados terminó hace 5 días sin calificar: 14 estudiantes no pueden matricularse en A2 y hay 3 cupos esperándolos en 0001-2026-0620.","Calificar","DetalleCurso.html"),("Dos cursos 'por abrir' en Ambato tienen menos de 5 inscritos a 2 semanas del inicio. Históricamente no abren con menos de 6.","Ver cursos de Ambato","Cursos.html"),("El aula Q-1 está al 60% de ocupación y C-2 (Valle) al 0%: el nuevo Kids 2 podría ir a C-2 el sábado.","Ver aulas","Configuracion.html")],"Pregunta: ¿qué cursos abren en noviembre y cuántos libros necesitan?")),
  subtitle="Programa, nivel, modalidad, horario y aula por sede")
@@ -1706,13 +1738,26 @@ det=shell("English for Adults B1 Virtual","Cursos",
   [c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871"),"70%","6.9","75%",badge("Riesgo asistencia","bad"),'<a href="CalificarCurso.html">Calificar</a>'],
   [c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875"),"45%","—","30%",badge("Riesgo asistencia","bad"),'<a href="CalificarCurso.html">Calificar</a>']],wide=0)+kv(("Matriculados","12/15"),("Asistencia promedio","84%"),("Mínimo para aprobar","75% de asistencia y nota ≥ 7")))
   +only("ADM,GER,SUC",row(btn("Calificar curso",None,True)))),
+ only("ADM,GER,DIR,SUC,COO,PRO,SEC", card("Seguimiento del curso · apertura, acompañamiento y cierre", flow([
+   ("Crear el curso en Cambridge One y GradeKeeper","72 h antes del inicio · Coord. Académica","Hecho · 28 ago","done"),
+   ("Correo informativo a los estudiantes (YAMM)","48 h antes · horario, aula o enlace, libro y profesor","Hecho · 30 ago","done"),
+   ("Grupo de WhatsApp y contrato firmado","Grupo solo informativo; ningún estudiante inicia sin contrato firmado","Hecho · 12 de 12","done"),
+   ("Recepción y bienvenida","Primera clase: presentación, reglas, acceso a plataformas","Hecho · 1 sep","done"),
+   ("Checklist de bienvenida","Segunda clase: libros entregados, códigos activados, Teams","Hecho · 2 sep","done"),
+   ("Observación de clase","Al 20% del curso · rúbrica de observación y retroalimentación al profesor","Hecho · 15 sep · 4.2/5","done"),
+   ("Follow up con estudiantes","Al 50% · asistencia, notas parciales, saldos; llamada a los que están en riesgo","Hecho · 6 oct · 2 en riesgo","done"),
+   ("Mensaje de próximo módulo y Mock Test","Al 75% · oferta del siguiente curso (reapertura) y agendar Mock Test","Vence 30 oct","now"),
+   ("Encuesta de satisfacción","Última semana · se envía a todos los estudiantes",""," "),
+   ("Cierre del curso","72 h después de la última clase: speaking mock, notas en GradeKeeper en 48 h, End of level report",""," ")])
+   +kv(("Responsables","Coord. Académica · profesor · Secretaría"),("Regla","un curso no se cierra sin notas ni se envía nota a un estudiante con deuda"))+row(btn("Marcar tarea cumplida",None,True)))),
+ only("ADM,GER,DIR,SUC,COO,SEC", card("Indexados · agregar estudiantes al curso", kv(("Regular","con 48 h o más de anticipación · correo con asunto |REGULAR| INDEXO ESTUDIANTES"),("Urgente","menos de 24 h · solo con autorización de Coord. Académica · asunto |URGENTE|"),("Aviso","grupo de WhatsApp |IMPORTANTE| INDEXADOS CAMBRIDGE SOL"),("Nivelación","si entra en la primera semana rinde la prueba de ubicación antes de la clase"),("Último indexado","Sofía Herrera · regular · 8 sep · 3 días antes"))+row(btn("Solicitar indexado",None,True)))),
  only(COMERCIAL+",COO",card("Lista de espera", table(["Estudiante","Desde","Asesor","Estado","Acción"],[["Lucía Benítez","10 oct","Carla M.",badge("Primera en la lista","navy"),btn("Ofrecer cupo")],["Tomás Villacrés","14 oct","Diego R.",badge("Esperando","neutral"),btn("Ofrecer cupo")]])+kv(("Regla","al liberarse un cupo se avisa al primero; tiene 48 h para confirmar")))),
  subtitle="Las sesiones registradas aquí alimentan la payment sheet del profesor y el progreso del estudiante")
 page("DetalleCurso.html","Detalle curso",det,"Detalle de curso y sesiones")
 
 # 9 Profesores
 prof=shell("Profesores","Profesores",
- filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Standby","Inactivo","Anterior"],w="150px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),sel("Vista",["Todos","Dictando ahora","Con horas libres","Sin contrato vigente"],w="170px",col=False),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Payment sheet","PaymentSheet.html")+btn("Correo masivo")),
+ filters(search("Buscar","Nombre o cédula",w="260px"),sel("Estado",["Todos","Activo","Standby","Inactivo","Anterior"],w="150px"),sel("Contrato",["Todos","Por horas","Nómina","Vencido"],w="140px"),sel("Vista",["Todos","Dictando ahora","Con horas libres","Sin contrato vigente"],w="170px",col=False),actions=btn("Alta de profesor","AltaProfesor.html",True)+btn("Contratación","ContratacionProfesores.html")+btn("Payment sheet","PaymentSheet.html")+btn("Correo masivo")),
  kpis([("Profesores activos",sv(36,18,11,7),"de 100 registrados"),("Dictando ahora",sv(5,3,1,1),"sesiones en curso"),("Horas esta semana",sv(412,210,124,78),"programadas"),("Sin contrato vigente con clases",sv(1,0,0,1),"bloquea pago")]),
  table(["Profesor","Sede","Contrato","Cursos activos","Clases hoy","Horas / semana","Asistencia","Estado","Acción"],[
   [c2("P. Gómez","Quito · Por horas · vigente · $7.00/h"),"Quito","Por horas · vigente","3",c2("2","B1 Virtual 19:00, A2 18:00"),"14 h",progress(88),badge("Activo","ok"),'<a href="FichaProfesor.html">Ver perfil</a>'],
@@ -1724,7 +1769,7 @@ prof=shell("Profesores","Profesores",
   [c2("A. Ruiz","Quito · Por horas · vigente · $6.50/h"),"Quito","Por horas · vigente","0",c2("0","disponible para reemplazos"),"0 h","—",badge("Standby","warn"),'<a href="FichaProfesor.html">Ver perfil</a>'],
   [c2("J. Mena","Valle · salió en jun 2026"),"Valle","—","0",c2("0","—"),"0 h","—",badge("Anterior","neutral"),'<a href="FichaProfesor.html">Ver perfil</a>']],sede=1,hide=(1,2),wide=0),
  ai([("Teens B1 Virtual (Valle) abre en 2 semanas sin profesor. P. Gómez dicta B1 Virtual en Quito con 88% de asistencia y tiene libres Lu-Ma-Mi-Ju 17:00–19:00.","Ver perfil","FichaProfesor.html"),("S. Jiménez está en 20 h/semana, el máximo de su contrato de nómina. No asignarle el curso nuevo de sábado.","Ver carga","FichaProfesor.html"),("R. Salas tiene contrato vencido y 8 h registradas este mes: la payment sheet no se puede aprobar hasta renovar o anular esas sesiones.","Renovar contrato","PaymentSheet.html")],"Pregunta: ¿quién puede cubrir Kids 2 Tarde el miércoles?"),
- card("Alta de profesor (flujo)", flow(["Coordinación llena el formulario","Profesor activo","Recibe cursos","Aparece en payment sheet"])+kv(("Sin autorización previa","Coordinación Académica crea profesores directamente"),("Con aprobación","solo tarifas fuera de la tabla vigente (Dirección)"))),
+ card("De candidato a profesor", flow(["Selección y evaluación (CV, referencias, entrevista, demo, MOCK)","Pay scale aprobado por Coord. Administrativa","Contratación aprobada por Dirección Administrativa","Coordinación crea el profesor","Inducción y primer curso"])+kv(("Alta del profesor","la crea Coordinación Académica sin pedir otra autorización: las aprobaciones ya ocurrieron en el proceso de contratación"),("Payment sheet","solo entra con pay scale aprobado, RUC y contrato firmado"),("Ver el proceso",'<a href="ContratacionProfesores.html">Contratación de profesores</a>'))),
  subtitle="Nadie crea un profesor que pueda cobrar sin aprobación (el caso del profesor falso)")
 page("Profesores.html","Profesores",prof,"Listado de profesores")
 
@@ -1738,8 +1783,17 @@ ps=shell("Payment sheet · Octubre 2026","Profesores",
   ["M. Castro","Ambato","Por horas","20","40","$6.50","$260","$260","—"],
   ["S. Jiménez","Quito","Nómina","30","60","—","Salario","—","—"],
   ["D. Paredes","Valle","Por horas","0","0","$6.00","$0","$120",badge("Factura sin sesiones","bad")]],sede=1),
- two(card("Cómo se calcula", flow(["Sesiones confirmadas","× tarifa/hora","Monto a pagar","vs factura del profesor","Alertas"])+note("Diferencias y profesores sin contrato vigente bloquean la aprobación hasta resolverse.")),
+ two(card("Cómo se calcula", flow(["Sesiones confirmadas","× tarifa/hora","Monto a pagar","vs factura del profesor","Alertas"])+kv(("Sesiones","se generan al crear el curso, descontando feriados; one to one se liquida desde 10 h"),("Actividades sin código de curso","payment sheet manual (talleres, mock, reemplazos)"),("Teacher of the Month","+5% sobre la payment sheet de la sede"),("Cierre","revisión mensual → correo al profesor → 3 días para observar → consolidación → factura del profesor"))),
      card("Alertas del mes", table(["Profesor","Alerta","Acción"],[["L. Vega","Factura $260 vs calculado $234 (+$26)",'<a href="FichaProfesor.html">Revisar sesiones</a>'],["R. Salas","Contrato vencido · 8 h registradas",btn("Renovar contrato",None,False,"Se renueva el contrato de R. Salas con la tarifa vigente de la tabla y vigencia hasta dic 2027. Al quedar vigente, sus 8 h registradas entran al pago de este mes. "+AUDIT,"FichaProfesor.html")],["D. Paredes","Factura $120 sin sesiones registradas",'<a href="Sesiones.html">Revisar sesiones</a>']]))),
+ two(card("Novedades del mes · atrasos, cancelaciones y reemplazos", filters(sel("Tipo",["Todos","Atraso","Cancelación","Reemplazo"],w="150px"),actions=btn("Registrar novedad",None,True)+only("ADM,GER,SUC,COO",btn("Marcar Teacher of the Month"),True))
+   +table(["Fecha","Profesor","Tipo","Novedad"],[
+    ["14 oct",c2("L. Vega","Kids 2 Tarde"),"Atraso",c2("12 min · -$1.30","CAMB-CLOCK · Minutes Late")],
+    ["09 oct",c2("P. Gómez","Adults A2"),"Reemplazo",c2("Cubrió A. Ruiz · 2 h pasan a A. Ruiz","aviso con 72 h · aprobado")],
+    ["07 oct",c2("M. Castro","Kids 1 Mañana"),"Cancelación",c2("Feriado local · sin pago","Remarks: se repone el 21 oct")],
+    ["03 oct",c2("D. Paredes","—"),"Cancelación",c2("Sin estudiantes · sin pago","Remarks: curso aún no abre")],
+    ["01 oct",c2("S. Jiménez","B2 Intensivo"),"Atraso",c2("5 min · sin descuento","dentro de la tolerancia")]],hide=(2,),wide=3)
+   +kv(("Reemplazos","con 48 h de aviso; las horas se pagan al profesor que cubre"),("Atrasos","minutos del reloj de asistencia; se descuentan según la política"),("Teacher of the Month · octubre",'<a href="FichaProfesor.html">P. Gómez · Quito</a> · +5%'))),
+     card("Correo de payment sheet al profesor", kv(("Asunto","Payment sheet · Octubre 2026 · Cambridge Quito"),("Plantilla","Estimado/a «NOMBRES»: en octubre dictaste «hrs» horas a «V.H» por hora; descuentos «DCTOS»; subtotal «SUBT». Emite tu factura por «FACT» (RIMPE o régimen general) y confirma la cuenta «No. cuenta»."),("Plazo para observar","3 días desde el envío"),("Último envío",badge("Pendiente · se envía al aprobar","warn")))+row(btn("Enviar correo de payment sheet",None,True)))),
  subtitle="Reemplaza el Excel + Drive de 2 días al mes")
 page("PaymentSheet.html","Payment sheet",ps,"Payment sheet de profesores")
 
@@ -1782,6 +1836,7 @@ def insight(area, sev, title, text, link, href, when="hoy"):
     return (f'<div class="insight"{rl}><div class="insight-side"><span class="badge badge-{k}">{sev}</span><small>{when}</small></div><div class="insight-body"><small class="insight-area">{area}</small><b>{title}</b><p>{text}</p>'
             f'<div class="insight-actions"><a href="{href}" class="btn btn-primary">{link}</a>{btn("Marcar como atendido")}{btn("Descartar")}</div></div></div>')
 INSIGHTS=[
+ ("Académico","media","Teens B1 Virtual (Valle) abre en 2 semanas y su candidata aún no rinde el MOCK","Daniela Paredes tiene la clase demostrativa el 24 oct; si el MOCK y el pay scale toman más de una semana, el curso abre sin profesor. P. Gómez podría cubrir las primeras clases.","Ver candidata","DetalleCandidato.html","hoy"),
  ("Académico","alta","4 estudiantes pagaron y no tienen grupo asignado","Matriculados entre el 8 y 12 oct en Adults virtual; no aparecen en ningún curso ni equipo de Teams. Dos ya preguntaron por el enlace de clase.","Asignar grupo","Estudiantes.html","hoy"),
  ("Comercial","media","De los 20 que terminaron en septiembre, 6 no se han rematriculado","3 dijeron precio, 2 horario, 1 no responde. Los de horario podrían entrar al grupo de sábados que abre el 9 ene.","Ver retención","Reportes.html","hoy"),
  ("Inventario","alta","3 libros con stock negativo hoy: el correo de las 07:00 ya salió a 5 personas","Empower B1+ Combo B (Valle -2), Super Minds L3 (Ambato -2) y Aula Internacional 1 (todas). Hay 1 pedido en camino que cubre solo el primero.","Ver stock negativo","Inventario.html","hoy 07:00"),
@@ -2040,10 +2095,89 @@ page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
 page("AltaProfesor.html","Alta de profesor",shell("Alta de profesor","Profesores",
  form(title="Datos personales", fields=[("Nombres y apellidos","Daniela Paredes",'text',None,True),("Cédula / ID","1712345679",'text',None,True),"Fecha de nacimiento",("Email","d.paredes@ejemplo.com",'email'),("Teléfono","099 000 0030",'tel'),"Sede(s)","Dirección","Foto (archivo)"]),
  form(title="Educación y certificaciones", fields=[("Título principal","Lic. en Educación · Universidad Central · 2022"),("Certificaciones","TKT · 2023; B2 First"),"Título / certificado (archivo)","Hoja de vida (archivo)"]),
- form(title="Contrato, tarifa y pago", fields=["Tipo de contrato (por horas / nómina)",("Tarifa por hora","9.00",'number',None,True,"Tabla vigente $6.50–$7.50: fuera de tabla pasa a aprobación de Dirección"),"Vigencia del contrato","Horas máximas por semana","Modalidades (virtual / presencial / ambas)","Contrato firmado (archivo)",("Forma de pago","Transferencia",'select',["Transferencia","Efectivo"]),("Banco y cuenta","Banco Pichincha · ahorros ····"),("Emite factura (sí / no)","Sí",'select',["Sí","No"]),"RUC (si emite factura)"]),
- card("Qué pasa al guardar", flow(["Coordinación Académica guarda","Profesor activo de inmediato","Puede recibir cursos","Aparece en payment sheet"])+kv(("Quién puede crear profesores","Coordinación Académica, Administración de sucursal y Administrador General, sin autorización previa"),("Lo único que pasa a aprobación","una tarifa por hora fuera de la tabla vigente ($6.50–$7.50) → Dirección"),("Siempre queda","en el audit log con quién lo creó y el contrato adjunto"))),
+ form(title="Contrato, tarifa y pago", fields=["Tipo de contrato (por horas / nómina)",("Tarifa por hora","9.00",'number',None,True,"Pay scale aprobado: $6.50–$7.50 según sede, título y MOCK; una tarifa distinta pasa a aprobación de Dirección"),("Pay scale aprobado (archivo)","",'file'),("RUC","1712345679001",'text',None,True,"Sin RUC no se emite factura de servicios profesionales"),("Antecedentes penales (archivo)","",'file'),("Resultado del MOCK","C1",'select',["B2","C1","C2"],True),"Vigencia del contrato","Horas máximas por semana","Modalidades (virtual / presencial / ambas)","Contrato firmado (archivo)",("Forma de pago","Transferencia",'select',["Transferencia","Efectivo"]),("Banco y cuenta","Banco Pichincha · ahorros ····"),("Emite factura (sí / no)","Sí",'select',["Sí","No"]),"RUC (si emite factura)"]),
+ card("Qué pasa al guardar", flow(["Coordinación Académica guarda","Profesor activo de inmediato","Puede recibir cursos","Aparece en payment sheet","Empieza la hoja de ruta de inducción"])+kv(("Quién puede crear profesores","Coordinación Académica, Administración de sucursal y Administrador General, sin pedir otra autorización"),("Por qué no hace falta","el candidato ya pasó por el proceso de contratación: pay scale aprobado por Coord. Administrativa y contratación aprobada por Dirección Administrativa"),("Lo único que vuelve a aprobación","una tarifa por hora distinta al pay scale aprobado → Dirección"),("Desde un candidato",'<a href="DetalleCandidato.html">María José Vinueza · aprobada · lista para crear perfil</a>: los datos, documentos y pay scale se precargan'),("Siempre queda","en el audit log con quién lo creó, el contrato y los documentos habilitantes adjuntos"))),
  foot(btn("Guardar profesor",None,True),btn("Cancelar","Profesores.html")),
  subtitle="Coordinación lo crea directamente; cada alta queda registrada con contrato adjunto"),"Alta de profesor")
+
+
+# ===== Contratación de profesores (manual de contratación de servicios profesionales, BPMN, checklists) =====
+VC='<a href="DetalleCandidato.html">Ver</a>'
+ETAPAS_CONTRATACION=[
+ ("Vacante aprobada","Coordinación Académica detecta la necesidad y Dirección General Académica aprueba abrir el proceso","Coord. Académica · DGA","done"),
+ ("Anuncio y recepción de CV","Publicación en LinkedIn y web; los CV llegan a la carpeta compartida de la sede","Asistente de Gerencia","done"),
+ ("Revisión de CV y entrevista telefónica","Filtro de perfil (título, experiencia, nivel de inglés) y primera llamada","Coord. Académica","done"),
+ ("Referencias","Formato de referencias de empleo: 2 laborales + 1 personal, con cargo, período y motivo de salida","Coord. Académica","done"),
+ ("Entrevista de contratación","Informe FT-SGC-002: trayectoria, intereses, conocimiento docente, manejo de clase, enseñanza virtual, desarrollo profesional y expectativas","Coord. Académica","done"),
+ ("Clase demostrativa","Rúbrica D-SGC-002: planificación, ambiente, recursos, lenguaje, manejo de clase y evaluación (1 a 5 por aspecto)","Coord. Académica","now"),
+ ("MOCK C1","Resultado mínimo B2 para dictar; C1 para niveles altos","Coord. Académica",""),
+ ("Entrevista formal","Entrevista con Dirección General Académica y decisión de continuar","DGA",""),
+ ("Pay scale","Escala salarial según sede, título y resultado del MOCK; aprobada por Coordinación Administrativa","Coord. Administrativa",""),
+ ("Aprobación de contratación","Validación de documentos habilitantes y visto bueno final","Dirección Administrativa",""),
+ ("Alta del profesor","Se crea el perfil con contrato, tarifa aprobada y documentos; correo de bienvenida e inducción","Coord. Académica · Asistencia Académica",""),
+ ("Hoja de ruta e inducción","Checklist de inducción (plataformas, Moodle New Edge, políticas) y seguimiento del primer curso","Coord. Académica · Coord. Administrativa",""),
+]
+DOCS_HABILITANTES=[("Hoja de vida",True),("Cédula o pasaporte",True),("Título universitario o certificación docente",True),("Certificado de antecedentes penales",True),("Resultado del MOCK (≥ B2)",True),("Rúbrica de clase demostrativa",True),("Pay scale firmado",True),("RUC activo (servicios profesionales)",True),("Certificaciones internacionales (TKT, CELTA, etc.)",False),("Contrato civil de servicios firmado",True)]
+candidatos_tbl=table(["Candidato","Sede","Vacante","Etapa","Último paso","Responsable","Hace","Acción"],[
+ [c2('<a href="DetalleCandidato.html" data-row>Daniela Paredes</a>',"Lic. en Educación · TKT · C1"),"Valle","Teens B1 Virtual · Lu-Ju 17:00","Clase demostrativa",badge("Demo agendada · 24 oct 16:00","navy"),"Coord. Académica Valle","2 días",VC],
+ [c2("Jorge Andrade","Lic. en Lingüística · CELTA"),"Quito","Adults A1 Sábados","Pay scale",badge("Esperando aprobación de Coord. Administrativa","warn"),"Coord. Administrativa","3 días",VC],
+ [c2("Paula Cevallos","Ing. Comercial · B2 First"),"Ambato","Business English · Ma-Ju 07:00","Referencias",badge("1 de 3 referencias recibidas","warn"),"Coord. Académica Ambato","5 días",VC],
+ [c2("Esteban Ruiz","Lic. en Idiomas · TKT"),"Quito","Kids 2 Mañana","MOCK C1",badge("Resultado B1 · no cumple el mínimo","bad"),"Coord. Académica Quito","1 día",VC],
+ [c2("Carolina Mera","MSc. en Enseñanza de Inglés · CELTA"),"Valle","Exam Preparation · Sa 09:00","Aprobación de contratación",badge("Documentos completos · falta visto bueno","warn"),"Dirección Administrativa","hoy",VC],
+ [c2("Andrés Calle","Lic. en Educación"),"Ambato","Kids 1 Tarde","Revisión de CV",badge("Entrevista telefónica pendiente","neutral"),"Coord. Académica Ambato","6 días",VC],
+ [c2("María José Vinueza","Lic. en Lingüística · CELTA · C1"),"Quito","Adults B2 Intensivo","Alta del profesor",badge("Aprobada · lista para crear perfil","ok"),"Coord. Académica Quito","hoy",VC],
+ [c2("Luis Guamán","Tecnólogo · B2"),"Valle","Teens A2","Descartado",badge("No continúa · referencias","neutral"),"—","12 días",VC]],sede=1,hide=(1,),wide=0)
+hoja_ruta=table(["Tarea","Responsable","Cuándo","Estado"],[
+ ["Correo de bienvenida con horario, sede y contacto de coordinación","Coord. Académica","Al aprobar la contratación",badge("Hecho","ok")],
+ ["Crear cuenta de correo institucional y acceso a Drive de la sede","Asistencia Académica","Antes del primer día",badge("Hecho","ok")],
+ ["Alta en Moodle New Edge, Cambridge One y GradeKeeper","Asistencia Académica","Antes del primer día",badge("Pendiente","warn")],
+ ["Registro en el reloj de asistencia (tablet CAMB-CLOCK)","Coord. Administrativa","Primer día",badge("Pendiente","warn")],
+ ["Entrega de credencial, locker y material del nivel","Coord. Administrativa","Primer día",badge("Pendiente","warn")],
+ ["Inducción: políticas, payment sheet, reemplazos, atrasos y cancelaciones","Coord. Académica","Primera semana",badge("Pendiente","warn")],
+ ["Agregar al grupo de WhatsApp de docentes de la sede","Coord. Académica","Primera semana",badge("Pendiente","warn")],
+ ["Observación de la primera clase y retroalimentación","Coord. Académica","Al 20% del primer curso",badge("Programada","neutral")]],wide=0)
+fin_contrato=table(["Tarea","Responsable","Estado"],[
+ ["Desvincular de cursos activos y reasignar profesor","Coord. Académica",badge("Hecho","ok")],
+ ["Dar de baja en Moodle, Cambridge One, GradeKeeper y Teams","Asistencia Académica",badge("Hecho","ok")],
+ ["Retirar correo institucional, Drive y grupos de WhatsApp","Asistencia Académica",badge("Pendiente","warn")],
+ ["Entrega de reportes finales (notas, portafolio, End of level report)","Profesor",badge("Pendiente","warn")],
+ ["Encuesta de salida","Coord. Académica",badge("Pendiente","warn")],
+ ["Confirmar saldo por facturar y última payment sheet","Coord. Administrativa",badge("Pendiente","warn")],
+ ["Devolución de locker, credencial y material","Coord. Administrativa",badge("Pendiente","warn")],
+ ["Pago final y cierre del expediente","Dirección Administrativa",badge("Bloqueado hasta completar lo anterior","neutral")]],wide=0)
+page("ContratacionProfesores.html","Contratación de profesores",shell("Contratación de profesores","Profesores",
+ stages('<b>'+sv(8,4,3,1,0)+' candidatos en proceso</b><span class="sync-ok">Manual de contratación de servicios profesionales · 2026</span>',[
+   ("Selección",sv(3,1,1,1,0),"CV, llamada, referencias","var(--info)","Selección"),
+   ("Evaluación",sv(2,1,1,0,0),"entrevista, demo, MOCK","var(--warn)","Evaluación"),
+   ("Aprobaciones",sv(2,1,1,0,0),"pay scale y contratación","var(--warn)","Aprobaciones"),
+   ("Alta e inducción",sv(1,1,0,0,0),"perfil creado y hoja de ruta","var(--ok)","Alta")]),
+ tabs(["Candidatos","Etapas del proceso","Documentos habilitantes","Hoja de ruta de inducción","Finalización de contrato"],"Candidatos",roles={"Finalización de contrato":"ADM,GER,DIR,SUC"},counts={"Candidatos":8},panels={
+  "Candidatos": filters(search("Buscar","Nombre, título o vacante",w="240px"),sel("Etapa",["Todas","Revisión de CV","Referencias","Clase demostrativa","MOCK C1","Pay scale","Aprobación de contratación","Alta del profesor","Descartado"],w="210px"),sel("Vacante",["Todas","Teens B1 Virtual · Lu-Ju 17:00","Adults A1 Sábados","Business English · Ma-Ju 07:00","Kids 2 Mañana","Exam Preparation · Sa 09:00","Kids 1 Tarde","Adults B2 Intensivo","Teens A2"],w="220px"),actions='<span class="result-count" aria-live="polite"></span>'+btn("Nuevo candidato",None,True)+btn("Publicar vacante"))+candidatos_tbl+pager(8),
+  "Etapas del proceso": card("Del anuncio a la primera clase", flow(ETAPAS_CONTRATACION)+kv(("Regla","ningún profesor recibe cursos ni entra a la payment sheet sin pay scale aprobado y documentos habilitantes completos"),("Quién crea el perfil","Coordinación Académica, al llegar a la etapa de alta; la autorización ya ocurrió en las etapas anteriores"),("Formatos","D-SGC-001 banco de preguntas · FT-SGC-002 informe de entrevista · D-SGC-002 rúbrica de clase demostrativa · formato de referencias"))),
+  "Documentos habilitantes": card("Expediente del profesor", table(["Documento","Obligatorio","Quién lo revisa"],[[d,badge("Sí","navy") if r else badge("Opcional","neutral"),"Coord. Administrativa" if d in ("RUC activo (servicios profesionales)","Pay scale firmado","Contrato civil de servicios firmado") else "Coord. Académica"] for d,r in DOCS_HABILITANTES],wide=0)+kv(("Sin RUC","no se puede emitir la factura de servicios profesionales: la payment sheet queda retenida"),("Antecedentes penales","vigencia máxima 6 meses al momento de la contratación"))),
+  "Hoja de ruta de inducción": card("Hoja de ruta · María José Vinueza · Adults B2 Intensivo · Quito", hoja_ruta+kv(("Avance","2 de 8 tareas"),("Primer día","3 nov 2026"),("Responsables","Coord. Académica · Asistencia Académica · Coord. Administrativa"))),
+  "Finalización de contrato": card("Checklist de finalización · R. Salas · Ambato", fin_contrato+kv(("Motivo","contrato vencido · no renueva"),("Última sesión","30 sep 2026"),("Regla","el pago final se libera cuando todas las tareas están completas"))),
+ }),
+ subtitle="Pipeline de selección, evaluación, aprobaciones, alta e inducción; cada etapa con su responsable y formato"),"Contratación de profesores")
+
+rubrica=table(["Aspecto","Puntaje (1–5)","Observación"],[
+ ["a) Planificación",'<span class="mono">4</span>',"Objetivos claros alineados al currículo; faltó diferenciar por nivel"],
+ ["b) Ambiente de aprendizaje",'<span class="mono">5</span>',"Participación de todos los estudiantes"],
+ ["c) Recursos",'<span class="mono">4</span>',"Buen uso de Cambridge One; material impreso justo"],
+ ["d) Lenguaje y destrezas",'<span class="mono">4</span>',"Lenguaje claro; retroalimentación oportuna"],
+ ["e) Manejo de clase",'<span class="mono">3</span>',"Transiciones lentas entre actividades"],
+ ["f) Evaluación y retroalimentación",'<span class="mono">4</span>',"Comprobó comprensión al final de cada actividad"]],wide=0)
+page("DetalleCandidato.html","Detalle candidato",shell("Daniela Paredes · candidata","Profesores",
+ hero([("Vacante","Teens B1 Virtual · Valle · Lu-Ju 17:00–19:00"),("Perfil","Lic. en Educación · TKT 2023 · B2 First"),("Nivel de inglés","C1 (autoevaluación) · MOCK pendiente"),("Experiencia","3 años · colegio y academia"),("Origen","LinkedIn · 8 oct 2026"),("Responsable","Coord. Académica Valle")],
+  btn("Registrar resultado de clase demostrativa",None,True)+btn("Agendar MOCK")+more_menu(btn("Descartar candidato",None,False,kind="danger")+btn("Reprogramar demo")+btn("Descargar expediente")),
+  tag=badge("Clase demostrativa · 24 oct 16:00","navy")+badge("Valle","navy")),
+ two(card("Etapas", flow(ETAPAS_CONTRATACION[:8])),
+     card("Entrevista de contratación · FT-SGC-002", kv(("Fecha","15 oct 2026 · 45 min"),("Entrevistó","Coord. Académica Valle"),("Trayectoria","3 años en colegio bilingüe y academia; Kids y Teens"),("Conocimiento docente","Enfoque comunicativo, TKT; sin experiencia en exámenes internacionales"),("Manejo de clase","Rutinas claras con niños; poca experiencia con adolescentes"),("Enseñanza virtual","Zoom y Teams; usa Kahoot y Wordwall"),("Desarrollo profesional","Quiere CELTA en 2027"),("Expectativas","15–20 h/semana en la tarde; disponible sábados"),("¿Continúa el proceso?",badge("Sí","ok")))
+       +table(["Referencia","Relación","Resultado"],[["Colegio Los Andes · Coordinadora","Laboral · 2023–2025",badge("Favorable","ok")],["Academia Speak Up · Directora","Laboral · 2021–2023",badge("Favorable","ok")],["Referencia personal","Personal",badge("Favorable","ok")]],wide=0))),
+ card("Clase demostrativa · rúbrica D-SGC-002", rubrica+kv(("Total","24 / 30 · promedio 4.0"),("Mínimo para continuar","3.5 de promedio y ningún aspecto en 1"),("Retroalimentación","entregar por escrito al candidato con fortalezas y áreas de mejora"))+'<p class="plain">La rúbrica se llena durante la clase de 30 minutos frente a un grupo real o simulado. El puntaje promedio y las observaciones quedan en el expediente y los ve Dirección General Académica en la entrevista formal.</p>'),
+ two(card("Pay scale propuesto", kv(("Sede","Valle"),("Título","Tercer nivel · educación"),("MOCK","pendiente"),("Tarifa sugerida por la tabla","$6.50/h"),("Estado",badge("Se calcula al tener el MOCK","neutral")))+only("ADM,GER,DIR,SUC",row(btn("Aprobar pay scale",None,False,disabled_reason="Falta el resultado del MOCK")))),
+     card("Documentos habilitantes", table(["Documento","Estado"],[["Hoja de vida",badge("Recibido","ok")],["Cédula",badge("Recibido","ok")],["Título universitario",badge("Recibido","ok")],["Antecedentes penales",badge("Pendiente","warn")],["RUC",badge("Pendiente","warn")],["Resultado del MOCK",badge("Pendiente","warn")],["Pay scale firmado",badge("Después de la aprobación","neutral")]],wide=0))),
+ subtitle="Expediente del candidato: entrevista, referencias, clase demostrativa, MOCK, pay scale y documentos"),"Detalle de candidato")
 
 # 22 Facturas
 V2='<a href="DetalleFactura.html">Ver</a>'
@@ -2204,6 +2338,16 @@ page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
   [c2("Libreta Superpower","Cód. 1999 · ISBN — · — —"),"—","—",c2("25 / 10 / 8","Quito / Valle / Ambato"),"0","—",badge("OK","ok"),'—']],hide=(1,2),wide=0),
  two(card("Correo diario de stock negativo", kv(("Se envía","todos los días a las 07:00"),("Destinatarios","Secretaría de cada sede, Administración de sucursal y Gerencia"),("Incluye","ítems con stock negativo y bajo mínimo por sede, pedidos en camino y códigos digitales sin asignar"),("Último envío",sv("Hoy 07:00 · 3 negativos · 4 bajo mínimo","Hoy 07:00 · 0 negativos · 2 bajo mínimo","Hoy 07:00 · 1 negativo · 1 bajo mínimo","Hoy 07:00 · 2 negativos · 1 bajo mínimo")),("Si no hay novedades","no se envía nada"))+row(btn("Enviar resumen ahora",None,True),btn("Editar destinatarios y hora")),extra=badge("Activo","ok")),
      card("Últimos envíos", table(["Fecha","Negativos","Bajo mínimo","Enviado a","Estado"],[["Hoy 07:00","3","4","5 personas",badge("Enviado","ok")],["Ayer 07:00","2","4","5 personas",badge("Enviado","ok")],["10 oct 07:00","0","3","5 personas",badge("Enviado","ok")],["09 oct","0","0","—",badge("Sin novedades","neutral")]]))),
+ card("Activos fijos por sede", filters(sel("Categoría",["Todas","Equipos de cómputo","Mobiliario","Audio y video","Climatización"],w="180px"),sel("Estado",["Todos","En uso","En traspaso","Dado de baja"],w="150px"),actions=btn("Nueva solicitud de activo",None,True)+btn("Registrar traspaso"))
+   +table(["Código","Activo","Sede","Categoría","Custodio","Valor","Estado"],[
+    [c2('<span class="mono">EQ.01.ACCO.000014</span>',"12 mar 2026 · acta A.E.R. 00031"),c2("Laptop 14'' · 16 GB","Quito · Coord. Académica"),"Quito","Equipos de cómputo","Coord. Académica Quito","$980.00",badge("En uso","ok")],
+    [c2('<span class="mono">MB.02.ACCO.000112</span>',"5 ene 2025"),c2("Mesa de trabajo 6 puestos","Valle · aula C-3 · Administración"),"Valle","Mobiliario","Administración Valle","$320.00",badge("En uso","ok")],
+    [c2('<span class="mono">AV.03.ACCO.000027</span>',"20 jun 2026 · acta C.T.I. 00007"),c2("Proyector 3500 lm","Ambato · aula A-1 · Coord. Académica"),"Ambato","Audio y video","Coord. Académica Ambato","$640.00",badge("En traspaso · desde Quito","warn")],
+    [c2('<span class="mono">EQ.01.ACCO.000009</span>',"2 feb 2023"),c2("Tablet reloj de asistencia","Quito · recepción · CAMB-CLOCK"),"Quito","Equipos de cómputo","Recepción Quito","$210.00",badge("En uso","ok")],
+    [c2('<span class="mono">CL.04.ACCO.000003</span>',"9 sep 2021 · vida útil cumplida"),c2("Aire acondicionado 18000 BTU","Quito · aula Q-4 · Administración"),"Quito","Climatización","Administración Quito","$0.00",badge("Dado de baja","neutral")]],sede=2,hide=(2,3,4),wide=1)
+   +flow(["Solicitud de activo","Aprobación de Gerencia","2 o 3 cotizaciones · cuadro comparativo","Orden de compra","Acta de entrega y recepción","Factura y registro contable","Inventario · código, ubicación, custodio","Etiqueta y asignación"],horizontal=False)
+   +kv(("Traspaso entre sedes","acta de traspaso interno con fecha de salida, fecha de ingreso, nueva ubicación y custodio"),("Baja","al cumplir la vida útil o por daño, con informe y aprobación de Gerencia")),
+   extra=badge("Propuesta · fuera del alcance del contrato actual")),
  card("Mercadería", filters(sel("Período",["Este mes","Mes anterior","Este año"],w="140px",col=False),actions=btn("Nueva venta de mercadería","VentaMercaderia.html",True))+table(["Producto","Sede","Existencias","Vendidas en el mes","Importe vendido"],[["Tomatodo Cambridge","Quito","18","11","$132"],["Tomatodo Cambridge","Valle","6","7","$84"],["Camiseta Summer Camp","Quito","4","9","$135"],["Cuaderno Cambridge","Cuenca","0","5","$22.50"]],sede=1)),
  subtitle="Stock por sede con alertas; el resumen de stock negativo llega por correo cada mañana"),"Inventario de libros")
 
@@ -2342,7 +2486,8 @@ page("RegistrarPago.html","Registrar pago",shell("Registrar pago","Facturación"
 # 37 Nota de crédito
 page("NotaCredito.html","Nota de crédito",shell("Nueva nota de crédito","Facturación",
  form(title="Datos", fields=[("Factura origen","000021092 · Luis Torres · $68.00",'select',["000021092 · Luis Torres · $68.00","000021094 · Camila Sánchez · $950.00","000021080 · Pedro Mora · $500.00"],True),"Estudiante (automático: Luis Torres)","Motivo (devolución / cambio de curso / libro con defecto / anulación total / otro)",("Monto","68.00",'number',None,True,"Hasta el total de la factura"),"Devolver libro al stock (sí / no)","Justificación"]),
- card("Qué pasa al emitir", flow(["Se vincula a la factura origen","Se envía al SRI y se autoriza","Ajusta saldo o genera devolución","Libro vuelve al stock (si aplica)","Audit log"])),
+ two(card("Qué pasa al emitir", flow(["Se vincula a la factura origen","Se envía al SRI y se autoriza","Ajusta saldo o genera devolución","Libro vuelve al stock (si aplica)","Audit log"])),
+     card("Reglas del contrato de servicios educativos", table(["Caso","Qué aplica"],[["Inscripción (derecho de matrícula)","No se devuelve"],["Devolución antes de iniciar","Se retiene el 10% del valor del curso; el resto se devuelve en hasta 45 días"],["Curso iniciado","No hay devolución en dinero: cambio de horario o modalidad, o nota de crédito"],["Nota de crédito","Vigencia 12 meses desde su emisión"],["Interrupción de 2 meses","Puede retomar con cambio de horario o modalidad o nota de crédito"],["Interrupción de 6 meses o más","Nuevo contrato y prueba de ubicación"],["Reclamos","Por escrito a Coordinación Administrativa de la sede"]],wide=0))),
  foot(btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Toda devolución o cambio deja rastro contable"),"Nota de crédito")
 
@@ -2391,7 +2536,7 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
 
 rows=[
  ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("VerificarCertificado.html","Verificar certificado (público)"),("PortalEstudiante.html","Portal del estudiante (propuesta fuera de alcance)"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
- ("Académico · Coordinación, profesores, secretaría",[("Programas.html","Programas, modalidades y tipos de clase"),("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("CalificarCurso.html","Calificar curso (cierre de módulo)"),("ExamenesInternacionales.html","Exámenes internacionales (propuesta)"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta con aprobación"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
+ ("Académico · Coordinación, profesores, secretaría",[("Programas.html","Programas, modalidades y tipos de clase"),("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("CalificarCurso.html","Calificar curso (cierre de módulo)"),("ExamenesInternacionales.html","Exámenes internacionales (propuesta)"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta de profesor"),("ContratacionProfesores.html","Contratación de profesores (pipeline)"),("DetalleCandidato.html","Detalle de candidato"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
  ("Comercial · Asesores, Dirección Comercial, secretaría",[("Leads.html","Leads y conversión (Kommo)"),("Pedidos.html","Tienda en línea · pedidos WooCommerce"),("TableroComercial.html","Tablero comercial (diario y mensual)"),("DetalleVenta.html","Detalle de venta (compra completa)"),("MatriculaContinuidad.html","Matrícula de continuidad (saldo a favor)"),("NuevaInscripcionExamen.html","Inscripción a examen internacional"),("VentaMercaderia.html","Venta de mercadería"),("InformeComisiones.html","Informe de comisiones del asesor"),("NuevaVenta.html","Nueva matrícula (por módulo)"),("MatriculaLead.html","Matrícula desde un lead (datos precargados)"),("Empresas.html","Empresas y grupos B2B"),("DetalleEmpresa.html","Detalle de empresa B2B"),("NuevaEmpresa.html","Nueva empresa y convenio"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
  ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
  ("Dirección · Gerencia, Dirección Comercial",[("Insights.html","Insights de IA"),("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
