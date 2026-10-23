@@ -121,6 +121,23 @@ button.sum-item,a.sum-item{cursor:pointer;transition:background var(--dur-1) var
 .field{display:flex;flex-direction:column;gap:6px;font-size:var(--t-13);color:var(--ink-2);font-weight:500;min-width:0}
 .field label{font-weight:500;color:var(--ink);font-size:var(--t-13)}.field label em{color:var(--red);font-style:normal;margin-left:2px}
 .field-head{display:flex;flex-direction:column;gap:2px}
+/* dirección con Google Maps */
+.field-span{grid-column:1/-1}
+.gmap{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden;display:flex;flex-direction:column}
+.gmap-search{display:flex;gap:8px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}.gmap-search .ctl{flex:1;min-width:0}.gmap-search .cico{flex:0 0 auto}
+.gmap-canvas{position:relative;height:220px;background:#EEF0EA;overflow:hidden}
+.gmap-road{position:absolute;background:#fff;border:1px solid #E1E3DC}
+.gmap-road.r1{left:0;right:0;top:48%;height:14px}.gmap-road.r2{top:0;bottom:0;left:38%;width:12px}.gmap-road.r3{top:0;bottom:0;left:72%;width:8px}
+.gmap-park{position:absolute;left:44%;top:12%;width:24%;height:34%;background:#D9E8CF;border-radius:6px}
+.gmap-pin{position:absolute;left:55%;top:52%;transform:translate(-50%,-100%);color:var(--navy);cursor:grab}.gmap-pin svg{width:32px;height:32px}
+.gmap-label{position:absolute;left:46%;top:16%;font-size:var(--t-13);color:var(--mute)}
+.gmap-attrib{position:absolute;right:8px;bottom:6px;font-size:11px;color:var(--mute)}
+.gmap-foot{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px;font-size:var(--t-13)}.gmap-foot .field-hint{flex:1 1 240px}
+@media (max-width:600px){.gmap-canvas{height:160px}}
+.mod.is-new{animation:wizin var(--dur-2) var(--ease)}
+.field-hint.is-warn{color:var(--warn)}
+.review-facts{padding:4px 0}
+.wf-row.is-new{background:var(--ok-50)}
 .field-hint{font-size:var(--t-13);color:var(--mute);font-weight:400;order:3}
 .ctl{min-height:var(--hit);padding:0 12px;border:1px solid var(--line-strong);border-radius:var(--r);font:inherit;font-size:var(--t-14);font-weight:400;background:var(--surface);color:var(--ink);width:100%;transition:box-shadow var(--dur-1) var(--ease)}
 .ctl:focus{outline:none;box-shadow:var(--focus)}.ctl[aria-invalid=true]{border-color:var(--bad)}
@@ -234,7 +251,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .stepper li[aria-current=step] .s-t{color:var(--ink);font-weight:600}
 .stepper li.is-error .s-n{border:2px solid var(--bad);color:var(--bad)}
 .stepper li.is-error .s-t::after{content:" · Revisar";color:var(--bad)}
-.wiz-progress{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden}.wiz-progress i{display:block;height:100%;background:var(--navy);transition:width var(--dur-2) var(--ease)}
+.wiz-progress{height:3px;margin-top:14px;background:var(--surface-2);border-radius:2px;overflow:hidden}.wiz-progress i{display:block;height:100%;background:var(--navy);transition:width var(--dur-2) var(--ease)}
 .wiz-mobile{display:none;align-items:center;gap:12px;font-size:var(--t-14)}.wiz-mobile b{font-weight:600}
 .wiz-step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:24px}
 .wizard.is-on .wiz-step{display:none}.wizard.is-on .wiz-step.on{display:flex;animation:wizin var(--dur-2) var(--ease)}

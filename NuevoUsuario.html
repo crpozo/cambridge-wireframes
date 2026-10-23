@@ -29,7 +29,7 @@
 </header>
 <main class="main" id="main">
   <div class="page-head"><div><h1>Nuevo usuario</h1><p>Un usuario, un rol, las sedes que le corresponden</p></div></div>
-  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="form-grid cols-2"><div class="field"><label for="f237">Nombres y apellidos</label><input id="f237" type="text" class="ctl" placeholder=""></div><div class="field"><label for="f238">Email</label><input id="f238" type="email" class="ctl" placeholder="nombre@ejemplo.com"></div><div class="field"><label for="f239">Rol</label><select id="f239" class="ctl"><option>Seleccionar…</option><option selected>Admin</option><option>Dir. Comercial</option><option>Coord. Académica</option><option>Asesor</option><option>Secretaría</option><option>Profesor</option></select></div><div class="field"><label for="f240">Sedes visibles</label><select id="f240" class="ctl"><option selected>Quito</option><option>Valle de los Chillos</option><option>Ambato</option><option>Cuenca</option></select></div><div class="field"><label for="f241">Estado</label><select id="f241" class="ctl"><option selected>Activo</option><option>Inactivo</option></select></div><div class="field"><label for="f242">2FA obligatorio</label><select id="f242" class="ctl"><option>Sí</option><option>No</option></select></div></div></section><section class="card"><div class="card-head"><h2>Permisos del rol elegido</h2></div><ul class="list"><li>Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede</li><li>No puede: aprobar profesores, exportar base completa, ver otras sedes</li></ul></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log." data-next="Usuarios.html">Guardar usuario</button><a href="Usuarios.html" class="btn">Cancelar</a></div>
+  <section class="card"><div class="card-head"><h2>Datos</h2></div><div class="form-grid cols-2"><div class="field"><label for="f249">Nombres y apellidos</label><input id="f249" type="text" class="ctl" placeholder=""></div><div class="field"><label for="f250">Email</label><input id="f250" type="email" class="ctl" placeholder="nombre@ejemplo.com"></div><div class="field"><label for="f251">Rol</label><select id="f251" class="ctl"><option>Seleccionar…</option><option selected>Admin</option><option>Dir. Comercial</option><option>Coord. Académica</option><option>Asesor</option><option>Secretaría</option><option>Profesor</option></select></div><div class="field"><label for="f252">Sedes visibles</label><select id="f252" class="ctl"><option selected>Quito</option><option>Valle de los Chillos</option><option>Ambato</option><option>Cuenca</option></select></div><div class="field"><label for="f253">Estado</label><select id="f253" class="ctl"><option selected>Activo</option><option>Inactivo</option></select></div><div class="field"><label for="f254">2FA obligatorio</label><select id="f254" class="ctl"><option>Sí</option><option>No</option></select></div></div></section><section class="card"><div class="card-head"><h2>Permisos del rol elegido</h2></div><ul class="list"><li>Crear estudiante · Aplicar descuento hasta 10% · Ver solo su sede</li><li>No puede: aprobar profesores, exportar base completa, ver otras sedes</li></ul></section><div class="form-foot"><button type="button" class="btn btn-primary" data-action="Se crea el usuario y recibe un correo para definir su contraseña. El alta queda en el audit log." data-next="Usuarios.html" data-save="usuarios">Guardar usuario</button><a href="Usuarios.html" class="btn">Cancelar</a></div>
 </main>
 </div>
 </div>
@@ -53,7 +53,11 @@
     b.addEventListener('click',function(){cur=b;title.textContent=b.textContent.trim();text.textContent=b.dataset.action;dlg.showModal();});
   });
   document.getElementById('wf-cancel').addEventListener('click',function(){dlg.close();});
+  function saveForm(list){var rec={};document.querySelectorAll('.field').forEach(function(f){var l=f.querySelector('label'),c=f.querySelector('input,select,textarea');if(!l||!c)return;var k=l.textContent.replace(/\*$/,'').trim();if(k in rec)return;var v=c.type==='file'?(c.files&&c.files[0]?c.files[0].name:''):(c.value||'');rec[k]=v.trim();});rec._ts=Date.now();
+    try{var arr=JSON.parse(localStorage.getItem('wf-data-'+list)||'[]');arr.unshift(rec);localStorage.setItem('wf-data-'+list,JSON.stringify(arr));}catch(e){}}
+  document.querySelectorAll('a[data-save]').forEach(function(a){a.addEventListener('click',function(){saveForm(a.dataset.save);});});
   document.getElementById('wf-ok').addEventListener('click',function(){
+    if(cur.dataset.save)saveForm(cur.dataset.save);
     dlg.close();toast.textContent='Hecho: '+cur.textContent.trim();toast.style.display='block';
     setTimeout(function(){toast.style.display='none';if(cur.dataset.next)location.href=cur.dataset.next;},1100);
   });
@@ -63,6 +67,17 @@
   document.querySelectorAll('.pills').forEach(function(g){var multi=g.hasAttribute('data-multi');g.querySelectorAll('.pill').forEach(function(b){b.addEventListener('click',function(){if(!multi)g.querySelectorAll('.pill').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-pressed','false');});var on=multi?!b.classList.contains('on'):true;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});});});
 })();
 (function(){
+  /* registros creados en esta demo (localStorage) → primeras filas de la lista */
+  document.querySelectorAll('[data-list]').forEach(function(w){var arr=[];try{arr=JSON.parse(localStorage.getItem('wf-data-'+w.getAttribute('data-list'))||'[]');}catch(e){}if(!arr.length)return;
+    var tpl=JSON.parse(w.getAttribute('data-list-tpl')),tbl=w.querySelector('.wf-table'),first=tbl.querySelector('.wf-row');if(!first)return;
+    function esc(x){return String(x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+    function cell(t,rec){t=t.replace(/[{]([^}]+)[}]/g,function(_,k){return esc(rec[k]||'—');});
+      if(t.indexOf('badge:')===0){var p=t.split(':');return '<span class="badge badge-'+p[1]+'"><i></i>'+p.slice(2).join(':')+'</span>';}
+      if(t.indexOf('link:')===0){var q=t.split(':');return '<a href="'+q[1]+'">'+q.slice(2).join(':')+'</a>';}
+      if(t.indexOf('mono:')===0)return '<span class="mono">'+t.slice(5)+'</span>';
+      if(t.indexOf('|')>0){var h=t.split('|');return '<span class="c2"><span>'+h[0]+'</span><small>'+h.slice(1).join('|')+'</small></span>';}return t;}
+    arr.slice().reverse().forEach(function(rec){var r=first.cloneNode(true);var tds=r.querySelectorAll('.td');tds.forEach(function(td,i){td.innerHTML=cell(tpl[i]||'—',rec);});
+      var sede=(r.textContent.match(/Quito|Valle|Ambato|Cuenca/)||[])[0];if(sede)r.setAttribute('data-sede',sede);else r.removeAttribute('data-sede');r.removeAttribute('data-href');r.classList.add('is-new');tbl.insertBefore(r,first);});});
   document.querySelectorAll('.wf-row').forEach(function(r){
     var a=r.querySelector('a[data-row]'); if(!a){var last=r.lastElementChild; a=last&&last.querySelector('a[href]'); if(!a||last.querySelectorAll('a,button').length!==1) return;}
     r.setAttribute('data-href',a.getAttribute('href'));
@@ -199,6 +214,28 @@ document.querySelectorAll('.tabs').forEach(function(bar){
   /* controles segmentados */
   document.querySelectorAll('.seg').forEach(function(g){var bs=g.querySelectorAll('[role=radio]');bs.forEach(function(b){b.addEventListener('click',function(){bs.forEach(function(x){x.setAttribute('aria-checked',x===b);x.tabIndex=x===b?0:-1;var p=document.getElementById(x.getAttribute('aria-controls'));if(p)p.hidden=x!==b;});});
     b.addEventListener('keydown',function(e){if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;e.preventDefault();var a=[].slice.call(bs),i=a.indexOf(b),n=a[(i+(e.key==='ArrowRight'?1:-1)+a.length)%a.length];n.focus();n.click();});});});
+  /* dirección por niveles: provincia → cantón → parroquia */
+  document.querySelectorAll('select[data-dpa]').forEach(function(p){var ids=p.getAttribute('data-dpa').split(','),c=document.getElementById(ids[0]),q=document.getElementById(ids[1]),d=JSON.parse(p.getAttribute('data-dpa-json'));
+    function fill(sel,list){sel.innerHTML=list.map(function(x){return '<option>'+x+'</option>';}).join('');}
+    p.addEventListener('change',function(){fill(c,Object.keys(d[p.value]||{}));fill(q,((d[p.value]||{})[c.value]||[]).concat(['Otra parroquia…']));});
+    c.addEventListener('change',function(){fill(q,((d[p.value]||{})[c.value]||[]).concat(['Otra parroquia…']));});});
+  /* agregar otro módulo (sin diálogo) */
+  document.querySelectorAll('[data-addmod]').forEach(function(b){b.addEventListener('click',function(){
+    var scope=b.closest('.wiz-step')||b.closest('.card')||document;var groups=scope.querySelectorAll('.mod-group');var g=groups[groups.length-1];if(!g)return;
+    var rows=g.querySelectorAll('.mod'),last=rows[rows.length-1],m=/Módulo (\d+)/.exec(last.textContent),n=m?+m[1]+1:rows.length+1;
+    var c=last.cloneNode(true);c.querySelector('.m-n b').textContent='Módulo '+n;var cells=c.children;
+    cells[1].innerHTML='Continúa en el mismo grupo<small>cupo reservado al matricular</small>';cells[3].innerHTML='por confirmar<small>inicia</small>';cells[4].innerHTML='<span class="badge badge-navy"><i></i>Reservado</span>';
+    g.appendChild(c);c.classList.add('is-new');var t=document.getElementById('toast');if(t){t.textContent='Módulo '+n+' agregado a la venta';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+  });});
+  /* descuento recalculable */
+  document.querySelectorAll('select[data-disc]').forEach(function(sel){var lg=document.querySelector('[data-ledger="'+sel.getAttribute('data-disc')+'"]');if(!lg)return;var lim=+sel.getAttribute('data-limit')||10;
+    function money(x){return '$'+Math.round(x).toLocaleString('en-US');}
+    function calc(){var p=+sel.value,tot=0,dsc=0;lg.querySelectorAll('[data-sub]').forEach(function(c){var v=+c.getAttribute('data-v'),dc=c.previousElementSibling,ok=dc.hasAttribute('data-dc'),d=ok?v*p/100:0;dc.textContent=(ok&&p)?p+'%':'—';c.textContent=money(v-d);tot+=v-d;dsc+=d;});
+      lg.querySelector('[data-ldisc]').textContent=dsc?'-'+money(dsc):'—';lg.querySelector('[data-ltotal]').textContent=money(tot);
+      document.querySelectorAll('[data-total-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){e.textContent=money(tot);});
+      document.querySelectorAll('[data-disc-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){e.textContent=p?p+'% · -'+money(dsc):'sin descuento';});
+      var h=sel.parentElement.querySelector('[data-disc-hint]');if(h){h.textContent=p>lim?'Más de '+lim+'%: la matrícula queda en espera hasta que Dirección Comercial apruebe el descuento':'Los valores de la tabla y el total se recalculan al cambiar';h.classList.toggle('is-warn',p>lim);}}
+    sel.addEventListener('change',calc);});
   /* asistente de pasos */
   document.querySelectorAll('[data-wizard]').forEach(function(w){
     var steps=[].slice.call(w.querySelectorAll('.wiz-step')),n=steps.length,cur=0,max=0,ol=w.querySelector('.stepper'),bar=w.querySelector('.wiz-progress i'),mob=w.querySelector('.wiz-mobile b');
