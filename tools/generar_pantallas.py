@@ -483,13 +483,27 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
     function fill(sel,list){{sel.innerHTML=list.map(function(x){{return '<option>'+x+'</option>';}}).join('');}}
     p.addEventListener('change',function(){{fill(c,Object.keys(d[p.value]||{{}}));fill(q,((d[p.value]||{{}})[c.value]||[]).concat(['Otra parroquia…']));}});
     c.addEventListener('change',function(){{fill(q,((d[p.value]||{{}})[c.value]||[]).concat(['Otra parroquia…']));}});}});
+  /* exportaciones reales: CSV de las tablas visibles, PDF por impresión, XML de ejemplo */
+  document.querySelectorAll('[data-export]').forEach(function(b){{b.addEventListener('click',function(){{
+    var kind=b.getAttribute('data-export'),name=((document.querySelector('h1')||{{}}).textContent||document.title||'reporte').replace(/[^\wáéíóúñ]+/gi,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10);
+    function dl(txt,ext,mime){{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+txt],{{type:mime}}));a.download=name+'.'+ext;document.body.appendChild(a);a.click();setTimeout(function(){{URL.revokeObjectURL(a.href);a.remove();}},500);
+      var t=document.getElementById('wf-toast');if(t){{t.textContent='Descargado: '+a.download;t.style.display='block';setTimeout(function(){{t.style.display='none';}},2200);}}}}
+    if(kind==='pdf'){{window.print();return;}}
+    var scope=b.closest('.panel,.card,.seg-panel')||document;var tables=[].slice.call(scope.querySelectorAll('.wf-table')).filter(function(t){{return t.offsetParent!==null;}});
+    if(!tables.length)tables=[].slice.call(document.querySelectorAll('.wf-table')).filter(function(t){{return t.offsetParent!==null;}});
+    function clean(s){{return '"'+s.replace(/\s+/g,' ').trim().replace(/"/g,'""')+'"';}}
+    if(kind==='xml'){{var rows=[];tables.forEach(function(t){{var cols=JSON.parse(t.getAttribute('data-cols'));t.querySelectorAll('.wf-row').forEach(function(r){{if(r.style.display==='none')return;var o='  <registro>';r.querySelectorAll('.td').forEach(function(c,i){{o+='<'+(cols[i]||'campo').replace(/[^a-z0-9]/gi,'_')+'>'+c.textContent.replace(/\s+/g,' ').trim().replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</'+(cols[i]||'campo').replace(/[^a-z0-9]/gi,'_')+'>';}});rows.push(o+'</registro>');}});}});
+      dl('<?xml version="1.0" encoding="UTF-8"?>\\n<exportacion origen="Plataforma Cambridge" fecha="'+new Date().toISOString()+'">\\n'+rows.join('\\n')+'\\n</exportacion>','xml','application/xml');return;}}
+    var out=[];tables.forEach(function(t,k){{var cols=JSON.parse(t.getAttribute('data-cols'));if(k)out.push('');out.push(cols.map(clean).join(';'));t.querySelectorAll('.wf-row').forEach(function(r){{if(r.style.display==='none')return;var cells=[];r.querySelectorAll('.td').forEach(function(c){{cells.push(clean(c.textContent));}});out.push(cells.join(';'));}});}});
+    if(!out.length){{out.push(clean(document.title));document.querySelectorAll('.sum-item').forEach(function(k){{out.push([k.querySelector('.sum-label'),k.querySelector('.sum-value'),k.querySelector('.sum-sub')].map(function(e){{return clean(e?e.textContent:'');}}).join(';'));}});}}
+    dl(out.join('\\n'),'csv','text/csv;charset=utf-8');}});}});
   /* agregar otro módulo (sin diálogo) */
   document.querySelectorAll('[data-addmod]').forEach(function(b){{b.addEventListener('click',function(){{
     var scope=b.closest('.wiz-step')||b.closest('.card')||document;var groups=scope.querySelectorAll('.mod-group');var g=groups[groups.length-1];if(!g)return;
     var rows=g.querySelectorAll('.mod'),last=rows[rows.length-1],m=/Módulo (\d+)/.exec(last.textContent),n=m?+m[1]+1:rows.length+1;
     var c=last.cloneNode(true);c.querySelector('.m-n b').textContent='Módulo '+n;var cells=c.children;
     cells[1].innerHTML='Continúa en el mismo grupo<small>cupo reservado al matricular</small>';cells[3].innerHTML='por confirmar<small>inicia</small>';cells[4].innerHTML='<span class="badge badge-navy"><i></i>Reservado</span>';
-    g.appendChild(c);c.classList.add('is-new');var t=document.getElementById('toast');if(t){{t.textContent='Módulo '+n+' agregado a la venta';t.classList.add('show');setTimeout(function(){{t.classList.remove('show');}},2200);}}
+    g.appendChild(c);c.classList.add('is-new');var t=document.getElementById('wf-toast');if(t){{t.textContent='Módulo '+n+' agregado a la venta';t.style.display='block';setTimeout(function(){{t.style.display='none';}},2200);}}
   }});}});
   /* descuento recalculable */
   document.querySelectorAll('select[data-disc]').forEach(function(sel){{var lg=document.querySelector('[data-ledger="'+sel.getAttribute('data-disc')+'"]');if(!lg)return;var lim=+sel.getAttribute('data-limit')||10;
@@ -747,6 +761,10 @@ def btn(label, href=None, primary=False, action=None, next=None, kind=None, disa
     sv_=f' data-save="{save}"' if save else ""
     if href: return f'<a href="{href}" class="{cls}"{sv_}>{label}</a>'
     if action is None: raise ValueError(f"Botón sin destino ni acción: {label}")
+    if re.match(r"^(Exportar|Descargar)", label) and label not in ("Descargar expediente",):
+        # Exportación real en la demo: CSV (abre en Excel) de las tablas visibles, PDF por impresión del navegador, XML de ejemplo.
+        kind_="pdf" if "PDF" in label or label in ("Descargar certificado","Descargar factura","Descargar facturas pendientes") else ("xml" if "XML" in label else "csv")
+        return f'<button type="button" class="{cls}" data-export="{kind_}" title="{action}">{label}</button>'
     nx=f' data-next="{next}"' if next else ""
     return f'<button type="button" class="{cls}" data-action="{action}"{nx}{sv_}>{label}</button>'
 
@@ -1499,7 +1517,7 @@ page("DetallePedido.html","Detalle pedido",shell("Pedido #WC-10482 · Mock Test 
 page("Pedidos.html","Tienda en línea",shell("Tienda en línea · pedidos WooCommerce","Tienda en línea",
  kpis([("Pedidos de la semana",sv(23,12,6,5),"tienda cambridgesol.edu.ec"),("Tiempo promedio de contacto",sv("9 h","7 h","11 h","12 h"),"meta < 24 h"),("Sin gestionar",sv(2,1,1,0),"1 por validar · 1 por contactar"),("Cancelados / abandonados",sv("2 · 8.7%","1","1","0"),"meta < 5% · 1 para recuperar"),("Atendidos correctamente",sv("96%","100%","92%","100%"),"meta 99%")]),
  tabs(["Pedidos","Incidencias","Correos al cliente","Certificaciones internacionales","Control semanal"],"Pedidos",counts={"Pedidos":8,"Incidencias":4},panels={
-  "Pedidos": filters(search("Buscar","Nº de pedido, cliente o producto",w="260px"),sel("Etapa",["Todas","Por validar","Validado · registrar factura","Contactado · agendado","Facturado · servicio en gestión","Entregado","Cancelado · llamar para recuperar","Abandonado","Incidencia · pedido duplicado"],w="220px"),sel("Producto",["Todos","Mock Test Internacional","Traducción","TOEFL ITP","SIELE Global"],w="180px",col="Producto"),dates(),actions=btn("Abrir WooCommerce","https://cambridgesol.edu.ec/",True)+btn("Ir a la tienda",WOO)+btn("Sincronizar pedidos",None,False,"Se traen los pedidos nuevos y cambios de estado de WooCommerce y el resultado del pago en Nuvei."))
+  "Pedidos": filters(search("Buscar","Nº de pedido, cliente o producto",w="260px"),sel("Etapa",["Todas","Por validar","Validado · registrar factura","Contactado · agendado","Facturado · servicio en gestión","Entregado","Cancelado · llamar para recuperar","Abandonado","Incidencia · pedido duplicado"],w="220px"),sel("Producto",["Todos","Mock Test Internacional","Traducción","TOEFL ITP","SIELE Global"],w="180px",col="Producto"),dates(),actions='<span class="result-count" aria-live="polite"></span>'+btn("Sincronizar pedidos",None,False,"Se traen los pedidos nuevos y cambios de estado de WooCommerce y el resultado del pago en Nuvei."))
    +pedidos_tbl+pager(sv(23,12,6,5))
    +two(card("Pedido #WC-10482 · qué sigue", kv(("Cliente","Lorena Paz · 099 000 0201 · l.paz@ejemplo.com"),("Producto","Mock Test Internacional · B2 · $45.00"),("Pago","Aprobado en Nuvei · 09:12 · sin rechazo"),("Recibido","hoy 09:12 · revisar antes de 13:12"),("Asignado a","Secretaría Académica Quito"))+flow([("Validar pedido","pago, datos, producto","","now"),("Registrar factura","","",""),("Contactar y agendar","antes de mañana 09:12","",""),("Enviar correo informativo","plantilla Mock Test","","")])+row(btn("Validar pedido",None,True),btn("Registrar factura","Facturas.html"),btn("Marcar contactado"),btn("Enviar correo informativo"),btn("Registrar incidencia"))),
         card("Pedidos cancelados · recuperar la venta", kv(("Regla","si hay datos del cliente, llamar para conocer el inconveniente e intentar recuperar la venta"),("Hoy","1 cancelado con datos (Marco Vinueza · pago rechazado en Nuvei)"),("Guion","confirmar el rechazo, ofrecer transferencia o pago en sede, registrar el resultado"))+row(btn("Llamar para recuperar venta",None,True),btn("Marcar como perdido",None,False,"El pedido queda como perdido con el motivo registrado; cuenta en el indicador de abandonados.")))),
@@ -1509,6 +1527,7 @@ page("Pedidos.html","Tienda en línea",shell("Tienda en línea · pedidos WooCom
   "Control semanal": two(card("Semana 20–24 oct", kv(("Pedidos","23"),("Tiempo promedio de respuesta","9 h (meta < 24 h)"),("Sin gestionar","2"),("Cancelados","2 · 1 recuperable"),("Incidencias abiertas","1 vencida"))+row(btn("Enviar reporte a Dirección Administrativa",None,True),btn("Exportar PDF"))),
      card("Indicadores", hbars([("Contacto en menos de 24 h",96),("Atendidos correctamente (meta 99%)",96),("Abandonados (meta < 5%)",9),("Conversión tienda (visitas → pedido)",3)],unit=""))),
  }),
+ actions=btn("Abrir la tienda (WooCommerce)",WOO,True)+btn("Ver en Books and Bits","https://exams.booksandbits.ec/csol"),
  subtitle="Procedimiento de pedidos de la tienda virtual: validación, registro, contacto en 24 h, servicio, incidencias y reporte semanal"),"Tienda en línea · pedidos WooCommerce")
 
 # 2 Home
@@ -2929,6 +2948,7 @@ button.sum-item,a.sum-item{cursor:pointer;transition:background var(--dur-1) var
 .field-hint.is-warn{color:var(--warn)}
 .review-facts{padding:4px 0}
 .wf-row.is-new{background:var(--ok-50)}
+@media print{.sidebar,.topbar,.ai-fab,.ai-panel,.form-foot,.filters,.filters-actions,.back,#wf-toast,dialog,.page-actions,.btn,.seg,.tabs{display:none !important}.main{padding:0}.card,.tbl-wrap{break-inside:avoid;border:0}body{background:#fff}.wf-table{font-size:11px}.panel[hidden]{display:none}}
 .field-hint{font-size:var(--t-13);color:var(--mute);font-weight:400;order:3}
 .ctl{min-height:var(--hit);padding:0 12px;border:1px solid var(--line-strong);border-radius:var(--r);font:inherit;font-size:var(--t-14);font-weight:400;background:var(--surface);color:var(--ink);width:100%;transition:box-shadow var(--dur-1) var(--ease)}
 .ctl:focus{outline:none;box-shadow:var(--focus)}.ctl[aria-invalid=true]{border-color:var(--bad)}
