@@ -896,7 +896,11 @@ def field(label, value="", kind="text", options=None, req=False, hint=""):
     elif kind=="file":
         ctl=f'<label class="ctl ctl-file" for="{i}"><span>{value or "Seleccionar archivo…"}</span><b>Examinar</b><input id="{i}" type="file" hidden></label>'
     else:
-        ctl=f'<input id="{i}" type="{kind}" class="ctl" placeholder="{value}">'
+        # Dato de ejemplo precargado (demo): en campos obligatorios o validados el valor va como value, no como placeholder,
+        # para que los asistentes avancen sin que el usuario tenga que escribir. Las pistas ("Busca por…", "Ej.…") siguen como placeholder.
+        hinty=(not value) or value.endswith("…") or value.lower().startswith(("busca","ej.","escribe","selecciona","se calcula")) or (kind=="date" and not re.match(r"^\d{4}-\d{2}-\d{2}$",value)) or (kind=="time" and not re.match(r"^\d{2}:\d{2}$",value))
+        if (req or val) and not hinty: ctl=f'<input id="{i}" type="{kind}" class="ctl" value="{value}">'
+        else: ctl=f'<input id="{i}" type="{kind}" class="ctl" placeholder="{value}">'
     if req: ctl=ctl.replace(f'id="{i}"',f'id="{i}" aria-required="true"',1)
     if val: ctl=ctl.replace(f'id="{i}"',f'id="{i}" data-validate',1)
     if hint and kind!="file": ctl=ctl.replace(f'id="{i}"',f'id="{i}" aria-describedby="{i}-h"',1)
@@ -1498,7 +1502,7 @@ venta_lead=shell("Nueva matrícula · desde lead","Nueva matrícula",
  wizcard(step(1,"Estudiante creado desde el lead",
    kv(("Lead","Andrea Villacís · Kommo · Instagram · cotizado hoy 10:20"),("Interés","Adults · virtual · grupal"),("Asesor","Carla M. · Quito"),("Al confirmar","el lead pasa a Ganado en Kommo y queda enlazado a la ficha"))
    +form([("Nombres","Andrea","text",None,True,"Del lead"),("Apellidos","Villacís","text",None,True,"Del lead"),("Teléfono","099 000 0101","tel",None,True,"Del lead"),
-          ("Email","a.villacis@ejemplo.com","email",None,True,"Del lead"),("Tipo de identificación","Cédula","select",["Cédula","RUC","Pasaporte"],True),("Cédula / ID!","","text",None,True,"Falta en el lead · se valida al pasar al siguiente paso"),
+          ("Email","a.villacis@ejemplo.com","email",None,True,"Del lead"),("Tipo de identificación","Cédula","select",["Cédula","RUC","Pasaporte"],True),("Cédula / ID!","1726543210","text",None,True,"Falta en el lead · se valida al pasar al siguiente paso"),
           ("Provincia / ciudad","Pichincha · Quito","select",["Pichincha · Quito","Pichincha · Valle de los Chillos","Tungurahua · Ambato","Otra…"],True),("Sector","Quito Norte · El Condado","select",["Quito Norte · La Carolina","Quito Norte · El Condado","Quito Centro · La Mariscal","Quito Sur · Quitumbe","Cumbayá / Tumbaco"],True),("Tipo de estudiante","Nuevo · creado desde el lead","text",None,False,"Automático"),
           ("Asesor (vendor)","Carla M.","select",["Carla M.","Diego R.","Andrea S.","Luis P."],True),("Canal de contacto","Kommo · Facebook / Instagram","select",["Kommo · WhatsApp","Kommo · Facebook / Instagram","Walk-in (visita a la sede)","Referido","Empresa (convenio)"],True,"Del lead"),("Sede","Quito","text",None,False,"Del lead")],cols=3)
    +row(btn("Ubicar en el mapa")),sub="Los datos que ya tenía el lead se precargan; solo falta la cédula y la dirección")
@@ -1630,7 +1634,7 @@ page("NuevaInscripcionExamen.html","Inscripción a examen",shell("Nueva inscripc
  wizcard(step(1,"Cliente y destinatario de la factura", form([("Tipo de cliente","Estudiante de Cambridge","select",["Estudiante de Cambridge","Cliente externo"],True),("Estudiante","Lucía Benítez · CED 1716543210","text",None,False,"Si es estudiante se reutiliza su ficha"),("Facturar a","Su madre · Carmen Ortiz · CED 1705432198","select",["La misma candidata","Su madre · Carmen Ortiz · CED 1705432198","Empresa","Otra persona"],True,"El destinatario puede ser distinto del candidato")],cols=3))
   +step(2,"Examen, tarifa y pago", form([("Categoría","Cambridge","select",["Cambridge","Oxford","TOEFL","Anglia"],True),("Examen","B2 First (FCE)","select",["A2 Key","B1 Preliminary","B2 First (FCE)","C1 Advanced"],True),("Tarifa vigente","$235.00","text",None,False,"Automático"),("Forma de pago","Tarjeta de crédito","select",["Efectivo","Tarjeta de crédito","Tarjeta de débito","Transferencia","Depósito"],True)],cols=4)
      +kv(("Factura","000021101 · se emite al registrar el pago"),("Validación del pago","posterior, por Contabilidad")))
-  +step(3,"Datos de quien rendirá el examen", form([("Apellidos","Benítez Ortiz","text",None,True),("Nombres","Lucía","text",None,True),("Género","Femenino","select",["Femenino","Masculino","Otro"],True),("Identificación","1716543210","text",None,True),("Fecha de nacimiento","","date",None,True),("Celular","099 000 0031","tel",None,True),("Correo","lucia.b@ejemplo.com","email",None,True,"Para las comunicaciones del examen")],cols=4)
+  +step(3,"Datos de quien rendirá el examen", form([("Apellidos","Benítez Ortiz","text",None,True),("Nombres","Lucía","text",None,True),("Género","Femenino","select",["Femenino","Masculino","Otro"],True),("Identificación","1716543210","text",None,True),("Fecha de nacimiento","2001-05-14","date",None,True),("Celular","099 000 0031","tel",None,True),("Correo","lucia.b@ejemplo.com","email",None,True,"Para las comunicaciones del examen")],cols=4)
      +upload("Identificación del candidato (parte frontal)","Foto o PDF · se contrasta con nombres y fecha de nacimiento"))
   +step(4,"Fecha del calendario anual", table(["Fecha","Sede","Cierre de inscripción","Disponible"],[["14 nov 2026","Quito","25 oct",badge("Sí · faltan 26 días","ok")],["5 dic 2026","Quito","15 nov",badge("Sí","ok")],["7 nov 2026","Valle","18 oct",badge("No · menos de 20 días","bad")]])
      +kv(("Regla","la inscripción debe hacerse con al menos 20 días de anticipación")))
