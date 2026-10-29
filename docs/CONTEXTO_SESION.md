@@ -98,6 +98,9 @@ Asistentes con datos precargados (campos obligatorios con `value`, no placeholde
 ### 29 oct 2026 · correos de Dirección Comercial y Administración
 Reflejados en el tablero comercial (matriz KPI, por origen, sedes combinables, filtros), orígenes de lead con sub-campos, RegistrarWalkIn.html, comisión por pago completo, aceptación electrónica del contrato e Integraciones. Resumen y recomendación técnica en `docs/REQUERIMIENTOS_CORREOS_OCT26.md`. Faltan los adjuntos de los correos (Excel de KPIs, consolidado, auditoría/hub de secretaría); las credenciales del hub no se guardan.
 
+### 29 oct 2026 · cambios de la revisión comercial del 23 oct
+Aplicados todos los cambios del documento "Cambios al prototipo y próximos pasos" (ver `docs/CAMBIOS_SESION_COMERCIAL_23OCT.md`, con estado por ítem y propuesta MVP vs Fase B). Quedan pendientes de Cambridge las listas reales, la tabla de descuentos, el catálogo con libros y precios y las métricas con su cálculo.
+
 ## 6. Pendientes y temas abiertos
 
 - Acceso a TeamDesk desde el entorno (bloqueado por política de red). Alternativas: permitir `teamdesk.net` en la política del entorno o exportar el esquema/vistas.

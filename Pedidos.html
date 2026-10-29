@@ -216,6 +216,8 @@ document.querySelectorAll('.tabs').forEach(function(bar){
   /* controles segmentados */
   document.querySelectorAll('.seg').forEach(function(g){var bs=g.querySelectorAll('[role=radio]');bs.forEach(function(b){b.addEventListener('click',function(){bs.forEach(function(x){x.setAttribute('aria-checked',x===b);x.tabIndex=x===b?0:-1;var p=document.getElementById(x.getAttribute('aria-controls'));if(p)p.hidden=x!==b;});});
     b.addEventListener('keydown',function(e){if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;e.preventDefault();var a=[].slice.call(bs),i=a.indexOf(b),n=a[(i+(e.key==='ArrowRight'?1:-1)+a.length)%a.length];n.focus();n.click();});});});
+  /* selector con campos dependientes */
+  document.querySelectorAll('select[data-dep]').forEach(function(sl){var id=sl.getAttribute('data-dep');function upd(){document.querySelectorAll('.dep-group[data-dep-for="'+id+'"]').forEach(function(g){g.hidden=g.getAttribute('data-dep-when')!==sl.value;});}sl.addEventListener('change',upd);upd();});
   /* origen del lead: canal de pauta y '¿cómo nos conoció?' según el origen */
   document.querySelectorAll('select[data-origen]').forEach(function(o){var ids=o.getAttribute('data-origen').split(','),p=document.getElementById(ids[0]).closest('.field'),w=document.getElementById(ids[1]).closest('.field');var pag=['Facebook','Instagram','TikTok','Facebook Forms'];
     function upd(){p.hidden=pag.indexOf(o.value)<0;w.hidden=o.value!=='Walk-in';}o.addEventListener('change',upd);upd();});

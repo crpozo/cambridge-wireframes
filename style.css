@@ -139,6 +139,7 @@ button.sum-item,a.sum-item{cursor:pointer;transition:background var(--dur-1) var
 .review-facts{padding:4px 0}
 .wf-row.is-new{background:var(--ok-50)}
 @media print{.sidebar,.topbar,.ai-fab,.ai-panel,.form-foot,.filters,.filters-actions,.back,#wf-toast,dialog,.page-actions,.btn,.seg,.tabs{display:none !important}.main{padding:0}.card,.tbl-wrap{break-inside:avoid;border:0}body{background:#fff}.wf-table{font-size:11px}.panel[hidden]{display:none}}
+.dep-group{display:contents}.dep-group[hidden]{display:none}
 .field-hint{font-size:var(--t-13);color:var(--mute);font-weight:400;order:3}
 .ctl{min-height:var(--hit);padding:0 12px;border:1px solid var(--line-strong);border-radius:var(--r);font:inherit;font-size:var(--t-14);font-weight:400;background:var(--surface);color:var(--ink);width:100%;transition:box-shadow var(--dur-1) var(--ease)}
 .ctl:focus{outline:none;box-shadow:var(--focus)}.ctl[aria-invalid=true]{border-color:var(--bad)}
