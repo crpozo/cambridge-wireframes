@@ -95,6 +95,9 @@ El usuario subió el manual de ecommerce (ya reflejado en `Pedidos.html`), el co
 ### 23 oct 2026 · preparación del taller con el cliente
 Asistentes con datos precargados (campos obligatorios con `value`, no placeholder) para recorrer todo el flujo con "Siguiente"; dirección Provincia → Cantón → Parroquia (DPA) + Google Maps; Matrícula desde lead (Kommo → plataforma, horarios, agregar módulo sin popup, descuento recalculable, confirmación en cuadrícula); Nueva matrícula alineada al Enrollment de TeamDesk (selector de curso, ¿Indexado?); Detalle de matrícula con Portafolio; Empresas con consolidado por empresa; DetallePedido con el seguimiento por pedido; "datos de demo que funcionan" (altas que crean registros reales en las listas vía localStorage); Reclutamiento administrativo como propuesta.
 
+### 29 oct 2026 · correos de Dirección Comercial y Administración
+Reflejados en el tablero comercial (matriz KPI, por origen, sedes combinables, filtros), orígenes de lead con sub-campos, RegistrarWalkIn.html, comisión por pago completo, aceptación electrónica del contrato e Integraciones. Resumen y recomendación técnica en `docs/REQUERIMIENTOS_CORREOS_OCT26.md`. Faltan los adjuntos de los correos (Excel de KPIs, consolidado, auditoría/hub de secretaría); las credenciales del hub no se guardan.
+
 ## 6. Pendientes y temas abiertos
 
 - Acceso a TeamDesk desde el entorno (bloqueado por política de red). Alternativas: permitir `teamdesk.net` en la política del entorno o exportar el esquema/vistas.
