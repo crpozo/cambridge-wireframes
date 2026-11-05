@@ -358,27 +358,53 @@ def page(fname, title, inner, lang_title):
 }})();
 (function(){{
   var sel=document.getElementById('sede');
+  var TODAY=new Date(2026,9,23);var MES={{ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11}};
+  function parseDate(t){{t=(t||'').toLowerCase();if(/\bhoy\b|hace \d+ ?(h|min)/.test(t))return TODAY;if(/\bayer\b/.test(t))return new Date(2026,9,22);
+    var m=/(\d{{1,2}})\s+(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-z]*\.?(?:\s+(\d{{4}}))?/.exec(t);if(m)return new Date(m[3]?+m[3]:2026,MES[m[2]],+m[1]);
+    m=/(\d{{4}})-(\d{{2}})-(\d{{2}})/.exec(t);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=/(\d{{1,2}})\/(\d{{1,2}})\/(\d{{4}})/.exec(t);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+    m=/\b(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-z]*\.?\s+(\d{{4}})/.exec(t);if(m)return new Date(+m[2],MES[m[1]],15);return null;}}
+  function rango(p){{var y=TODAY.getFullYear(),mo=TODAY.getMonth(),d=TODAY.getDate();function D(a,b,c){{return new Date(a,b,c);}}
+    switch(p){{case 'Hoy':return [TODAY,TODAY];case 'Ayer':return [D(y,mo,d-1),D(y,mo,d-1)];case 'Esta semana':var wd=(TODAY.getDay()+6)%7;return [D(y,mo,d-wd),D(y,mo,d-wd+6)];
+      case 'Del 1 al 15':return [D(y,mo,1),D(y,mo,15)];case 'Del 16 a fin de mes':return [D(y,mo,16),D(y,mo+1,0)];case 'Este mes':return [D(y,mo,1),D(y,mo+1,0)];case 'Mes anterior':return [D(y,mo-1,1),D(y,mo,0)];
+      case 'Este trimestre':var q=Math.floor(mo/3)*3;return [D(y,q,1),D(y,q+3,0)];case 'Este año':return [D(y,0,1),D(y,11,31)];case 'Últimos 7 días':return [D(y,mo,d-6),TODAY];case 'Últimos 30 días':return [D(y,mo,d-29),TODAY];default:return null;}}}}
+  function num(t){{var m=String(t).replace(/[^\d.,-]/g,'').replace(/,/g,'');return m&&!isNaN(+m)?+m:null;}}
+  function fmt(v,kind,money){{if(kind==='pct')return Math.round(v)+'%';if(kind==='money'||kind==='money0'||money){{var dec=(kind==='money0')?0:(Math.abs(v-Math.round(v))<0.005?0:2);return '$'+v.toLocaleString('en-US',{{minimumFractionDigits:dec,maximumFractionDigits:dec}});}}return Math.round(v*10)/10+'';}}
+  window.wfSedes=null;
   function refresh(){{
-    var v=sel?sel.value:'Todas';
-    document.querySelectorAll('[data-sv]').forEach(function(e){{var d=JSON.parse(e.getAttribute('data-sv'));if(d[v]!=null)e.textContent=d[v];}});
+    var v=sel?sel.value:'Todas';var set=window.wfSedes;
+    document.querySelectorAll('[data-sv]').forEach(function(e){{var d=JSON.parse(e.getAttribute('data-sv'));
+      if(set&&set.length>1){{var tot=0,ok=true,money=false;set.forEach(function(k){{var n=num(d[k]);if(n===null)ok=false;else tot+=n;if(/\$/.test(d[k]||''))money=true;}});if(ok){{e.textContent=fmt(tot,money?'money':'',money);return;}}}}
+      if(d[v]!=null)e.textContent=d[v];}});
     document.querySelectorAll('.wf-table').forEach(function(t){{
       var cols=JSON.parse(t.getAttribute('data-cols'));
       var host=t.closest('.tbl-wrap')||t; var f=host.previousElementSibling; while(f&&!f.classList.contains('wf-filters')&&!f.classList.contains('wf-table')&&!f.classList.contains('tbl-wrap')) f=f.previousElementSibling;
+      var tid=t.getAttribute('data-tid');var tf=tid?document.querySelector('.wf-filters[data-target="'+tid+'"]'):null;if(tf)f=tf;
       var ctrls=(f&&f.classList.contains('wf-filters'))?[].slice.call(f.querySelectorAll('[data-fcol]')):[];
       var shown=0;
       t.querySelectorAll('.wf-row').forEach(function(r){{
-        var rs=r.getAttribute('data-sede'); var ok=(!rs||v==='Todas'||rs==='Todas'||rs===v);
+        var rs=r.getAttribute('data-sede'); var ok=(!rs||rs==='Todas'||(set&&set.length?set.indexOf(rs)>=0:(v==='Todas'||rs===v)));
         var cells=[].map.call(r.children,function(c){{return c.textContent.trim().toLowerCase();}});
-        ctrls.forEach(function(c){{ if(!ok) return; var q=c.value.trim().toLowerCase(); if(!q||/^tod[oa]s$/.test(q)) return;
+        ctrls.forEach(function(c){{ if(!ok) return; var q=c.value.trim(); var ql=q.toLowerCase(); if(!q||/^tod[oa]s$/.test(ql)||/^todo el per/.test(ql)) return;
           var col=c.getAttribute('data-fcol');
-          if(col==='*'){{ ok=cells.some(function(x){{return x.indexOf(q)>=0;}}); }}
-          else {{ var i=cols.indexOf(col); if(i>=0) ok=cells[i].indexOf(q)>=0; }} }});
+          if(col.charAt(0)==='@'){{var rg=rango(q);if(!rg)return;var i2=cols.indexOf(col.slice(1));if(i2<0)return;var dt=parseDate(cells[i2]);ok=!!dt&&dt>=rg[0]&&dt<=rg[1];return;}}
+          if(col==='*'){{ ok=cells.some(function(x){{return x.indexOf(ql)>=0;}}); }}
+          else {{ var i=cols.indexOf(col); if(i>=0) ok=cells[i].indexOf(ql)>=0; }} }});
         r.hidden=!ok; if(ok) shown++;
       }});
       var e=t.querySelector('.wf-empty'); if(e) e.style.display=shown?'none':'block';
       var pg=host.nextElementSibling; if(pg&&pg.classList.contains('wf-pager')){{var sp=pg.querySelector('.wf-shown'); if(sp) sp.textContent=' · '+shown+' en pantalla';}}
       if(f&&f.classList.contains('wf-filters')&&window.wfChips) window.wfChips(f,shown);
     }});
+    /* cifras calculadas sobre las filas visibles */
+    document.querySelectorAll('[data-agg]').forEach(function(e){{var t=document.querySelector('.wf-table[data-tid="'+e.getAttribute('data-tid')+'"]');if(!t)return;var cols=JSON.parse(t.getAttribute('data-cols'));var rows=[].filter.call(t.querySelectorAll('.wf-row'),function(r){{return !r.hidden;}});
+      var k=e.getAttribute('data-agg'),f=e.getAttribute('data-fmt')||'',parts=k.split(':'),op=parts[0],spec=parts.slice(1).join(':'),col=spec.split('=')[0],val=(spec.split('=')[1]||'').toLowerCase(),ci=cols.indexOf(col);
+      function cell(r){{return (r.children[ci]?r.children[ci].textContent:'').trim();}}
+      var out='';
+      if(op==='count')out=spec?rows.filter(function(r){{return cell(r).toLowerCase().indexOf(val)>=0;}}).length+'':rows.length+'';
+      else if(op==='pct'){{var n=rows.filter(function(r){{return cell(r).toLowerCase().indexOf(val)>=0;}}).length;out=rows.length?fmt(n*100/rows.length,'pct'):'0%';}}
+      else if(op==='distinct'){{var seen={{}};rows.forEach(function(r){{seen[cell(r)]=1;}});out=Object.keys(seen).length+'';}}
+      else {{var tot=0,n2=0,money=false;rows.forEach(function(r){{var c=cell(r);var x=num(c);if(x!==null){{tot+=x;n2++;if(c.indexOf('$')>=0)money=true;}}}});out=fmt(op==='avg'?(n2?tot/n2:0):tot,f,money);}}
+      if(f==='int')out=Math.round(num(out)||0)+'';e.textContent=out;}});
   }}
   if(sel){{
     var saved=null; try{{saved=localStorage.getItem('wf-sede');}}catch(e){{}}
@@ -386,6 +412,13 @@ def page(fname, title, inner, lang_title):
     sel.addEventListener('change',function(){{try{{localStorage.setItem('wf-sede',sel.value);}}catch(e){{}}refresh();}});
   }}
   document.querySelectorAll('[data-fcol]').forEach(function(c){{c.addEventListener('input',refresh);c.addEventListener('change',refresh);}});
+  /* pastillas de sede: una, varias combinadas o consolidado */
+  document.querySelectorAll('.pills[data-sede-pills]').forEach(function(g){{var ps=[].slice.call(g.querySelectorAll('.pill'));
+    function apply(){{var on=ps.filter(function(p){{return p.classList.contains('on');}}).map(function(p){{return p.textContent.trim();}});var spec=on.filter(function(x){{return !/consolidado|todas/i.test(x);}});
+      if(!spec.length||on.some(function(x){{return /consolidado|todas/i.test(x);}})){{window.wfSedes=null;if(sel){{sel.value='Todas';}}}}else{{window.wfSedes=spec.map(function(x){{return x.replace(/ de los Chillos/,'');}});if(sel)sel.value=spec.length===1?window.wfSedes[0]:'Todas';}}
+      try{{if(sel)localStorage.setItem('wf-sede',sel.value);}}catch(e){{}}refresh();}}
+    ps.forEach(function(p){{p.addEventListener('click',function(){{var isC=/consolidado|todas/i.test(p.textContent);setTimeout(function(){{if(isC&&p.classList.contains('on'))ps.forEach(function(x){{if(x!==p){{x.classList.remove('on');x.setAttribute('aria-pressed','false');}}}});else if(!isC&&p.classList.contains('on'))ps.forEach(function(x){{if(/consolidado|todas/i.test(x.textContent)){{x.classList.remove('on');x.setAttribute('aria-pressed','false');}}}});apply();}},0);}});}});
+    if(sel){{var cur=sel.value;ps.forEach(function(p){{var t=p.textContent.trim();var on=cur==='Todas'?/consolidado|todas/i.test(t):t.indexOf(cur)===0;p.classList.toggle('on',on);p.setAttribute('aria-pressed',on);}});}}}});
   try{{var q=new URLSearchParams(location.search).get('q');var sb=document.querySelector('input[data-fcol="*"]');if(q&&sb){{sb.value=q;}}}}catch(e){{}}
   refresh();
 }})();
@@ -490,7 +523,7 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
   document.querySelectorAll('select[data-dep]').forEach(function(sl){{var id=sl.getAttribute('data-dep');function upd(){{document.querySelectorAll('.dep-group[data-dep-for="'+id+'"]').forEach(function(g){{g.hidden=g.getAttribute('data-dep-when')!==sl.value;}});}}sl.addEventListener('change',upd);upd();}});
   /* origen del lead: canal de pauta y '¿cómo nos conoció?' según el origen */
   document.querySelectorAll('select[data-origen]').forEach(function(o){{var ids=o.getAttribute('data-origen').split(','),p=document.getElementById(ids[0]).closest('.field'),w=document.getElementById(ids[1]).closest('.field');var pag=['Facebook','Instagram','TikTok','Facebook Forms'];
-    function upd(){{p.hidden=pag.indexOf(o.value)<0;w.hidden=o.value!=='Walk-in';}}o.addEventListener('change',upd);upd();}});
+    function upd(){{p.hidden=pag.indexOf(o.value)<0;w.hidden=o.value!=='Walk in';}}o.addEventListener('change',upd);upd();}});
   /* dirección por niveles: provincia → cantón → parroquia */
   document.querySelectorAll('select[data-dpa]').forEach(function(p){{var ids=p.getAttribute('data-dpa').split(','),c=document.getElementById(ids[0]),q=document.getElementById(ids[1]),d=JSON.parse(p.getAttribute('data-dpa-json'));
     function fill(sel,list){{sel.innerHTML=list.map(function(x){{return '<option>'+x+'</option>';}}).join('');}}
@@ -632,6 +665,11 @@ def kpi(label, value, sub=""):
             f'<span style="font-size:12px;color:{MUTE};text-transform:uppercase;letter-spacing:.04em">{label}</span>'
             f'<span style="font-size:26px;font-weight:700;line-height:1.1">{value}</span>'
             + (f'<span style="font-size:12px;color:{MUTE}">{sub}</span>' if sub else '') + '</div>')
+def agg(kind, tid, fmt=""):
+    """Cifra viva: se recalcula sobre las filas visibles de la tabla tid (JS). kind: 'count' | 'count:Col=Valor' | 'sum:Col' | 'avg:Col' | 'pct:Col=Valor' | 'distinct:Col'.
+    fmt: 'money' | 'int' | 'pct' | 'money0' (sin decimales). Vacío = se deduce de los datos."""
+    return f'<span data-agg="{kind}" data-tid="{tid}" data-fmt="{fmt}">…</span>'
+PERIODOS=["Este mes","Hoy","Ayer","Esta semana","Del 1 al 15","Del 16 a fin de mes","Mes anterior","Este trimestre","Este año","Todo el período"]
 def kpis(items):
     return f'<div style="display:grid;grid-template-columns:repeat({len(items)}, minmax(0, 1fr));gap:16px">'+"".join(kpi(*i) for i in items)+'</div>'
 
@@ -920,8 +958,9 @@ def _cell(c):
         if txt.lower().startswith("ver"): return f'<a href="{h}" class="row-go" aria-label="{txt}"><span class="chev" aria-hidden="true"></span></a>', ""
         return f'<a href="{h}" class="row-link">{txt}<span class="chev" aria-hidden="true"></span></a>', ""
     return c, ""
-def table(cols, rows, h=46, sede=None, hide=(), wide=0):
-    """sede: índice de la columna de sede (filtro global). hide: índices que no se muestran pero siguen filtrando. wide: columna principal."""
+def table(cols, rows, h=46, sede=None, hide=(), wide=0, tid=None):
+    """sede: índice de la columna de sede (filtro global). hide: índices que no se muestran pero siguen filtrando. wide: columna principal.
+    tid: identificador para que agg() calcule cifras sobre las filas visibles y para que filters(target=tid) la filtre desde cualquier parte de la página."""
     import json as _j, re as _re
     n=len(cols); hide=set(hide)
     def cls(i): return ' td-hide' if i in hide else ''
@@ -938,7 +977,7 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0):
         body+=f'<div class="wf-row"{sd}>{cells}</div>'
     empty='<div class="wf-empty" style="display:none;grid-column:1/-1">Sin resultados con estos filtros</div>'
     tpl=" ".join(("minmax(200px,2.2fr)" if i==wide else ("max-content" if cols[i] in ("Acción","Estado","") else "minmax(min-content,1fr)")) for i in range(n) if i not in hide)
-    return f'<div class="tbl-wrap"><div class="wf-table tbl" data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:{tpl}">{hd}{body}{empty}</div></div>'
+    return f'<div class="tbl-wrap"><div class="wf-table tbl"{f" data-tid={chr(34)}{tid}{chr(34)}" if tid else ""} data-cols=\'{_j.dumps(cols,ensure_ascii=False)}\' style="grid-template-columns:{tpl}">{hd}{body}{empty}</div></div>'
 
 def ltable(lst, cols, rows, tpl=None, **kw):
     """Tabla que además muestra los registros creados en esta demo (localStorage 'wf-data-<lst>', guardados por btn(save=lst)).
@@ -953,7 +992,7 @@ LIST_TPL={
  "cursos":["{Programa} {Nivel}|{Código} · {Sede} · {Aula o enlace virtual} · {Horario} · {Modalidad}","{Sede}","{Programa}","{Modalidad}","{Nivel}","(sin asignar)","0/{Cupo máximo}","0%","badge:warn:Por abrir · creado en esta demo","link:DetalleCurso.html:Ver"],
  "profesores":["{Nombres y apellidos}|{Sede} · {Tipo de contrato} · ${Tarifa por hora}/h","{Sede}","{Tipo de contrato}","0","0|sin clases hoy","0 h","—","badge:ok:Activo · creado en esta demo","link:FichaProfesor.html:Ver perfil"],
  "usuarios":["{Nombres y apellidos}|{Email}","{Rol}","{Sedes visibles}","badge:ok:Activo · creado en esta demo","link:Usuarios.html:Ver"],
- "leads":["{Nombres y apellidos}|{Teléfono} · {Email}","{Sede}","Walk-in|{¿Cómo nos conoció? (walk-in)}","{Interés}","{Asesor de turno}","La misma persona","Recién registrado · pendiente en Kommo","link:MatriculaLead.html:Matricular"],
+ "leads":["{Nombres y apellidos}|{Teléfono} · {Email}","{Sede}","Walk in|{¿Cómo nos conoció? (walk-in)}","{Interés}","{Asesor de turno}","La misma persona","Recién registrado · pendiente en Kommo","link:MatriculaLead.html:Matricular"],
 }
 def tabs(items, active, panels=None, roles=None, maxvis=5, counts=None):
     panels=panels or {}; roles=roles or {}; counts=counts or {}; btns=[]; body=""
@@ -1079,7 +1118,7 @@ def _auto_field(f):
     if label.lower().startswith(("observación","motivo","condición","columnas","descripción")): return field(label, hint or "Escribe aquí…", "textarea")
     return field(label, hint, "text")
 def form(fields, cols=2, title="", extra=""):
-    out="".join(direccion_fields() if f=="@@DIR@@" else (origen_fields() if f=="@@ORIGEN@@" else (origen_fields("Walk-in") if f=="@@ORIGEN_WALKIN@@" else _auto_field(f))) for f in fields)
+    out="".join(direccion_fields() if f=="@@DIR@@" else (origen_fields() if f=="@@ORIGEN@@" else (origen_fields("Walk in") if f=="@@ORIGEN_WALKIN@@" else _auto_field(f))) for f in fields)
     grid=f'<div class="form-grid cols-{cols}">{out}</div>'
     if title or extra: return card(title, grid+extra)
     return grid
@@ -1108,15 +1147,16 @@ def search(label, placeholder, w="280px"):
     i=_nid(); return f'<label class="field" style="width:{w}">{label}<input id="{i}" type="search" data-fcol="*" placeholder="{placeholder}" class="ctl"></label>'
 def dates(label="Rango de fechas", a="2026-10-01", b="2026-10-31"):
     i=_nid(); return f'<div class="field"><label for="{i}">{label}</label><div style="display:flex;gap:6px;align-items:center"><input id="{i}" type="date" value="{a}" class="ctl" style="width:150px"><span>a</span><input type="date" value="{b}" aria-label="Hasta" class="ctl" style="width:150px"></div></div>'
-def filters(*ctrls, actions="", show=3):
-    """Buscador + hasta 2 selectores visibles; el resto en el popover 'Filtros'. Debajo, chips de filtros activos."""
+def filters(*ctrls, actions="", show=3, target=None):
+    """Buscador + hasta 2 selectores visibles; el resto en el popover 'Filtros'. Debajo, chips de filtros activos.
+    Filtra la primera tabla que le sigue, o la tabla con tid=target (aunque esté en otra pestaña). sel(col="@Columna") filtra por período sobre una columna de fecha."""
     ctrls=[c for c in ctrls if c]
     main="".join(ctrls[:show]); more=ctrls[show:]
     i=_nid()
     extra=(f'<button type="button" class="btn btn-more" data-menu aria-expanded="false" aria-controls="{i}">Filtros ({len(more)})<span class="cnt"></span></button>' if more else "")
     hidden=(f'<div id="{i}" class="filters-more menu-pop" hidden>{"".join(more)}</div>' if more else "")
     acts=f'<div class="filters-actions">{split_actions(actions,2)}</div>' if actions else ''
-    return f'<div class="wf-filters filters">{main}{extra}{hidden}{acts}<div class="chips-active" aria-live="polite"></div></div>'
+    return f'<div class="wf-filters filters"{f" data-target={chr(34)}{target}{chr(34)}" if target else ""}>{main}{extra}{hidden}{acts}<div class="chips-active" aria-live="polite"></div></div>'
 
 def note(text, kind="info"):
     return ""  # las notas explicativas se quitaron del mockup a pedido del cliente; la explicación vive en docs/
@@ -1314,7 +1354,7 @@ def addmod_btn(label="Agregar otro módulo"):
     return f'<button type="button" class="btn" data-addmod>{label}</button>'
 def mod_row(n, nivel, prog, prog_sub, code, code_sub, fecha, estado):
     return f'<div class="mod"><div class="m-n"><b>Módulo {n}</b><small>Nivel {nivel}</small></div><div>{prog}<small>{prog_sub}</small></div><div><span class="mono">{code}</span><small>{code_sub}</small></div><div>{fecha}<small>inicia</small></div><div>{estado}</div></div>'
-ORIGENES=["Facebook","Instagram","TikTok","Facebook Forms","WhatsApp","Contacto web","Test online","Exalumno","Referido","Convenio empresarial","Alianza","Feria","Walk-in","Otro"]
+ORIGENES=["Facebook","Instagram","TikTok","Facebook Forms","WhatsApp","Exalumno","Referencia / Referido","Convenios empresariales","Alianzas","Feria","Walk in","Contacto Web","Test Online","Otros"]  # mismo orden y etiquetas que Contact Channel en TeamDesk
 ORIGENES_PAGADOS=["Facebook","Instagram","TikTok","Facebook Forms"]
 CANALES_PAUTA=["Meta Ads · Facebook","Meta Ads · Instagram","TikTok Ads","Google Ads","Facebook Forms (formulario de la pauta)","Orgánico (sin pauta)"]
 WALKIN_COMO=["Fachada o sector","Redes sociales orgánicas","Google o IA orgánica","Pauta digital visualizada","Activaciones o ferias","Prensa o medios","Conocía la marca SOL","Asociación de marca","Otros"]
@@ -1326,13 +1366,14 @@ def origen_fields(origen="Instagram", canal="Meta Ads · Instagram", como="Facha
     oo="".join(f'<option{" selected" if o==origen else ""}>{o}</option>' for o in ORIGENES)
     co="".join(f'<option{" selected" if o==canal else ""}>{o}</option>' for o in CANALES_PAUTA)
     wo="".join(f'<option{" selected" if o==como else ""}>{o}</option>' for o in WALKIN_COMO)
-    pag=origen in ORIGENES_PAGADOS; wk=origen=="Walk-in"
+    pag=origen in ORIGENES_PAGADOS; wk=origen=="Walk in"
     return (f'<div class="field"><label for="{a}">Origen del lead{em}</label><select id="{a}" class="ctl"{rq} data-origen="{b},{c}">{oo}</select><small class="field-hint">Mismo catálogo en Kommo y en la plataforma; se conserva al pasar a Ganado</small></div>'
             f'<div class="field" data-origen-pauta{"" if pag else " hidden"}><label for="{b}">Canal de la estrategia pagada{em}</label><select id="{b}" class="ctl">{co}</select><small class="field-hint">Para pauta: de qué canal llegó exactamente</small></div>'
             f'<div class="field" data-origen-walkin{"" if wk else " hidden"}><label for="{c}">¿Cómo nos conoció? (walk-in){em}</label><select id="{c}" class="ctl">{wo}</select><small class="field-hint">Si el lead entró solo como Walk-in, el asesor lo completa a mano</small></div>')
-def pills(items, on=0, multi=False):
+def pills(items, on=0, multi=False, sede=False):
+    """sede=True: las pastillas controlan el selector de sede global (una, varias combinadas o 'Consolidado' = Todas); las cifras sv() se suman."""
     out="".join(f'<button type="button" class="pill{" on" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else ""}" aria-pressed="{"true" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else "false"}">{t}</button>' for i,t in enumerate(items))
-    return f'<div class="pills"{" data-multi" if multi else ""}>{out}</div>'
+    return f'<div class="pills"{" data-multi" if multi else ""}{" data-sede-pills" if sede else ""}>{out}</div>'
 def dep_select(label, options, value, deps, req=True, hint=""):
     """Select cuyo valor muestra u oculta grupos de campos: deps={valor: html_de_campos}. Los grupos no listados se ocultan."""
     _FID[0]+=1; i=f"f{_FID[0]}"
@@ -1491,10 +1532,10 @@ page("Leads.html","Leads",shell("Leads y conversión","Leads",
  filters(search("Buscar","Nombre, teléfono o correo",w="240px"),sel("Quién estudia",["Todos","La misma persona","Dependiente","Varios"],w="160px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px"),sel("Origen",["Todos"]+ORIGENES,w="160px"),actions='<span class="result-count" aria-live="polite"></span>'+btn("Exportar"))
  +ltable("leads",["Lead ganado","Sede","Origen","Interés","Asesor","Quién estudia","Ganado en Kommo","Acción"],[
   [c2("Andrea Villacís","099 000 0101 · a.villacis@ejemplo.com"),"Quito",c2("Instagram","Meta Ads · Instagram"),"Adults · virtual · grupal","Carla M.","La misma persona","Hoy 10:20",VL],
-  [c2("Roberto Salgado","099 000 0107 · padre"),"Valle",c2("Walk-in","Fachada o sector"),"Kids · presencial",'Diego R.',c2("Dependiente","su hijo Tomás, 9 años"),"Hoy 09:05",VL],
-  [c2("Grupo Nova · RR. HH.","empresa · 8 ejecutivos"),"Ambato","Convenio empresarial","Business · one to one","Sofía L.",c2("Varios","8 estudiantes de la empresa"),"Ayer",'<a href="DetalleEmpresa.html">Ver empresa</a>'],
-  [c2("Lucía Paredes","099 000 0103"),"Quito",c2("Referido","María Andrade"),"Adults · presencial sábados","Carla M.","La misma persona","Ayer",VL],
-  [c2("Sebastián Toro","099 000 0105"),"Quito",c2("Test online","test de nivel en la web"),"Preescolar","Carla M.",c2("Dependiente","su hija Emma, 5 años"),"10 oct",'<a href="Ficha360.html">Ver ficha</a>'],
+  [c2("Roberto Salgado","099 000 0107 · padre"),"Valle",c2("Walk in","Fachada o sector"),"Kids · presencial",'Diego R.',c2("Dependiente","su hijo Tomás, 9 años"),"Hoy 09:05",VL],
+  [c2("Grupo Nova · RR. HH.","empresa · 8 ejecutivos"),"Ambato","Convenios empresariales","Business · one to one","Sofía L.",c2("Varios","8 estudiantes de la empresa"),"Ayer",'<a href="DetalleEmpresa.html">Ver empresa</a>'],
+  [c2("Lucía Paredes","099 000 0103"),"Quito",c2("Referencia / Referido","María Andrade"),"Adults · presencial sábados","Carla M.","La misma persona","Ayer",VL],
+  [c2("Sebastián Toro","099 000 0105"),"Quito",c2("Test Online","test de nivel en la web"),"Preescolar","Carla M.",c2("Dependiente","su hija Emma, 5 años"),"10 oct",'<a href="Ficha360.html">Ver ficha</a>'],
   [c2("Paula Cárdenas","099 000 0106"),"Valle","Exalumno","Adults · virtual","Diego R.","La misma persona","08 oct",'<a href="Ficha360.html">Ver ficha</a>']],sede=1,hide=(1,),wide=0)+pager(sv(310,180,80,50)),
  subtitle="Solo entran los leads que Kommo marca como ganados (webhook); llegan como estudiantes nuevos para completar la ficha o matricular. El embudo completo es solo de consulta",
  actions=btn("Registrar walk-in","RegistrarWalkIn.html",True)),"Leads y conversión (Kommo)")
@@ -1933,10 +1974,44 @@ page("InformeComisiones.html","Informe de comisiones",shell("Mi informe de comis
 
 # Tablero comercial (diario y mensual) y consolidado de Dirección Comercial (anexo 2)
 conc_tbl=table(["Concepto","Hoy","Mes","Meta","Cumplimiento"],[[c2("Servicios educativos","base de metas"),"$1,240",sv("$18,460","$9,820","$4,310","$2,630","$1,700"),"$20,000",badge("92%","warn")],["Inscripción","$80","$1,520","—","—"],["Materiales","$160","$2,880","—","—"],["Exámenes internacionales","$235","$3,290","—","—"],["Traducciones","$0","$420","—","—"],["Mercadería","$27","$310","—","—"]],wide=0,hide=(3,))
+VENTAS=[  # (fecha, estudiante, venta, origen, origen_sub, producto, programa, modalidad, clasificación, servicios, total, pagada, asesor, sede)
+ ("23 oct","Lorena Paz","V-2026-0418","Contacto Web","formulario de la web","Mock Test Internacional · B2","Exam Preparation","Presencial","Nueva",45,45,"Sí · 23 oct","Carla M.","Quito"),
+ ("23 oct","Tomás Villacrés","V-2026-0417","Walk in","Fachada o sector","1 módulo · A2","English for Adults","Presencial","Reingreso",252,336,"Sí · 23 oct","Diego R.","Valle"),
+ ("22 oct","Valeria Cedeño","V-2026-0416","Instagram","Meta Ads · Instagram","2 módulos · 1 nivel B2","English for Adults","Virtual","Nueva",351,419.5,"No · 2 cuotas","Carla M.","Quito"),
+ ("22 oct","Emma Toro","V-2026-0415","Test Online","test de nivel en la web","2 módulos · Eaglets","Cambridge Eaglets (preescolar)","Presencial","Nueva",380,470,"Sí · 22 oct","Carla M.","Quito"),
+ ("21 oct","Grupo Nova · 3 ejecutivos","V-2026-0414","Convenios empresariales","Grupo Nova","20 horas · one to one Business","Business English","Presencial","Nueva",960,1080,"No · factura global 30 días","Sofía L.","Ambato"),
+ ("20 oct","Paula Ortiz","V-2026-0413","Referencia / Referido","por María Andrade","4 módulos · B1 y B1+","English for Adults","Virtual","Nueva",920,1060,"Sí · 20 oct","Carla M.","Quito"),
+ ("19 oct","María Andrade","V-2026-0412","Exalumno","continuidad","3 módulos · 1 nivel","English for Adults","Virtual","Continuidad",600,680,"Sí · 19 oct","Carla M.","Quito"),
+ ("18 oct","Gabriel Mora","V-2026-0411","Instagram","Meta Ads · Instagram","2 módulos · 1 nivel A1","English for Teens","Presencial","Nueva",432,542,"Sí · 18 oct","Carla M.","Quito"),
+ ("17 oct","Pedro Mora","V-2026-0409","Walk in","Redes sociales orgánicas","1 módulo · B1","English for Adults","Virtual","Reingreso",195,263.5,"No · saldo $250","Diego R.","Valle"),
+ ("17 oct","Martín Ortega","V-2026-0405","Referencia / Referido","por Pedro Mora","4 módulos · 2 niveles","English for Adults","Presencial","Nueva",880,1060,"No · 2 cuotas","Ana P.","Cuenca"),
+ ("16 oct","Camila Sánchez","V-2026-0401","Convenios empresariales","Clínica Santa Fe","2 módulos · 1 nivel A2","English for Adults","Presencial","Nueva",460,573.6,"Sí · 16 oct","Sofía L.","Ambato"),
+ ("16 oct","Lucía Benítez","V-2026-0399","Facebook","Meta Ads · Facebook","Traducción · 4 páginas","Servicios","Virtual","Nueva",60,60,"Sí · 16 oct","Carla M.","Quito"),
+ ("15 oct","Julián Morejón","V-2026-0398","WhatsApp","chat directo","40 horas · one to one","Tailored","Presencial","Nueva",640,675,"Sí · 15 oct","Diego R.","Valle"),
+ ("14 oct","Dana Pérez","V-2026-0397","TikTok","TikTok Ads","20 horas · one to one","Tailored","Presencial","Nueva",320,337.5,"Sí · 14 oct","Sofía L.","Ambato"),
+ ("13 oct","Andrés Pazmiño","V-2026-0396","Alianzas","Banco del Valle · 10%","1 módulo · A2","English for Adults","Presencial","Nueva",226.8,310,"No · 3 cuotas","Diego R.","Valle"),
+ ("10 oct","Sofía Herrera","V-2026-0395","Facebook Forms","formulario de la pauta","2 módulos · 1 nivel B1","English for Teens","Presencial","Nueva",432,542,"Sí · 10 oct","Carla M.","Quito"),
+ ("09 oct","Familia Rojas · Kids","V-2026-0394","Walk in","Pauta digital visualizada","2 módulos · Kids 2","English for Kids","Presencial","Nueva",395,501.25,"Sí · 09 oct","Sofía L.","Ambato"),
+ ("08 oct","Esteban Ruiz","V-2026-0393","Contacto Web","formulario de la web","TOEFL ITP","Exam Preparation","Presencial","Nueva",60,60,"Sí · 08 oct","Carla M.","Quito"),
+ ("07 oct","Mateo Salazar","V-2026-0392","Referencia / Referido","hermano matriculado","2 módulos · A1","English for Kids","Presencial","Nueva",380,420,"No · 2 cuotas","Sofía L.","Ambato"),
+ ("06 oct","Daniela Cruz","V-2026-0391","Feria","feria universitaria","2 módulos · 1 nivel B1","English for Adults","Virtual","Nueva",351,419.5,"Sí · 06 oct","Ana P.","Cuenca"),
+ ("03 oct","Gabriela Núñez","V-2026-0390","Exalumno","volvió tras 4 meses","2 módulos · A2","English for Adults","Presencial","Reingreso",450,475,"Sí · 03 oct","Carla M.","Quito"),
+ ("02 oct","Marco Vinueza","V-2026-0389","Instagram","Meta Ads · Instagram","Mock Test Internacional · C1","Exam Preparation","Presencial","Nueva",45,45,"Sí · 02 oct","Carla M.","Quito"),
+ ("01 oct","Joaquín Vivar","V-2026-0388","WhatsApp","chat directo","2 módulos · Teens A2","English for Teens","Presencial","Nueva",384,476.5,"Sí · 01 oct","Diego R.","Valle"),
+ ("30 sep","Ana Lucía Torres","V-2026-0386","Otros","prensa","Curso de español · A1","Spanish","Virtual","Nueva",300,330,"Sí · 30 sep","Carla M.","Quito"),
+ ("28 sep","Renata Vallejo","V-2026-0384","Instagram","Meta Ads · Instagram","2 módulos · 1 nivel A1","English for Adults","Virtual","Nueva",351,419.5,"Sí · 12 oct","Diego R.","Valle"),
+ ("25 sep","Carlos Guamán","V-2026-0381","Referencia / Referido","por Gabriela Núñez","1 módulo · B1","English for Adults","Presencial","Continuidad",252,336,"Sí · 25 sep","Carla M.","Quito"),
+]
+def ventas_rows():
+    out=[]
+    for f,est,v,o,osub,prod,prog,mod,cls,serv,tot,pag,ase,sede in VENTAS:
+        out.append([f,c2(f'<a href="DetalleVenta.html">{est}</a>',f"{v} · {cls.lower()}"),c2(o,osub),prod,prog,mod,cls,f"${serv:,.2f}",f"${tot:,.2f}",badge(pag,"ok" if pag.startswith("Sí") else "warn"),f"{ase} · {sede}",sede,'<a href="DetalleVenta.html">Ver venta</a>'])
+    return out
+ventas_tbl=table(["Fecha de venta","Venta · estudiante","Origen","Producto o servicio","Programa","Modalidad","Clasificación","Servicios educativos","Total facturado","Pagada por completo","Asesor · sede","Sede","Acción"],ventas_rows(),sede=11,hide=(4,5,6,11),wide=1,tid="ventas")
 page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tablero comercial",
- '<div class="kv"><span><span class="k">Sedes</span> </span>'+pills(["Quito","Valle","Ambato","Cuenca","Consolidado"],on=(0,1,2,4),multi=True)+'<span class="field-hint">Elige una, combina dos o tres, o mira el consolidado. Cuenca lleva un reporte distinto y no entra en el consolidado de Quito, Valle y Ambato.</span></div>'
- +filters(sel("Período",["Hoy","Ayer","Del 1 al 15","Del 16 a fin de mes","Este mes","Mes anterior","Este trimestre","Este año","Rango libre…"],w="170px",col=False),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L.","Ana P."],w="140px",col=False),sel("Programa",["Todos","Preescolar","Kids","Teens","Adults","Business"],w="140px",col=False),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px",col=False),sel("Origen",["Todos"]+ORIGENES+["Walk-in · "+w for w in WALKIN_COMO],w="200px",col=False),sel("Producto o servicio",["Todos","Niveles","One to one","Certificaciones (exámenes)","Traducciones","Cursos de español","Materiales"],w="190px",col=False),sel("Datos",["Solo plataforma nueva","Incluir histórico TeamDesk (referencia)"],w="250px",col=False),actions=btn("Exportar Excel"),show=3),
- kpis([("Nuevas matrículas válidas",sv(46,24,11,7,4),"meta 52 · 88%"),("Servicios educativos",sv("$18,460","$9,820","$4,310","$2,630","$1,700"),"meta $20,000 · 92%"),("Total facturado",sv("$26,880","$14,100","$6,420","$3,960","$2,400"),"todos los conceptos"),("Cobros del período",sv("$24,310","$12,900","$5,880","$3,530","$2,000"),"incluye $3,120 de ventas anteriores")]),
+ '<div class="kv"><span><span class="k">Sedes</span> </span>'+pills(["Quito","Valle","Ambato","Cuenca","Consolidado"],on=(4,),multi=True,sede=True)+'<span class="field-hint">Elige una, combina dos o tres, o mira el consolidado. Cuenca lleva un reporte distinto y no entra en el consolidado de Quito, Valle y Ambato.</span></div>'
+ +filters(sel("Período",PERIODOS,w="170px",col="@Fecha de venta"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L.","Ana P."],w="140px",col="Asesor · sede"),sel("Programa",["Todos","Preescolar","Kids","Teens","Adults","Business","Exam Preparation","Tailored","Spanish"],w="150px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Origen",["Todos"]+ORIGENES,w="200px"),sel("Producto o servicio",["Todos","módulo","horas","Mock Test","TOEFL","Traducción","español"],w="170px"),sel("Clasificación",["Todas","Nueva","Reingreso","Continuidad"],w="140px"),actions=btn("Exportar Excel"),show=3,target="ventas"),
+ kpis([("Ventas",agg("count","ventas"),"en el período y sedes elegidos"),("Nuevas matrículas válidas",agg("count:Clasificación=Nueva","ventas"),"meta del mes 22 · reingresos y continuidad aparte"),("Servicios educativos",agg("sum:Servicios educativos","ventas","money0"),"base de metas y comisiones"),("Total facturado",agg("sum:Total facturado","ventas","money0"),"todos los conceptos"),("Pagadas por completo",agg("pct:Pagada por completo=Sí","ventas"),"solo estas generan comisión")]),
  tabs(["Hoy y acumulado","Matriz KPI mensual","Metas por asesor","Por origen","Ventas","Cobros del período","Clasificación","Consolidado por sede","Origen y oferta"],"Hoy y acumulado",roles={"Consolidado por sede":"ADM,GER,DIR,SUC","Matriz KPI mensual":"ADM,GER,DIR,SUC,ASE"},panels={
   "Metas por asesor": table(["Asesor","Sede","Meta del mes","Lleva","Le falta","Avance","Días restantes"],[
      ["Carla M.","Quito","$6,000 · 12 niveles","$5,420 · 14 niveles","$580 · meta de niveles cumplida",progress(90),"8"],
@@ -1962,23 +2037,17 @@ page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tabl
      ["Estrategias pagadas","—","43","sin base","—",badge("Sí","ok")],["Referidos","31","16","-48.4%","35.7",badge("No","bad")],["Walk-in","36","28","-22.2%","41.4",badge("No","bad")],["Exalumno","11","6","-45.5%","12.7",badge("No","bad")],
      ["Convenios y alianzas","6","20","+233%","6.9",badge("Sí","ok")],["Ferias","0","0","—","0",badge("Sí","ok")],["Leads anteriores","2","0","-100%","2.3",badge("No","bad")],[c2("Total","matrículas con origen registrado"),"86","113","+31.4%","98.9",badge("Sí","ok")]],wide=0)
      +kv(("Walk-in","se puede abrir por '¿cómo nos conoció?' en la pestaña Por origen"),("Trimestre","julio, agosto y septiembre en la misma vista al elegir 'Este trimestre' en el período"))),
-  "Por origen": filters(sel("Fuente",["Instagram","Facebook","TikTok","Facebook Forms","WhatsApp","Contacto web","Test online","Exalumno","Referido","Convenio empresarial","Alianza","Feria","Walk-in","Walk-in · Fachada o sector","Walk-in · Redes sociales orgánicas","Walk-in · Google o IA orgánica","Walk-in · Pauta digital visualizada","Walk-in · Activaciones o ferias","Walk-in · Prensa o medios","Walk-in · Conocía la marca SOL","Walk-in · Asociación de marca","Otro"],w="260px",col=False),sel("Período",["Este mes","Este trimestre","Este año"],w="150px",col=False),actions=btn("Exportar Excel"))
+  "Por origen": filters(sel("Fuente",ORIGENES+["Walk in · "+w for w in WALKIN_COMO],w="260px",col=False),sel("Período",["Este mes","Este trimestre","Este año"],w="150px",col=False),actions=btn("Exportar Excel"))
     +kpis([("Leads de esta fuente",sv(86,50,22,14,0),"28% de los leads del mes"),("Matrículas",sv(14,8,4,2,0),"16% de conversión"),("Servicios vendidos",sv(17,10,5,2,0),"niveles 11 · exámenes 5 · traducción 1"),("Facturación",sv("$7,840","$4,600","$2,100","$1,140","$0"),"29% del total del mes")])
     +table(["Fuente","Sede","Leads","Matrículas","Servicio educativo","Total facturado","Asesor con más cierres"],[
      ["Instagram · Meta Ads","Quito","50","8","$3,980","$4,600","Carla M."],["Instagram · Meta Ads","Valle","22","4","$1,800","$2,100","Diego R."],["Instagram · Meta Ads","Ambato","14","2","$990","$1,140","Sofía L."],
-     [c2("Referido","3 por María Andrade · 2 por Pedro Mora · 2 otros"),"Quito","31","7","$3,350","$3,900","Carla M."],[c2("Referido","2 por Camila Sánchez"),"Ambato","9","2","$900","$1,050","Sofía L."],
-     ["Walk-in · Fachada o sector","Quito","12","3","$1,200","$1,380","Carla M."],["Test online","Valle","18","2","$820","$940","Diego R."],["Convenio empresarial","Ambato","6","4","$2,400","$2,800","Sofía L."]],sede=1,wide=0)
+     [c2("Referencia / Referido","3 por María Andrade · 2 por Pedro Mora · 2 otros"),"Quito","31","7","$3,350","$3,900","Carla M."],[c2("Referencia / Referido","2 por Camila Sánchez"),"Ambato","9","2","$900","$1,050","Sofía L."],
+     ["Walk in · Fachada o sector","Quito","12","3","$1,200","$1,380","Carla M."],["Test Online","Valle","18","2","$820","$940","Diego R."],["Convenios empresariales","Ambato","6","4","$2,400","$2,800","Sofía L."]],sede=1,wide=0)
     +kv(("Para qué","informe individual del asesor y reporte consolidado: cuánto generó cada fuente en leads, matrículas, servicios y facturación"),("Walk-in","se puede abrir por '¿cómo nos conoció?' porque la etiqueta se conserva al pasar a Ganado")),
   "Hoy y acumulado": two(card("Por concepto (no se mezclan)", conc_tbl),
-     card("Indicadores", kv(("Ventas nuevas",sv("24 · $11,900","13 · $6,400","7 · $3,100","4 · $2,400")),("Ventas de continuidad",sv("14 · $6,560","9 · $4,200","3 · $1,210","2 · $1,150")),("Índice de retención","71% · 14 de las 20 que terminaron el mes pasado se rematricularon"),("Ventas","38 · 52 módulos · 21 niveles"),("Ticket de servicios por matrícula válida","$401"),("Ticket total por venta","$707"),("Saldos pendientes","$4,120 · 17 estudiantes"),("Saldos a favor","$6,800 · 23 ventas")))
+     card("Indicadores del período (se recalculan con los filtros)", kv(("Ventas nuevas",agg("count:Clasificación=Nueva","ventas")),("Reingresos",agg("count:Clasificación=Reingreso","ventas")),("Continuidad",agg("count:Clasificación=Continuidad","ventas")),("Índice de retención","71% · 14 de las 20 que terminaron el mes pasado se rematricularon"),("Ticket de servicios por venta",agg("avg:Servicios educativos","ventas","money")),("Ticket total por venta",agg("avg:Total facturado","ventas","money")),("Virtuales",agg("pct:Modalidad=Virtual","ventas")),("Asesores con ventas",agg("distinct:Asesor · sede","ventas"))))
        +linechart(["1","5","10","15","19"],{"Servicios 2026":[1.2,5.4,9.8,14.6,18.5],"Mismo día 2025":[1.0,4.8,9.1,13.0,16.2]})),
-  "Ventas": table(["Fecha de venta","Venta · estudiante","Origen","Producto o servicio","Servicios educativos","Pagada por completo","Asesor · sede","Acción"],[
-    ["19 oct",c2("V-2026-0412","María Andrade · continuidad"),"Exalumno","3 módulos · 1 nivel","$600",badge("Sí · 19 oct","ok"),"Carla M. · Quito",'<a href="DetalleVenta.html">Ver venta</a>'],
-    ["18 oct",c2("V-2026-0411","Gabriel Mora · nueva"),c2("Instagram","Meta Ads · Instagram"),"2 módulos · 1 nivel","$420",badge("Sí · 18 oct","ok"),"Carla M. · Quito",'<a href="DetalleVenta.html">Ver venta</a>'],
-    ["17 oct",c2("V-2026-0409","Pedro Mora · reingreso"),c2("Walk-in","Fachada o sector"),"1 módulo","$230",badge("No · saldo $250","warn"),"Diego R. · Valle",'<a href="DetalleVenta.html">Ver venta</a>'],
-    ["17 oct",c2("V-2026-0405","Martín Ortega · nueva"),"Referido","4 módulos · 2 niveles","$880",badge("No · 2 cuotas","warn"),"Ana P. · Cuenca",'<a href="DetalleVenta.html">Ver venta</a>'],
-    ["16 oct",c2("V-2026-0401","Camila Sánchez · nueva"),"Convenio empresarial","2 módulos · 1 nivel","$460",badge("Sí · 16 oct","ok"),"Sofía L. · Ambato",'<a href="DetalleVenta.html">Ver venta</a>'],
-    ["16 oct",c2("V-2026-0399","Lorena Paz"),"Contacto web","Mock Test Internacional · B2","$45",badge("Sí · 16 oct","ok"),"Carla M. · Quito",'<a href="DetalleVenta.html">Ver venta</a>']],sede=6,wide=1)+pager(38)
+  "Ventas": ventas_tbl+pager(26)
     +kv(("Seguimiento diario","número de ventas y matrículas, facturación, servicios y productos vendidos, origen de cada venta y resultado por asesor y sede"),("Pagada por completo","la comisión se genera en el mes en que la venta termina de pagarse, no en el mes de la venta")),
   "Cobros del período": table(["Fecha de cobro","Venta original","Fecha de venta","Asesor original","Monto","Tipo"],[["19 oct",c2('<a href="DetalleVenta.html">V-2026-0371</a>',"Gabriela Núñez · cuota 2"),"18 sep","Carla M.","$225",badge("Venta anterior","navy")],["18 oct",c2('<a href="DetalleVenta.html">V-2026-0411</a>',"Gabriel Mora"),"18 oct","Carla M.","$500",badge("Venta del mes","ok")],["15 oct",c2('<a href="DetalleVenta.html">V-2026-0352</a>',"Tomás Villacrés · saldo"),"30 ago","Diego R.","$410",badge("Venta anterior","navy")]],wide=1)
      +kv(("Aplicaciones de saldo a favor","no aparecen aquí: no son cobros nuevos")),
@@ -1986,7 +2055,7 @@ page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tabl
      +kv(("Regla","solo las nuevas válidas cuentan para la meta de matrículas; cada corrección queda trazada")),
   "Consolidado por sede": table(["Sede","Matrículas oct 2026","Oct 2025","Variación","Servicios educativos","Meta","Cumplimiento"],[["Quito","24","21","+14%","$9,820","$10,000",badge("98%","ok")],["Valle","11","13","-15%","$4,310","$5,000",badge("86%","warn")],["Ambato","7","6","+17%","$2,630","$3,000",badge("88%","warn")],[c2("Consolidado","Quito + Valle + Ambato"),"42","40","+5%","$16,760","$18,000",badge("93%","warn")],[c2("Cuenca","reporte propio · no entra al consolidado"),"4","—","sin base","$1,700","$2,000",badge("85%","warn")]],sede=0,wide=0)
      +kv(("Comparación","mismo número de días transcurridos y mismos conceptos (sin inscripción ni materiales)"),("Sin base de comparación","se muestra 'sin base' en lugar de dividir por cero"))+row(btn("Editar metas")),
-  "Origen y oferta": two(card("Ventas por origen del lead", hbars([("Instagram · Meta Ads",14),("Referido",9),("Walk-in",6),("Exalumno",4),("Convenio empresarial",3),("Contacto web",3),("Test online",2),("Facebook · Meta Ads",2),("TikTok",1),("Feria",1),("WhatsApp",1)],unit="")),
+  "Origen y oferta": two(card("Ventas por origen del lead", hbars([("Instagram · Meta Ads",14),("Referencia / Referido",9),("Walk in",6),("Exalumno",4),("Convenios empresariales",3),("Contacto Web",3),("Test Online",2),("Facebook · Meta Ads",2),("TikTok",1),("Feria",1),("WhatsApp",1)],unit="")),
      card("Ventas por oferta", hbars([("Niveles",21),("One to one",6),("Certificaciones (exámenes)",14),("Traducciones",3),("Cursos de español",2)],unit=""))),
  }),
  subtitle="Ventas, facturación, servicios educativos y cobros con cifras reales; cada total abre su detalle"),"Tablero comercial")
