@@ -1912,12 +1912,21 @@ page("VentaMercaderia.html","Venta de mercadería",shell("Venta de mercadería",
 # Informe mensual de comisiones del asesor (anexo 1)
 page("InformeComisiones.html","Informe de comisiones",shell("Mi informe de comisiones · Octubre 2026","Comisiones",
  flow(["Asesor revisa y envía","Dirección Comercial revisa","Administración revisa y asigna el pago"]),
- kpis([("Ventas del mes","9","6 nuevas · 2 reingresos · 1 continuidad"),("Servicios educativos vendidos","$4,860","base de la meta"),("Total facturado","$5,320","incluye inscripción y materiales"),("Cobros del mes de ventas anteriores","$980","2 ventas de septiembre")]),
- card("Ventas del mes", filters(sel("Sede",["Todas","Quito","Valle"],w="130px",col=False),actions=btn("Exportar Excel"))+table(["Fecha","Estudiante · venta","Módulos vendidos","Total facturado","Servicios educativos","Programa · modalidad","Sede"],[
-   ["03 oct",c2('<a href="DetalleVenta.html">Sofía Herrera</a>',"V-2026-0398 · 001-202603218"),"2 · nivel B1","$530","$450","Adults · Virtual","Quito"],
-   ["08 oct",c2('<a href="DetalleVenta.html">Andrés Pazmiño</a>',"V-2026-0403 · 001-202603230"),"1","$275","$230","Adults · Presencial","Quito"],
-   ["12 oct",c2('<a href="DetalleVenta.html">Paula Ortiz</a>',"V-2026-0407 · venta en otra sede"),"4 · B1 y B1+","$1,060","$920","Adults · Virtual","Valle"],
-   ["15 oct",c2('<a href="DetalleVenta.html">Gabriel Mora</a>',"V-2026-0411 · 001-202603241"),"2 · nivel A1","$500","$420","Teens · Presencial","Quito"]],wide=1)),
+ kpis([("Matrículas del mes","11","7 de 2+ módulos · 2 de 1 módulo · 3 por horas"),("Servicios educativos","$4,201.40","base de la meta y de la comisión"),("Total de facturas","$4,962.40","incluye inscripción y materiales"),("Ticket","$451.13","por matrícula · $381.95 en servicios")]),
+ card("Registro mensual de matrículas · base del cálculo de comisiones", filters(sel("Grupo",["Todos","2 módulos o más","1 módulo","Horas","Summer y cursos cortos","Estudiante existente","Venta en otra sede"],w="200px"),sel("Modalidad",["Todas","Presencial","Virtual","Híbrido"],w="140px"),actions='<span class="result-count" aria-live="polite"></span>'+btn("Exportar Excel"))
+   +table(["Fecha","Estudiante","Módulos vendidos","Matrícula","Total factura","Servicios educativos","Modalidad","Programa","Grupo"],[
+   ["02 oct",c2('<a href="DetalleVenta.html">'+"Sofía Herrera</a>","V-2026-0398"),"2",'<span class="mono">001-202603218</span>',"$542.00","$432.00","Presencial","English for Teens","2 módulos o más"],
+   ["03 oct",c2('<a href="DetalleVenta.html">'+"Gabriel Mora</a>","V-2026-0411"),"2",'<span class="mono">001-202603241</span>',"$573.60","$453.60","Presencial","English for Adults","2 módulos o más"],
+   ["07 oct",c2('<a href="DetalleVenta.html">'+"Valeria Cedeño</a>","V-2026-0404"),"2",'<span class="mono">001-202603236</span>',"$419.50","$351.00","Virtual","English for Adults Virtual","2 módulos o más"],
+   ["08 oct",c2('<a href="DetalleVenta.html">'+"Andrés Pazmiño</a>","V-2026-0403"),"1",'<span class="mono">001-202603230</span>',"$336.00","$252.00","Presencial","English for Adults","1 módulo"],
+   ["10 oct",c2('<a href="DetalleVenta.html">'+"Camila Sánchez</a>","V-2026-0401"),"1",'<span class="mono">001-202603233</span>',"$263.50","$195.00","Virtual","English for Adults Virtual","1 módulo"],
+   ["12 oct",c2('<a href="DetalleVenta.html">'+"Julián Morejón</a>","V-2026-0406"),"40 horas normales",'<span class="mono">001-202603238</span>',"$675.00","$640.00","Presencial","Tailored (one to one)","Horas"],
+   ["14 oct",c2('<a href="DetalleVenta.html">'+"Dana Pérez</a>","V-2026-0408"),"20 horas normales",'<span class="mono">001-202603240</span>',"$337.50","$320.00","Presencial","Tailored (one to one)","Horas"],
+   ["15 oct",c2('<a href="DetalleVenta.html">'+"Fernanda Flor</a>","V-2026-0409"),"18 horas preparatorias",'<span class="mono">001-202603242</span>',"$325.30","$307.80","Virtual","Tailored (one to one)","Horas"],
+   ["16 oct",c2('<a href="DetalleVenta.html">'+"Emilia Ludeña</a>","V-2026-0410"),"1",'<span class="mono">001-202603244</span>',"$220.00","$170.00","Presencial","Summer for Kids","Summer y cursos cortos"],
+   ["18 oct",c2('<a href="DetalleVenta.html">'+"Julina Rosero</a>","V-2026-0412 · ya era estudiante"),"1",'<span class="mono">001-202603250</span>',"$210.00","$160.00","Presencial","English for Teens","Estudiante existente"],
+   ["20 oct",c2('<a href="DetalleVenta.html">'+"Paula Ortiz</a>","V-2026-0407 · vendida en Quito"),"4",'<span class="mono">001-202603252</span>',"$1,060.00","$920.00","Virtual","English for Adults Virtual","Venta en otra sede"]],hide=(8,),wide=1)
+   +kv(("Total","11 matrículas · total facturas $4,962.40 · servicios educativos $4,201.40"),("Ticket","$451.13 por matrícula (facturas) · $381.95 (servicios educativos)"),("Mismo formato","que el 'Reporte para comisiones' mensual: fecha, estudiante, módulos u horas vendidos, matrícula, total de facturas, servicios educativos, modalidad, programa y vendedor, agrupado en bloques"),("Comisión","se calcula sobre las ventas totalmente pagadas, con la tabla de rangos de la sede (pendiente de recibir la tabla real)"))),
  card("Cobros del mes de ventas anteriores", table(["Venta original","Fecha de venta","Asesor original","Cobrado en octubre","Cuenta como"],[[c2('<a href="DetalleVenta.html">V-2026-0371</a>',"Gabriela Núñez · cuota 2"),"18 sep","Carla M.","$225",badge("Cobro, no venta nueva","navy")],[c2('<a href="DetalleVenta.html">V-2026-0365</a>',"Mateo Salazar · saldo"),"5 sep","Carla M.","$755",badge("Cobro, no venta nueva","navy")]])),
  foot(only("ASE",btn("Enviar a Dirección Comercial",None,True),True)+only("DIR",btn("Aprobar y enviar a Administración",None,True),True)+only("ADM,GER",btn("Asignar pago de comisión",None,True),True)+only("DIR,ADM,GER",btn("Devolver con observaciones"),True)+btn("Volver","Comisiones.html")),
  subtitle="Reemplaza el registro manual del asesor: ventas, servicios educativos y cobros de ventas anteriores con su asesor original"),"Informe de comisiones del asesor")
@@ -1935,20 +1944,24 @@ page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tabl
      ["Sofía L.","Ambato","$3,000 · 10 niveles","$2,630 · 11 niveles","$370 · meta de niveles cumplida",progress(88),"8"],
      ["Ana P.","Cuenca","$2,000 · 8 niveles","$1,700 · 7 niveles","$300 · 1 nivel",progress(85),"8"]],sede=1,wide=0)
     +kv(("Base por sede","cada sede tiene su propia meta; se edita en 'Editar metas'"),("Ritmo","las ventas suben después del día 15: el avance se compara con el mismo día del mes anterior"))+row(btn("Editar metas"),btn("Exportar Excel")),
-  "Matriz KPI mensual": filters(sel("Mes",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="160px",col=False),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col=False),actions=btn("Exportar Excel")+btn("Editar metas"))
-    +table(["Indicador","Oct 2025","Oct 2026","Variación","Proyección +15%","Meta","Cumplimiento"],[
-     [c2("Matrículas","nuevas válidas"),"38",sv("46","24","11","7","4"),"+21%","44","52",badge("88%","warn")],
-     [c2("Facturación total","todos los conceptos"),"$23,400",sv("$26,880","$14,100","$6,420","$3,960","$2,400"),"+15%","$26,910","$28,000",badge("96%","warn")],
-     [c2("Ticket promedio","facturación / matrículas"),"$616","$584","-5%","—","$600",badge("97%","warn")],
-     [c2("Servicios vendidos (cantidad)","niveles, one to one, exámenes, traducciones, español"),"41","46","+12%","47","50",badge("92%","warn")],
-     [c2("Servicios vendidos (valor)","servicios educativos"),"$16,050",sv("$18,460","$9,820","$4,310","$2,630","$1,700"),"+15%","$18,458","$20,000",badge("92%","warn")],
-     [c2("Matrículas por referidos","origen Referido o Exalumno"),"9","13","+44%","10","12",badge("108%","ok")],
-     [c2("Niveles vendidos","grupales"),"19","21","+11%","22","24",badge("88%","warn")],
-     [c2("One to one vendidos","normal, reducido y Business"),"4","6","+50%","5","6",badge("100%","ok")],
-     [c2("Certificaciones","exámenes internacionales"),"12","14","+17%","14","15",badge("93%","warn")],
-     [c2("Traducciones","páginas facturadas"),"2","3","+50%","2","3",badge("100%","ok")],
-     [c2("Cursos de español","Spanish"),"1","2","+100%","1","2",badge("100%","ok")]],wide=0)
-    +kv(("Proyección","15% de crecimiento sobre el mismo período del año anterior, para matrículas y facturación"),("Variación","mismo mes del año anterior, mismos días transcurridos"),("Cumplimiento","real / meta del mes por sede y por asesor"),("Hoy","esta matriz reemplaza el Excel mensual de KPIs y el reporte consolidado de Quito, Valle y Ambato")),
+  "Matriz KPI mensual": filters(sel("Sede",["Valle de los Chillos","Quito","Ambato","Consolidado Quito + Valle + Ambato"],w="240px",col=False),sel("Mes",["Julio 2026","Agosto 2026","Septiembre 2026","Octubre 2026"],w="160px",col=False),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col=False),actions=btn("Exportar Excel")+btn("Editar metas"))
+    +card("Indicadores · Valle de los Chillos · julio", table(["Indicador","2025","2026","Variación %","Meta (2025 + 15 %)","Cumplimiento"],[
+     ["Matrículas","132","123","-6.8%","151.8",badge("No","bad")],
+     ["Facturación total","$37,332.77","$37,030.20","-0.8%","$42,932.69",badge("No","bad")],
+     [c2("Ticket","facturación total / matrículas"),"$282.82","$301.06","+6.4%","$325.25",badge("No","bad")],
+     ["Total servicios educativos","$32,607.77","$30,085.45","-7.7%","$37,498.94",badge("No","bad")],
+     [c2("Ticket de servicios","servicios educativos / matrículas"),"$247.03","$244.60","-1.0%","$284.08",badge("No","bad")],
+     ["Referidos","31","16","-48.4%","35.7",badge("No","bad")],
+     ["Niveles","5","16","+220%","5.8",badge("Sí","ok")],
+     ["One to one","5","12","+140%","5.8",badge("Sí","ok")],
+     ["Certificaciones","3","5","+66.7%","3.5",badge("Sí","ok")],
+     ["Traducciones","2","1","-50%","2.3",badge("No","bad")],
+     ["Cursos de español","0","0","—","0",badge("Sí","ok")]],wide=0)
+     +kv(("Meta","valor del mismo mes de 2025 × 1.15 (proyección de crecimiento del 15 %)"),("Variación","(2026 − 2025) / 2025"),("Cumplimiento","Sí si 2026 ≥ meta"),("Cifras","del reporte real de Valle del tercer trimestre; Cuenca lleva un reporte distinto y no entra en el consolidado")))
+    +card("Comparativo por origen del lead · matrículas", table(["Origen","2025","2026","Variación %","Meta (2025 + 15 %)","Cumplimiento"],[
+     ["Estrategias pagadas","—","43","sin base","—",badge("Sí","ok")],["Referidos","31","16","-48.4%","35.7",badge("No","bad")],["Walk-in","36","28","-22.2%","41.4",badge("No","bad")],["Exalumno","11","6","-45.5%","12.7",badge("No","bad")],
+     ["Convenios y alianzas","6","20","+233%","6.9",badge("Sí","ok")],["Ferias","0","0","—","0",badge("Sí","ok")],["Leads anteriores","2","0","-100%","2.3",badge("No","bad")],[c2("Total","matrículas con origen registrado"),"86","113","+31.4%","98.9",badge("Sí","ok")]],wide=0)
+     +kv(("Walk-in","se puede abrir por '¿cómo nos conoció?' en la pestaña Por origen"),("Trimestre","julio, agosto y septiembre en la misma vista al elegir 'Este trimestre' en el período"))),
   "Por origen": filters(sel("Fuente",["Instagram","Facebook","TikTok","Facebook Forms","WhatsApp","Contacto web","Test online","Exalumno","Referido","Convenio empresarial","Alianza","Feria","Walk-in","Walk-in · Fachada o sector","Walk-in · Redes sociales orgánicas","Walk-in · Google o IA orgánica","Walk-in · Pauta digital visualizada","Walk-in · Activaciones o ferias","Walk-in · Prensa o medios","Walk-in · Conocía la marca SOL","Walk-in · Asociación de marca","Otro"],w="260px",col=False),sel("Período",["Este mes","Este trimestre","Este año"],w="150px",col=False),actions=btn("Exportar Excel"))
     +kpis([("Leads de esta fuente",sv(86,50,22,14,0),"28% de los leads del mes"),("Matrículas",sv(14,8,4,2,0),"16% de conversión"),("Servicios vendidos",sv(17,10,5,2,0),"niveles 11 · exámenes 5 · traducción 1"),("Facturación",sv("$7,840","$4,600","$2,100","$1,140","$0"),"29% del total del mes")])
     +table(["Fuente","Sede","Leads","Matrículas","Servicio educativo","Total facturado","Asesor con más cierres"],[
@@ -2121,10 +2134,12 @@ com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
    +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
         card("Tabla de rangos vigente · Quito · niveles grupales", table(["Niveles vendidos en el mes","Virtual","Presencial"],[["1 – 5","$8 por nivel","$10 por nivel"],["6 – 10","$12 por nivel","$15 por nivel"],["11 o más","$18 por nivel","$22 por nivel"]],wide=0)
           +kv(("Base por sede","Ambato y Valle tienen su propia tabla; one to one y los demás productos tienen rangos aparte"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Pago completo","la comisión se genera cuando la matrícula está totalmente pagada"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
-   +card("Reporte mensual por grupo · octubre 2026", table(["Grupo","Asesor","Ventas","Módulos / horas","Monto","Comisión"],[
+   +card("Reporte mensual por grupo · octubre 2026 · bloques del registro de matrículas", table(["Grupo","Asesor","Matrículas","Módulos / horas","Servicios educativos","Comisión"],[
      [c2("2 módulos o más","nivel completo o varios"),"Carla M.","9","26 módulos","$6,500","$312.00"],[c2("2 módulos o más","nivel completo o varios"),"Diego R.","5","12 módulos","$3,000","$120.00"],
-     [c2("Módulos sueltos","1 módulo"),"Carla M.","3","3 módulos","$750","$24.00"],[c2("Módulos sueltos","1 módulo"),"Sofía L.","4","4 módulos","$1,000","$32.00"],
-     [c2("Horas","one to one y personalizado"),"Carla M.","2","30 h","$900","$45.00"],[c2("Horas","one to one y personalizado"),"Sofía L.","1","10 h","$300","$15.00"]],wide=0)+row(btn("Exportar Excel")))
+     [c2("1 módulo","módulo suelto"),"Carla M.","3","3 módulos","$750","$24.00"],[c2("1 módulo","módulo suelto"),"Sofía L.","4","4 módulos","$1,000","$32.00"],
+     [c2("Horas","one to one, tailored y preparatorias"),"Carla M.","2","30 h","$900","$45.00"],[c2("Horas","one to one, tailored y preparatorias"),"Sofía L.","1","10 h","$300","$15.00"],
+     [c2("Summer y cursos cortos","summer camp, clubes"),"Carla M.","3","3","$510","$15.00"],[c2("Estudiante existente","ya era estudiante · no cuenta como nueva"),"Diego R.","2","2 módulos","$320","$8.00"],[c2("Venta en otra sede","se registra con la sede donde estudia"),"Carla M.","1","4 módulos","$920","$36.80"]],wide=0)
+     +kv(("Bloques","los mismos del 'Reporte para comisiones' mensual: 2 módulos o más, 1 módulo, horas, summer y cursos cortos, estudiante existente y venta en otra sede"),("Pendiente","la tabla de cómo se paga cada bloque (rangos por sede y modalidad) no vino en el Excel; las comisiones de ejemplo usan la tabla de muestra"))+row(btn("Exportar Excel")))
    +card("Ventas que entran a la comisión de octubre · pagadas por completo en octubre", table(["Venta","Estudiante","Fecha de venta","Pagada por completo","Asesor","Monto","Comisión"],[
      [c2("V-2026-0338","multi-módulo · 2 niveles"),"Tomás Villacrés","12 ago 2026",badge("15 oct 2026","ok"),"Diego R.","$980","$39.20"],
      [c2("V-2026-0371","1 nivel"),"Gabriela Núñez","18 sep 2026",badge("19 oct 2026","ok"),"Carla M.","$450","$18.00"],
@@ -2684,7 +2699,7 @@ page("DetalleComision.html","Detalle comisión",shell("Mi comisión · Octubre 2
 # 26 Reglas de comisión
 def rangos_tbl(filas): return table(["Rango del mes","Virtual","Presencial","Vigencia"],filas,wide=0)
 page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Comisiones",
- only("ADM,GER,DIR",kv(("Quién configura","Administración (Estefanía) · los asesores solo consultan sus comisiones y las exportan a Excel"),("Modelo","tablas de rangos según módulos o niveles vendidos, modalidad, base de cada sede y producto; no son porcentajes"))),
+ only("ADM,GER,DIR",kv(("Quién configura","Administración (Estefanía) · los asesores solo consultan sus comisiones y las exportan a Excel"),("Modelo","tablas de rangos según módulos o niveles vendidos, modalidad, base de cada sede y producto; no son porcentajes"),("Estado",badge("Tablas de ejemplo · la tabla real de comisiones sigue pendiente de Cambridge","warn")))),
  tabs(["Niveles y módulos (grupal)","One to one y horas","Otros productos","Bonos","Simulador"],"Niveles y módulos (grupal)",panels={
   "Niveles y módulos (grupal)": seg(["Quito","Valle de los Chillos","Ambato","Cuenca"],[
      rangos_tbl([["1 – 5 niveles","$8 por nivel","$10 por nivel","2026"],["6 – 10 niveles","$12 por nivel","$15 por nivel","2026"],["11 o más niveles","$18 por nivel","$22 por nivel","2026"],["Módulo suelto","$4 por módulo","$5 por módulo","2026"]]),
