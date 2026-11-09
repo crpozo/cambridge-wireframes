@@ -101,6 +101,9 @@ Reflejados en el tablero comercial (matriz KPI, por origen, sedes combinables, f
 ### 29 oct 2026 · cambios de la revisión comercial del 23 oct
 Aplicados todos los cambios del documento "Cambios al prototipo y próximos pasos" (ver `docs/CAMBIOS_SESION_COMERCIAL_23OCT.md`, con estado por ítem y propuesta MVP vs Fase B). Quedan pendientes de Cambridge las listas reales, la tabla de descuentos, el catálogo con libros y precios y las métricas con su cálculo.
 
+### 5–9 nov 2026 · datos vivos, secretaría y alcance
+Adjuntos de Dirección Comercial (matriz KPI e informe del asesor alineados); documentos de secretaría (informe de mejora, hub actual, propuesta externa) → PDF de 30 to-dos para la propuesta; catálogo de orígenes igual a TeamDesk; representante solo si es menor o alguien se hace cargo; "Nueva factura" con selector de tipo; **datos vivos** en toda la plataforma (período real, cifras calculadas sobre filas visibles, sedes combinables). Contexto exportable en `docs/CONTEXTO_PROYECTO_CAMBRIDGE.md`, con la lista de lo que está fuera del contrato y debe cotizarse aparte.
+
 ## 6. Pendientes y temas abiertos
 
 - Acceso a TeamDesk desde el entorno (bloqueado por política de red). Alternativas: permitir `teamdesk.net` en la política del entorno o exportar el esquema/vistas.
