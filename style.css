@@ -484,7 +484,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media print{.receipt{border:0;padding:0;max-width:none}}
 
 /* ocupación proyectada */
-.occ{display:flex;flex-direction:column;gap:14px;min-width:300px;padding:16px 0}
+.occ{display:flex;flex-direction:column;gap:14px;min-width:320px;padding:16px 0}
 .occ-top{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .occ-n{display:flex;align-items:baseline;gap:10px}
 .occ-n b{font-family:var(--font-mono);font-size:var(--t-20);line-height:1;font-weight:600;color:var(--ink)}
@@ -497,10 +497,10 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-ex{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 3px,transparent 3px 7px);opacity:.5;border-radius:0 99px 99px 0}
 .occ-min{position:absolute;top:-6px;bottom:-6px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
 .occ-ok{--occ:var(--ok)}.occ-warn{--occ:var(--warn)}.occ-bad{--occ:var(--bad)}
-.occ-key{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0}
-.occ-key>div{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:6px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.occ-key{display:grid;grid-template-columns:repeat(3,minmax(max-content,1fr));gap:10px;margin:0}
+.occ-key>div{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:6px;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
 .occ-key dd{margin:0;font-family:var(--font-mono);font-size:var(--t-16);line-height:1;font-weight:600;color:var(--ink)}
-.occ-key dt{display:flex;align-items:center;gap:8px;font-size:var(--t-12);color:var(--mute);line-height:1;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.occ-key dt{display:flex;align-items:center;gap:8px;font-size:var(--t-13);color:var(--mute);line-height:1;max-width:100%;min-width:0;white-space:nowrap}
 .occ-key dt::before{content:"";flex:none;width:10px;height:10px;border-radius:3px;background:var(--occ,var(--navy))}
 .occ-key .k-ex dt::before{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--occ,var(--navy))}
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
