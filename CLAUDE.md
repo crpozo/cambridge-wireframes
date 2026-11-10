@@ -12,6 +12,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 - `docs/REQUERIMIENTOS_CORREOS_OCT26.md`: requerimientos de los correos del 26 oct 2026 (KPIs comerciales, seguimiento diario, catálogo de orígenes con sub-campos de walk-in y pauta, comisión por pago completo, aceptación electrónica del contrato, secretaría/Kommo) y dónde vive cada uno.
 - `docs/CAMBIOS_SESION_COMERCIAL_23OCT.md`: los cambios al prototipo que salieron de la revisión del módulo comercial (23 oct) con su estado, y la propuesta de MVP vs Fase B.
 - `docs/CONTEXTO_PROYECTO_CAMBRIDGE.md`: contexto completo exportable (qué es, actores, alcance contractual con lo que está dentro y lo que debe cotizarse aparte, estado del prototipo, decisiones, requerimientos, pendientes).
+- `docs/INFORME_REMATRICULA_ENTREGAS_NOV2026.md`: auditoría de `main` frente a los requerimientos de la sesión con Secretaría (5 nov), el plan estratégico comercial y la entrega digital de libros; qué se agregó, qué es viable y qué no.
 - `docs/CONTEXTO_SESION.md`: traspaso completo de la sesión de trabajo (cronología de pedidos, estado del repo, pendientes).
 
 ## Estructura
@@ -59,6 +60,10 @@ docs/                   documentación de contexto
 - Rematrícula conectada con el Muro (LMS): avance 100% + nota ≥ 7 activa "Rematricularme" en el portal; queda "Pendiente de pago" y Secretaría confirma en Facturación → Rematrículas por confirmar; recordatorios automáticos "te faltan X días". Leads de Kommo → matrícula en `Leads.html`; vista B2B en `Empresas.html`. Dirección del estudiante sectorizada (provincia/ciudad, sector, referencia, ubicar en el mapa), nunca texto libre.
 - No inventar funcionalidades fuera del contrato (Cláusula Tercera). Si algo no está en los 11 módulos, va como "fuera de alcance" o se pregunta.
 - `PortalEstudiante.html` es una **propuesta fuera del alcance contractual** (vista del estudiante: curso actual, asistencia, notas y certificados, pagos, datos); lleva la etiqueta "Propuesta · fuera del alcance del contrato actual" en su cabecera, tiene su propia shell (`.portal`, sin menú interno) y se llega desde el **login único** (`Main.html`: correo + contraseña; el sistema redirige por rol al panel o al portal; en el mockup hay un enlace "Demo: ver qué ve un estudiante") y desde la Ficha 360° (ícono de usuario). "Cerrar sesión" del portal vuelve a `Main.html`.
+
+- **Entrega digital de libros (M7)**: `EntregasLibros.html` (lista, sin retirar, alertas de stock), `EntregarLibro.html` (tablet: escáner simulado, revisión, firma en canvas o por QR simulado) y `ReciboEntrega.html`. La lógica vive en `assets/entregas.js` (sin dependencias; usa delegación de eventos porque el botón de confirmar está en el pie). Datos de ejemplo en `ENT` del generador. No se imprime nada: no reintroducir "Imprimir etiquetas" en matrícula.
+- **Rematrícula**: `Rematricula.html` (estados desde el cierre de notas, capacidad, reglas) y `RematriculaFactura.html` (matrícula + factura + pago en una pantalla). La ocupación proyectada sale de `CAPACIDAD` / `ocupacion()` / `capacidad_tbl()` (también se usa en Cursos). Conciliación bancaria: `P_CONC` en Facturación → Cobros. Tablero comercial: `tablero_plan()` (pestaña "Plan estratégico").
+- Las acciones nuevas están en el bloque `ACTIONS.update` que sigue a `FIN TEMA`; ese bloque se ejecuta antes que los asistentes de matrícula, así que una etiqueta definida más abajo debe repetirse ahí.
 
 ## Verificación rápida
 ```
