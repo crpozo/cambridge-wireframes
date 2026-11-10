@@ -1456,12 +1456,21 @@ def ocupacion(cap, ins, term):
     elif pct>=80: est=badge("Buena ocupación","ok")
     else: est=badge("Por llenar · reforzar contacto","warn")
     return esp,tot,pct,est
+def occ_cell(cap, ins, esp, pct, tone):
+    """Celda de ocupación proyectada: número grande + barra segmentada (inscritos / esperados / libres) + leyenda."""
+    tot=ins+esp; wi=min(ins/cap*100,100); we=max(min(tot/cap*100,100)-wi,0); mn=min(MIN_ABRIR/cap*100,100)
+    over=' occ-over' if pct>100 else ''
+    return (f'<div class="occ occ-{tone}{over}">'
+            f'<div class="occ-top"><span class="occ-n"><b>{tot}</b><span> de {cap} cupos</span></span><span class="occ-pct">{pct}%</span></div>'
+            f'<div class="occ-bar" role="img" aria-label="{ins} inscritos y {esp} esperados de {cap} cupos"><i class="occ-in" style="width:{wi:.0f}%"></i><i class="occ-ex" style="width:{we:.0f}%"></i><b class="occ-min" style="left:{mn:.0f}%" title="Mínimo para abrir: {MIN_ABRIR}"></b></div>'
+            f'<div class="occ-key"><span class="k-in">{ins} inscritos</span><span class="k-ex">{esp} esperados</span><span class="k-free">{max(cap-tot,0)} libres</span></div></div>')
 def capacidad_tbl(tid="capacidad"):
     rows=[]
     for c,d,sd,aula,cap,ins,term in CAPACIDAD:
         esp,tot,pct,est=ocupacion(cap,ins,term)
-        rows.append([c2(c,d),sd,c2(aula,f"capacidad {cap}"),str(ins),c2(str(esp),f"{round(RETENCION*100)}% de {term} que terminan"),progress(min(pct,100),color=("var(--bad)" if (tot<MIN_ABRIR or pct>100) else ("var(--ok)" if pct>=80 else "var(--warn)")))+f'<small>{tot} de {cap}'+(f' · {pct}% del aula' if pct>100 else '')+'</small>',est])
-    return table(["Curso proyectado","Sede","Aula","Inscritos","Rematrícula esperada","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)
+        tone="bad" if (tot<MIN_ABRIR or pct>100) else ("ok" if pct>=80 else "warn")
+        rows.append([c2(c,d),sd,c2(aula,f"capacidad {cap}"),occ_cell(cap,ins,esp,pct,tone),est])
+    return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra sólida = inscritos hoy · rayada = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
 
 # ===== Entregas de libros 100% digitales (módulo Inventario) =====
 # Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet o escanea el libro → el estudiante firma
@@ -3865,6 +3874,21 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.qrbox{grid-template-columns:1fr}.qrbox svg{width:100%;max-width:220px;height:auto}.receipt{padding:24px 18px}.receipt dl{grid-template-columns:1fr}.receipt-sign{grid-template-columns:1fr}}
 @media print{.receipt{border:0;padding:0;max-width:none}}
 
+/* ocupación proyectada */
+.occ{display:flex;flex-direction:column;gap:6px;min-width:260px;padding:4px 0}
+.occ-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.occ-n b{font-family:var(--font-mono);font-size:var(--t-20);font-weight:600;color:var(--ink)}.occ-n span{font-size:var(--t-13);color:var(--mute);margin-left:4px}
+.occ-pct{font-family:var(--font-mono);font-size:var(--t-14);font-weight:600;color:var(--mute)}
+.occ-bar{position:relative;display:flex;height:12px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);overflow:visible}
+.occ-bar i{display:block;height:100%}.occ-bar i:first-child{border-radius:99px 0 0 99px}
+.occ-in{background:var(--occ,var(--navy))}
+.occ-ex{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 3px,transparent 3px 6px);opacity:.55;border-radius:0 99px 99px 0}
+.occ-min{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
+.occ-ok{--occ:var(--ok)}.occ-warn{--occ:var(--warn)}.occ-bad{--occ:var(--bad)}.occ-bad .occ-pct{color:var(--bad)}.occ-ok .occ-pct{color:var(--ok)}
+.occ-key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--t-13);color:var(--mute)}
+.occ-key span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--occ,var(--navy))}
+.occ-key .k-ex::before{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 2px,transparent 2px 4px);opacity:.6;box-shadow:inset 0 0 0 1px var(--occ,var(--navy))}
+.occ-key .k-free::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}
