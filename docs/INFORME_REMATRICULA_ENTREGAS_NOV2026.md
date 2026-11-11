@@ -491,3 +491,24 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Qué es exactamente la **copia amarilla** y quién la conserva; el prototipo la trata como un archivo más del pago.
 - El **plazo de conservación** del archivo digital y de los originales, que lo define Contabilidad.
 - Si cada **datáfono o lote** (por sede o por banco) necesita su propio cierre y su propia foto.
+
+
+## 26. Entrega y registro de certificaciones internacionales (revisión de 10 nov)
+**Lo que dijo Secretaría**: cuando llega un certificado internacional se **envía un correo** a la persona, se le pide la **cédula**, se **saca una copia** y se entrega el certificado físico firmado. Después se entra al sistema de exámenes internacionales, se busca a la persona, se registra la **calificación**, la **firma**, y se **escanea el documento junto con la copia de la cédula** para el archivo digital y físico, como **comprobante ante un posible reclamo** de entrega.
+
+**Qué había**: `ExamenesInternacionales.html` con los estados (inscrito, esperando resultados, listo para retirar, entregado) y un botón genérico "Registrar resultado"; la entrega digital de libros (sección 3) con firma en pantalla. **Faltaba** la entrega del certificado con su identificación, su firma y su comprobante.
+
+**Qué se agregó al prototipo** (el módulo sigue marcado como propuesta fuera del alcance, ver sección 16)
+- **Aviso de que llegó el certificado**: botón "Avisar que llegó un certificado" y una **regla automática** (Automatizaciones, área Exámenes) que envía el correo al candidato con dónde y cuándo retirarlo y **qué traer** (cédula o pasaporte).
+- **Entregar certificado** (`EntregaCertificado.html`, desde "Entregar certificado" en el listado de "Listo para retirar"): identifica al candidato, registra el **puntaje, nivel, número y fecha de emisión**, y verifica que el certificado coincide con el candidato y está completo.
+- **Identificación sin fotocopia**: la cédula o el pasaporte se adjunta como **foto o PDF** y es **obligatoria**: sin ella no se puede confirmar la entrega (el prototipo rechaza archivos que no sean foto o PDF).
+- **Firma en la tablet o por QR**, la misma de la entrega de libros.
+- **Acta de entrega** (`ActaCertificado.html`): documento en PDF con el candidato, el documento, el examen, el resultado, la firma, la **imagen de la identificación**, quién entregó y cuándo; se **archiva en el expediente**, sale por correo y es el **comprobante ante un reclamo**. El examen pasa a "Entregado" con "Ver acta".
+
+**Viabilidad**: **viable de construir**, pero es parte del módulo de **exámenes internacionales, fuera del alcance del contrato** (punto 3 del contexto): requiere cotización aparte. La firma es simple, no certificada (punto 9).
+
+**Por confirmar con el cliente**
+- **Datos personales**: la imagen de la cédula o el pasaporte es un dato sensible; hay que definir quién la ve, cuánto tiempo se conserva y cómo se protege (el contrato incluye una cláusula de protección de datos).
+- Si el **archivo físico** (certificado firmado y copia de la cédula) sigue siendo obligatorio para el cliente o la auditoría, o basta el digital.
+- Si **un tercero puede retirar** el certificado (el prototipo permite un representante autorizado y pide una autorización).
+- Si los certificados de **Cambridge, Oxford y Anglia** se entregan igual que el de TOEFL, y quién registra la **llegada** del certificado en la sede.
