@@ -360,3 +360,24 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Los **plazos y escalamientos** (3 días antes, días 1, 7 y 15, 72 h) son supuestos tomados de las reuniones y del manual.
 - Si la **capacidad estándar de 12** reemplaza a la capacidad por aula (norma SETEC) cuando una aula tiene una propia, o solo se usa si falta.
 - Quién puede encender y apagar reglas, y quién recibe cada alerta.
+
+
+## 20. Envío automático de facturas a Dora y al SRI, con espera de 2 horas (revisión de 10 nov)
+**Lo que dijo Secretaría**: la emisión de facturas electrónicas, su carga al SRI y al sistema contable a través de **Dora** está automatizada. Pasan exactamente **2 horas** después de emitir la factura para que el sistema la suba sola y se actualice un **contador numérico** (normalmente en cero). Ese margen sirve para manejar cualquier error o inconveniente técnico. A veces el SRI no autoriza la factura y se queda retenida.
+
+**Qué había en `main`**: la columna "SRI" del listado de facturas (autorizada, sin autorizar, rechazada), el botón "Reintentar autorización" en el detalle y una fila de Dora "por definir" en Integraciones. **No se veía** la espera de 2 horas, el contador ni qué facturas están esperando, ya salieron o fallaron. Además, la factura de ejemplo se autorizaba 1 minuto después de emitirla, lo que contradecía esa espera.
+
+**Qué se agregó al prototipo**
+- **Pantalla "Envíos a Dora y al SRI"** (desde el menú "Más acciones" de Facturación y desde el detalle de la factura): cifras (en espera, **sin subir**, autorizadas, rechazadas y con error) y el flujo en cinco pasos: se emite, ventana de corrección de 2 horas, sale sola a Dora, Dora la autoriza en el SRI y la sube a contabilidad, y si falla se avisa.
+- **Estado por factura con cuenta regresiva en vivo** ("Sube en 01:17:50"). Dentro de la espera se puede **Corregir** (datos o anular sin dejar rastro en el SRI) o **Enviar ahora**; al salir, el estado cambia a "Enviada", el contador de "sin subir" baja y **Corregir se bloquea** (después se corrige con nota de crédito).
+- **Facturas con problemas**: la rechazada por el SRI ("cédula inválida", con "Corregir y reenviar") y la que falló por Dora ("Reintentar envío").
+- **Parámetros**: ventana de corrección (sin espera, 1, 2 o 4 horas), reintentos automáticos y alerta si no se autoriza en 24 horas.
+- Se corrigió la **factura de ejemplo**: emitida a las 10:11, enviada a Dora a las 12:11, autorizada a las 12:12 y comprobante a las 12:14, con su línea en el historial. El listado de facturas suma el estado "En espera" y un filtro.
+
+**Viabilidad**: **registrar la factura, la espera y el seguimiento: viable** (M5 y M8). **El envío en sí depende de Dora**: M11 contempla Dora "sujeto a lo que exponga" y la **emisión directa al SRI sin Dora es adenda** (punto 10 del contexto). Mientras no haya API de Dora, la plataforma no puede enviar sola y esta pantalla sería solo de seguimiento.
+
+**Por confirmar con el cliente**
+- Si **hoy el envío automático lo hace otra herramienta** (la propuesta externa) y cómo convivirá con la plataforma.
+- Qué expone Dora (API, estado de la autorización, motivo del rechazo) y si el **contador** es el de Dora o uno propio.
+- Si las **2 horas** son una regla del negocio o un límite técnico de la herramienta actual; el prototipo la deja configurable.
+- Qué hacer con las facturas que el SRI no autoriza: cuánto tiempo pueden quedar retenidas y quién las corrige.
