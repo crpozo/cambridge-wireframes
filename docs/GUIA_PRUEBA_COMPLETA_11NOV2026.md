@@ -78,3 +78,20 @@ Se revisan con las guías anteriores; hoy no se modificaron.
 - **Integración real con Dora, Kommo y WhatsApp**: es dependencia externa; el prototipo solo la simula.
 - **Código de barras del RIDE**: el RIDE oficial del SRI lleva el código de barras de la clave de acceso; el prototipo muestra la clave en texto y Dora lo genera al emitir.
 - **Por confirmar con el cliente**: desde cuándo se cuentan los 3 y 6 meses, si 3 meses basta para repetir el test, el texto legal de la aceptación, el plazo máximo de crédito por convenio y a partir de qué avance solo decide Académico (se usó 80 %).
+
+## I. Tiempos de trabajo del 11 nov 2026
+Salen de las horas reales de los commits y del reflog de git. Cada tramo va desde el hito anterior hasta el suyo, así que incluye pruebas y las pausas entre mensajes.
+
+| Parte | Desde | Hasta | Duración |
+|---|---|---|---|
+| Tablero comercial: filtros reales, embudo y matriz | 12:57 | 13:08 | 11 min |
+| Cambios de la reunión (factura copiable, nivel y horario, referido, estados, aceptación, canal, mensajes) | 13:08 | 13:36 | 28 min |
+| Simulación de WhatsApp | 13:36 | 13:45 | 9 min |
+| Botón "Ver portal del estudiante" en la Ficha 360 | 13:45 | 13:54 | 9 min |
+| Arma tu reporte con filtros que cambian el resultado | 13:54 | 13:57 | 3 min |
+| Merge a main y publicación | 13:57 | 14:04 | 7 min |
+| Guía completa de pruebas y aclaraciones | 14:04 | 14:21 | 17 min |
+| Pendientes: crédito editable, campos de la ficha, cambio de matrícula, RIDE | 14:21 | 14:25 | 4 min |
+| **Total** | 12:57 | 14:25 | **88 min** |
+
+El análisis y diseño del tablero antes de crear su rama (12:57) no está contado: no hay una hora de inicio confiable.
