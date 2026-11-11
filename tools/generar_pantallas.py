@@ -59,7 +59,7 @@ ACTIONS={
  "Nuevo candidato":("Se inscribe un candidato: datos personales, examen, fecha y sede; se emite la factura del examen.",None),
  "Importar notas del Muro":("Se traen las notas de participación, quiz y examen registradas en el Muro (Moodle) para este módulo.",None),
  "Guardar borrador de notas":("Las notas se guardan sin cerrar el módulo; puedes seguir editándolas.",None),
- "Cerrar módulo y emitir certificados":("Se cierran las notas del módulo 7: los aprobados avanzan al módulo 8 de su compra y, al cerrar el nivel, reciben su certificado con código único de verificación. Los bloqueados por asistencia van a Coordinación. "+AUDIT,"DetalleCurso.html"),
+ "Cerrar módulo y emitir certificados":("Se cierran las notas del módulo 7: los aprobados avanzan al módulo 8 de su compra y, al cerrar el nivel, reciben su certificado con código único de verificación. Los bloqueados por asistencia van a Coordinación. Al cerrar, la plataforma envía sola el correo de rematrícula a los aprobados sin deuda (8), deja propuesta su matrícula en el siguiente curso con el cupo reservado 72 h y avisa a Secretaría; los que tienen deuda no reciben la nota hasta regularizar. "+AUDIT,"Rematricula.html"),
  "Confirmar mi cupo":("Confirmas que sigues en el mismo grupo para el módulo 8. No hay pago: ya está incluido en tu compra. Te llega el enlace de clase el día anterior.",None),
  "Enviar solicitud":("La solicitud va a la bandeja de Dirección Comercial. La venta queda en espera; verás aprobado o rechazado en Notificaciones y en tus pendientes de Inicio, y al aprobarse retomas la venta. "+AUDIT,"Home.html"),
  "Nuevo estudiante":"NuevoEstudiante.html","Importar / Exportar":"ImportExport.html","Nuevo curso":"NuevoCurso.html","Editar curso":"NuevoCurso.html",
@@ -918,6 +918,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
 
 # Notificaciones: (roles, tipo, tinte, símbolo, título, detalle, destino, cuándo, leída). Cada rol ve solo las suyas (campana y Notificaciones.html).
 NOTIFS=[
+ ("ADM,GER,SUC,SEC","Rematrícula","navy","→","Notas cerradas: A1 Sábados · 8 listos para rematricular","El aviso al estudiante ya salió solo · hoy 09:10","Rematricula.html","Hoy",False),
  ("ADM,GER,DIR","Aprobación","yellow","!","Descuento 42% pendiente de tu aprobación","Gabriela Núñez · Carla M. · hace 1 día","Aprobaciones.html","Ayer",False),
  ("ADM,GER,SUC,SEC","Inventario","red","−","Stock negativo: Empower B1+ en Valle","Correo de las 07:00 enviado · hoy","Inventario.html","Hoy",False),
  ("ADM,GER,SUC,COO","Pagos","navy","$","Payment sheet de octubre lista para revisión","3 alertas · ayer 17:30","PaymentSheet.html","Ayer",False),
@@ -1608,13 +1609,37 @@ _ACC={"calif":'<a href="CalificarCurso.html">Calificar curso</a>',"mat":'<a href
 _re_tbl=table(["Estudiante","Sede","Curso que terminó","Notas","Siguiente curso","Estado","Acción"],
   [[c2(f'<a href="Ficha360.html">{r[0]}</a>',r[1]),r[1],c2(r[2],r[3]),r[4],c2(r[5],r[6]),_est_re(r[7]),_ACC[r[8]]] for r in RE],sede=1,hide=(1,),wide=0,tid="remat")
 
+def _mail(asunto,para,cuerpo,cta,href,nota=""):
+    return (f'<article class="mail" aria-label="Vista previa del correo"><dl class="mail-head"><div><dt>De</dt><dd>Cambridge School of Languages</dd></div><div><dt>Para</dt><dd>{para}</dd></div><div><dt>Asunto</dt><dd><b>{asunto}</b></dd></div></dl>'
+            f'<div class="mail-body">{cuerpo}<a class="btn btn-primary" href="{href}">{cta}</a>{f"<small>{nota}</small>" if nota else ""}</div></article>')
+_mail_ok=_mail("Aprobaste el módulo 7 · tu módulo 8 empieza el 3 de noviembre","maria.andrade@ejemplo.com",
+  '<p>Hola María,</p><p>Tu profesor cerró las notas de <b>English for Adults B1</b>. Tu nota final fue <b>8.4</b> y aprobaste.</p>'
+  '<p>Tu siguiente módulo: <b>Módulo 8 · B1</b> · Lu-Ma-Mi-Ju 19:00–21:00 · inicia el 3 de noviembre con P. Gómez.</p><p>Te reservamos el cupo hasta el <b>26 de octubre a las 10:00</b>. Valor pendiente: <b>$250.00</b>.</p>',
+  "Confirmar mi matrícula y pagar","PortalEstudiante.html","El enlace es personal. Si ya pagaste varios módulos, tu cupo está asegurado y solo debes confirmar.")
+_mail_rec=_mail("Tu nota del módulo 7 · siguientes pasos","sofia.herrera@ejemplo.com",
+  '<p>Hola Sofía,</p><p>Tu nota final fue <b>6.8</b>. Antes de pasar al módulo 8 necesitas <b>tutorías y el examen de recuperación</b>.</p><p>Coordinación Académica te contactará en las próximas 48 horas para agendarlas.</p>',
+  "Agendar mi tutoría","PortalEstudiante.html","No se te matricula en el siguiente módulo hasta decidirlo con Coordinación.")
+_mail_deuda=_mail("Tienes un saldo pendiente · regularízalo para ver tu nota","pedro.mora@ejemplo.com",
+  '<p>Hola Pedro,</p><p>Tus notas del módulo 7 ya están listas. Tienes un saldo vencido de <b>$500.00</b>; al regularizarlo te enviaremos tu nota y la matrícula de tu siguiente módulo.</p>',
+  "Ver mi estado de cuenta","PortalEstudiante.html","Si ya pagaste, responde este correo con tu comprobante.")
+_AV=[("23 oct 09:10","María Andrade","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Confirmó"),("23 oct 09:10","Martín Ortega","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Abierto"),
+     ("23 oct 09:10","Camila Sánchez","Teens A2 · módulo 6","Aprobado · matrícula propuesta","Correo","Enviado"),("23 oct 09:10","Gabriela Núñez","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Sin abrir"),
+     ("23 oct 09:10","Sofía Herrera","Adults B1 · módulo 7","Recuperación · tutorías","Correo","Abierto"),("23 oct 09:10","Luis Torres","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Rebotó")]
+_bad_av={"Confirmó":badge("Confirmó","ok"),"Abierto":badge("Abierto","navy"),"Enviado":badge("Enviado","neutral"),"Sin abrir":badge("Sin abrir","warn"),"Rebotó":badge("Rebotó","bad")}
+_avisos=(kpis([("Avisos enviados",agg("count","avisos"),"hoy, al cerrar las notas"),("Confirmaron",agg("count:Estado=Confirmó","avisos"),"ya matriculados",{"fset":"Estado=Confirmó"}),("Abiertos",agg("count:Estado=Abierto","avisos"),"sin confirmar todavía",{"fset":"Estado=Abierto"}),
+    ("Sin abrir",agg("count:Estado=Sin abrir","avisos"),"se reenvía a las 48 h",{"fset":"Estado=Sin abrir"}),("Rebotaron",agg("count:Estado=Rebotó","avisos"),"correo inválido: lo corrige Secretaría",{"fset":"Estado=Rebotó"})])
+  +card("Correo que recibe el estudiante",seg(["Aprobado","Recuperación","Con deuda"],[_mail_ok,_mail_rec,_mail_deuda],label="Tipo de aviso")
+         +kv(("Cuándo sale","al cerrar las notas del módulo, sin que nadie lo envíe"),("Si no responde","se reenvía a las 48 h; a las 72 h se libera el cupo y se avisa a Secretaría")))
+  +card("Registro de envíos",table(["Hora","Estudiante","Curso","Aviso","Canal","Estado"],[[h,c2(e,""),c,a,ca,_bad_av[es]] for h,e,c,a,ca,es in _AV],hide=(0,),wide=1,tid="avisos")
+         +kv(("Canal","correo; el aviso por WhatsApp es una propuesta aparte"),("Disparador",badge("Depende de que las notas se registren en la plataforma")+'<small> · si siguen en GradeKeeper hace falta una integración que no está en el contrato</small>'))))
 page("Rematricula.html","Rematrícula",shell("Rematrícula","Rematrícula",
  kpis([("Terminaron el módulo",agg("count","remat"),"según filtros y sede"),("Esperando notas",agg("count:Estado=Esperando notas","remat"),"bloquean la rematrícula",{"fset":"Estado=Esperando notas"}),
        ("Alerta enviada",agg("count:Estado=Alerta enviada","remat"),"listos para matricular",{"fset":"Estado=Alerta enviada"}),
        ("Sin factura",agg("count:Estado=Sin factura","remat"),"matriculados en rojo",{"fset":"Estado=Sin factura"}),
        ("Por conciliar",agg("count:Estado=Por conciliar","remat"),"pago reportado, sin validar",{"fset":"Estado=Por conciliar"}),
        ("Confirmadas",agg("count:Estado=Confirmada","remat"),"cupo asegurado",{"fset":"Estado=Confirmada"})]),
- tabs(["Estudiantes","Capacidad del siguiente curso","Reglas"],"Estudiantes",panels={
+ tabs(["Estudiantes","Avisos automáticos","Capacidad del siguiente curso","Reglas"],"Estudiantes",panels={
+  "Avisos automáticos": _avisos,
   "Estudiantes": card("Del cierre de notas a la matrícula",flow([
       ("El profesor cierra las notas del módulo","nota ≥ 7 y asistencia ≥ 75%","Automático","done"),
       ("La plataforma avisa al estudiante","correo: 'Tu nota es … tu siguiente nivel empieza el …' con enlace para confirmar y pagar","Automático","done"),
@@ -2005,7 +2030,7 @@ page("Pedidos.html","Tienda en línea",shell("Tienda en línea · pedidos WooCom
 # 2 Home
 home=shell("Inicio","Inicio",
  only("ADM,GER,DIR,SUC", tasks([("Aprobar descuento de 42% · Gabriela Núñez","pedido por Carla M. ayer · supera el límite de 10%",badge("Espera tu decisión","warn"),"Aprobaciones.html"),("Revisar la payment sheet de octubre","3 alertas: diferencia de $26 y una factura sin sesiones",badge("Pendiente","warn"),"PaymentSheet.html"),("Cobrar $12,450 en matrículas con saldo","el 60% en 4 cursos que terminan en noviembre",badge("Por vencer","warn"),"Facturas.html"),("Ambato sin matrículas nuevas hace 2 semanas","2 cursos por abrir con menos de 5 inscritos",badge("Requiere acción","bad"),"Cursos.html")]))+
- only("SEC", tasks([("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
+ only("SEC", tasks([("Rematricular a 8 estudiantes","el profesor cerró las notas de A1 Sábados; el aviso ya salió solo",badge("Listos","ok"),"Rematricula.html"),("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
  only("ASE", tasks([("Contactar 5 leads de Kommo","2 llevan más de 3 días sin respuesta",badge("Sin contactar","bad"),"Leads.html"),("Seguir tu solicitud de descuento de 42%","Gabriela Núñez · espera a Dirección Comercial",badge("En revisión","info"),"SolicitudDescuento.html"),("Llamar a 4 estudiantes con saldo vencido","$1,420 en total",badge("Vencida","bad"),"Facturas.html")]))+
  only("COO,PRO", tasks([("Confirmar 3 sesiones de esta semana","2 de P. Gómez · Teens A2 lleva 2 días",badge("Pendiente","warn"),"Sesiones.html"),("Calificar Adults A1 Sábados","terminó hace 5 días · 14 estudiantes esperan su certificado",badge("Requiere acción","bad"),"CalificarCurso.html"),("Asignar profesor a Teens B1 Virtual","abre en 2 semanas · P. Gómez tiene horario libre",badge("Sin profesor","warn"),"Cursos.html")]))+
  only("SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"en tu sede"),("Rematrículas por confirmar",sv(2,1,1,0),"pago reportado desde el portal"),("Cobrado hoy",sv("$3,160","$1,420","$980","$760"),"15 pagos · caja abierta"),("Facturas sin autorizar",sv(2,2,0,0),"1 rechazada por el SRI")]))+
@@ -2248,7 +2273,14 @@ page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-
    [c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871"),"70%","7.5","6.8","6.4","7.0",badge("Bloqueado · asistencia","bad")],
    [c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875"),"45%","5.0","4.5","—","—",badge("Reprobado","bad")]],wide=0)
    +kv(("Aprobados","10 de 12"),("Bloqueados por asistencia","1 · decide Coordinación"),("Reprobados","1 · repite el módulo"))),
- two(card("Al cerrar el módulo", flow(["Speaking mock y notas en GradeKeeper (48 h)","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación y End of level report","Reprobados: rematrícula del mismo módulo"])),
+ card("Qué se dispara solo al cerrar las notas",table(["Grupo","Estudiantes","Qué recibe","Qué queda"],[
+   [badge("Aprobados sin deuda","ok"),"8",c2("Correo con su nota y el siguiente módulo","enlace para confirmar y pagar"),c2("Matrícula propuesta","cupo reservado 72 h en 0001-2026-0801")],
+   [badge("Aprobados con deuda","warn"),"2",c2("Nada todavía","la nota no se envía con saldo vencido"),c2("Bloqueados","Secretaría los ve en cartera")],
+   [badge("Bloqueado por asistencia","bad"),"1",c2("Aviso a Coordinación","decide si se matricula"),c2("Pendiente de decisión","no se rematricula solo")],
+   [badge("Reprobado","bad"),"1",c2("Llamada de Coordinación","antes de publicar la nota"),c2("Repite el módulo","rematrícula del mismo módulo")]],wide=0)
+   +kv(("Secretaría","recibe la notificación y ve a los 8 listos en Rematrícula, sin esperar a que Académico le avise"),("Quién dispara","el profesor o Coordinación al cerrar el módulo en la plataforma"))
+   +row(btn("Ver los avisos automáticos","Rematricula.html",kind="ghost")),extra=badge("Automático","ok")),
+ two(card("Al cerrar el módulo", flow(["Speaking mock y notas (48 h)","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación y End of level report","Reprobados: rematrícula del mismo módulo"])),
      card("Reglas del proceso de cierre", table(["Nota final","Qué pasa"],[['<span class="mono">≥ 7.00</span>',"Aprueba · Student Report en PDF a su expediente"],['<span class="mono">6.50 – 6.99</span>',"Tutorías y examen de recuperación antes de decidir"],['<span class="mono">≤ 6.49</span>',"Pierde el módulo · repite con descuento para repetir"],["Cualquiera · con deuda","No se envía la nota ni el certificado hasta regularizar el saldo"],["Menor a 7.00","Coordinación llama al estudiante o representante antes de publicar"]],wide=0)
        +kv(("Plazo","72 h después de la última clase"),("Encuesta","se envía al cerrar; el informe trimestral consolida resultados por sede")))),
  foot(btn("Cerrar módulo y emitir certificados",None,True),btn("Guardar borrador de notas"),btn("Cancelar","DetalleCurso.html")),
@@ -3922,6 +3954,12 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
+/* vista previa de correo */
+.mail{max-width:560px;border:1px solid var(--line-strong);border-radius:var(--r);background:#fff;overflow:hidden}
+.mail-head{margin:0;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:var(--t-13)}
+.mail-head>div{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px}.mail-head dt{color:var(--mute)}.mail-head dd{margin:0;color:var(--ink)}
+.mail-body{padding:20px 22px;display:flex;flex-direction:column;gap:12px;font-size:var(--t-14);line-height:1.55;color:var(--ink-2)}.mail-body p{margin:0}
+.mail-body .btn{align-self:flex-start}.mail-body small{color:var(--mute);font-size:var(--t-13)}
 /* vista previa de mensaje */
 .msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
 .msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}

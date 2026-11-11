@@ -506,6 +506,12 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
+/* vista previa de correo */
+.mail{max-width:560px;border:1px solid var(--line-strong);border-radius:var(--r);background:#fff;overflow:hidden}
+.mail-head{margin:0;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:var(--t-13)}
+.mail-head>div{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px}.mail-head dt{color:var(--mute)}.mail-head dd{margin:0;color:var(--ink)}
+.mail-body{padding:20px 22px;display:flex;flex-direction:column;gap:12px;font-size:var(--t-14);line-height:1.55;color:var(--ink-2)}.mail-body p{margin:0}
+.mail-body .btn{align-self:flex-start}.mail-body small{color:var(--mute);font-size:var(--t-13)}
 /* vista previa de mensaje */
 .msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
 .msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}

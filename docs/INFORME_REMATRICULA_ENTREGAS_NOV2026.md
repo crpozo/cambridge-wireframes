@@ -170,3 +170,22 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 
 **Cambios en el prototipo**: en `RematriculaFactura.html` la nueva tarjeta "2 · Curso nuevo" muestra el curso con programa, módulo, docente, aula, plataforma LMS, días y horario, inicio, fin, horas totales, cupo, valor y progreso. Si el módulo aún no tiene curso, la segunda opción permite **crearlo sin salir de la matrícula** (docente, aula, código LMS, horario, fecha de inicio, fin calculado, horas y cupo) o abrir el formulario completo. `NuevoCurso.html` y el detalle del curso suman el campo "Código en el LMS".
 
+
+
+## 10. Notas académicas → matrícula: aviso automático al cerrar las notas (revisión de 10 nov)
+**Dolor**: el sistema actual no conecta la aprobación de notas con la matrícula. Secretaría espera a que Académico termine y le avise; cada correo y cada matrícula se hacen a mano.
+
+**Qué había en `main`**: `CalificarCurso.html` con reglas de cierre (≥ 7 aprueba, 6.50–6.99 recuperación, deuda bloquea la nota), el protocolo manual de reaperturas y, desde esta rama, `Rematricula.html` con los estados y las reglas. Faltaba **mostrar qué se dispara al cerrar las notas**, el **correo** que recibe el estudiante y el **registro** de lo enviado.
+
+**Qué se agregó al prototipo**
+- `CalificarCurso.html`: tarjeta "Qué se dispara solo al cerrar las notas" con cuatro grupos (aprobados sin deuda, aprobados con deuda, bloqueados por asistencia, reprobados), qué recibe cada uno y qué queda en el sistema.
+- `Rematricula.html`, pestaña **Avisos automáticos**: vista previa del correo en tres variantes (aprobado, recuperación, con deuda), cifras de envío (confirmaron, abiertos, sin abrir, rebotaron) y registro por estudiante. Reglas: reenvío a las 48 h; a las 72 h se libera el cupo y se avisa a Secretaría.
+- Secretaría recibe una **notificación** y una **tarea** en su Inicio ("Notas cerradas: A1 Sábados · 8 listos para rematricular"): ya no espera a que Académico le avise.
+- Los aprobados con deuda no reciben la nota hasta regularizar; los de recuperación o bloqueados por asistencia no se rematriculan solos (decide Coordinación).
+
+**Viabilidad y condiciones**
+- **El disparador funciona solo si las notas se registran en la plataforma** (M3 incluye "notas pass/fail"). El proceso actual del cliente registra las notas en **GradeKeeper** (`docs/PROCESOS_INTERNOS.md`) y el contrato solo contempla integraciones con Kommo, Moodle y Dora (M11). Si las notas siguen viviendo en GradeKeeper, esta automatización necesita una integración que **no está en el contrato**. Es la pregunta clave para el cliente.
+- **"Sin intervención manual" total**: el aviso y la matrícula propuesta sí son automáticos. La confirmación final depende del pago del estudiante y de que exista el curso siguiente con cupo; si no existe, se avisa a Coordinación para crearlo.
+- **Correo al estudiante**: la plataforma ya necesita enviar correos por el contrato (aceptación del contrato, recordatorios de cuotas), pero las notificaciones a estudiantes "más allá de las internas" figuran como fuera de alcance (punto 17 del contexto) y dependen de un proveedor de correo transaccional. Conviene **confirmar si el aviso de rematrícula entra en ese correo ya contratado**. **WhatsApp**: propuesta aparte (punto 12).
+- **Enlace "Confirmar mi matrícula y pagar"**: apunta al portal del estudiante, que es una propuesta fuera del alcance. Sin portal, el enlace llevaría a una página de pago simple o el estudiante respondería al correo.
+- El texto de los correos, los plazos (48 h, 72 h) y quién puede cerrar notas son supuestos por confirmar con Coordinación Académica.
