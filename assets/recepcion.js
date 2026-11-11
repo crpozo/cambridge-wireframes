@@ -1,5 +1,6 @@
-/* Recepción de un pedido al proveedor (prototipo): cuenta lo recibido contra lo pedido, marca cada ítem
-   como completo, faltante o sobrante y solo deja marcar el pedido como recibido si está completo. */
+/* Recepción de un pedido al proveedor (prototipo): cuenta lo recibido contra lo pedido con botones + y −,
+   marca cada ítem como completo, faltante o sobrante y solo deja marcar el pedido como recibido si está completo.
+   Los libros no traen código de barras: el conteo es manual. */
 (function () {
   if (window.__recepcion) return;
   window.__recepcion = true;
@@ -40,36 +41,27 @@
   document.addEventListener('input', function (e) { if (e.target.matches && e.target.matches('input[data-rec]')) calc(); });
   document.addEventListener('change', function (e) { if (e.target.matches && e.target.matches('input[data-rec]')) calc(); });
 
-  function sumar(isbn) {
-    var fila = inputs().filter(function (i) { return i.getAttribute('data-isbn') === isbn; })[0];
-    if (!fila) { toast('Ese ISBN no está en este pedido'); return; }
-    var p = +fila.getAttribute('data-pedido'), r = (+fila.value || 0) + 1;
-    fila.value = r; calc();
-    toast((fila.getAttribute('data-nombre') || isbn) + ': ' + r + ' de ' + p);
-  }
+  function campoDe(btn) { return btn.parentElement.querySelector('input[data-rec]'); }
 
   document.addEventListener('click', function (e) {
-    var sim = e.target.closest ? e.target.closest('[data-rec-scan-btn]') : null;
-    if (sim) {
-      var pend = inputs().filter(function (i) { return (+i.value || 0) < +i.getAttribute('data-pedido'); })[0];
-      var inp = document.querySelector('[data-rec-scan]');
-      var isbn = pend ? pend.getAttribute('data-isbn') : (inputs()[0] || {}).getAttribute('data-isbn');
-      if (inp) inp.value = isbn;
-      sumar(isbn); return;
+    var t = e.target.closest ? e.target : null; if (!t) return;
+    var mas = t.closest('[data-rec-plus]'), menos = t.closest('[data-rec-minus]'), todo = t.closest('[data-rec-all]');
+    if (mas || menos) {
+      var i = campoDe(mas || menos); if (!i) return;
+      i.value = Math.max((+i.value || 0) + (mas ? 1 : -1), 0); calc(); return;
     }
-    var c = e.target.closest ? e.target.closest('[data-rec-confirm]') : null;
+    if (todo) {
+      inputs().forEach(function (i) { i.value = i.getAttribute('data-pedido'); });
+      calc(); toast('Todo marcado como recibido: revisa que coincida con el documento del proveedor'); return;
+    }
+    var c = t.closest('[data-rec-confirm]');
     if (c) {
       if (!window.__recOk) { toast(window.__recFalta ? 'Faltan ' + window.__recFalta + ' libros para marcar el pedido como recibido' : 'Hay libros de más: revisa el conteo'); return; }
       toast('Pedido recibido: el stock se actualizó y los libros se asignaron a sus entregas');
       setTimeout(function () { location.href = c.getAttribute('data-next') || 'Movimientos.html'; }, 1100);
     }
   });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-rec-scan]')) {
-      e.preventDefault(); var v = e.target.value.trim(); if (v) { sumar(v); e.target.value = ''; }
-    }
-  });
 
-  function init() { calc(); setTimeout(calc, 400); }
+  function init() { calc(); var n = 0, iv = setInterval(function () { calc(); if (++n > 12) clearInterval(iv); }, 250); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

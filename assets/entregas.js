@@ -96,12 +96,12 @@
     });
   });
 
-  // Escáner de código de barras simulado
+  // Buscar entrega por estudiante (simulado)
   document.querySelectorAll('[data-scan]').forEach(function (b) {
     b.addEventListener('click', function () {
       var i = document.querySelector('[data-scan-input]');
-      if (i) i.value = '9781108961516';
-      toast('Libro identificado: Empower B1 Combo A. Coincide con la entrega EN-2026-0431');
+      if (i) i.value = 'María Andrade · 001-202602794';
+      toast('Entrega encontrada: EN-2026-0431 · Empower B1 Combo A');
     });
   });
 

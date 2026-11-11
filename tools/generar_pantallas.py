@@ -1435,7 +1435,6 @@ import urllib.parse
 ACTIONS.update({
  # Entrega digital de libros
  "Buscar entrega":("Se busca la entrega pendiente por nombre, cédula, matrícula o ISBN. Si el estudiante tiene varias, se listan para elegir.",None),
- "Escanear código de barras":("Se abre la cámara de la tablet (o el lector USB) y se lee el ISBN del libro; la plataforma abre la entrega pendiente que lo lleva.",None),
  "Crear entrega manual":("Para un libro vendido sin matrícula (factura suelta) o una reposición: se crea una entrega ligada a la factura, con el mismo flujo de firma y recibo.","EntregarLibro.html"),
  "Enviar recordatorio de retiro":("Se envía un correo al estudiante (o a su representante) recordándole retirar el libro en su sede. Queda anotado en la entrega. El envío por WhatsApp es una propuesta aparte.",None),
  "Enviar recordatorio a todos":("Se envía el recordatorio de retiro a todos los matriculados de la lista que aún no retiran su libro. "+AUDIT,None),
@@ -1457,6 +1456,12 @@ ACTIONS.update({
  "Vincular a la bolsa":("Se liga la factura al módulo pagado de la bolsa del estudiante; queda disponible para matricularlo cuando exista el curso. No se emite nada nuevo y el saldo se recalcula. "+AUDIT,None),
  "Registrar recepción parcial":("Se suma al stock lo que llegó, el pedido queda 'Con pendientes' con los libros que faltan y se avisa al proveedor. Los libros ya vendidos se asignan a su entrega solo cuando lleguen. "+AUDIT,"Movimientos.html"),
  "Crear pedido con esta lista":("Se crea el pedido a Books & Bits con las cantidades de la lista de compra de la semana y queda En camino. Secretaría de la sede lo recibe cuando llegue. "+AUDIT,"Movimientos.html"),
+ "Pedir los datos al cliente":("Se envía al cliente la plantilla de datos para el registro (correo; el envío por WhatsApp es una propuesta aparte): apellidos, nombres, cédula, fecha de nacimiento, celular, correo y el PDF de la cédula.",None),
+ "Pedir la cédula al cliente":("Se envía un recordatorio al cliente pidiendo el PDF de la cédula del candidato. Sin ese documento no se puede registrar el examen, aunque el pago ya esté hecho.",None),
+ "Pedir cédula":("Se envía un recordatorio al cliente pidiendo el PDF de la cédula. El candidato sigue en 'Falta cédula' y se muestra la fecha límite de inscripción para que no se pase de los 20 días.",None),
+ "Pedir excepción de fecha":("Se envía la solicitud a Coordinación Académica para inscribir con menos de 20 días de anticipación. No está garantizada: el cliente queda informado. Queda en Aprobaciones. "+AUDIT,None),
+ "Enviar resumen al cliente":("Se envía por correo el resumen con datos, examen y fecha para que el cliente los verifique. No se imprime nada.",None),
+ "Guardar pendiente de cédula":("El candidato queda 'Falta cédula': la factura y el pago ya están registrados, se pide el PDF y se reserva el cupo hasta el cierre de inscripción (20 días antes). Si no llega a tiempo se avisa a Coordinación. "+AUDIT,"ExamenesInternacionales.html"),
  "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -1512,7 +1517,7 @@ def capacidad_tbl(tid="capacidad"):
     return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra sólida = inscritos hoy · rayada = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
 
 # ===== Entregas de libros 100% digitales (módulo Inventario) =====
-# Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet o escanea el libro → el estudiante firma
+# Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet buscando al estudiante → el estudiante firma
 # con el dedo o desde su celular (QR) → recibo PDF con firma en la ficha y por correo → se descuenta el stock. Nada se imprime.
 def _est_ent(s):
     return {"Lista para entregar":badge("Lista para entregar","navy"),"Sin retirar":badge("Sin retirar","warn"),"Sin stock":badge("Sin stock","bad"),"Entregada":badge("Entregada","ok")}[s]
@@ -1555,7 +1560,7 @@ page("EntregasLibros.html","Entregas de libros",shell("Entregas de libros","Entr
        ("Papel impreso","0","recibos y etiquetas")]),
  tabs(["Entregas","Sin retirar","Alertas de stock","Cómo funciona"],"Entregas",panels={
   "Entregas": filters(search("Buscar","Estudiante, matrícula, libro o ISBN",w="280px"),sel("Estado",["Todos","Lista para entregar","Sin retirar","Sin stock","Entregada"],w="190px"),sel("Sede",["Todas","Quito","Valle","Ambato"],w="140px",col=False),sel("Período",PERIODOS,w="170px",col="@Creada"),
-      actions=btn("Abrir entrega con escáner","EntregarLibro.html",True)+btn("Crear entrega manual")+btn("Exportar Excel"))+_ent_tbl+pager(sv(48,22,14,12)),
+      actions=btn("Abrir entrega","EntregarLibro.html",True)+btn("Crear entrega manual")+btn("Exportar Excel"))+_ent_tbl+pager(sv(48,22,14,12)),
   "Sin retirar": card("Matriculados que aún no retiran su libro",
       kv(("Criterio","más de 7 días desde que la entrega quedó lista"),("Recordatorio","automático al 7.º y 14.º día por correo al estudiante o a su representante"))
       +_sin_retirar+row(btn("Enviar recordatorio a todos",None,True),btn("Exportar Excel")),extra=badge("Reporte","navy")),
@@ -1564,13 +1569,13 @@ page("EntregasLibros.html","Entregas de libros",shell("Entregas de libros","Entr
       +row(btn("Editar umbrales de stock"),btn("Nuevo pedido a proveedor","NuevoPedido.html",kind="ghost")),extra=badge("Alertas","warn")),
   "Cómo funciona": two(card("El flujo, sin imprimir nada",flow([
       ("Se confirma la matrícula","se crea sola la entrega con el libro del nivel (solo el primer nivel; el asesor puede cambiar físico por licencia digital)","Automático","done"),
-      ("El encargado abre la entrega","desde la tablet de la sede, buscando al estudiante o escaneando el código de barras del libro","Tablet","now"),
+      ("El encargado abre la entrega","desde la tablet de la sede, buscando al estudiante por nombre, cédula o matrícula, o desde la lista de pendientes","Tablet","now"),
       ("El estudiante firma","con el dedo en la pantalla, o desde su celular escaneando un QR. Si es menor de 18, firma el representante",""," "),
       ("Se genera el recibo en PDF","estudiante, libro, fecha, hora, quién entregó y la firma; queda en la ficha y sale por correo",""," "),
       ("Se descuenta el stock","en el mismo momento de confirmar, en la sede donde se entregó",""," ")])),
-    card("Qué reemplaza y qué queda fuera",kv(("Reemplaza","recibo impreso en la impresora de facturas, cinta, firma a mano y etiquetas por libro"),("Reportes","matriculados sin retiro y stock bajo por nivel y sede (pestañas de esta pantalla)"),("Correo","incluido: el recibo sale por el correo transaccional de la plataforma"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'),("Escáner","la cámara de la tablet lee el código de barras; también sirve un lector USB como teclado"))))}),
+    card("Qué reemplaza y qué queda fuera",kv(("Reemplaza","recibo impreso en la impresora de facturas, cinta, firma a mano y etiquetas por libro"),("Reportes","matriculados sin retiro y stock bajo por nivel y sede (pestañas de esta pantalla)"),("Correo","incluido: el recibo sale por el correo transaccional de la plataforma"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'),("Búsqueda","por nombre, cédula o matrícula del estudiante; los libros no tienen código de barras"))))}),
  subtitle="Entrega digital del libro de cada matrícula: firma en pantalla, recibo en PDF y stock al instante",
- actions=btn("Abrir entrega con escáner","EntregarLibro.html",True)),"Entregas de libros")
+ actions=btn("Abrir entrega","EntregarLibro.html",True)),"Entregas de libros")
 
 
 _msg_wa='<div class="msg-prev"><small>Vista previa del mensaje</small><p>Hola María, gracias por retirar tu libro en Cambridge Quito. Aquí está tu recibo de entrega.</p><span class="msg-file">recibo-EN-2026-0431.pdf</span></div>'
@@ -1588,11 +1593,11 @@ _firma_qr=('<div class="qrbox">'+qr_svg(11)+'<div class="qr-side"><b>Escanea con
 page("EntregarLibro.html","Entregar libro",shell("Entregar libro","Entregas de libros",
  '<div class="deliver"><div class="deliver-main">'
  +card("1 · Identifica la entrega",
-   '<div class="scan"><label class="sr" for="scan-in">Código de barras o ISBN</label><input id="scan-in" class="ctl" data-scan-input placeholder="Escanea el código de barras del libro…" inputmode="numeric" autocomplete="off"><button type="button" class="btn btn-primary" data-scan>Escanear código de barras</button>'+btn("Buscar entrega",kind="ghost")+'</div>'
+   '<div class="scan"><label class="sr" for="scan-in">Buscar entrega</label><input id="scan-in" class="ctl" data-scan-input placeholder="Busca por nombre, cédula o matrícula del estudiante…" autocomplete="off"><button type="button" class="btn btn-primary" data-scan>Buscar entrega</button></div>'
    +facts([("Entrega",'<span class="mono">EN-2026-0431</span> '+badge("Lista para entregar","navy")),("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrícula",'<span class="mono">001-202602794</span>'),("Curso",'<span class="mono">0001-2026-0767</span> · B1 virtual'),
            ("Libro","Empower B1 Combo A (digital pack)"),("ISBN",'<span class="mono">9781108961516</span>'),("Sede","Quito"),("Stock de la sede","4 → 3 al confirmar"),("Creada","hoy 09:15, al confirmar la matrícula")]))
  +card("2 · Revisa el libro",'<div class="checks">'
-   '<label class="check"><input type="checkbox" data-check><span><b>El libro coincide con la entrega</b><small>Mismo título e ISBN que el código escaneado</small></span></label>'
+   '<label class="check"><input type="checkbox" data-check><span><b>El libro coincide con la entrega</b><small>Mismo título que el de la entrega</small></span></label>'
    '<label class="check"><input type="checkbox" data-check><span><b>Está completo y en buen estado</b><small>Si es digital pack, el código de activación viene dentro y queda asignado al estudiante</small></span></label>'
    '<label class="check"><input type="checkbox" data-check><span><b>Los datos del estudiante son correctos</b><small>Nombre, correo para el recibo y, si es menor de 18 años, el representante que firma</small></span></label></div>')
  +card("3 · Firma de recepción",
@@ -2346,17 +2351,18 @@ page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-
 # 8c Exámenes internacionales (propuesta: no está en los 11 módulos del contrato)
 page("ExamenesInternacionales.html","Exámenes internacionales",shell("Exámenes internacionales","Exámenes",
  hero([("Qué es","Inscripción a exámenes Cambridge, Oxford, TOEFL, SIELE y Anglia"),("Cambridge · Oxford · Anglia","se compran en Books and Bits (exams.booksandbits.ec/csol); llega confirmación por registro y cierre diario"),("TOEFL ITP · SIELE · Mock Test","se compran en la tienda en línea (WooCommerce) y Secretaría gestiona el pedido"),("Hoy en TeamDesk","tabla International Exams")],btn("Cargar calendario anual")+btn("Ver pedidos de la tienda","Pedidos.html")+btn("Abrir Books and Bits","https://exams.booksandbits.ec/csol"),tag=badge("Requerimiento de Dirección Comercial · confirmar alcance","warn")),
- kpis([("Candidatos en la lista",agg("count","examenes"),"según filtros y sede"),("Esperando resultados",agg("count:Estado=Esperando","examenes"),"enviados al centro"),("Listos para retirar",agg("count:Estado=Listo","examenes"),"certificado en la sede"),("Entregados",agg("count:Estado=Entregado","examenes"),"cerrados")]),
- filters(search("Buscar","Candidato o cédula",w="220px"),sel("Examen",["Todos","Cambridge","Oxford","TOEFL","Anglia"],w="140px"),sel("Estado",["Todos","Inscrito","Esperando resultados","Listo para retirar","Entregado"],w="190px"),actions=btn("Nuevo candidato","NuevaInscripcionExamen.html",True)),
+ kpis([("Candidatos en la lista",agg("count","examenes"),"según filtros y sede"),("Esperando resultados",agg("count:Estado=Esperando","examenes"),"enviados al centro"),("Listos para retirar",agg("count:Estado=Listo","examenes"),"certificado en la sede"),("Entregados",agg("count:Estado=Entregado","examenes"),"cerrados"),("Falta cédula",agg("count:Estado=Falta cédula","examenes"),"pagados, sin el PDF",{"fset":"Estado=Falta cédula"})]),
+ filters(search("Buscar","Candidato o cédula",w="220px"),sel("Examen",["Todos","Cambridge","Oxford","TOEFL","Anglia"],w="140px"),sel("Estado",["Todos","Inscrito","Falta cédula","Esperando resultados","Listo para retirar","Entregado"],w="190px"),actions=btn("Nuevo candidato","NuevaInscripcionExamen.html",True)),
  table(["Candidato","Sede","Examen","Factura","Puntaje y nivel","Estado","Acción"],[
   [c2("Lucía Benítez","CED 1716543210 · 17 años"),"Quito",c2("Cambridge · B2 First (FCE)","14 nov 2026"),"000021101 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")],
   [c2("Tomás Villacrés","CED 1719876543"),"Quito",c2("Cambridge · C1 Advanced","10 oct 2026"),"000021043 · pagada","—",badge("Esperando resultados","warn"),btn("Registrar resultado")],
   [c2("Paula Ortiz","PAS AB123456"),"Valle",c2("TOEFL iBT","26 sep 2026"),"000021020 · pagada","96 · B2",badge("Listo para retirar","ok"),btn("Registrar resultado")],
   [c2("Daniel Paz","CED 1803456789"),"Ambato",c2("Oxford Test of English","19 sep 2026"),"000020998 · pagada","128 · B2",badge("Entregado","neutral"),btn("Registrar resultado")],
   [c2("Emilia Torres","CED 1724567890 · 12 años"),"Valle",c2("Cambridge · A2 Key for Schools","5 dic 2026"),"000021105 · crédito","—",badge("Inscrito","navy"),btn("Registrar resultado")],
-  [c2("Gabriel Mora","CED 1712349876"),"Quito",c2("Anglia · Intermediate","28 nov 2026"),"000021110 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")]],sede=1,wide=0,tid="examenes"),
+  [c2("Gabriel Mora","CED 1712349876"),"Quito",c2("Anglia · Intermediate","28 nov 2026"),"000021110 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")],
+  [c2("Sebastián Ríos","Cliente externo · sin cédula adjunta"),"Quito",c2("Cambridge · B1 Preliminary","5 dic 2026 · cierra 15 nov"),"000021112 · pagada","—",badge("Falta cédula","bad"),btn("Pedir cédula")]],sede=1,wide=0,tid="examenes"),
  card("Reporte por examen", table(["Examen","Internos","Externos","Importe","Asesor con más ventas"],[["B2 First (FCE)","12","5","$3,995","Carla M."],["C1 Advanced","4","3","$1,925","Diego R."],["TOEFL iBT","2","6","$1,600","Ana P."]])),
- card("Flujo", flow(["Inscripción y factura","Envío al centro autorizado","Esperando resultados","Puntaje y nivel","Listo para retirar","Entregado con firma"])),
+ card("Flujo", flow(["Factura emitida antes de inscribir","Datos y cédula en PDF (obligatoria)","Fecha con 20 días de anticipación","Inscripción en el centro autorizado","Esperando resultados","Puntaje y nivel","Listo para retirar","Entregado con firma"])),
  subtitle="Propuesta para validar con Cambridge: hoy se gestiona en la tabla International Exams de TeamDesk"),"Exámenes internacionales")
 
 
@@ -2391,15 +2397,15 @@ page("MatriculaContinuidad.html","Matrícula de continuidad",shell("Matrícula d
 
 # Inscripción a examen internacional (venta, factura, pago e inscripción)
 page("NuevaInscripcionExamen.html","Inscripción a examen",shell("Nueva inscripción a examen internacional","Exámenes",
- wizcard(step(1,"Cliente y destinatario de la factura", form([("Tipo de cliente","Estudiante de Cambridge","select",["Estudiante de Cambridge","Cliente externo"],True),("Estudiante","Lucía Benítez · CED 1716543210","text",None,False,"Si es estudiante se reutiliza su ficha"),("Facturar a","Su madre · Carmen Ortiz · CED 1705432198","select",["La misma candidata","Su madre · Carmen Ortiz · CED 1705432198","Empresa","Otra persona"],True,"El destinatario puede ser distinto del candidato")],cols=3))
+ wizcard(step(1,"Cliente y destinatario de la factura", form([("Tipo de cliente","Estudiante de Cambridge","select",["Estudiante de Cambridge","Cliente externo"],True),("Estudiante","Lucía Benítez · CED 1716543210","text",None,False,"Si es estudiante se reutiliza su ficha"),("Facturar a","Su madre · Carmen Ortiz · CED 1705432198","select",["La misma candidata","Su madre · Carmen Ortiz · CED 1705432198","Empresa","Otra persona"],True,"El destinatario puede ser distinto del candidato")],cols=3)+row(btn("Pedir los datos al cliente",kind="ghost")))
   +step(2,"Examen, tarifa y pago", form([("Categoría","Cambridge","select",["Cambridge","Oxford","TOEFL","Anglia"],True),("Examen","B2 First (FCE)","select",["A2 Key","B1 Preliminary","B2 First (FCE)","C1 Advanced"],True),("Tarifa vigente","$235.00","text",None,False,"Automático"),("Forma de pago","Tarjeta de crédito","select",["Efectivo","Tarjeta de crédito","Tarjeta de débito","Transferencia","Depósito"],True)],cols=4)
-     +kv(("Factura","000021101 · se emite al registrar el pago"),("Validación del pago","posterior, por Contabilidad")))
+     +form([("Número de factura","000021101","text",None,True,"Obligatorio: la factura se emite antes de inscribir y es el respaldo del pago")],cols=3)+kv(("Orden","primero la factura y después la inscripción"),("Validación del pago","posterior, por Contabilidad")))
   +step(3,"Datos de quien rendirá el examen", form([("Apellidos","Benítez Ortiz","text",None,True),("Nombres","Lucía","text",None,True),("Género","Femenino","select",["Femenino","Masculino","Otro"],True),("Identificación","1716543210","text",None,True),("Fecha de nacimiento","2001-05-14","date",None,True),("Celular","099 000 0031","tel",None,True),("Correo","lucia.b@ejemplo.com","email",None,True,"Para las comunicaciones del examen")],cols=4)
-     +upload("Identificación del candidato (parte frontal)","Foto o PDF · se contrasta con nombres y fecha de nacimiento"))
-  +step(4,"Fecha del calendario anual", table(["Fecha","Sede","Cierre de inscripción","Disponible"],[["14 nov 2026","Quito","25 oct",badge("Sí · faltan 26 días","ok")],["5 dic 2026","Quito","15 nov",badge("Sí","ok")],["7 nov 2026","Valle","18 oct",badge("No · menos de 20 días","bad")]])
-     +kv(("Regla","la inscripción debe hacerse con al menos 20 días de anticipación")))
-  +step(5,"Verificar con el cliente y enviar", kv(("Revisar","datos, examen y fecha con el cliente (puede enviarse una captura)"))+row(btn("Imprimir y enviar")))),
- foot(btn("Inscribir candidato",None,True),btn("Cancelar","ExamenesInternacionales.html")),
+     +'<div class="doc-req" data-exam-doc>'+field("Cédula del candidato en PDF","","file",None,True,"Obligatoria: sin este documento no se puede registrar el examen")+'<div class="doc-status" data-doc-status role="status"><b>Falta el PDF de la cédula</b><span>Se contrasta con los nombres y la fecha de nacimiento</span></div></div>'+row(btn("Pedir la cédula al cliente",kind="ghost"))+'<script src="assets/examen.js"></script>')
+  +step(4,"Fecha del calendario anual", table(["Fecha del examen","Sede","Cierre de inscripción","Faltan","Disponible","Acción"],[["14 nov 2026","Quito","25 oct","22 días",badge("Sí · cierra en 2 días","warn"),"—"],["5 dic 2026","Quito","15 nov","43 días",badge("Sí","ok"),"—"],["7 nov 2026","Valle","18 oct","15 días",badge("No · menos de 20 días","bad"),btn("Pedir excepción de fecha",kind="ghost")]],wide=0)
+     +kv(("Regla","la inscripción se cierra 20 días antes del examen"),("Hoy","23 oct 2026"),("Con menos de 20 días","solo con excepción de Coordinación; no está garantizada")))
+  +step(5,"Verificar con el cliente y enviar", kv(("Revisar","datos, examen y fecha con el cliente"),("Orden","factura → datos y cédula en PDF → fecha → inscripción"))+row(btn("Enviar resumen al cliente")))),
+ foot('<button type="button" class="btn btn-primary" data-exam-submit data-next="ExamenesInternacionales.html">Inscribir candidato</button>',btn("Guardar pendiente de cédula",kind="ghost"),btn("Cancelar","ExamenesInternacionales.html",kind="ghost")),
  subtitle="Venta, factura, pago e inscripción vinculados; candidato separado del pagador"),"Inscripción a examen")
 
 # Venta de mercadería
@@ -3458,14 +3464,14 @@ _REC=[("Empower B1+ Intermediate Combo B","9781108961523",3,3),("Super Minds 2Ed
       ("Empower A1 Starter SB with digital pack","9781108961691",2,2),("Prepare 3 WB with Digital Pack 2E","9781009030502",1,0),("Four Corners 2ED L4 ESB with DP","9781009293891",1,1)]
 def _rec_row(n,isbn,ped,rec):
     d=rec-ped; k="ok" if d==0 else ("warn" if d<0 else "bad"); t="Completo" if d==0 else (f"Faltan {-d}" if d<0 else f"Sobran {d}")
-    return [c2(n,f"ISBN {isbn}"),str(ped),f'<input type="number" min="0" class="ctl rec-in" value="{rec}" data-rec data-pedido="{ped}" data-isbn="{isbn}" data-nombre="{n}" aria-label="Recibidos de {n}">',f'<span data-rec-dif>{"0" if d==0 else (f"+{d}" if d>0 else str(d))}</span>',f'<span class="badge badge-{k}" data-rec-est>{t}</span>']
+    return [c2(n,f"ISBN {isbn}"),str(ped),f'<div class="rec-step"><button type="button" class="btn btn-ghost" data-rec-minus aria-label="Quitar uno de {n}">−</button><input type="number" min="0" class="ctl rec-in" value="{rec}" data-rec data-pedido="{ped}" data-isbn="{isbn}" data-nombre="{n}" aria-label="Recibidos de {n}"><button type="button" class="btn btn-ghost" data-rec-plus aria-label="Sumar uno de {n}">+</button></div>',f'<span data-rec-dif>{"0" if d==0 else (f"+{d}" if d>0 else str(d))}</span>',f'<span class="badge badge-{k}" data-rec-est>{t}</span>']
 _rec_tbl=table(["Libro","Pedido","Recibido","Diferencia","Estado"],[_rec_row(*r) for r in _REC],wide=0)
 page("RecepcionPedido.html","Recibir pedido",shell("Recibir pedido #P-041","Movimientos y pedidos",
  card("Pedido",facts([("Pedido",'<span class="mono">#P-041</span> '+badge("En camino","navy")),("Proveedor","Books & Bits"),("Sede que recibe","Valle"),("Comprado el","2 oct 2026"),("Llegó","hoy · 23 oct"),("Recibe","Secretaría Valle")]))
  +card("1 · Documento del proveedor",form([("Factura o guía del proveedor","000815900","text",None,True,"El número del documento con que llegan los libros"),("Total del documento","$480.00","text",None,False,"Se compara con el valor del pedido"),("Adjuntar el documento","","file",None,True,"Foto o PDF de la factura o guía")],cols=3)
        +kv(("Coincide con el pedido",badge("Pedido #P-041 · $480.00","ok")),("Por qué","así queda el respaldo de lo recibido junto al pedido, sin papel")))
  +card("2 · Cuenta los libros",
-   '<div class="scan"><label class="sr" for="rec-scan">Código de barras o ISBN</label><input id="rec-scan" class="ctl" data-rec-scan placeholder="Escanea el código de barras del libro y pulsa Enter…" inputmode="numeric" autocomplete="off"><button type="button" class="btn btn-primary" data-rec-scan-btn>Escanear código de barras</button></div>'
+   '<div class="rec-tools"><button type="button" class="btn" data-rec-all>Marcar todo como recibido</button><span>Cuenta con + y −. Los libros no traen código de barras.</span></div>'
    +_rec_tbl
    +'<div class="rec-sum" aria-live="polite"><b data-rec-total>Recibidos 11 de 12</b><span data-rec-hint></span></div>',extra=badge("Cuenta contra el pedido","navy"))
  +card("3 · Qué pasa al recibirlo",flow([("El stock de Valle sube","con lo que llegó; los saldos negativos se cubren"),("Los libros ya vendidos se asignan solos","a su entrega digital: pasan de 'Sin stock' a 'Lista para entregar' y se avisa a Secretaría"),("No se imprimen etiquetas","la tablet muestra a quién va cada libro al entregarlo"),("Queda el respaldo","documento del proveedor, quién recibió y cuándo, en el audit log")],horizontal=False))
@@ -4070,7 +4076,13 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* inscripción a exámenes: documento obligatorio */
+.doc-req{display:flex;flex-direction:column;gap:10px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r);background:var(--bad-50)}
+.doc-req.is-ok{border-left-color:var(--ok);background:var(--ok-50)}.doc-req.is-missing{box-shadow:0 0 0 2px var(--bad)}
+.doc-status{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.doc-status span{color:var(--ink-2);font-size:var(--t-13)}
 /* recepción de pedidos */
+.rec-step{display:inline-flex;align-items:center;gap:6px}.rec-step .btn{min-width:var(--hit);padding:0;font-size:var(--t-16)}
+.rec-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.rec-tools span{font-size:var(--t-13);color:var(--mute)}
 .rec-in{width:96px;min-height:var(--hit);text-align:right;font-family:var(--font-mono)}
 .rec-sum{display:flex;flex-direction:column;gap:2px;margin-top:12px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
 .rec-sum b{font-size:var(--t-16)}.rec-sum span{font-size:var(--t-13);color:var(--ink-2)}

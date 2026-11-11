@@ -99,7 +99,7 @@ Además: 11 tarjetas principales (ingreso, matrículas, niveles, ticket, one to 
 ```
 Matrícula confirmada
    └─ se crea sola la entrega pendiente (libro del nivel, solo el del primer nivel)
-        └─ Secretaría abre la entrega en la tablet (busca al estudiante o escanea el código de barras)
+        └─ Secretaría abre la entrega en la tablet (busca al estudiante por nombre, cédula o matrícula)
              └─ revisa: libro correcto · completo y en buen estado · datos del estudiante
                   └─ firma: con el dedo en la tablet, o desde su celular con un QR (menor de 18: firma el representante)
                        └─ confirmar → recibo en PDF (estudiante, libro, fecha, hora, quién entregó, firma)
@@ -111,7 +111,7 @@ Matrícula confirmada
 
 **Estados de una entrega**: Lista para entregar · Sin stock (esperando compra) · Sin retirar (más de 7 días) · Entregada.
 
-**Pantalla de la tablet** (`EntregarLibro.html`): campo grande para escanear, tres pasos numerados, casillas de 24 px (objetivo táctil ≥ 44 px), zona de firma de 230 px de alto con trazo real (se puede dibujar en el prototipo), alternativa por QR con simulación de "firma recibida", y el botón de confirmar fijo abajo. Si falta revisar o firmar, avisa qué falta. En el prototipo la firma dibujada **sí aparece en el recibo**.
+**Pantalla de la tablet** (`EntregarLibro.html`): campo grande para buscar al estudiante, tres pasos numerados, casillas de 24 px (objetivo táctil ≥ 44 px), zona de firma de 230 px de alto con trazo real (se puede dibujar en el prototipo), alternativa por QR con simulación de "firma recibida", y el botón de confirmar fijo abajo. Si falta revisar o firmar, avisa qué falta. En el prototipo la firma dibujada **sí aparece en el recibo**.
 
 **Reportes pedidos**:
 - *Matriculados que aún no retiran su libro*: pestaña "Sin retirar" con días transcurridos, a quién se contactó y recordatorios.
@@ -122,13 +122,13 @@ Matrícula confirmada
 ## 4. Lo que no jala, no es viable o necesita adenda
 
 1. **Envío del recibo por WhatsApp** (y recordatorios por WhatsApp): fuera del alcance (punto 12 del contexto). Requiere la API oficial de Meta, plantillas aprobadas y tiene costo por mensaje. Se dejó solo por correo y con etiqueta "Propuesta".
-2. **Escaneo con la cámara de la tablet**: en el prototipo está **simulado**. En la plataforma real la lectura por cámara en el navegador es inconsistente (iOS y algunos navegadores); lo seguro es una librería de lectura (por ejemplo ZXing) o un **lector USB**, que se comporta como teclado y ya funciona con el campo de la pantalla. Conviene confirmar qué tablet usarán.
+2. **Libros sin código de barras**: los libros de Cambridge no traen código de barras, así que no hay escaneo. La entrega se abre buscando al estudiante (nombre, cédula o matrícula) o desde la lista de pendientes, y la recepción de pedidos se cuenta con botones + y −.
 3. **Firma desde el celular con QR**: el QR del prototipo es de ejemplo y no se puede escanear. En la realidad necesita un enlace de un solo uso, con vencimiento, y una página móvil mínima. Es viable pero es una pieza extra de desarrollo.
 4. **Firma como evidencia legal**: es firma simple (como la aceptación electrónica del contrato). Si Cambridge necesita firma certificada, es adenda (punto 9).
 5. **Rematrícula 100 % automática sin Secretaría**: depende del Muro y de la creación de grupos; no se puede prometer hasta confirmar qué expone Moodle (punto 14).
 6. **Conexión directa con el banco, OCR de comprobantes y verificación con Nuvei**: no viables sin terceros; ver 2.4.
 7. **Embudo desde Kommo**: viable solo si el plan de Kommo expone la API necesaria (ya figura como pendiente de accesos: plan Advanced).
-8. **Si el prototipo se muestra como "ya funciona"**: no. Es una maqueta navegable; la firma, el QR y el escáner son demostraciones.
+8. **Si el prototipo se muestra como "ya funciona"**: no. Es una maqueta navegable; la firma y el QR son demostraciones.
 
 ## 5. Preguntas abiertas para el cliente
 - **Deserción mensual**: ¿cómo se define? Propuesta: estudiantes que terminan un módulo y no se rematriculan en 30 días, sobre los que terminaron.
@@ -146,8 +146,8 @@ Matrícula confirmada
 
 ## 7. Cómo probar el prototipo
 1. `python -m http.server 8765` dentro de la carpeta del repo, y abrir `http://localhost:8765/`.
-2. Entrar con cualquier rol (por ejemplo Secretaría, con "Ver como") → Inventario → **Entregas de libros** → "Abrir entrega con escáner".
-3. En la tablet: escanear, marcar las tres revisiones, firmar con el dedo (o con el mouse) y confirmar. El recibo muestra la firma que dibujaste.
+2. Entrar con cualquier rol (por ejemplo Secretaría, con "Ver como") → Inventario → **Entregas de libros** → "Abrir entrega".
+3. En la tablet: buscar la entrega, marcar las tres revisiones, firmar con el dedo (o con el mouse) y confirmar. El recibo muestra la firma que dibujaste.
 4. Académico → **Rematrícula** → "Matricular y facturar" en un estudiante con alerta enviada.
 5. Facturación → Cobros → **Conciliación bancaria**. Cursos → "Capacidad y ocupación". Tablero comercial → **Plan estratégico**.
 
@@ -278,7 +278,7 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 
 **Qué se agregó al prototipo**
 - **Lista de compra de esta semana** (Inventario): se arma sola con los títulos en negativo, la sede, los libros vendidos sin stock y la cantidad a comprar, con "Crear pedido con esta lista". Aclara que el negativo son libros ya vendidos que aún no están en la sede.
-- **Recibir pedido** (`RecepcionPedido.html`, desde Inventario, Movimientos, Pedidos a proveedor "Recibir" y el Inicio de Secretaría): datos del pedido, **documento del proveedor** (número, total y adjunto), **conteo por libro contra lo pedido** con diferencia y estado (completo, faltan, sobran) y escáner de código de barras (simulado) que suma de a uno.
+- **Recibir pedido** (`RecepcionPedido.html`, desde Inventario, Movimientos, Pedidos a proveedor "Recibir" y el Inicio de Secretaría): datos del pedido, **documento del proveedor** (número, total y adjunto), **conteo por libro contra lo pedido** con diferencia y estado (completo, faltan, sobran) y botones + y − (o "Marcar todo como recibido") para contar, porque los libros no traen código de barras.
 - **Regla de la sesión**: "Marcar como recibido" solo se habilita si el pedido está **completo**; con faltantes o sobrantes avisa qué pasa. Existe "Registrar recepción parcial", que suma lo recibido y deja el pedido "Con pendientes".
 - **"Qué pasa al recibirlo"**: el stock de la sede sube, los saldos negativos se cubren y **los libros ya vendidos se asignan solos a su entrega digital** (de "Sin stock" a "Lista para entregar", sección de Entregas de libros) o a su pedido de la tienda en línea. Cada libro muestra para quién es.
 - **Sin etiquetas**: el paso de imprimir y pegar etiquetas desaparece; la tablet muestra a quién va cada libro al entregarlo.
@@ -288,6 +288,30 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 **Por confirmar con el cliente**
 - Si **las etiquetas físicas** se pueden eliminar del todo. Si necesitan identificar físicamente el libro de cada estudiante, se puede mantener una etiqueta opcional.
 - Si se permite **recibir parcialmente** (el prototipo lo permite, con pendientes) o solo pedidos completos como hoy.
-- **Escáner**: la lectura por cámara en el navegador no es fiable en todos los equipos; conviene un lector USB (funciona como teclado).
+- **Sin código de barras**: el conteo de la recepción es manual (botones + y −). Se retiró el escáner que tenía el prototipo.
 - Cómo se vinculan las ventas **en línea** con el stock negativo: depende de la sincronización con la tienda (WooCommerce), que figura como fuera del alcance del contrato (punto 4 del contexto).
 - Quién puede registrar una recepción y si hace falta una segunda persona que la valide.
+
+
+## 16. Exámenes internacionales: factura previa, cédula en PDF y 20 días (revisión de 10 nov)
+**Lo que dijo Secretaría**: para que una persona externa rinda un examen internacional hay que emitir primero la factura, verificar los datos y adjuntar obligatoriamente el PDF de la cédula. La política exige hacer el trámite con 20 días de anticipación. Hubo un caso en que el cliente pagó, pero nunca envió la cédula y no se pudo registrar.
+
+**Qué había en `main`**: `NuevaInscripcionExamen.html` con 5 pasos (cliente, examen y pago, datos, fecha del calendario, verificación). La identificación era un adjunto opcional, la regla de 20 días era solo un texto, un paso terminaba en "Imprimir y enviar" y no había forma de saber quién pagó y no completó el trámite. El módulo está marcado como **propuesta fuera del alcance del contrato** (punto 3 del contexto).
+
+**Qué se agregó al prototipo**
+- **Factura primero**: el paso del pago pide el **número de factura** como campo obligatorio y explica el orden: factura, datos y cédula, fecha, inscripción.
+- **Cédula en PDF obligatoria**: sin el PDF no se puede inscribir. La pantalla lo marca en rojo, rechaza archivos que no sean PDF y se pone verde al adjuntarlo. Se puede **pedir al cliente** la cédula o todos los datos con un botón.
+- **Guardar pendiente de cédula**: para el caso del pago hecho sin documento, el candidato queda con el estado **"Falta cédula"** (factura y pago registrados, cupo reservado hasta el cierre de inscripción) en lugar de perderse. En el listado de exámenes hay una cifra y un filtro "Falta cédula" y una acción "Pedir cédula".
+- **Regla de 20 días visible**: el calendario muestra la fecha del examen, el cierre de inscripción, los días que faltan y si está disponible; una fecha con menos de 20 días permite **pedir excepción** a Coordinación (queda en Aprobaciones).
+- Ya no se imprime: el paso final es **"Enviar resumen al cliente"** por correo.
+
+**Viabilidad**: es viable de construir, pero es un módulo **fuera del alcance del contrato**, así que su construcción y cualquier envío por WhatsApp (plantilla de datos) requieren cotización aparte. El bloqueo sin cédula en el prototipo es una demostración; en la plataforma real debe validarse en el servidor y guardar el documento en el expediente.
+
+**Por confirmar con el cliente**
+- Si **siempre** hace falta la cédula (también para estudiantes que ya la tienen en su ficha) o solo para clientes externos.
+- Quién puede autorizar una **excepción de la regla de 20 días** y si el centro examinador la acepta.
+- Plazo máximo para completar la cédula antes de liberar el cupo y qué pasa con el pago si no se completa.
+- Los feriados y el calendario anual se cargan una vez al año (ver sección 13).
+
+## 17. Corrección: los libros no tienen código de barras (10 nov)
+Se retiró todo lo relacionado con escanear libros: el campo y botón de escáner de la **entrega** (ahora se busca la entrega por nombre, cédula o matrícula del estudiante, o se elige de la lista de pendientes) y el escáner de la **recepción de pedidos** (ahora el conteo es manual con botones **+** y **−** y un botón "Marcar todo como recibido"). También se corrigieron las referencias en este informe, en `docs/PANTALLAS.md` y en `CLAUDE.md`. No se reintroducirá un escáner salvo que el cliente lo pida.

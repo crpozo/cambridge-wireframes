@@ -507,7 +507,13 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* inscripción a exámenes: documento obligatorio */
+.doc-req{display:flex;flex-direction:column;gap:10px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r);background:var(--bad-50)}
+.doc-req.is-ok{border-left-color:var(--ok);background:var(--ok-50)}.doc-req.is-missing{box-shadow:0 0 0 2px var(--bad)}
+.doc-status{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.doc-status span{color:var(--ink-2);font-size:var(--t-13)}
 /* recepción de pedidos */
+.rec-step{display:inline-flex;align-items:center;gap:6px}.rec-step .btn{min-width:var(--hit);padding:0;font-size:var(--t-16)}
+.rec-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.rec-tools span{font-size:var(--t-13);color:var(--mute)}
 .rec-in{width:96px;min-height:var(--hit);text-align:right;font-family:var(--font-mono)}
 .rec-sum{display:flex;flex-direction:column;gap:2px;margin-top:12px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
 .rec-sum b{font-size:var(--t-16)}.rec-sum span{font-size:var(--t-13);color:var(--ink-2)}
