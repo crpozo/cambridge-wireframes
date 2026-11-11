@@ -1439,6 +1439,8 @@ ACTIONS.update({
  "Matricular y facturar":("Se crea la matrícula 001-202603262 en el siguiente curso, se emite la factura con servicios educativos y materiales por separado (el módulo pagado por adelantado queda ligado a la bolsa) y se registra el pago con su comprobante. Si es transferencia queda 'Por conciliar' hasta que el extracto del banco la confirme. "+AUDIT,"DetalleFactura.html"),
  "Agregar pago":("Se agrega otra línea de pago (p. ej. parte en efectivo y parte con transferencia) con su comprobante.",None),
  "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
+ "Volver a generar ítems":("Se vuelven a leer los datos de la matrícula (módulos, descuento y material del nivel) y se recalculan los ítems de la factura. Los ítems que agregaste a mano se conservan.",None),
+ "Agregar producto":("Se agrega un producto del inventario (libro, merchandising) a la sección Productos de la factura; descuenta stock al emitirla.",None),
  "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -1708,9 +1710,16 @@ page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factur
    seg(["Curso abierto","El módulo aún no tiene curso"],[_curso_abierto,_curso_crear],label="Curso del siguiente módulo"),
    extra=badge("Propuesto por el cierre de notas","navy"))
   +card("3 · Factura que se genera con la matrícula",
-   _rm_ledger+disc_field("lgr",10)+aprob_descuento("lgr")+politica_descuentos()
-   +table(["Ítem","Tipo","Valor"],[[c2("Módulo 7 · B1","SRV-MOD-07 · course fee · virtual"),"Servicio educativo","$250.00"],[c2("Módulo 8 · B1","SRV-MOD-08 · pagado por adelantado · bolsa"),"Servicio educativo","$250.00"],[c2("Empower B1 Combo A","sin material: ya lo tiene del primer nivel"),"Producto","$0.00"]],wide=0)
-   +kv(("Servicios y productos","van en líneas distintas para saber cuántos módulos se facturan de verdad"),("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
+   '<div class="linked"><div><b>Ítems generados desde la matrícula <a class="mono" href="DetalleMatricula.html">001-202603262</a></b><span>La factura queda vinculada a la matrícula. Servicios educativos y productos van en secciones separadas.</span></div>'+btn("Volver a generar ítems",kind="ghost")+'</div>'
+   +'<h4 class="section-title">Servicios educativos</h4>'
+   +table(["Ítem","Código","Origen","Valor"],[[c2("Módulo 7 · B1","course fee · virtual · matrícula 001-202603262"),'<span class="mono">SRV-MOD-07</span>',"Matrícula","$250.00"],[c2("Módulo 8 · B1","pagado por adelantado"),'<span class="mono">SRV-MOD-08</span>',"Bolsa de módulos","$250.00"],[c2("Inscripción","tuition fee · estudiante antiguo, exonerado"),'<span class="mono">SRV-INS</span>',"Matrícula","$0.00"]],wide=0)
+   +kv(("Subtotal servicios educativos","$500.00"),("Módulos facturados","2 · se pueden contar en reportes"))
+   +'<h4 class="section-title">Productos</h4>'
+   +table(["Ítem","Código","Origen","Valor"],[[c2("Empower B1 Combo A","ya lo tiene del primer nivel · no se cobra ni descuenta stock"),'<span class="mono">1141</span>',"Material del nivel","$0.00"]],wide=0)
+   +row(btn("Agregar producto",kind="ghost"))+kv(("Subtotal productos","$0.00"))
+   +'<h4 class="section-title">Valores y descuento</h4>'
+   +_rm_ledger+disc_field("lgr",10)+aprob_descuento("lgr")+politica_descuentos()
+   +kv(("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
   +card("4 · Pago y comprobante",
    form([("Método de pago","Transferencia","select",["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Pago en línea (link)","Nota de crédito"],True),
          ("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],False,"Si es de otro banco el número del comprobante puede no coincidir con el del banco: se concilia por monto y fecha"),
@@ -2252,7 +2261,7 @@ ACTIONS.update({
 })
 page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-202602794","Estudiantes",
  hero([("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Curso",'<a href="DetalleCurso.html">0001-2026-0767</a>'),("Programa","English for Adults (ESL) · Virtual · Grupal"),("Nivel","Módulo 7 · B1"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Asesor (vendor)","Carla M."),("Plan de pago","2 cuotas · cada 30 días"),("Contrato",badge("Aceptado · 28 ago 10:40 · María Andrade","ok")+'<small> · código por correo · IP registrada</small>'),("Indexado","No"),("Tipo de estudiante","Antiguo · 3.ª matrícula"),("Documento de matrícula",'<a href="#">matricula-001-202602794.pdf</a>'),("Comisión del asesor","Pendiente · se paga al cobrar")],
-  only(COMERCIAL+",COO",btn("Cambio de curso"),True)+only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True)+only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True)+btn("Ver venta completa","DetalleVenta.html")+btn("Reenviar contrato para aceptación")+btn("Imprimir matrícula")+btn("Agregar comentario")+only("ASE,DIR,ADM",btn("Eliminar matrícula"),True)+only("ADM,GER,DIR,SUC",btn("Reversar y anular"),True),
+  only(COMERCIAL,btn("Generar factura",None,False,disabled_reason="Ya está facturada: 000021090"),True)+only(COMERCIAL+",COO",btn("Cambio de curso"),True)+only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True)+only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True)+btn("Ver venta completa","DetalleVenta.html")+btn("Reenviar contrato para aceptación")+btn("Imprimir matrícula")+btn("Agregar comentario")+only("ASE,DIR,ADM",btn("Eliminar matrícula"),True)+only("ADM,GER,DIR,SUC",btn("Reversar y anular"),True),
   tag='<span class="hero-code">001-202602794</span>'+badge("En curso","ok")+badge("Quito","navy")+badge("Antiguo","neutral")),
  only(COMERCIAL,
  two(card("Resumen", kv(("Subtotal","$330.00"),("Descuento","-$25.00 · referido"),("Total","$305.00"),("Pagado","$305.00"),("Saldo","$0 · venta pagada en 2 cuotas"))+progress(100,"Pagado de esta matrícula")
@@ -2269,7 +2278,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
        [c2("Retiro","deja el instituto"),"Nota de crédito, devolución o saldo a favor según la política","Administración de sucursal",btn("Retirar estudiante")],
        [c2("Transferir saldo","a otro estudiante"),"Nota de crédito aquí y saldo a favor en el otro","Administración de sucursal",btn("Transferir saldo")]],wide=0),
   "Matrículas de la venta": table(["Matrícula","Módulo","Curso","Total","Estado","Acción"],[["001-202602794","7 · B1",c2("0001-2026-0767","Virtual · Lu-Ma-Mi-Ju 19:00–21:00"),"$305",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602795","8 · B1",c2("Mismo grupo","se asigna al cerrar el módulo 7"),"$225",badge("Reservada","navy"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602796","9 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602797","10 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>']],wide=2),
-  "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["000021090","28 ago 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
+  "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["000021090","28 ago 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+kv(("Vinculación","la factura 000021090 está ligada a esta matrícula: servicios educativos $900 y productos $80"),("Si no tuviera factura","aquí se genera con un clic, con los ítems de la matrícula"))+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
   "Cartera": table(["Cuota","Vence","Monto","Pagado","Días vencidos","Estado"],[["1 de 2","28 ago 2026","$490","$490","—",badge("Pagada","ok")],["2 de 2","27 sep 2026","$490","$490","—",badge("Pagada","ok")]])+row(btn("Enviar estado de cuenta"),btn("Registrar pago")),
   "Códigos de libros": table(["Material","ISBN","Código de activación","Entregado","Acción"],[["Empower B1 Combo A (digital pack)","9781108961516","EMP-B1-7K2Q-••••",'<a href="ReciboEntrega.html">28 ago 2026 · recibo firmado</a>',badge("Activado","ok")],["Empower B1+ Combo B (digital pack)","9781108961523","EMP-B1P-3M9X-•••• · reservado",'<a href="EntregasLibros.html">entrega pendiente · módulo 9</a>',btn("Asignar código",None,False)]]),
   "Asistencia": table(["Sesión","Fecha","Presente","Observación"],[["8","13 oct · 19:00","✓","—"],["9","14 oct · 19:00","✓","—"],["10","15 oct · 19:00","✗","Aviso previo"],["11","19 oct · 19:00","✓","—"]])+kv(("Asistencia","10 de 11 sesiones · 90%"),("Mínimo para aprobar","75%")),
@@ -2534,11 +2543,12 @@ det=shell("English for Adults B1 Virtual","Cursos",
   tag='<span class="hero-code">0001-2026-0767</span>'+badge("En curso","ok")+badge("Quito","navy")),
  two(card("Profesor asignado", kv(("Profesor",'<a href="FichaProfesor.html">P. Gómez</a>'),("Contrato",badge("Activo hasta dic 2026","ok")),("Horas en este curso","22 h dictadas"))+only("ADM,GER,SUC",kv(("Tarifa","$7.00/h · $154 en este curso")))+only("ADM,GER,SUC,COO",filters(sel("Cambiar profesor",["P. Gómez","L. Vega","M. Castro","R. Salas (contrato vencido)"],w="260px"),actions=btn("Cambiar",None,False,"Si el nuevo profesor no tiene contrato activo, el cambio queda pendiente de aprobación de Coordinación.")))),
      card("Sesiones", table(["Fecha","Horas","Registro"],[["Lu 12 oct","2","Automático"],["Ma 13 oct","2","Automático"],["Mi 14 oct","2","Manual"],["Ju 15 oct","2","Automático"],["Lu 19 oct","2","Pendiente"]]))),
- card("Estudiantes matriculados", only(COMERCIAL, filters(sel("Mostrar",["Todos","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only("ADM,GER,DIR,SUC",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Estado","Acción"],[
+ card("Estudiantes matriculados", only(COMERCIAL, filters(sel("Mostrar",["Todos","Sin factura","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only("ADM,GER,DIR,SUC",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Estado","Acción"],[
   ["001-202602794",c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794 · 099 000 0001"),"90%","$305","$305","$0",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602846",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846 · 099 000 0002"),"85%","$250","$0","$250",badge("Factura vencida","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602871",c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871 · 099 000 0005"),"70%","$230","$230","$0",badge("Riesgo asistencia","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
-  ["001-202602875",c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875 · 099 000 0006"),"45%","$195","$0","$195",badge("Sin pago · riesgo","bad"),'<a href="DetalleMatricula.html">Ver</a>']],hide=(0,),wide=1)+kv(("Matriculados","12/15"),("Saldo pendiente del curso","$445"),("Asistencia promedio","84%")))
+  ["001-202602875",c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875 · 099 000 0006"),"45%","$195","$0","$195",badge("Sin pago · riesgo","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
+  ["001-202603270",c2('<a href="Ficha360.html">Renata Salazar</a>',"001-202603270 · 099 000 0012"),"—","$250","$0","$250",badge("Matriculada · sin factura","bad"),'<a href="RematriculaFactura.html">Facturar</a>']],hide=(0,),wide=1)+kv(("Matriculados","12/15"),("Saldo pendiente del curso","$695"),("Asistencia promedio","84%")))
   +only("COO,PRO", filters(sel("Mostrar",["Todos","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=btn("Calificar curso",None,True)+only("COO",btn("Exportar"),True))+table(["Estudiante","Asistencia","Nota parcial","Muro","Estado","Acción"],[
   [c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794"),"90%","8.4","100% módulo 7",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
   [c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"85%","7.6","90%",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
@@ -3078,6 +3088,13 @@ filters(sel("Estudiante",["Pedro Mora","Camila Sánchez","Gabriela Núñez","Mat
 P_SIN_VINCULAR=(
 table(["Factura","Cliente","Total","Motivo","Acción"],[["000021097","Consumidor final","$45.00","Venta de libro sin matrícula",btn("Vincular a matrícula")],["000021088",c2("Grupo Nova","RUC 1790012345001"),"$1,200.00","Factura B2B sin estudiantes asignados",btn("Vincular a matrícula")],["000021071","Andrés Pazmiño","$195.00","Matrícula anulada y vuelta a crear",btn("Vincular a matrícula")]])
    +kv(("Por qué importa","una factura sin matrícula no descuenta saldo ni paga comisión")))
+_SF=[("Renata Salazar","Quito","001-202603270","Adults B1 · 0001-2026-0767","Hoy 09:30","$250.00","Menos de 24 h"),("Tomás Villacrés","Quito","001-202603268","Adults A2 · 0001-2026-0620","Ayer 16:10","$500.00","Menos de 24 h"),
+     ("Lucía Benítez","Valle","001-202603255","Kids 2 · 0001-2026-0328","20 oct","$380.00","Más de 24 h"),("Isabela Aguirre","Quito","001-202603259","Adults A1 · 0001-2026-0430","19 oct","$250.00","Más de 24 h")]
+P_SINFACT=(
+kpis([("Matrículas sin factura",agg("count","sinfact"),"matriculadas, aún sin facturar"),("Valor por facturar",agg("sum:Valor","sinfact","money0"),"servicios y productos"),("Más de 24 h",agg("count:Estado=Más de 24 h","sinfact"),"alerta a Secretaría",{"fset":"Estado=Más de 24 h"})])
+   +filters(search("Buscar","Estudiante, matrícula o curso",w="260px"),sel("Estado",["Todos","Menos de 24 h","Más de 24 h"],w="170px"),actions=btn("Exportar Excel"))
+   +table(["Estudiante","Matrícula","Curso","Matriculada","Valor","Estado","Acción"],[[c2(f'<a href="Ficha360.html">{e}</a>',sd),m,c,f,v,badge(es,"bad" if "Más" in es else "warn"),'<a href="RematriculaFactura.html">Facturar</a>'] for e,sd,m,c,f,v,es in _SF],wide=0,tid="sinfact")
+   +kv(("Cómo se factura","desde aquí, desde el curso o desde la matrícula: los ítems se generan solos con los servicios educativos y los productos de la matrícula"),("Regla","una matrícula sin factura se marca en rojo y a las 24 horas Secretaría recibe una alerta")))
 P_PV=(
 flow(["Asesor registra el pago y sube el comprobante","Contabilidad valida en el banco","Secretaría confirma en el sistema"])
    +table(["Pago","Estudiante · venta","Monto","Comprobante","Estado","Acción"],[
@@ -3112,7 +3129,7 @@ table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[
 page("Facturas.html","Facturas",shell("Facturación","Facturación",
  kpis([("Facturas en la lista",agg("count","facturas"),"según filtros, período y sede"),("Facturado",agg("sum:Total","facturas","money0"),"total de las facturas visibles"),("Pagadas",agg("pct:Cobro=Pagada","facturas"),agg("count:Cobro=Pagada","facturas")+" facturas"),("Pendientes · vencidas",agg("count:Cobro=Pendiente","facturas")+" · "+agg("count:Cobro=Vencida","facturas"),"por cobrar",{"href":"#go-seg-cartera"}),("Sin autorizar SRI",agg("count:SRI=Sin autorizar","facturas"),"revisar y reenviar",{"fset":"Vista=Sin autorizar SRI"})]),
  tabs(["Facturas","Cobros","Ajustes"],"Facturas",roles={},counts={"Cobros":2,"Ajustes":3},panels={
-  "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular"],[
+  "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular","Matrículas sin factura"],[
    '<div class="quick" data-fgroup role="group" aria-label="Vistas rápidas">'+"".join(f'<button type="button" class="q" data-fset="Vista={v}" aria-pressed="false">{v}</button>' for v in ["Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"])+'</div>'
    +filters('<div hidden>'+sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],col="Vista")+'</div>',search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
    +'<div class="bulk"><span>Marca facturas para enviarlas juntas</span>'+btn("Enviar comprobantes seleccionados",kind="ghost")+'</div>'
@@ -3129,7 +3146,7 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
    ("000021080","25 sep","Valle","Diego R.",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846 · B1"),"$500.00","Sí · 15 días",badge("Autorizada","ok"),badge("Vencida · 9 días","bad"),"Por cobrar · Vencidas"),
    ("000021074","18 sep","Quito","Carla M.",c2('<a href="Ficha360.html">Gabriela Núñez</a>',"001-202602863 · A2"),"$450.00","Sí · 30 días",badge("Autorizada","ok"),badge("Parcial · $225 por cobrar","warn"),"Por cobrar"),
    ("000021061","05 sep","Ambato","Sofía L.",c2('<a href="Ficha360.html">Diego Vargas (menor)</a>',"001-202602790 · Kids 1"),"$380.00","No",badge("Anulada","neutral"),badge("Anulada","neutral"),"Anuladas")]],sede=2,hide=(2,8),wide=3,tid="facturas")+pager(sv(76,40,22,14,10)),
-   P_POR_ESTUDIANTE, P_SIN_VINCULAR],label="Vistas de facturas"),
+   P_POR_ESTUDIANTE, P_SIN_VINCULAR, P_SINFACT],label="Vistas de facturas",counts={"Matrículas sin factura":4}),
 
 
   "Cobros": seg(["Pagos por validar","Conciliación bancaria","Caja del día","Cartera","Calendario de crédito"],[P_PV,P_CONC,P_CAJA,P_CART,credito],label="Vistas de cobros",counts={"Pagos por validar":2,"Conciliación bancaria":3}),
@@ -3137,7 +3154,7 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
  }),
  ai([("2 facturas de hoy aún no están autorizadas por el SRI: la 000021095 fue rechazada (cédula del cliente inválida) y la 000021092 no se ha enviado.","Ver sin autorizar","Facturas.html"),("La factura 000021080 de Pedro Mora venció hace 2 días con $500 de saldo; su asesor es Diego R.","Ver calendario de crédito","Facturas.html"),("Hoy el 100% de las facturas fueron por transferencia; ninguna en efectivo.","Ver reportes","Reportes.html")],"¿Qué facturas de crédito vencen esta semana?"),
  subtitle="Una factura por venta, con pago, autorización SRI y envío del comprobante",
- actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura ▾</button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
+ actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura ▾</button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="RematriculaFactura.html">Desde una matrícula existente</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
 
 # 23 Detalle factura
 page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturación",
@@ -3972,6 +3989,10 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
+.tbl .mono{white-space:nowrap}
+/* factura vinculada a la matrícula */
+.linked{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2)}
+.linked>div{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14);min-width:0}.linked span{color:var(--mute);font-size:var(--t-13)}
 /* aprobación de descuentos */
 .appr{display:flex;flex-direction:column;gap:12px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r);background:var(--warn-50)}
 .appr[hidden]{display:none}.appr-head{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.appr-head span{color:var(--ink-2);font-size:var(--t-13)}

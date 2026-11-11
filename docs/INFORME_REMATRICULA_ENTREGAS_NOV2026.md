@@ -212,3 +212,19 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 - **Quién puede aprobar** cada tipo (el prototipo ofrece Dirección Comercial, Administración General y Gerencia General) y si la aprobación se pide dentro de la plataforma (bandeja de Aprobaciones) o se registra después de aprobarla por fuera.
 - **Hermanos**: ¿siempre requieren aprobación, o solo a partir de cierto porcentaje?
 - **Validación real**: en el prototipo el bloqueo es una demostración en el navegador. En la plataforma debe validarse en el servidor y quedar en el audit log (aprobador, fecha, descuento, matrícula).
+
+
+## 12. Facturación vinculada a la matrícula, sin cambiar de pestaña (revisión de 10 nov)
+**Lo que dijo Secretaría**: hoy hay que pasar de cursos a matrículas y de ahí a facturas, lo cual es tedioso. Al estar matriculado el estudiante, la matrícula se vincula y genera los ítems de la factura, con **servicios educativos** y **productos** (materiales) claramente diferenciados. Hoy, al registrarse todo como "producto", no se puede saber cuántos módulos se facturan realmente.
+
+**Qué había en `main`**: Nueva matrícula ya incluía factura y pago en un solo asistente para ventas nuevas; la factura ya tenía columna "Tipo" (servicio o producto); la vista "Sin vincular" cubre las facturas sin matrícula. Faltaba el camino inverso y el caso real de Secretaría: **partir de una matrícula o de un curso y facturar desde ahí**.
+
+**Qué se agregó al prototipo**
+- **Matrícula y factura** (`RematriculaFactura.html`): la factura muestra "Ítems generados desde la matrícula 001-…", vinculada a ella, con botón "Volver a generar ítems". Los ítems se separan en **Servicios educativos** (módulos, inscripción, con su código y origen: matrícula o bolsa de módulos) y **Productos** (libros y materiales), cada uno con su subtotal y un botón "Agregar producto". Se muestra cuántos módulos se facturan.
+- **Detalle de curso**: en la lista de estudiantes aparece el estado "Matriculada · sin factura" (en rojo, como en TeamDesk) con la acción **Facturar** directa, y un filtro "Sin factura". El saldo del curso se actualiza.
+- **Detalle de matrícula**: botón "Generar factura" (aquí deshabilitado porque la matrícula ya está facturada, con el motivo) y, en la pestaña de facturas, la vinculación: "la factura 000021090 está ligada a esta matrícula: servicios educativos $900 y productos $80".
+- **Facturación**: nueva vista **"Matrículas sin factura"** (cifras: cuántas, valor por facturar, más de 24 h, con acción Facturar por fila) y la opción **"Desde una matrícula existente"** en el menú "Nueva factura".
+
+**Viabilidad**: **viable y dentro del alcance** (M5, con M2 y M3): el contexto del proyecto ya dice "factura con varios ítems con código y material sugerido editable" y "una factura por venta con todos los ítems". La separación entre servicios y productos permite contar módulos facturados, lo que hoy no se puede; depende de definir bien los códigos de los ítems en el catálogo (Configuración).
+
+**Por confirmar**: si el **IVA** o las reglas del SRI son distintos entre servicios educativos y productos (el prototipo muestra servicios con IVA 0 %); el catálogo real de códigos por módulo y por libro; y si la factura puede editarse una vez generada o solo regenerarse. Las pantallas de Facturar de cursos y matrículas apuntan a una misma pantalla de ejemplo (la de Camila Sánchez); en la plataforma real cargarían los datos de cada matrícula.
