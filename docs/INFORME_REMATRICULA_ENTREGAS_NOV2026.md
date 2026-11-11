@@ -530,3 +530,21 @@ Se auditó la lista "Proceso comercial" (15 métricas estratégicas, 11 tarjetas
 | Matriz consultable por sede, asesor, programa, producto y canal, exportable | Integrado (agrupación elegible, búsqueda y Excel) |
 
 **No viable o por confirmar.** Las cifras reales dependen de lo que exponga la API de Kommo (módulo 11, "sujeto a lo que exponga"). Siguen pendientes de definición con el cliente: deserción (propuesta: no se rematricula en 30 días), upsell (servicio adicional sobre la matrícula), estudiantes en planes de nivel y la regla de "lead atendido". Los datos del tablero son de ejemplo, no reales.
+
+## 28. Cambios de la reunión con Secretaría y Comercial (revisión de 11 nov)
+
+| Requerimiento | Estado |
+|---|---|
+| Representante obligatorio desde los 18 años (antes 22 en TeamDesk) | Ya aplicado en el prototipo (se calcula con la fecha de nacimiento) |
+| Copiar los datos del estudiante a la factura | Nuevo: botón en el paso 4 de la matrícula |
+| Nivel y horario editables al matricular | Nuevo (paso 2) |
+| Marcar referido al registrar | Nuevo: "¿Es referido?" y "Referido por" en todos los formularios de origen |
+| No facturar por separado cada módulo | Ya integrado: una factura por venta con todos los ítems |
+| Activo, inactivo o nuevo por tiempo sin matrícula | Nuevo: 0 a 2 meses activo, 3 a 5 inactivo (sin inscripción), 6 o más nuevo |
+| Total facturado sin intervención manual | Preguntas nuevas en el Constructor de reportes; cifras en el Tablero comercial |
+| Aceptación electrónica con registro | Prototipo (casilla con fecha, hora y comprobante); la validez legal es una consulta pendiente |
+| Mensajes de bienvenida, apertura y fin de módulo | Reglas y plantillas nuevas; WhatsApp es propuesta fuera de alcance, el correo está dentro |
+| Canal de contacto editable | Nuevo en la Ficha 360, con historial |
+| Integrar Kommo y sincronizar reportes de sedes | Ya existe; la conexión real depende de la API de Kommo |
+
+**Por confirmar:** si el corte de 3 y 6 meses se mide desde el fin del último módulo o desde la última matrícula, si el plazo de 3 meses para repetir el test es suficiente, y el texto legal de la aceptación.
