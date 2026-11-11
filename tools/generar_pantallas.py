@@ -1533,6 +1533,11 @@ page("EntregasLibros.html","Entregas de libros",shell("Entregas de libros","Entr
  subtitle="Entrega digital del libro de cada matrícula: firma en pantalla, recibo en PDF y stock al instante",
  actions=btn("Abrir entrega con escáner","EntregarLibro.html",True)),"Entregas de libros")
 
+
+_msg_wa='<div class="msg-prev"><small>Vista previa del mensaje</small><p>Hola María, gracias por retirar tu libro en Cambridge Quito. Aquí está tu recibo de entrega.</p><span class="msg-file">recibo-EN-2026-0431.pdf</span></div>'
+_canal_correo=form([("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True,"Recibe el recibo en PDF como adjunto")],cols=1)
+_canal_wa=form([("Celular con WhatsApp","099 000 0001","tel",None,True,"Recibe el recibo en PDF por WhatsApp")],cols=1)+_msg_wa+kv(("Estado",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'))
+_canal_ambos=form([("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True),("Celular con WhatsApp","099 000 0001","tel",None,True)],cols=2)+_msg_wa
 # ---- Pantalla de entrega (pensada para la tablet) ----
 _firma_tab=('<div class="sigpad" data-sigpad><canvas aria-label="Zona de firma: firma aquí con el dedo o el lápiz"></canvas><span class="sig-hint">Firma aquí con el dedo o el lápiz</span></div>'
   '<div class="sig-bar"><button type="button" class="btn btn-ghost" data-sig-clear>Borrar y firmar de nuevo</button><span class="sig-status" data-sig-status role="status">Sin firma todavía</span></div>')
@@ -1554,8 +1559,9 @@ page("EntregarLibro.html","Entregar libro",shell("Entregar libro","Entregas de l
  +card("3 · Firma de recepción",
    '<div data-signer-wrap>'+form([("¿Quién firma?","Estudiante · mayor de edad","select",["Estudiante · mayor de edad","Representante · estudiante menor de 18 años"],True,"Si el estudiante es menor de 18 años firma su representante")],cols=1)+'</div>'
    +seg(["En esta tablet","Desde el celular (QR)"],[_firma_tab,_firma_qr],label="Cómo firma"))
+ +card("4 · Envío del recibo",'<div data-canal-wrap>'+seg(["Correo","WhatsApp","Correo y WhatsApp"],[_canal_correo,_canal_wa,_canal_ambos],label="Enviar recibo por")+'</div>'+kv(("Siempre","el recibo queda guardado en la ficha del estudiante, se elija el canal que se elija")))
  +'</div><aside class="deliver-aside">'
- +card("Al confirmar",flow([("Se guarda la firma","con fecha, hora y quién entregó"),("Se genera el recibo en PDF","queda en la ficha del estudiante"),("Sale por correo","maria.andrade@ejemplo.com"),("Se descuenta el stock","Quito · 1 libro"),("La entrega pasa a Entregada","y el checklist de bienvenida se marca solo")],horizontal=False))
+ +card("Al confirmar",flow([("Se guarda la firma","con fecha, hora y quién entregó"),("Se genera el recibo en PDF","queda en la ficha del estudiante, en Archivos y certificados"),("Se envía el recibo","<span data-canal-resumen>por correo · maria.andrade@ejemplo.com</span>"),("Se descuenta el stock","Quito · 1 libro"),("La entrega pasa a Entregada","y el checklist de bienvenida se marca solo")],horizontal=False))
  +card("Quién entrega",kv(("Entrega","Secretaría Quito"),("Fecha y hora","23 oct 2026 · se toma al confirmar"),("Papel","ninguno: sin recibo impreso ni etiquetas")))
  +'</aside></div><script src="assets/entregas.js"></script>',
  foot('<button type="button" class="btn btn-primary" data-sig-confirm data-next="ReciboEntrega.html">Confirmar entrega y generar recibo</button>',btn("Volver a entregas","EntregasLibros.html",kind="ghost")),
@@ -1571,9 +1577,9 @@ page("ReciboEntrega.html","Recibo de entrega",shell("Recibo de entrega EN-2026-0
    '<dt>Sede</dt><dd>Quito</dd><dt>Entregó</dt><dd>Secretaría Quito</dd><dt>Recibió</dt><dd data-sig-por>Estudiante · mayor de edad</dd></dl>'
    '<div class="receipt-sign"><div><div class="sig-line"><img data-sig-img src="'+SIGN_SVG+'" alt="Firma de quien recibe"></div><span>Firma de quien recibe</span><small data-sig-via>Firmado en la tablet de la sede</small></div><div><div class="sig-line"><b>Secretaría Quito</b></div><span>Quien entregó · usuario con sesión iniciada</span></div></div>'
    '<footer class="receipt-foot"><span>Código de verificación <span class="mono">EN0431-7K2Q</span> · verificable en la plataforma</span><span>Documento digital · no requiere impresión</span></footer></article>',
-   card("Qué pasó al confirmar",flow([("Firma capturada","en la tablet · 23 oct 10:42","Hecho","done"),("PDF generado y guardado","en la ficha de María Andrade, pestaña Documentos","Hecho","done"),("Enviado por correo","maria.andrade@ejemplo.com · 10:42","Hecho","done"),
+   card("Qué pasó al confirmar",flow([("Firma capturada","en la tablet · 23 oct 10:42","Hecho","done"),("PDF generado y guardado","en la ficha de María Andrade · <a href=\"Ficha360.html\">Archivos y certificados</a>","Hecho","done"),('<span data-canal-titulo>Enviado por correo</span>','<span data-canal-detalle>maria.andrade@ejemplo.com · 10:42</span>',"Hecho","done"),
       ("Stock descontado","Quito · Empower B1 Combo A: 4 → 3","Hecho","done"),("Checklist de bienvenida","libro entregado marcado en la matrícula","Hecho","done"),("Audit log","entrega, firma y envío con tu usuario, fecha y sede","Hecho","done")],horizontal=False)
-      +kv(("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · hoy solo sale por correo</small>'))
+      +kv(("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'))
       +row(btn("Descargar recibo PDF",None,True),btn("Reenviar recibo por correo"),btn("Ver ficha del estudiante","Ficha360.html",kind="ghost")),
       extra=badge("Enviado","ok")),ratio="7fr 5fr")
  +'<script src="assets/entregas.js"></script>',
@@ -2058,7 +2064,8 @@ ficha=shell("María Andrade","Estudiantes",
      card("Resumen financiero", kv(("Factura","000021090 (módulos 7–10)"),("Total","$980"),("Pagado","$980"),("Saldo","$0"),("Descuento","10% referido · dentro del límite del asesor"))+hbars([("Facturado",1880),("Cobrado",1880),("Notas de crédito",45)],"$")+row('<a href="DetalleFactura.html" style="font-size:13px">Ver factura 000021090</a>')))+
      card("Cursos tomados", table(["Curso","Nivel","Profesor","Estado","Nota"],[["Adults B1 Virtual","B1","P. Gómez","En curso","—"],["Adults A2","A2","L. Vega","Pass","85"]])),
   "Facturas y pagos": row(btn("Enviar estado de cuenta"),btn("Descargar facturas pendientes"))+table(["Factura","Concepto","Total","Pagado","Saldo","Estado","Acción"],[["000021090","Venta multi-módulo · módulos 7 a 10","$980","$980","$0","Pagada",btn("Ver","DetalleFactura.html")],["000020411","A2 · módulos 3 a 6","$450","$450","$0","Pagada",btn("Ver","DetalleFactura.html")],["000019872","A1 · módulos 1 y 2","$450","$450","$0","Pagada",btn("Ver","DetalleFactura.html")],["NC-000000298","Nota de crédito · libro devuelto","-$45","—","—","Aplicada",btn("Ver","DetalleFactura.html")]])+row(btn("Nueva venta","NuevaVenta.html",True),btn("Registrar pago")),
-  "Archivos y certificados": two(card("Archivos", table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["matricula-001-202602794.pdf","Matrícula firmada","Carla M.","28 ago"],["comprobante_transferencia_884512.pdf","Comprobante de pago","Secretaría","28 ago"]])+row(upload("Adjuntar archivo","PDF, JPG o PNG · máx. 10 MB"),btn("Subir archivo",None,True))),
+  "Archivos y certificados": card("Recibos de entrega de libros", table(["Recibo","Libro","Fecha y hora","Enviado por","Acción"],[[c2('<span class="mono">EN-2026-0431</span>',"firmado en la tablet de Quito"),"Empower B1 Combo A (digital pack)","23 oct 2026 · 10:42",'<span data-recibo-canal>Correo</span>','<a href="ReciboEntrega.html">Ver recibo</a>']],wide=0)+kv(("Cada entrega","genera un recibo en PDF con la firma y queda aquí automáticamente"))+'<script src="assets/entregas.js"></script>',extra=badge("Digital","ok"))
+   +two(card("Archivos", table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["matricula-001-202602794.pdf","Matrícula firmada","Carla M.","28 ago"],["comprobante_transferencia_884512.pdf","Comprobante de pago","Secretaría","28 ago"]])+row(upload("Adjuntar archivo","PDF, JPG o PNG · máx. 10 MB"),btn("Subir archivo",None,True))),
      card("Certificados emitidos", table(["Nivel","Nota","Emitido","Acción"],[["A1","80 · Pass","dic 2025",btn("Descargar PDF")],["A2","85 · Pass","jun 2026",btn("Descargar PDF")]])+row(btn("Emitir certificado"))+note("Los exámenes internacionales (tabla International Exams de TeamDesk) no están en los 11 módulos del contrato: se migran como archivo histórico y se confirma con el cliente si se gestionan aquí."))),
   "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["27 sep 17:20","Secretaría","Registró pago","Cuota 2 de 2 · $490 · tarjeta"],["28 ago 10:11","Carla M.","Creó venta","Módulos 7 a 10 · 4 matrículas · factura 000021090 · 10% referido"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["10 jul 2025","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+note("Vista filtrada del audit log para este estudiante. El registro completo está en Configuración → Audit log."),
  }),
@@ -3896,6 +3903,11 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-ex dt::before{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--occ,var(--navy))}
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
+[data-canal-wrap] .seg-panel{margin-top:16px}
+/* vista previa de mensaje */
+.msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
+.msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}
+.msg-file{align-self:flex-start;font-family:var(--font-mono);font-size:var(--t-13);padding:4px 8px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface)}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}

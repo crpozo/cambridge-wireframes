@@ -15,6 +15,30 @@
   var QR_SIGN = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 90"><path d="M14 60 C 30 12, 50 10, 60 54 S 94 86, 114 36 S 152 12, 166 48 S 198 64, 226 28" fill="none" stroke="#16181D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
 
+  var CANAL = 'wf-entrega-canal';
+  var CORREO = 'maria.andrade@ejemplo.com', CEL = '099 000 0001';
+  var texto = {
+    'Correo': { resumen: 'por correo · ' + CORREO, titulo: 'Enviado por correo', detalle: CORREO + ' · 10:42' },
+    'WhatsApp': { resumen: 'por WhatsApp · ' + CEL + ' (propuesta)', titulo: 'Enviado por WhatsApp (propuesta)', detalle: CEL + ' · 10:42' },
+    'Correo y WhatsApp': { resumen: 'por correo y por WhatsApp (propuesta)', titulo: 'Enviado por correo y WhatsApp', detalle: CORREO + ' y ' + CEL + ' · 10:42' }
+  };
+  function setText(sel, v) { document.querySelectorAll(sel).forEach(function (e) { e.textContent = v; }); }
+  function canalActual() {
+    var r = document.querySelector('[data-canal-wrap] [role=radio][aria-checked=true]');
+    return r ? r.textContent.trim() : 'Correo';
+  }
+  document.addEventListener('click', function (e) {
+    var r = e.target.closest ? e.target.closest('[data-canal-wrap] [role=radio]') : null;
+    if (r) setText('[data-canal-resumen]', (texto[r.textContent.trim()] || texto['Correo']).resumen);
+  });
+  // Recibo y ficha: reflejan el canal elegido al confirmar
+  var elegido = load(CANAL);
+  if (elegido && texto[elegido]) {
+    setText('[data-canal-titulo]', texto[elegido].titulo);
+    setText('[data-canal-detalle]', texto[elegido].detalle);
+    setText('[data-recibo-canal]', elegido);
+  }
+
   var pad = document.querySelector('[data-sigpad]');
   var state = { signed: false, via: null, data: null };
 
@@ -91,7 +115,7 @@
     if (!ok) falta.push('revisar el libro');
     if (!state.signed) falta.push('la firma');
     if (falta.length) { toast('Falta ' + falta.join(' y ') + ' para confirmar la entrega'); return; }
-    save(KEY, state.data); save(KEY + '-via', state.via || '');
+    save(KEY, state.data); save(KEY + '-via', state.via || ''); save(CANAL, canalActual());
     var sg = document.querySelector('[data-signer-wrap] select');
     save(KEY + '-por', sg ? sg.value : '');
     location.href = b.getAttribute('data-next') || 'ReciboEntrega.html';
