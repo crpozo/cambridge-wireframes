@@ -447,3 +447,26 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Qué **datos oficiales** devuelve cada banco para las interbancarias (número del documento, fecha de acreditación) y si la fecha puede diferir un día.
 - Qué se hace con una confirmación que llega **después del cierre de caja** (el prototipo la actualiza en la versión vigente y la deja en el historial).
 - Si la verificación aplica también a depósitos y a pagos con tarjeta.
+
+
+## 24. Pagos en línea con Datafast: links y su historial (revisión de 10 nov)
+**Lo que dijo Secretaría**: para revisar un pago en línea usa Datafast y el **código de autorización** (por ejemplo 209832) para buscar en el **historial de links**. Cuando el departamento comercial crea el link, la información **no llega al usuario de Secretaría**: hay que entrar a la factura, sacar el comprobante que adjuntó Comercial e imprimirlo.
+
+**Qué había en `main` y en esta rama**: el método "Pago en línea (link)" con un código de autorización escrito a mano y un botón "Traer del historial" que solo mostraba un aviso (sección 18). **No existía** ninguna pantalla de links ni de su historial.
+
+**Qué se agregó al prototipo**
+- **Links de pago** (`LinksPago.html`, desde "Más acciones" de Facturación): historial con link, quién lo creó (Comercial) y su sede, cliente, concepto o factura, monto, estado (pagado, pendiente, vencido), código de autorización y si ya está **registrado en la Caja del día**. Cifras y filtros, y **búsqueda por código de autorización**: escribir 209832 trae el link, la factura y el comprobante.
+- **El link nace ligado a la factura o matrícula**: el formulario "Generar un link de pago" obliga a elegir a qué pago corresponde. Al pagarse, el pago se **registra solo** en la factura con su autorización y su comprobante; Secretaría lo ve sin entrar a ninguna factura ni imprimir nada.
+- **Comprobante de la transacción** (autorización, lote, tarjeta, valor y fecha) guardado en la factura y descargable en PDF.
+- **Visibilidad**: Secretaría y Contabilidad ven los links de su sede aunque los haya creado Comercial; cada asesor ve los suyos.
+- En **Registrar pago** (y en Matrícula y factura), el método "Pago en línea" ahora trae un **selector del historial**: al elegir el link se llenan solos el código de autorización, el link y el monto, y la suma de pagos se actualiza.
+- Un caso "falta conciliar con Datafast" (pagado pero sin confirmar contra el historial) y una fila de Datafast en Integraciones.
+
+**Viabilidad**: **registrar y buscar los pagos en línea es viable** (M5). Que el pago **se registre solo** depende de que **Datafast avise a la plataforma** (conexión o API), algo que **no está en el contrato** (la verificación con Nuvei figura como fuera de alcance, punto 11 del contexto). Mientras no exista, hay un camino intermedio viable: **importar el reporte de transacciones** que se descarga de Datafast y buscar cada pago por su código de autorización.
+
+**Por confirmar con el cliente**
+- Si **Datafast ofrece una API o un aviso automático** al cobrar y qué datos devuelve (autorización, lote, tarjeta enmascarada).
+- Si los **links los seguirá creando Comercial en el portal de Datafast** (y se importan) o se generan desde la plataforma (requiere API).
+- Qué comprobante vale para Contabilidad: el de Datafast, el voucher o ambos.
+- Si el mismo flujo aplica a **Nuvei**, que también aparece en la tienda en línea.
+- Datos de prueba: las autorizaciones y números del prototipo son de ejemplo.
