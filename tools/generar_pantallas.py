@@ -1862,43 +1862,40 @@ P_CONC=(
 # ===== Tablero comercial · pestaña "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
 # Tarjetas, líneas para evolución, barras para comparar, circulares para %, embudo de Kommo y matriz exportable. Cifras ficticias de ejemplo.
 def tablero_plan():
-    meses=["Jun","Jul","Ago","Sep","Oct"]
-    tarjetas1=kpis([("Ingreso total",sv("$21,940","$12,640","$5,420","$3,880","$2,310"),"octubre · todos los conceptos"),("Matrículas",sv(42,24,11,7,6),"nuevas, reingresos y continuidad"),("Niveles vendidos",sv(38,21,9,8,7),"1 nivel = 2 módulos"),
-                    ("Ticket promedio",sv("$522","$527","$493","$554","$385"),"ingreso total / matrículas"),("One to one vendidos",sv(7,4,2,1,1),"programas de horas"),("Cumplimiento de la meta",sv("93%","98%","86%","88%","85%"),"meta: mismo mes 2025 + 15%")])
-    tarjetas2=kpis([("Certificados vendidos",sv(14,8,3,3,2),"exámenes internacionales"),("Traducciones vendidas",sv(3,1,1,1,0),"las registra Secretaría"),("Total de servicios",sv(17,9,4,4,2),"certificados + traducciones"),
-                    ("Ticket de servicios",sv("$118","$124","$109","$112","$98"),"servicios / servicios vendidos"),("Variación vs 2025",sv("+5%","+14%","-15%","+17%","+9%"),"matrículas, mismo período")])
-    lineas=two(card("Ingresos mensuales · 2026 frente a 2025 (miles de USD)",linechart(meses,{"2026":[17.9,19.4,18.2,20.6,21.9],"2025":[16.8,18.0,17.6,19.1,20.8]})),
-               card("Matrículas mensuales · 2026 frente a 2025",linechart(meses,{"2026":[36,39,37,41,42],"2025":[35,38,36,40,40]})))
-    lineas2=two(card("Resultado real frente a la meta proyectada (miles de USD)",linechart(meses,{"Real":[17.9,19.4,18.2,20.6,21.9],"Meta (2025 + 15%)":[19.3,20.7,20.2,22.0,23.9]})),
-                card("Ticket promedio mensual (USD)",areachart(meses,[497,497,492,502,522],unit="")))
-    lineas3=card("Evolución de la conversión y la deserción (%)",linechart(meses,{"Conversión lead → matrícula":[15.2,16.0,16.4,16.9,16.8],"Deserción mensual":[9.1,8.4,8.8,8.0,7.6]})
-        +kv(("Conversión","matrículas ganadas / leads recibidos en el mes (Kommo)"),("Deserción",badge("Requerimiento · definición por confirmar")+'<small> · propuesta: estudiantes que terminan un módulo y no se rematriculan en 30 días</small>')))
-    barras1=two(card("Ingresos por sede (USD)",hbars([("Quito",12640),("Valle",5420),("Ambato",3880),("Cuenca · reporte aparte",2310)],unit="$")),
-                card("Ingresos por línea de negocio (USD)",hbars([("Servicios educativos",16760),("Materiales",2390),("Inscripción",1240),("Exámenes internacionales",1120),("Traducciones",260),("Mercadería",170)],unit="$")))
-    barras2=two(card("Servicios educativos por programa (USD)",hbars([("Adults",8020),("Teens",3490),("Kids",2630),("Business",1560),("Tailored",1060)],unit="$")),
-                card("Certificaciones, traducciones y servicios vendidos",hbars([("Certificaciones (exámenes)",14),("Simuladores",5),("Traducciones",3),("Cursos de español",2)])))
-    asesor=card("Resultado por asesor",table(["Asesor","Sede","Matrículas","Facturación","Conversión","Referidos","Upsell"],[
-        ["Carla M.","Quito","14","$7,420","21%","4","36%"],["Andrea S.","Quito","6","$3,350","17%","2","28%"],["Luis P.","Quito","4","$1,870","12%","1","20%"],
-        ["Diego R.","Valle","11","$5,420","14%","3","25%"],["Sofía L.","Ambato","7","$3,880","18%","2","33%"],["Ana P.","Cuenca","6","$2,310","12%","1","20%"]],sede=1,wide=0)
-        +kv(("Upsell","% de ventas del asesor que incluyen un servicio adicional: examen, tutorías, simulador o niveles extra"),("Quién ve qué","cada asesor ve su propio reporte; Dirección Comercial ve el consolidado de Quito, Valle y Ambato")))
-    origen=two(card("Matrículas por origen del lead",hbars([("Instagram · Meta Ads",14),("Referencia / Referido",9),("Walk in",6),("Exalumno",4),("Convenios empresariales",3),("Contacto Web",3)])),
-               card("Conversión por canal (%)",hbars([("Referencia / Referido",38),("Walk in",31),("Exalumno",29),("Convenios empresariales",25),("Instagram · Meta Ads",16),("Test Online",11),("TikTok",6)])))
-    circ=card("Participación sobre el total de matrículas",
-        row(gauge(64,"Estudiantes en planes de nivel",color=CH[0]),gauge(21,"Matrículas por referidos",color=CH[2]),gauge(89,"Leads atendidos",color=CH[3]),gap=32)
-        +'<h4 class="section-title">Ventas one to one frente a programas regulares</h4>'+stacked([("Regulares (grupal)",78),("One to one",22)])
-        +'<h4 class="section-title">Distribución de matrículas por programa</h4>'+stacked([("Adults",46),("Teens",24),("Kids",20),("Otros",10)])
-        +'<h4 class="section-title">Upsell por asesor</h4>'+hbars([("Carla M.",36),("Sofía L.",33),("Andrea S.",28),("Diego R.",25),("Luis P.",20),("Ana P.",20)]))
-    embudo=card("Embudo comercial · fuente: Kommo",funnel([("Leads recibidos",310),("Asignados y atendidos por asesores",276),("Cotizados",120),("Ganados · matrícula",52)])
-        +kv(("En prospección","34 leads"),("Perdidos","31 leads · precio y horario, las causas más comunes"),("Conversión total lead → matrícula","16.8%"))
+    """Plan estratégico: todo se recalcula en el navegador (assets/plan.js) con los filtros; los datos de ejemplo son ficticios (tools/plan_datos.py)."""
+    import json as _j, sys as _s
+    _s.path.insert(0, os.path.join(ROOT, "tools"))
+    import plan_datos
+    datos=plan_datos.build(ORIGENES, WALKIN_COMO)
+    blob=_j.dumps({"S":datos["S"],"L":datos["L"],"D":datos["D"],"dim":datos["dim"]},ensure_ascii=False,separators=(",",":"))
+    per=["Este mes","Hoy","Ayer","Esta semana","Mes anterior","Este trimestre","Trimestre anterior","Este año"]
+    def pf(key,label,opts,w="170px"):
+        return f'<label class="field" style="width:{w}">{label}<select class="ctl" data-pf="{key}">'+"".join(f"<option>{o}</option>" for o in opts)+'</select></label>'
+    barra=('<div class="filters plan-filters" aria-label="Filtros del plan estratégico">'
+      +pf("periodo","Período",per)
+      +'<label class="field" style="width:170px">Día específico<input type="date" class="ctl" data-pf="dia" min="2025-06-01" max="2026-10-23"></label>'
+      +pf("ase","Asesor",["Todos"]+plan_datos.ASES,"150px")
+      +pf("prog","Programa",["Todos"]+plan_datos.PROGS,"150px")
+      +pf("prod","Producto o servicio",["Todos"]+plan_datos.PROD,"180px")
+      +pf("orig","Origen del lead",["Todos"]+ORIGENES,"200px")
+      +pf("walk","Clasificación de walk-in",["Todas"]+WALKIN_COMO,"210px")
+      +'<div class="filters-actions"><button type="button" class="btn btn-ghost" data-pf-reset>Limpiar filtros</button>'+btn("Exportar Excel")+'</div></div>')
+    ctx='<p class="plan-ctx" data-plan-ctx aria-live="polite"></p>'
+    etbl=('<div class="plan-tools"><label class="field" style="width:200px">Agrupar por<select class="ctl" data-pf="egrupo"><option>Sede</option><option>Asesor</option><option>Canal</option><option>Mes</option></select></label></div>'
+          '<div class="tbl-wrap" data-plan-etbl><div class="wf-table tbl" data-cols="[]"></div></div>')
+    embudo=card("Embudo comercial · fuente: Kommo",'<div data-plan-out="embudo"></div>'+etbl
         +kv(("Qué se trae de Kommo","solo los totales por etapa, período, sede, asesor y canal; el lead individual pasa a la plataforma al ganarse, con origen, asesor, programa, sede, fecha y valor"),("Etapas","se conservan todas las del proceso de Kommo")),
         extra=badge("Depende de la API de Kommo","warn"))
-    matriz=card("Matriz consultable y exportable",filters(search("Buscar","Asesor, programa o canal",w="240px"),sel("Sede",["Todas","Quito","Valle","Ambato"],w="130px",col="Sede"),sel("Asesor",["Todos","Carla M.","Andrea S.","Diego R.","Sofía L."],w="140px",col="Asesor"),sel("Canal",["Todos","Instagram","Referido","Walk in","Convenios"],w="150px",col="Canal"),actions=btn("Exportar Excel"))
-        +table(["Sede","Asesor","Programa · producto","Canal","Matrículas","Facturación","Conversión"],[
-          ["Quito","Carla M.",c2("Adults","niveles · virtual"),"Instagram","6","$3,120","22%"],["Quito","Carla M.",c2("Adults","one to one"),"Referido","3","$1,980","38%"],["Quito","Andrea S.",c2("Teens","niveles · presencial"),"Walk in","4","$2,010","31%"],
-          ["Valle","Diego R.",c2("Kids","niveles · presencial"),"Referido","5","$2,150","36%"],["Valle","Diego R.",c2("Adults","certificación · examen"),"Instagram","3","$1,020","14%"],["Ambato","Sofía L.",c2("Business","convenio empresarial"),"Convenios","4","$2,400","25%"],
-          ["Ambato","Sofía L.",c2("Adults","niveles · virtual"),"Instagram","3","$1,480","16%"],["Quito","Luis P.",c2("Kids","niveles · presencial"),"Walk in","2","$990","12%"]],wide=2)
-        +kv(("Filtros de todo el panel","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in")))
-    return (card("Indicadores principales",tarjetas1+tarjetas2,extra=badge("Octubre 2026","navy"))+lineas+lineas2+lineas3+barras1+barras2+asesor+origen+circ+embudo+matriz)
+    dims="".join(f'<label class="chk-inline"><input type="checkbox" class="chk" data-mdim="{i}"{" checked" if i<2 else ""}> {n}</label>' for i,n in enumerate(["Sede","Asesor","Programa","Producto","Canal"]))
+    matriz=card("Matriz consultable y exportable",
+        '<div class="plan-tools"><div class="plan-dims" role="group" aria-label="Agrupar la matriz por"><span class="k">Agrupar por</span>'+dims+'</div>'
+        '<label class="field" style="width:260px">Buscar en la matriz<input type="search" class="ctl" data-pf-mbus placeholder="Asesor, programa o canal"></label></div>'
+        '<div class="tbl-wrap" data-plan-mtbl><div class="wf-table tbl" data-cols="[]"></div></div>'
+        '<p class="plan-nota" data-plan-minfo></p>'
+        +kv(("Filtros","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in"),("Exportar","descarga en Excel lo que ves, con el gráfico y la tabla")),
+        extra=badge("Se recalcula con los filtros","navy"))
+    return ('<div data-plan>'+barra+ctx+'<div data-plan-out="todo"></div><div class="plan-sec">'+embudo+matriz+'</div>'
+            +'<script id="plan-data" type="application/json">'+blob+'</script><script src="assets/plan.js"></script></div>')
 
 
 # 1 Login
@@ -4484,6 +4481,16 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
 .msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}
 .msg-file{align-self:flex-start;font-family:var(--font-mono);font-size:var(--t-13);padding:4px 8px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface)}
+/* plan estratégico */
+.plan-filters{margin-bottom:12px}.plan-ctx{margin:0 0 16px;font-size:var(--t-14);color:var(--mute)}.plan-ctx b{color:var(--ink);font-weight:600}
+.plan-sec{display:flex;flex-direction:column;gap:20px;margin-top:20px}[data-plan-out=todo]>.plan-sec{margin-top:0}
+.plan-empty{margin:0;padding:24px 0;text-align:center;color:var(--mute);font-size:var(--t-14)}
+.plan-nota{margin:0;font-size:var(--t-13);color:var(--mute)}
+.plan-kv{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:var(--t-14);color:var(--mute);margin:12px 0}.plan-kv b{color:var(--ink);font-size:var(--t-16);font-variant-numeric:tabular-nums}
+.plan-tools{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:12px}
+.plan-dims{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;min-height:40px}.chk-inline{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-14)}
+.pie-wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:center}.pie{width:132px;height:132px;border-radius:50%;flex:none;-webkit-mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%);mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%)}
+.pie-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:var(--t-14);min-width:0}.pie-leg li{display:flex;align-items:center;gap:8px}.pie-leg i{width:10px;height:10px;border-radius:2px;flex:none}.pie-leg b{font-variant-numeric:tabular-nums}.pie-leg small{color:var(--mute)}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}
