@@ -269,3 +269,25 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 - **SRI**: la nota de crédito debe autorizarse en el SRI. La plataforma la registra, pero emitirla directamente al SRI no está contratado (depende de Dora, módulo 11, o es adenda).
 - **Facturas ya pagadas**: si la factura original está pagada y la nota de crédito deja saldo a favor, hay que decidir si se devuelve o se aplica al siguiente módulo (hoy el prototipo ofrece "queda como saldo a favor").
 - Hasta cuándo se puede ajustar una factura (cierre contable del mes) y quién puede emitir la nota de crédito.
+
+
+## 15. Stock negativo y recepción de libros físicos (revisión de 10 nov)
+**Lo que dijo Secretaría**: el inventario muestra negativos (-1, -4) cuando se venden libros en línea que hay que comprar. Cuando llega la compra, quien recibe verifica los artículos contra el documento, revisa si la entrega está completa, la marca como recibida en el sistema, imprime las etiquetas, las separa a mano y etiqueta cada libro para mantener actualizado el inventario. Si el pedido llega incompleto no se puede marcar como recibido.
+
+**Qué había en `main`**: stock por sede con alerta de negativos y el correo diario de las 07:00, ingresos de proveedor ya registrados con su estado ("Recibido" o "Con pendientes"), pedido sugerido por forecast y los códigos de activación (módulo 7, M7). **Faltaba** explicar qué significa el negativo, armar la lista de compra y, sobre todo, la **pantalla de recepción**: contar lo que llegó, compararlo con el pedido y el documento, y qué pasa al marcarlo recibido.
+
+**Qué se agregó al prototipo**
+- **Lista de compra de esta semana** (Inventario): se arma sola con los títulos en negativo, la sede, los libros vendidos sin stock y la cantidad a comprar, con "Crear pedido con esta lista". Aclara que el negativo son libros ya vendidos que aún no están en la sede.
+- **Recibir pedido** (`RecepcionPedido.html`, desde Inventario, Movimientos, Pedidos a proveedor "Recibir" y el Inicio de Secretaría): datos del pedido, **documento del proveedor** (número, total y adjunto), **conteo por libro contra lo pedido** con diferencia y estado (completo, faltan, sobran) y escáner de código de barras (simulado) que suma de a uno.
+- **Regla de la sesión**: "Marcar como recibido" solo se habilita si el pedido está **completo**; con faltantes o sobrantes avisa qué pasa. Existe "Registrar recepción parcial", que suma lo recibido y deja el pedido "Con pendientes".
+- **"Qué pasa al recibirlo"**: el stock de la sede sube, los saldos negativos se cubren y **los libros ya vendidos se asignan solos a su entrega digital** (de "Sin stock" a "Lista para entregar", sección de Entregas de libros) o a su pedido de la tienda en línea. Cada libro muestra para quién es.
+- **Sin etiquetas**: el paso de imprimir y pegar etiquetas desaparece; la tablet muestra a quién va cada libro al entregarlo.
+
+**Viabilidad**: **viable y dentro del alcance** (M7 incluye "inventario bajo demanda y tracking de pedidos"). La asignación automática de lo recibido a las entregas pendientes se apoya en el flujo de entregas digitales.
+
+**Por confirmar con el cliente**
+- Si **las etiquetas físicas** se pueden eliminar del todo. Si necesitan identificar físicamente el libro de cada estudiante, se puede mantener una etiqueta opcional.
+- Si se permite **recibir parcialmente** (el prototipo lo permite, con pendientes) o solo pedidos completos como hoy.
+- **Escáner**: la lectura por cámara en el navegador no es fiable en todos los equipos; conviene un lector USB (funciona como teclado).
+- Cómo se vinculan las ventas **en línea** con el stock negativo: depende de la sincronización con la tienda (WooCommerce), que figura como fuera del alcance del contrato (punto 4 del contexto).
+- Quién puede registrar una recepción y si hace falta una segunda persona que la valide.
