@@ -336,3 +336,27 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - La lista final de métodos y qué datos exige cada uno (por ejemplo, si se necesita el nombre del titular de la tarjeta).
 - Si el **cierre de caja** debe ser un documento digital firmado: hoy Secretaría imprime y entrega la lista de pagos a Contabilidad. Hacerlo digital queda como siguiente mejora.
 - Los plazos de diferido y los datáfonos de ejemplo son supuestos.
+
+
+## 19. Automatizaciones: aperturas, reaperturas, cobranza y notas (revisión de 10 nov)
+**Lo que dijo Secretaría**: se pueden programar alertas automáticas y plantillas de WhatsApp para aperturas, reaperturas de cursos y seguimiento de cobranzas a quienes tienen saldos pendientes. La capacidad estándar de las aulas es de 12 estudiantes. Hoy Secretaría revisa a mano, semana a semana, los grupos que terminan y sus notas pendientes para planear la apertura y los procesos comerciales.
+
+**Qué había en `main`**: pedazos sueltos: el protocolo de reaperturas y el botón "Enviar reporte semanal" en Cursos, recordatorios de cuota en la matrícula, la cartera, plantillas en Configuración y alertas en Insights. **No había un lugar** para ver qué avisos salen solos, apagarlos, ver a quién llegaron ni los parámetros (capacidad estándar, mínimo para abrir).
+
+**Qué se agregó al prototipo**: pantalla nueva **Automatizaciones** (menú Dirección; Secretaría, Coordinación y Dirección la ven), con cuatro pestañas:
+- **Reglas** (10, por área): aperturas (crear el curso en el LMS a las 72 h, correo informativo a las 48 h, alerta de ocupación baja y curso sin profesor a los 14 días), reaperturas (contacto al 75 % del curso, reporte semanal), cobranza (cuota por vencer, cuota vencida a los 1, 7 y 15 días con escalamiento, saldo con el curso en marcha) y notas pendientes. Cada una con su momento, qué hace, canal y un **interruptor** para activarla o apagarla sin borrarla (el conteo de reglas activas se actualiza).
+- **Plantillas**: vista previa con variables ({nombre}, {curso}, {fecha}, {saldo}…) de cinco mensajes (rematrícula, cuota por vencer, cuota vencida, inicio de curso, pocas inscripciones).
+- **Registro de envíos**: qué salió, a quién, por qué canal y si se envió, rebotó u fue omitido (por ejemplo, un cobro que se salta porque el estudiante prometió pagar).
+- **Resumen semanal y parámetros**: el resumen del lunes con los grupos que terminan, sus notas pendientes y la ocupación del siguiente curso, y los **parámetros** (capacidad estándar 12, mínimo para abrir 6, alerta bajo 50 %, anticipación de 14 días, día y hora del resumen).
+- Accesos desde Cursos ("Configurar avisos automáticos") y desde la Cartera ("Automatizar cobranza").
+
+**Viabilidad**
+- **Alertas internas y correos: viables y dentro del alcance** (M5 incluye recordatorios de cuota y cobranza; M3 los cursos y M8 los reportes). El resumen semanal y el reporte de reaperturas entran en su versión básica.
+- **WhatsApp: fuera del alcance** (punto 12 del contexto): requiere la API oficial de Meta, **plantillas aprobadas una por una por Meta** y tiene costo por mensaje. Las reglas lo marcan como propuesta y hoy salen por correo y notificación.
+- **Crear el curso en el LMS** no se puede automatizar sin la API de Cambridge One o Moodle (M11 "sujeto a lo que expongan"); por eso la regla solo recuerda a Coordinación.
+
+**Por confirmar con el cliente**
+- La **propuesta externa de automatización** que ya existe (ver sección 6 del contexto): decidir si se absorbe en la plataforma o convive con Kommo, para no duplicar avisos.
+- Los **plazos y escalamientos** (3 días antes, días 1, 7 y 15, 72 h) son supuestos tomados de las reuniones y del manual.
+- Si la **capacidad estándar de 12** reemplaza a la capacidad por aula (norma SETEC) cuando una aula tiene una propia, o solo se usa si falta.
+- Quién puede encender y apagar reglas, y quién recibe cada alerta.
