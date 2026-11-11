@@ -1343,7 +1343,7 @@ def ledger_calc(items, disc=10, lid=None):
         rows+=(f'<div>{c}<small>{d}</small></div><div class="n">${v:,}</div><div class="n ld"{" data-dc" if ok else ""}>{f"{disc}%" if ok and disc else "—"}</div><div class="n" data-sub data-v="{v}">${v-dv:,}</div>')
     return (f'<div class="ledger" data-ledger="{lid}"><div class="lh">Concepto</div><div class="lh n">Valor</div><div class="lh n ld">Dcto.</div><div class="lh n">Subtotal</div>{rows}'
             f'<div class="lt">Total</div><div class="lt n"></div><div class="lt n ld" data-ldisc>{f"-${dsc:,}" if dsc else "—"}</div><div class="lt n" data-ltotal>${tot:,}</div></div>')
-DESCUENTOS=[(0,"Sin descuento"),(10,"Referido · 10%"),(10,"Hermano o familiar matriculado · 10%"),(10,"Promoción vigente · 10%"),(5,"Pronto pago · 5%"),(15,"Convenio Grupo Nova · 15% (se aplica solo si en el paso 1 paga la empresa)"),(10,"Alianza Banco del Valle · 10% (paga el estudiante)"),(20,"Beneficio cancela 2 módulos · 20% · pasa a aprobación"),(100,"Indexado · 100%")]
+DESCUENTOS=[(0,"Sin descuento"),(10,"Referido · 10%"),(10,"Hermano o familiar matriculado · 10% · requiere aprobación"),(10,"Promoción vigente · 10%"),(5,"Pronto pago · 5%"),(15,"Convenio Grupo Nova · 15% (se aplica solo si en el paso 1 paga la empresa)"),(10,"Alianza Banco del Valle · 10% (paga el estudiante)"),(20,"Beneficio cancela 2 módulos · 20% · pasa a aprobación"),(100,"Indexado · 100%")]
 def disc_field(lid, value=10, limit=10, opts=None):
     """Selector de descuento ligado a un ledger_calc, con la tabla de descuentos (DESCUENTOS: la real la envían Dayana y Estefanía). Por encima del límite del asesor avisa que pasa a aprobación."""
     _FID[0]+=1; i=f"f{_FID[0]}"
@@ -1400,6 +1400,25 @@ def step(n, title, inner, sub=""):
 # ================= FIN TEMA =================
 
 # ================= PROTOTIPO nov 2026 · rematrícula, matrícula + factura, capacidad, conciliación y entregas digitales =================
+def aprob_descuento(lid):
+    """Bloque 'Aprobado por': aparece solo si el descuento lo exige (más del límite del asesor, hermanos o beneficios) y bloquea el guardado hasta registrarlo. JS: assets/descuentos.js"""
+    return (f'<div class="appr" data-appr-for="{lid}" data-appr-required="0" hidden><div class="appr-head"><b>Aprobación del descuento</b><span data-appr-msg></span></div>'
+            +form([("Aprobado por","","select",["Selecciona quién aprobó…","Dirección Comercial","Administración General","Gerencia General"],True,"Obligatorio antes de guardar la matrícula"),
+                   ("Referencia de la aprobación","","text",None,False,"Ej.: solicitud en Aprobaciones o correo"),
+                   ("Fecha y hora de la aprobación","se registra al guardar","text",None,False,"Automático")],cols=3)
+            +'</div><script src="assets/descuentos.js"></script>')
+def politica_descuentos():
+    """Tabla de políticas (supuestos hasta recibir la tabla real de Dirección Comercial y Administración)."""
+    rows=[]
+    for pct,t in DESCUENTOS:
+        if pct==0: continue
+        nombre=t.split(" · ")[0].split(" (")[0]
+        aprob="Sí · registra quién aprobó" if (pct>10 or "aprobaci" in t.lower() or "hermano" in t.lower()) else "No · hasta 10% lo aplica el asesor"
+        rows.append([nombre,f"{pct}%",aprob])
+    return ('<details class="policy"><summary>Ver políticas de descuento</summary>'+table(["Motivo","Descuento","¿Necesita aprobación?"],rows,wide=0)
+            +kv(("Regla","hasta 10% lo aplica el asesor; más de 10%, hermanos y beneficios por pago de módulos necesitan aprobación"),("Registro","el nombre de quien aprobó, la fecha y la referencia quedan en la matrícula antes de guardarla"),
+                ("Tabla real",badge("Por confirmar")+'<small> · la envían Dirección Comercial y Administración</small>'))+'</details>')
+
 # Helpers y acciones compartidos por Cursos, Rematrícula, Facturas, Tablero y las pantallas de entrega de libros.
 import urllib.parse
 ACTIONS.update({
@@ -1420,7 +1439,7 @@ ACTIONS.update({
  "Matricular y facturar":("Se crea la matrícula 001-202603262 en el siguiente curso, se emite la factura con servicios educativos y materiales por separado (el módulo pagado por adelantado queda ligado a la bolsa) y se registra el pago con su comprobante. Si es transferencia queda 'Por conciliar' hasta que el extracto del banco la confirme. "+AUDIT,"DetalleFactura.html"),
  "Agregar pago":("Se agrega otra línea de pago (p. ej. parte en efectivo y parte con transferencia) con su comprobante.",None),
  "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
- "Matricular sin facturar":("La matrícula queda en rojo ('Matriculado · sin factura') y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
+ "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
  "Conciliar ahora":("Se concilian los ingresos del extracto con los pagos 'Por validar': la coincidencia exacta valida el pago y marca la factura como Pagada; las dudosas quedan para revisión. "+AUDIT,None),
@@ -1684,13 +1703,12 @@ page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factur
  two('<div class="deliver-main">'+
   card("1 · Estudiante",
    facts([("Estudiante",'<a href="Ficha360.html">Camila Sánchez</a>'),("Curso que terminó",'<a href="DetalleCurso.html">Teens A2 · 0001-2025-0330</a>'),("Notas","8.1 · asistencia 92% · aprobó"),("Cuotas","al día · sin deuda vencida")])
-   +form([("Módulos que paga ahora","2 · módulo 7 y módulo 8 (por adelantado)","select",["1 · solo el módulo 7","2 · módulo 7 y módulo 8 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 8 aún no tiene curso propio: queda en la bolsa y la factura queda ligada a él, no suelta"),
-          ("Descuento aprobado por","—","text",None,False,"Obligatorio si el descuento es mayor a 10%")],cols=2))
+   +form([("Módulos que paga ahora","2 · módulo 7 y módulo 8 (por adelantado)","select",["1 · solo el módulo 7","2 · módulo 7 y módulo 8 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 8 aún no tiene curso propio: queda en la bolsa y la factura queda ligada a él, no suelta")],cols=2))
   +card("2 · Curso nuevo",
    seg(["Curso abierto","El módulo aún no tiene curso"],[_curso_abierto,_curso_crear],label="Curso del siguiente módulo"),
    extra=badge("Propuesto por el cierre de notas","navy"))
   +card("3 · Factura que se genera con la matrícula",
-   _rm_ledger+disc_field("lgr",10)
+   _rm_ledger+disc_field("lgr",10)+aprob_descuento("lgr")+politica_descuentos()
    +table(["Ítem","Tipo","Valor"],[[c2("Módulo 7 · B1","SRV-MOD-07 · course fee · virtual"),"Servicio educativo","$250.00"],[c2("Módulo 8 · B1","SRV-MOD-08 · pagado por adelantado · bolsa"),"Servicio educativo","$250.00"],[c2("Empower B1 Combo A","sin material: ya lo tiene del primer nivel"),"Producto","$0.00"]],wide=0)
    +kv(("Servicios y productos","van en líneas distintas para saber cuántos módulos se facturan de verdad"),("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
   +card("4 · Pago y comprobante",
@@ -2165,7 +2183,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
    "Una matrícula por módulo. Solo aparecen cursos del programa y módulo elegidos, con cupo y sin choque de horario"),
   ("Valores y descuentos",
    two(ledger+kv(("Tu límite sin aprobación","10%"),("Aplicado",'<span data-disc-for="lgv">10% · -$100</span>'),("Más de 10%",'<a href="SolicitudDescuento.html">pasa a aprobación de Dirección Comercial</a>'),("Tabla de descuentos","se administra en Configuración; la tabla real la envían Dayana y Estefanía"),("Empresa","si en el paso 1 elegiste alianza o convenio, su descuento se aplica solo y no se suma a otro")),
-       disc_field("lgv",10)+form([("Motivo del descuento","Referido","select",["Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Beneficio cancela 2 módulos","Indexado","Otro"],True,"Obligatorio si hay descuento"),
+       disc_field("lgv",10)+aprob_descuento("lgv")+politica_descuentos()+form([("Motivo del descuento","Referido","select",["Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Beneficio cancela 2 módulos","Indexado","Otro"],True,"Obligatorio si hay descuento"),
              ("Observaciones","","textarea",None,False,"Ej.: matrícula condicionada, ingresa a medio nivel"),("Contrato y Reglamento del Estudiante","Enviar para aceptación electrónica al estudiante (mayor de edad)","select",["Enviar para aceptación electrónica al estudiante (mayor de edad)","Enviar para aceptación electrónica al representante (menor de 18 años)","Adjuntar contrato firmado en papel (PDF)"],True,"Se envía solo al confirmar la matrícula, por correo y WhatsApp; la aceptación queda en el expediente con fecha, hora y código de verificación. Reemplaza Jotform")],cols=1),ratio="7fr 5fr"),
    "Cada concepto tiene su propio descuento, como en TeamDesk"),
   ("Factura y pago",
@@ -2213,7 +2231,7 @@ venta_lead=shell("Nueva matrícula · desde lead","Nueva matrícula",
   +step(3,"Valores y descuentos",
    ledger_calc([("Derecho de matrícula","tuition fee · estudiante nuevo",25,False),("Valor del curso","course fee · 2 módulos × $225 · virtual",450,True),("Libros y materiales","Empower A1 Starter SB with digital pack",70,False)],0,"lgl")
    +kv(("Tu límite sin aprobación","10%"),("Aplicado",'<span data-disc-for="lgl">sin descuento</span>'))
-   +'<div class="form-grid cols-3">'+disc_field("lgl",0)+field("Motivo del descuento","Sin descuento","select",["Sin descuento","Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Otro"],False,"Obligatorio si hay descuento")+field("Matrícula firmada","","file",None,True,"Adjunta la matrícula original firmada (PDF)")+'</div>',
+   +'<div class="form-grid cols-3">'+disc_field("lgl",0)+field("Motivo del descuento","Sin descuento","select",["Sin descuento","Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Otro"],False,"Obligatorio si hay descuento")+field("Matrícula firmada","","file",None,True,"Adjunta la matrícula original firmada (PDF)")+'</div>'+aprob_descuento("lgl")+politica_descuentos(),
    sub="Mismos conceptos que una venta normal; el asesor puede aplicar hasta 10% con motivo")
   +step(4,"Factura y forma de pago",
    form([("Facturar a","Andrea Villacís · cédula por completar","select",["Andrea Villacís · cédula por completar","Consumidor final","Otro cliente…"],True),("Plan de pago","Contado","select",["Contado","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días"],True),("Crédito","No","text",None,False,"Automático")],cols=3)
@@ -2240,7 +2258,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
  two(card("Resumen", kv(("Subtotal","$330.00"),("Descuento","-$25.00 · referido"),("Total","$305.00"),("Pagado","$305.00"),("Saldo","$0 · venta pagada en 2 cuotas"))+progress(100,"Pagado de esta matrícula")
        +kv(("Venta","multi-módulo · 4 matrículas en la factura 000021090"),("Canal de contacto","Kommo · WhatsApp"),("Paga la empresa","No"),("Matrícula firmada",'<a href="#">matricula-001-202602794.pdf</a>'))),
      card("Valores y descuentos", table(["Concepto","Valor","Dcto.","Subtotal"],[[c2("Derecho de matrícula (tuition fee)","estudiante antiguo · exonerado"),"$0","—","$0"],[c2("Valor del curso (course fee)","módulo 7 · B1"),"$250","10%","$225"],[c2("Libros y materiales","Empower B1 Combo A + B1+ Combo B"),"$80","—","$80"]])
-       +kv(("Motivo del descuento","Referido · dentro del límite del asesor"),("Observaciones","Continúa en el mismo grupo para el módulo 8"))))),
+       +kv(("Motivo del descuento","Referido · dentro del límite del asesor"),("Aprobado por","No requerido · 10% está dentro del límite del asesor"),("Observaciones","Continúa en el mismo grupo para el módulo 8"))))),
  only("COO,PRO", card("Resumen académico", kv(("Módulo","7 · B1"),("Asistencia","10/11 · 90%"),("Nota parcial","8.4"),("Estado",badge("En curso","ok")))+progress(60,"Avance del módulo 7"))),
  tabs(["Matrículas de la venta","Estado de la matrícula","Facturas y pagos","Cartera","Códigos de libros","Asistencia","Portafolio","Certificados","Comisión","Historial"],"Matrículas de la venta",roles={"Estado de la matrícula":COMERCIAL+",COO","Facturas y pagos":COMERCIAL,"Cartera":COMERCIAL,"Comisión":"ADM,GER,DIR,ASE"},panels={
   "Estado de la matrícula": flow(["Reservada","En curso","Congelada (máx. 3 meses)","Reactivada","Terminada · aprobada o reprobada","Retirada"])
@@ -3954,6 +3972,14 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
+/* aprobación de descuentos */
+.appr{display:flex;flex-direction:column;gap:12px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r);background:var(--warn-50)}
+.appr[hidden]{display:none}.appr-head{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.appr-head span{color:var(--ink-2);font-size:var(--t-13)}
+.appr .form-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.appr.is-missing{border-left-color:var(--bad);background:var(--bad-50)}
+.policy{margin:12px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.policy>summary{cursor:pointer;padding:12px 16px;font-size:var(--t-14);font-weight:600;color:var(--navy);min-height:var(--hit);display:flex;align-items:center}
+.policy[open]>summary{border-bottom:1px solid var(--line)}.policy>*:not(summary){margin:12px 16px}
 /* vista previa de correo */
 .mail{max-width:560px;border:1px solid var(--line-strong);border-radius:var(--r);background:#fff;overflow:hidden}
 .mail-head{margin:0;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:var(--t-13)}

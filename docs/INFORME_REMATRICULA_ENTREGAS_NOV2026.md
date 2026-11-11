@@ -189,3 +189,26 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 - **Correo al estudiante**: la plataforma ya necesita enviar correos por el contrato (aceptación del contrato, recordatorios de cuotas), pero las notificaciones a estudiantes "más allá de las internas" figuran como fuera de alcance (punto 17 del contexto) y dependen de un proveedor de correo transaccional. Conviene **confirmar si el aviso de rematrícula entra en ese correo ya contratado**. **WhatsApp**: propuesta aparte (punto 12).
 - **Enlace "Confirmar mi matrícula y pagar"**: apunta al portal del estudiante, que es una propuesta fuera del alcance. Sin portal, el enlace llevaría a una página de pago simple o el estudiante respondería al correo.
 - El texto de los correos, los plazos (48 h, 72 h) y quién puede cerrar notas son supuestos por confirmar con Coordinación Académica.
+
+
+## 11. Descuentos, políticas de módulos y aprobador (revisión de 10 nov)
+**Lo que dijo Secretaría**: al crear la matrícula se aplican descuentos por pagar dos módulos o el nivel completo (la política más común), y otros casos como hermanos que necesitan revisión y aprobación administrativa. Antes de guardar la matrícula en estado pendiente de facturación se debe registrar el nombre de quien aprobó el descuento.
+
+**Qué había en `main`**
+- Tabla de descuentos con motivos (referido, hermanos, promoción, convenio, "Beneficio cancela 2 módulos", indexado) y regla "hasta 10 % lo aplica el asesor; más pasa a aprobación" (`docs/DECISIONES.md`).
+- Bandeja de Aprobaciones y `SolicitudDescuento.html`.
+- **Faltaba**: dónde se registra **quién aprobó**. En la rematrícula era un campo de texto libre y opcional; en Nueva matrícula no existía. Los hermanos entraban como "10 %" sin aprobación.
+
+**Qué se agregó al prototipo**
+- **Bloque "Aprobación del descuento"** (aprobado por, referencia, fecha y hora automática) en Nueva matrícula, Matrícula desde lead y Matrícula y factura. **Solo aparece cuando hace falta**: descuento por encima del límite del asesor, hermanos o beneficios por pago de módulos.
+- **Bloqueo al guardar**: mientras no se elija quién aprobó, los botones de confirmar o guardar la matrícula no avanzan y avisan qué falta. Con aprobador registrado, se abre la confirmación normal.
+- "Hermano o familiar matriculado" ahora figura "requiere aprobación".
+- Tarjeta desplegable **"Ver políticas de descuento"** junto al selector, con cada motivo, su porcentaje y si necesita aprobación.
+- `DetalleMatricula.html` muestra "Aprobado por" (en el ejemplo, "No requerido · dentro del límite del asesor").
+- "Matricular sin facturar" deja la matrícula en **estado pendiente de facturación** con el aprobador registrado.
+
+**Por confirmar con el cliente**
+- **Los porcentajes reales.** Hay una inconsistencia que ya existía: el manual de procesos habla de **10 %** por pagar 2 módulos (reaperturas) y la tabla de ejemplo del prototipo dice **20 % y pasa a aprobación**. La tabla real la deben enviar Dirección Comercial y Administración. Hasta entonces los valores son ilustrativos.
+- **Quién puede aprobar** cada tipo (el prototipo ofrece Dirección Comercial, Administración General y Gerencia General) y si la aprobación se pide dentro de la plataforma (bandeja de Aprobaciones) o se registra después de aprobarla por fuera.
+- **Hermanos**: ¿siempre requieren aprobación, o solo a partir de cierto porcentaje?
+- **Validación real**: en el prototipo el bloqueo es una demostración en el navegador. En la plataforma debe validarse en el servidor y quedar en el audit log (aprobador, fecha, descuento, matrícula).
