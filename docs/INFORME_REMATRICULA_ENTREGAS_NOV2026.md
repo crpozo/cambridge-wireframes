@@ -426,3 +426,24 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Los **comprobantes físicos** (vouchers, papeletas): hoy se pegan en hojas; en el prototipo se adjuntan al pago, pero hay que acordar cuánto tiempo se conserva el original.
 - Quién cierra la caja, a qué hora y si una caja aprobada se puede reabrir.
 - La **verificación contra el correo de Contabilidad** (confirmación de pagos) se trata en la sección siguiente de la reunión.
+
+
+## 23. Verificación de transferencias contra la confirmación de Contabilidad (revisión de 10 nov)
+**Lo que dijo Secretaría**: para verificar una transferencia, entra al correo y busca la confirmación de pago con el número de comprobante (por ejemplo 92839). Revisa que los datos de la confirmación, de la lista de pagos y del sistema **coincidan exactamente** en valor, fecha y detalles. Las transferencias **interbancarias**, a diferencia de las del Banco Pichincha, suelen generar un documento oficial con otro número, lo que obliga a **modificar el sistema y reimprimir** los comprobantes de la caja.
+
+**Qué había en `main`**: "Pagos por validar" (Contabilidad valida en el banco y Secretaría confirma), la conciliación contra el extracto del banco (sección 4) y, en el cierre de caja, una columna de verificación. **Faltaba** la comparación campo por campo de las tres versiones del dato, y quitar la búsqueda manual del correo.
+
+**Qué se agregó al prototipo**: pantalla nueva **Verificar transferencias** (desde Cobros → Conciliación bancaria y desde el cierre de caja):
+- **Contabilidad confirma dentro de la plataforma**, registrando el número oficial, el valor y la fecha del banco. Ya no hay que buscar el correo: la confirmación se ve como el correo de siempre, pero dentro de la pantalla.
+- **Comparación automática campo por campo** (número de comprobante, valor, fecha, banco y factura) entre lo registrado en el sistema, la lista de pagos y la confirmación, con lo distinto resaltado.
+- **Búsqueda por número**: escribir parte del número (por ejemplo "92839") trae todos los pagos que lo contienen.
+- **Interbancarias**: cuando el número del cliente (IB-90312) difiere del oficial del banco (6720458), se ve la diferencia y se corrige **solo ese dato**: el número oficial pasa al pago y el del cliente queda como referencia. La tabla, las cifras, la **lista de pagos y el cierre de caja se actualizan solos** y queda en el audit log; **no hay que reimprimir nada**.
+- La acción "Validar pago" de Contabilidad se redactó para que registre los datos oficiales y la plataforma los compare.
+
+**Viabilidad**: **viable y dentro del alcance** (M5, con el audit log de M1). La comparación depende de que **Contabilidad confirme en la plataforma**; si siguiera confirmando solo por correo, habría que registrar el número a mano o leer los correos con una integración (no contratada). La lectura automática de comprobantes (OCR) y la verificación con Nuvei están fuera del alcance (punto 11 del contexto).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad acepta confirmar los pagos dentro de la plataforma** en lugar de por correo, y quién tiene el permiso.
+- Qué **datos oficiales** devuelve cada banco para las interbancarias (número del documento, fecha de acreditación) y si la fecha puede diferir un día.
+- Qué se hace con una confirmación que llega **después del cierre de caja** (el prototipo la actualiza en la versión vigente y la deja en el historial).
+- Si la verificación aplica también a depósitos y a pagos con tarjeta.
