@@ -228,3 +228,23 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 **Viabilidad**: **viable y dentro del alcance** (M5, con M2 y M3): el contexto del proyecto ya dice "factura con varios ítems con código y material sugerido editable" y "una factura por venta con todos los ítems". La separación entre servicios y productos permite contar módulos facturados, lo que hoy no se puede; depende de definir bien los códigos de los ítems en el catálogo (Configuración).
 
 **Por confirmar**: si el **IVA** o las reglas del SRI son distintos entre servicios educativos y productos (el prototipo muestra servicios con IVA 0 %); el catálogo real de códigos por módulo y por libro; y si la factura puede editarse una vez generada o solo regenerarse. Las pantallas de Facturar de cursos y matrículas apuntan a una misma pantalla de ejemplo (la de Camila Sánchez); en la plataforma real cargarían los datos de cada matrícula.
+
+
+## 13. Cursos futuros sin crear, fechas de fin con feriados y multimódulos (revisión de 10 nov)
+**Lo que dijo Secretaría**: cuando un estudiante paga varios módulos por adelantado, los cursos futuros (por ejemplo los de febrero) todavía no existen y se crean a mano, calculando la fecha de fin y los feriados. En la primera factura se usa la sección de multimódulos para registrar cuántos módulos se pagaron; cuando no hay matrícula vinculada, hay que buscar a mano el producto del módulo (el 5 o el 6) y agregarlo a una factura suelta para asignarlo después a un curso.
+
+**Qué había en `main`**: `NuevoCurso.html` con una fecha de fin "calculada" (solo un texto), un calendario de feriados 2026 en Programas, y la bolsa de módulos visible solo en la ficha y el portal del estudiante. **Faltaba**: calcular la fecha de fin de verdad, ver **qué cursos hay que crear** según lo que ya se pagó y **asignar** esos módulos sin una factura suelta.
+
+**Qué se agregó al prototipo**
+- **Calendario del curso con cálculo real** (Nuevo curso y la creación de un curso dentro de la matrícula): se elige fecha de inicio, días de clase, horas por sesión y total de horas, y la pantalla calcula la **primera clase, el fin, el número de sesiones y los feriados saltados**. Ejemplo: desde el 1 de febrero de 2027, con Lu-Ma-Mi-Ju y 36 h, salta el Carnaval (8 y 9 feb) y termina el 4 de marzo. El resultado llena el campo "Fecha fin".
+- **Bolsa de módulos** (`Rematricula.html`, nueva pestaña): "Cursos que faltan por crear" (cuántos estudiantes ya pagaron cada módulo, fecha sugerida y cuántos faltan para el mínimo de 6) y "Quién pagó qué módulo" (estudiante, módulo, factura y fecha de pago). Cada fila lleva a **Crear curso**, y hay una acción **"Matricular a los que ya pagaron"**.
+- **Nuevo curso** suma "Estudiantes con este módulo ya pagado": al crear el curso se matriculan con su módulo, **sin emitir otra factura**.
+- **Sin factura suelta**: el módulo adelantado queda guardado en la factura original y en la bolsa (ver sección 12); ya no hay que buscar el producto del módulo y agregarlo a mano.
+
+**Viabilidad**: **viable y dentro del alcance** (M3 creación de cursos, M5 bolsa de módulos y factura multi-módulo).
+
+**Por confirmar con el cliente**
+- **Feriados**: los de 2027 del prototipo son de ejemplo. Los feriados móviles y los "puentes" los fija el Gobierno por decreto, así que el calendario debe cargarse cada año y poder editarse; también los locales (por ejemplo, el 6 de diciembre en Quito).
+- **Creación automática**: hoy la persona crea el curso a mano con la ayuda de la bolsa. Crear automáticamente los cursos cuando se junte la demanda no está pedido ni contratado; es una posible mejora.
+- **Mínimo para abrir (6)** y la **regla de una o dos semanas** que mencionó Secretaría sobre la duración según el horario: hay que confirmarlas.
+- La fecha de fin depende de las sesiones regulares; **reposiciones, recuperaciones o cambios de profesor** no se reflejan en el cálculo.

@@ -1400,6 +1400,17 @@ def step(n, title, inner, sub=""):
 # ================= FIN TEMA =================
 
 # ================= PROTOTIPO nov 2026 · rematrícula, matrícula + factura, capacidad, conciliación y entregas digitales =================
+def calendario_curso(inicio="2027-02-01", dias=(1,2,3,4), hps="2", total="36"):
+    """Calendario del curso: calcula primera clase, fin y feriados saltados. JS: assets/cursos.js"""
+    nombres=["Lu","Ma","Mi","Ju","Vi","Sa"]
+    chips="".join(f'<label class="daychip"><input type="checkbox" data-cal-day value="{i+1}"{" checked" if (i+1) in dias else ""}><span>{n}</span></label>' for i,n in enumerate(nombres))
+    return ('<div class="cal" data-cal><div class="cal-in">'
+            +field("Fecha de inicio",inicio,"date",None,True)
+            +'<div class="field"><span class="lbl">Días de clase</span><div class="daychips" role="group" aria-label="Días de clase">'+chips+'</div></div>'
+            +field("Horas por sesión",hps,"select",["1","2","4"],True)+field("Total de horas",total,"number",None,True,"One to one: paquete de 20 o 40 h")+'</div>'
+            +'<dl class="cal-out" aria-live="polite"><div><dt>Primera clase</dt><dd data-cal-first>—</dd></div><div><dt>Fin del curso</dt><dd data-cal-end>—</dd></div><div><dt>Sesiones</dt><dd data-cal-sessions>—</dd></div><div class="cal-skip"><dt>Feriados saltados</dt><dd data-cal-skipped>—</dd></div></dl></div>'
+            +'<script src="assets/cursos.js"></script>')
+
 def aprob_descuento(lid):
     """Bloque 'Aprobado por': aparece solo si el descuento lo exige (más del límite del asesor, hermanos o beneficios) y bloquea el guardado hasta registrarlo. JS: assets/descuentos.js"""
     return (f'<div class="appr" data-appr-for="{lid}" data-appr-required="0" hidden><div class="appr-head"><b>Aprobación del descuento</b><span data-appr-msg></span></div>'
@@ -1441,6 +1452,8 @@ ACTIONS.update({
  "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
  "Volver a generar ítems":("Se vuelven a leer los datos de la matrícula (módulos, descuento y material del nivel) y se recalculan los ítems de la factura. Los ítems que agregaste a mano se conservan.",None),
  "Agregar producto":("Se agrega un producto del inventario (libro, merchandising) a la sección Productos de la factura; descuenta stock al emitirla.",None),
+ "Matricular a los que ya pagaron":("Los estudiantes con el módulo pagado se matriculan en el curso elegido usando ese módulo: no se emite otra factura, la matrícula queda ligada a la factura original y reciben el enlace de clase. "+AUDIT,None),
+ "Asignar a un curso existente":("Se elige un curso abierto del mismo módulo y se matricula al estudiante con el módulo que ya pagó. No se emite otra factura. "+AUDIT,None),
  "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -1653,14 +1666,28 @@ _avisos=(kpis([("Avisos enviados",agg("count","avisos"),"hoy, al cerrar las nota
          +kv(("Cuándo sale","al cerrar las notas del módulo, sin que nadie lo envíe"),("Si no responde","se reenvía a las 48 h; a las 72 h se libera el cupo y se avisa a Secretaría")))
   +card("Registro de envíos",table(["Hora","Estudiante","Curso","Aviso","Canal","Estado"],[[h,c2(e,""),c,a,ca,_bad_av[es]] for h,e,c,a,ca,es in _AV],hide=(0,),wide=1,tid="avisos")
          +kv(("Canal","correo; el aviso por WhatsApp es una propuesta aparte"),("Disparador",badge("Depende de que las notas se registren en la plataforma")+'<small> · si siguen en GradeKeeper hace falta una integración que no está en el contrato</small>'))))
+_BOLSA=[("Gabriela Núñez","Quito","Módulo 5 · A2+","000021074","18 sep"),("Luis Torres","Quito","Módulo 5 · A2+","000021081","26 sep"),("Andrés Pazmiño","Quito","Módulo 5 · A2+","000021069","12 sep"),
+        ("Martín Ortega","Valle","Módulo 6 · A2+","000021098","14 oct"),("Isabela Aguirre","Quito","Módulo 6 · A2+","000021086","1 oct"),
+        ("María Andrade","Quito","Módulo 9 · B1+","000021090","28 ago"),("Daniela Ríos","Quito","Módulo 9 · B1+","000021077","20 sep"),("Sofía Herrera","Quito","Módulo 9 · B1+","000021083","28 sep"),("Pedro Mora","Valle","Módulo 9 · B1+","000021080","25 sep")]
+_bolsa_grupos=table(["Curso que falta crear","Estudiantes que ya pagaron","Fecha sugerida","Estado","Acción"],[
+   [c2("Adults A2+ · módulo 5","Quito · virtual"),"3",c2("lun 15 feb 2027","después de Carnaval (8 y 9 feb)"),badge("Faltan 3 para el mínimo (6)","warn"),'<a href="NuevoCurso.html">Crear curso</a>'],
+   [c2("Adults A2+ · módulo 6","Valle y Quito · virtual"),"2",c2("lun 15 feb 2027","después de Carnaval (8 y 9 feb)"),badge("Faltan 4 para el mínimo (6)","bad"),'<a href="NuevoCurso.html">Crear curso</a>'],
+   [c2("Adults B1+ · módulo 9","Quito · presencial"),"4",c2("lun 1 feb 2027","salta Carnaval en el cálculo"),badge("Faltan 2 para el mínimo (6)","warn"),'<a href="NuevoCurso.html">Crear curso</a>']],wide=0)
+_bolsa_est=table(["Estudiante","Sede","Módulo pagado","Factura","Pagado el","Estado","Acción"],[[c2(f'<a href="Ficha360.html">{e}</a>',sd),sd,m,f'<a href="DetalleFactura.html">{f}</a>',p,badge("Pagado · sin curso","warn"),'<a href="NuevoCurso.html">Crear curso</a>'] for e,sd,m,f,p in _BOLSA],hide=(1,),wide=0,tid="bolsa")
+_bolsa_tab=(kpis([("Módulos pagados sin curso",agg("count","bolsa"),"en la bolsa de módulos"),("Estudiantes",agg("distinct:Estudiante","bolsa"),"con al menos un módulo pagado"),("Cursos por crear","3","con la demanda de estos módulos")])
+  +card("Cursos que faltan por crear",_bolsa_grupos+kv(("Para qué sirve","Secretaría ve de un vistazo qué cursos de febrero hay que crear y cuántos estudiantes ya los pagaron"),("Al crear el curso","los que pagaron se matriculan solos con su módulo, sin una factura nueva"))
+        +row(btn("Matricular a los que ya pagaron",None,True),btn("Nuevo curso","NuevoCurso.html",kind="ghost")),extra=badge("Módulos pagados por adelantado","navy"))
+  +card("Quién pagó qué módulo",filters(search("Buscar","Estudiante o factura",w="260px"),sel("Módulo pagado",["Todos","Módulo 5 · A2+","Módulo 6 · A2+","Módulo 9 · B1+"],w="190px",col="Módulo pagado"),sel("Sede",["Todas","Quito","Valle"],w="130px",col=False))
+        +_bolsa_est+kv(("Sin factura suelta","cada módulo pagado queda ligado a su factura y a la bolsa; ya no hay que buscar el producto del módulo ni agregarlo a una factura aparte"))))
 page("Rematricula.html","Rematrícula",shell("Rematrícula","Rematrícula",
  kpis([("Terminaron el módulo",agg("count","remat"),"según filtros y sede"),("Esperando notas",agg("count:Estado=Esperando notas","remat"),"bloquean la rematrícula",{"fset":"Estado=Esperando notas"}),
        ("Alerta enviada",agg("count:Estado=Alerta enviada","remat"),"listos para matricular",{"fset":"Estado=Alerta enviada"}),
        ("Sin factura",agg("count:Estado=Sin factura","remat"),"matriculados en rojo",{"fset":"Estado=Sin factura"}),
        ("Por conciliar",agg("count:Estado=Por conciliar","remat"),"pago reportado, sin validar",{"fset":"Estado=Por conciliar"}),
        ("Confirmadas",agg("count:Estado=Confirmada","remat"),"cupo asegurado",{"fset":"Estado=Confirmada"})]),
- tabs(["Estudiantes","Avisos automáticos","Capacidad del siguiente curso","Reglas"],"Estudiantes",panels={
+ tabs(["Estudiantes","Avisos automáticos","Bolsa de módulos","Capacidad del siguiente curso","Reglas"],"Estudiantes",counts={"Bolsa de módulos":9},panels={
   "Avisos automáticos": _avisos,
+  "Bolsa de módulos": _bolsa_tab,
   "Estudiantes": card("Del cierre de notas a la matrícula",flow([
       ("El profesor cierra las notas del módulo","nota ≥ 7 y asistencia ≥ 75%","Automático","done"),
       ("La plataforma avisa al estudiante","correo: 'Tu nota es … tu siguiente nivel empieza el …' con enlace para confirmar y pagar","Automático","done"),
@@ -1697,8 +1724,8 @@ _curso_crear=(
  +form([("Programa","English for Teens","select",["English for Teens","English for Adults","English for Kids","Business English"],True),("Modalidad","Virtual","select",["Virtual","Presencial"],True),("Módulo","7 · B1","select",["6 · A2+","7 · B1","8 · B1"],True),
         ("Docente","P. Gómez · contrato activo · 14 de 20 h","select",["P. Gómez · contrato activo · 14 de 20 h","L. Vega · contrato activo · 18 de 20 h","D. Paredes · tarifa en aprobación"],True,"Solo docentes con contrato activo y libres en ese horario"),
         ("Aula o enlace virtual","Teams 1 (virtual)","select",["Teams 1 (virtual)","Zoom 1 (virtual)","Zoom 2 (virtual)"],True,"Capacidad SETEC · el cupo no puede superarla"),("Código en el LMS","CSL-TB1-0790","text",None,False,"El código del curso en Cambridge One / Moodle; hoy se copia a mano"),
-        ("Horario","Regular tarde · Lu-Ma-Mi-Ju 17:00–19:00 · 2 h","select",["Regular tarde · Lu-Ma-Mi-Ju 17:00–19:00 · 2 h","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h","Sábados intensivo · Sa 09:00–13:00 · 4 h"],True),("Fecha de inicio","2026-12-07","date",None,True),
-        "Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36","number",None,True),("Cupo máximo","12","number",None,True,"≤ capacidad del aula")],cols=2)
+        ("Cupo máximo","12","number",None,True,"≤ capacidad del aula")],cols=2)
+ +'<h4 class="section-title">Calendario del curso</h4>'+calendario_curso()
  +row(btn("Crear curso y continuar",None,True),btn("Abrir el formulario completo","NuevoCurso.html",kind="ghost")))
 
 page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factura","Rematrícula",
@@ -2872,7 +2899,8 @@ page("ImportExport.html","Importar / exportar",shell("Importar / exportar estudi
 
 # 18 Nuevo curso
 page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
- form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Código en el LMS (Cambridge One / Moodle)","CSL-B1-0773",'text',None,False,"El código del curso en la plataforma de aprendizaje; hoy se crea y se copia a mano. Sincronizarlo solo es posible si el LMS expone su API"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
+ form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Código en el LMS (Cambridge One / Moodle)","CSL-B1-0773",'text',None,False,"El código del curso en la plataforma de aprendizaje; hoy se crea y se copia a mano. Sincronizarlo solo es posible si el LMS expone su API"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Estudiantes con este módulo ya pagado","3 · se matriculan al crear el curso","select",["3 · se matriculan al crear el curso","Ninguno · solo crear el curso"],False,"Los que pagaron este módulo por adelantado y esperan el curso (bolsa de módulos)"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
+ card("Calendario del curso", calendario_curso(), extra=badge("Feriados de Ecuador cargados","ok")),
  card("Horario personalizado", horario_builder(), extra='<small class="card-hint">Se muestra al elegir "Personalizado" en Horario</small>'),
  card("Profesor", filters(search("Buscar profesor","Nombre, especialidad o sede",w="300px"),sel("Contrato",["Todos","Activo","Vencido"],w="130px"),sel("Disponible en el horario",["Todos","Sí","No"],w="170px"),actions=kv(("Seleccionado",'<b>P. Gómez</b> · contrato activo · 14 de 20 h')))
    +table(["Profesor","Contrato","Carga","Disponible en el horario","Especialidad","Acción"],[
@@ -3990,6 +4018,18 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* calendario del curso */
+.cal{display:flex;flex-direction:column;gap:14px}
+.cal-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;align-items:start}
+.lbl{display:block;font-size:var(--t-13);font-weight:500;margin-bottom:6px}
+.daychips{display:flex;gap:6px;flex-wrap:wrap}.daychip{position:relative}.daychip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.daychip span{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:var(--hit);padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);font-size:var(--t-14);font-weight:500;color:var(--ink-2)}
+.daychip input:checked+span{background:var(--navy);border-color:var(--navy);color:#fff}.daychip input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.cal-out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);overflow:hidden}
+@media (max-width:600px){.cal-out{grid-template-columns:1fr}.cal-out>div{border-left:0;border-top:1px solid var(--line)}.cal-out>div:first-child{border-top:0}}
+.cal-out>div{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:1px solid var(--line)}.cal-out>div:first-child{border-left:0}
+.cal-out dt{font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.cal-out dd{margin:0;font-size:var(--t-14);font-weight:600;color:var(--ink)}
+.cal-out .cal-skip{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.cal.has-skipped .cal-skip dd{color:var(--warn)}
 /* factura vinculada a la matrícula */
 .linked{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2)}
 .linked>div{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14);min-width:0}.linked span{color:var(--mute);font-size:var(--t-13)}

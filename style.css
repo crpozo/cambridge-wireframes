@@ -507,6 +507,18 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* calendario del curso */
+.cal{display:flex;flex-direction:column;gap:14px}
+.cal-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;align-items:start}
+.lbl{display:block;font-size:var(--t-13);font-weight:500;margin-bottom:6px}
+.daychips{display:flex;gap:6px;flex-wrap:wrap}.daychip{position:relative}.daychip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.daychip span{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:var(--hit);padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);font-size:var(--t-14);font-weight:500;color:var(--ink-2)}
+.daychip input:checked+span{background:var(--navy);border-color:var(--navy);color:#fff}.daychip input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.cal-out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);overflow:hidden}
+@media (max-width:600px){.cal-out{grid-template-columns:1fr}.cal-out>div{border-left:0;border-top:1px solid var(--line)}.cal-out>div:first-child{border-top:0}}
+.cal-out>div{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:1px solid var(--line)}.cal-out>div:first-child{border-left:0}
+.cal-out dt{font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.cal-out dd{margin:0;font-size:var(--t-14);font-weight:600;color:var(--ink)}
+.cal-out .cal-skip{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.cal.has-skipped .cal-skip dd{color:var(--warn)}
 /* factura vinculada a la matrícula */
 .linked{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2)}
 .linked>div{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14);min-width:0}.linked span{color:var(--mute);font-size:var(--t-13)}
