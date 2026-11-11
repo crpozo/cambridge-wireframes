@@ -1205,8 +1205,8 @@ def vbars(groups, series, h=150):
     g="".join('<div class="vgroup"><div class="vbars-stack" style="height:%dpx">'%h+"".join(f'<div class="vbar" title="{series[i]}: {v}" style="height:{v/mx*h:.0f}px;background:{CH[i%4]}"><span>{v}</span></div>' for i,v in enumerate(vs))+f'</div><span class="vlabel">{l}</span></div>' for l,vs in groups)
     leg="".join(f'<span class="leg"><i style="background:{CH[i%4]}"></i>{n}</span>' for i,n in enumerate(series)) if len(series)>1 else ""
     return f'<div class="chart"><div class="vbars">{g}</div>{f"<div class=legend>{leg}</div>" if leg else ""}</div>'
-def linechart(labels, series, h=160):
-    W=600; mx=max(v for vs in series.values() for v in vs) or 1; n=len(labels); xs=[40+i*(W-60)/(n-1) for i in range(n)]
+def linechart(labels, series, h=160, W=600):
+    mx=max(v for vs in series.values() for v in vs) or 1; n=len(labels); xs=[40+i*(W-60)/(n-1) for i in range(n)]
     paths="".join(f'<polyline fill="none" stroke="{CH[k%4]}" stroke-width="2.5" stroke-linejoin="round" points="{" ".join(f"{xs[i]:.0f},{h-20-(v/mx)*(h-40):.0f}" for i,v in enumerate(vs))}"/>' for k,(name,vs) in enumerate(series.items()))
     axis="".join(f'<text x="{xs[i]:.0f}" y="{h-4}" font-size="12" text-anchor="middle" fill="{MUTE}">{l}</text>' for i,l in enumerate(labels))
     grid="".join(f'<line x1="40" x2="{W-20}" y1="{h-20-(h-40)*f:.0f}" y2="{h-20-(h-40)*f:.0f}" stroke="{LINE}"/><text x="36" y="{h-16-(h-40)*f:.0f}" font-size="12" text-anchor="end" fill="{MUTE}">{mx*f:.0f}</text>' for f in (0,.5,1))
@@ -3445,15 +3445,33 @@ page("ConstructorReportes.html","Reportes self-service",shell("Arma tu reporte",
  subtitle="Pregunta en tus palabras, elige período y sede, y listo"),"Arma tu reporte")
 
 # 30 Dashboard ejecutivo
+def dash_lines(labels, series, h=250, W=600):
+    """Líneas con área suave, rejilla discreta y etiqueta directa (nombre y valor) al final de cada serie."""
+    mx=max(v for vs in series.values() for v in vs); top=(int(mx/5)+1)*5; n=len(labels)
+    x0,x1,y0,y1=34,W-78,h-26,12; xs=[x0+i*(x1-x0)/(n-1) for i in range(n)]
+    Y=lambda v:y0-(v/top)*(y0-y1)
+    grid="".join(f'<line x1="{x0}" x2="{x1+8}" y1="{Y(g):.0f}" y2="{Y(g):.0f}" stroke="{LINE}" stroke-dasharray="{"" if g==0 else "3 4"}"/><text x="{x0-8}" y="{Y(g)+4:.0f}" font-size="11" text-anchor="end" fill="{MUTE}">${g}k</text>' for g in range(0,top+1,5))
+    axis="".join(f'<text x="{xs[i]:.0f}" y="{h-6}" font-size="11" text-anchor="middle" fill="{MUTE}">{l}</text>' for i,l in enumerate(labels))
+    body=""
+    for k,(name,vs) in enumerate(series.items()):
+        c=CH[k%4]; pts=[(xs[i],Y(v)) for i,v in enumerate(vs)]; ln=" ".join(f"{x:.0f},{y:.0f}" for x,y in pts)
+        area=f"{pts[0][0]:.0f},{y0} "+ln+f" {pts[-1][0]:.0f},{y0}"
+        lx,ly=pts[-1]
+        body+=f'<polygon points="{area}" fill="{c}" fill-opacity=".07"/><polyline fill="none" stroke="{c}" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" points="{ln}"/><circle cx="{lx:.0f}" cy="{ly:.0f}" r="4.5" fill="{c}" stroke="#fff" stroke-width="2"/><text x="{lx+10:.0f}" y="{ly+4:.0f}" font-size="12" font-weight="600" fill="{c}">{name} ${vs[-1]}k</text>'
+    return f'<div class="chart"><svg viewBox="0 0 {W} {h}" style="width:100%;height:auto" role="img" aria-label="Ingresos mensuales por sede">{grid}{body}{axis}</svg></div>'
+def dash_share(items):
+    tot=sum(v for _,v,_ in items)
+    rows="".join(f'<div class="share"><div class="share-top"><span><i style="background:{c}"></i>{n}</span><b>${v:,}</b></div><div class="share-track"><div style="width:{v/tot*100:.0f}%;background:{c}"></div></div><span class="share-pct">{v/tot*100:.0f}% del total</span></div>' for n,v,c in items)
+    return f'<div class="shares">{rows}</div>'
 page("DashboardEjecutivo.html","Dashboard ejecutivo",shell("Dashboard ejecutivo","Dashboard ejecutivo",
  rep_tabs("Dashboard ejecutivo"),
  filters(sel("Período",["2026 (ene–oct)","2025","Último trimestre"],w="170px"),sel("Comparar con",["2025","Sin comparación"],w="160px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px")),
- '<section class="card"><div class="hero-number"><span class="hn-label">Ingresos del año (ene a oct 2026)</span><span class="hn-value">'+sv("$386,400","$204,800","$116,900","$64,700","$22,300")+'</span><span class="hn-sub">+12% frente al mismo período de 2025</span></div>'
- +linechart(["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"],{"Quito":[18,19,21,20,22,21,19,20,23,24],"Valle":[10,11,12,11,13,12,11,12,13,14],"Ambato":[6,6,7,6,7,7,6,6,7,8]},h=220)+'</section>',
- kpis([("Estudiantes activos",sv(812,420,230,162,38),"+3% vs 2025"),("Ticket promedio por venta",sv("$915","$940","$890","$880","$860"),"2.1 niveles por venta"),("Margen después de profesores y libros",sv("34%","38%","31%","27%","25%"),"por sede")]),
+ kpis([("Ingresos del año (ene a oct 2026)",sv("$386,400","$204,800","$116,900","$64,700","$22,300"),'<span class="d-up">+12%</span> vs mismo período de 2025'),("Estudiantes activos",sv(812,420,230,162,38),'<span class="d-up">+3%</span> vs 2025'),("Ticket promedio por venta",sv("$915","$940","$890","$880","$860"),"2.1 niveles por venta"),("Margen después de profesores y libros",sv("34%","38%","31%","27%","25%"),"por sede")]),
+ two(card("Ingresos mensuales por sede",dash_lines(["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"],{"Quito":[18,19,21,20,22,21,19,20,23,24],"Valle":[10,11,12,11,13,12,11,12,13,14],"Ambato":[6,6,7,6,7,7,6,6,7,8]})),
+ card("Aporte por sede al ingreso del año",dash_share([("Quito",204800,CH[0]),("Valle",116900,CH[1]),("Ambato",64700,CH[2])])+'<p class="share-note">Quito explica el 53% de los ingresos y crece 9%. Ambato necesita 2 cursos nuevos para llegar a la meta.</p>'),ratio="2fr 1fr"),
  two(card("Mix por programa y modalidad", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])),
  card("Funnel comercial (2026)", funnel([("Leads Kommo",2840),("Cotizaciones",1120),("Ventas",640),("Matriculados",598)]))),
- two(card("Retención y avance de niveles", hbars([("Continúan al siguiente nivel",71),("Pausan (vuelven en 6 meses)",14),("Abandonan",15)],"")+progress(71,"Retención objetivo 2026: 75%")),card("Lectura rápida",li(["Quito explica el 53% de los ingresos y crece 9%","Valle mantiene el ticket más alto","Ambato necesita 2 cursos nuevos para llegar a la meta"]))),
+ card("Retención y avance de niveles", hbars([("Continúan al siguiente nivel",71),("Pausan (vuelven en 6 meses)",14),("Abandonan",15)],"")+progress(71,"Retención objetivo 2026: 75%")),
  subtitle="Vista gerencial, distinta de la reportería operativa"),"Dashboard ejecutivo")
 
 # 31 Chatbot
@@ -4287,7 +4305,8 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .vlabel{font-size:var(--t-12);color:var(--mute);text-align:center}
 .sbar{position:relative;width:26px}.sbar-track{position:absolute;inset:0;background:var(--surface-2);border-radius:2px}.sbar-fill{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column-reverse;gap:1px;overflow:hidden;border-radius:2px}
 .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:var(--t-13);color:var(--mute)}.leg{display:inline-flex;align-items:center;gap:6px}.leg i{width:10px;height:10px;border-radius:2px;display:inline-block}
-.funnel{display:flex;flex-direction:column;gap:8px}.funnel-row{display:flex;align-items:center;gap:12px;font-size:var(--t-14)}.funnel-bar{min-width:72px;color:#fff;padding:8px 12px;font-weight:500;border-radius:var(--r-sm);font-variant-numeric:tabular-nums}
+.funnel{display:flex;flex-direction:column;gap:8px}.funnel-row{display:flex;align-items:center;gap:12px;font-size:var(--t-14)}.shares{display:flex;flex-direction:column;gap:16px}.share-top{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-14)}.share-top i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px}.share-top b{font-weight:500;font-variant-numeric:tabular-nums}.share-track{height:8px;background:var(--line);border-radius:4px;margin:6px 0 4px;overflow:hidden}.share-track div{height:100%;border-radius:4px}.share-pct{font-size:var(--t-13);color:var(--mute)}.share-note{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--t-13);color:var(--mute)}.d-up{color:var(--ok);font-weight:500}
+.funnel-row>span{flex:none;white-space:nowrap}.funnel-bar{min-width:72px;color:#fff;padding:8px 12px;font-weight:500;border-radius:var(--r-sm);font-variant-numeric:tabular-nums}
 .stack{display:flex;height:10px;border-radius:2px;overflow:hidden;gap:2px;background:var(--surface-2)}
 .gauge{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.gauge svg{max-width:100%}.gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px}
 
