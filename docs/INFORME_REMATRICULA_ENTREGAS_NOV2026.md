@@ -248,3 +248,24 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 - **Creación automática**: hoy la persona crea el curso a mano con la ayuda de la bolsa. Crear automáticamente los cursos cuando se junte la demanda no está pedido ni contratado; es una posible mejora.
 - **Mínimo para abrir (6)** y la **regla de una o dos semanas** que mencionó Secretaría sobre la duración según el horario: hay que confirmarlas.
 - La fecha de fin depende de las sesiones regulares; **reposiciones, recuperaciones o cambios de profesor** no se reflejan en el cálculo.
+
+
+## 14. Facturas sueltas y notas de crédito por cambio de modalidad o de curso (revisión de 10 nov)
+**Lo que dijo Secretaría**: los servicios adicionales (tutorías, simuladores) generan facturas sueltas sin matrícula, y para encontrar la factura del módulo siguiente hay que revisarlas todas a mano. Además, cuando hay un cambio de modalidad o de curso que modifica el valor se hace una **nota de crédito**, y la factura original queda en el historial.
+
+**Qué había en `main`**: una vista "Sin vincular" con tres casos y un botón de vincular sin contexto; `NotaCredito.html` como formulario simple con las reglas del contrato de servicios; y un listado de notas de crédito. **Faltaba** distinguir las facturas que de verdad hay que revisar de las que no, sugerir a dónde pertenece cada una, y **calcular** qué corresponde cuando cambia el valor.
+
+**Qué se agregó al prototipo**
+- **Facturas sueltas clasificadas por concepto** (Facturación → Facturas → "Sin vincular"): cada factura lleva su concepto (módulo adelantado, matrícula, convenio, tutoría, simulador, traducción, libro) y un estado: **"Requiere acción"** (módulos o matrículas sin vincular) o **"Servicio independiente"** (tutorías, simuladores, traducciones y libros, que se ligan a la ficha del estudiante y no necesitan matrícula). Con cifras y filtros, solo las que requieren acción quedan pendientes (en el ejemplo, 4 de 8).
+- **Sugerencia del sistema** por cada una ("Bolsa de módulos · módulo 5, coincide valor y fecha", "Matrícula 001-202603265, misma persona y valor") y acciones: vincular a la bolsa, vincular a matrícula, asignar estudiantes de un convenio.
+- **Nota de crédito con cálculo** (`NotaCredito.html`): motivos "Cambio de modalidad" y "Cambio de curso u horario". Al elegir modalidad actual, modalidad nueva y número de módulos, la pantalla dice si corresponde **nota de crédito** (el valor baja), **cobro adicional** (sube) o **solo mover la matrícula** (igual), y llena el monto. Ejemplo: presencial $275 a virtual $250 da una nota de crédito de $25. Incluye la decisión de **volver a facturar** y el flujo "qué pasa con la factura original".
+- **Historial**: la factura original **no se borra**: queda con el estado **"Ajustada · NC-…"** en el listado y la nota de crédito enlaza a la factura nueva (listado de notas con el nuevo caso).
+
+**Viabilidad**: **viable y dentro del alcance** (M5 incluye "notas de crédito" y el contexto del proyecto ya describe la factura con ítems con código). Clasificar las facturas depende de que cada ítem del catálogo (Configuración) tenga su tipo: módulo, tutoría, simulador, traducción, libro.
+
+**Por confirmar con el cliente**
+- Los **precios por modalidad** del cálculo ($250 virtual y $275 presencial por módulo) salen de los datos de ejemplo; deben venir del catálogo real.
+- **Devoluciones en dinero**: el contrato de servicios retiene el 10 % antes de iniciar y no devuelve inscripción; la calculadora cubre solo el cambio de valor, no esas devoluciones.
+- **SRI**: la nota de crédito debe autorizarse en el SRI. La plataforma la registra, pero emitirla directamente al SRI no está contratado (depende de Dora, módulo 11, o es adenda).
+- **Facturas ya pagadas**: si la factura original está pagada y la nota de crédito deja saldo a favor, hay que decidir si se devuelve o se aplica al siguiente módulo (hoy el prototipo ofrece "queda como saldo a favor").
+- Hasta cuándo se puede ajustar una factura (cierre contable del mes) y quién puede emitir la nota de crédito.

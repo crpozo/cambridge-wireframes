@@ -507,6 +507,13 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* ajustes: cambio de modalidad o de curso */
+.nc{display:flex;flex-direction:column;gap:12px}
+.nc-out{display:grid;grid-template-columns:1fr 1fr 2fr;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);overflow:hidden}
+.nc-out>div{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:1px solid var(--line)}.nc-out>div:first-child{border-left:0}
+.nc-out span{font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.nc-out b{font-size:var(--t-14);color:var(--ink)}
+.nc[data-nc-tipo="nc"] [data-nc-resultado]{color:var(--ok)}.nc[data-nc-tipo="cobro"] [data-nc-resultado]{color:var(--warn)}
+@media (max-width:600px){.nc-out{grid-template-columns:1fr}.nc-out>div{border-left:0;border-top:1px solid var(--line)}.nc-out>div:first-child{border-top:0}}
 /* calendario del curso */
 .cal{display:flex;flex-direction:column;gap:14px}
 .cal-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;align-items:start}
