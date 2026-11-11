@@ -403,3 +403,26 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Si el **plan B en contingencia** es aceptable para Contabilidad y el SRI en su forma de registrar la clave de acceso, y quién lo autoriza.
 - Qué hacer con la **comisión del asesor y la entrega del libro** mientras la factura está retenida (el prototipo las marca "pendientes de autorización").
 - Con qué frecuencia ocurren hoy las retenciones, para dimensionar el tiempo que ahorra la pantalla.
+
+
+## 22. Documentos físicos para Contabilidad: cierre de caja digital (revisión de 10 nov)
+**Lo que dijo Secretaría**: el flujo exige imprimir la lista de pagos, la lista de ventas (con las facturas a crédito) y la lista de matrículas para entregarlas a Contabilidad. Se hacen copias de respaldo: dos copias de la lista de pagos, una de las cuales regresa a Secretaría. Si se detecta un error hay que **reimprimir toda la caja**, algo crítico por las quejas de la auditoría.
+
+**Qué había en `main`**: una pestaña "Caja del día" con los cobros por método y un botón "Cerrar caja" que solo mostraba un aviso, más botones para imprimir cada recibo. En la sección 18 ya se había dejado "cierre de caja digital" como mejora pendiente.
+
+**Qué se agregó al prototipo**: pantalla nueva **Cierre de caja** (desde "Cerrar caja" en Facturación y desde el Inicio de Secretaría):
+- **Las tres listas se arman solas**: pagos (con método, comprobante y verificación contra el banco o el datáfono), ventas (con las facturas a crédito y su saldo) y matrículas (ligadas a su factura), con filtros y exportación a Excel.
+- **Cuadre de caja**: efectivo contra lo contado, tarjetas contra el cierre del lote y transferencias contra el extracto; si cambias el efectivo contado, la pantalla muestra la diferencia.
+- **Envío digital a Contabilidad con versión** (v1, v2…) y **acuse digital** de recepción, que reemplaza la copia que regresaba firmada.
+- **Corregir solo lo observado**: Contabilidad deja una observación y Secretaría corrige **ese ítem** y reenvía una versión nueva, **sin rehacer toda la caja**. Todo queda en un historial de versiones (quién cambió qué y cuándo).
+- **Paquete para auditoría** descargable (PDF) y Excel: el respaldo que antes se guardaba impreso.
+- Los recibos de caja ya no se imprimen: se **envían por correo** al estudiante y quedan en su ficha.
+
+**Viabilidad**: **viable y dentro del alcance** (M5 cobros y reportes, M8 reportería, M1 audit log). Lo que **no** controla la plataforma es que **Contabilidad acepte el cierre digital**: depende de su proceso y de la auditoría (ver abajo).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad y la auditoría aceptan** el cierre digital en lugar del papel; algunos controles pueden exigir firma física o un documento específico.
+- Si el **acuse digital** tiene validez para ellos o se necesita firma electrónica (certificada sería adenda, punto 9 del contexto).
+- Los **comprobantes físicos** (vouchers, papeletas): hoy se pegan en hojas; en el prototipo se adjuntan al pago, pero hay que acordar cuánto tiempo se conserva el original.
+- Quién cierra la caja, a qué hora y si una caja aprobada se puede reabrir.
+- La **verificación contra el correo de Contabilidad** (confirmación de pagos) se trata en la sección siguiente de la reunión.
