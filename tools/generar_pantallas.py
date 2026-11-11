@@ -3610,15 +3610,29 @@ _semana=(card("Resumen semanal · sale cada lunes 08:00",table(["Grupo que termi
   +card("Parámetros",form([("Capacidad estándar por aula","12","number",None,True,"Se usa cuando el aula no tiene una capacidad propia"),("Mínimo de inscritos para abrir","6","number",None,True),("Alerta de ocupación baja (%)","50","number",None,True,"Por debajo de este porcentaje se avisa"),
         ("Anticipación de la alerta de apertura (días)","14","number",None,True),("Resumen semanal","Lunes · 08:00","select",["Lunes · 08:00","Lunes · 07:00","Viernes · 17:00"],True),("Destinatarios","Secretaría, Coordinación y Dirección Comercial","text",None,False)],cols=3)
         +row(btn("Guardar parámetros",None,True)),extra=badge("Se usan en todas las alertas","navy")))
+_wa_sim=(card("Conexión con WhatsApp Business",kv(("Proveedor","API de WhatsApp Business (Meta) · simulada"),("Número","+593 99 000 0000 · ejemplo"),("Estado",badge("Conectado · simulación","ok")),("Calidad del número",badge("Alta","ok")),("Mensajes de hoy",'<span data-wa-sent>0</span> enviados · <span data-wa-resp>0</span> respuestas'))
+    +kv(("Importante",badge("Propuesta · fuera del alcance del contrato actual")+"<small> · esta pantalla simula la integración; no envía nada real</small>")),extra=badge("Simulación","warn"))
+  +card("Plantillas aprobadas por Meta",table(["Plantilla","Categoría","Estado en Meta","Cuándo se usa"],[
+    ["Bienvenida al matricularse","Utilidad",badge("Aprobada","ok"),"al confirmar la matrícula"],["Mensaje de apertura","Utilidad",badge("Aprobada","ok"),"48 h antes del inicio"],
+    ["Fin de módulo","Utilidad",badge("Aprobada","ok"),"al cerrar las notas"],["Cuota por vencer","Utilidad",badge("En revisión","warn"),"3 días antes del vencimiento"],["Promoción de rematrícula","Marketing",badge("Rechazada","bad"),"se debe reescribir"]],wide=0)
+    +kv(("Cómo funciona","cada plantilla la aprueba Meta antes de usarla; fuera de las 24 h de una conversación solo se pueden enviar plantillas aprobadas"),("Cuestan","Meta cobra por conversación; el valor depende del país y la categoría")))
+  +card("Probar el envío",'<div class="wa-grid"><div class="wa-controls">'
+    +'<label class="field">Estudiante<select class="ctl" data-wa-est><option>María Andrade</option><option>Pedro Mora</option></select></label>'
+    +'<label class="field">Plantilla<select class="ctl" data-wa-plan><option>Bienvenida al matricularse</option><option>Mensaje de apertura (48 h antes)</option><option>Fin de módulo</option><option>Cuota por vencer</option></select></label>'
+    +'<div class="msg-prev"><small>Lo que se enviará</small><p data-wa-prev></p></div>'
+    +'<div class="row"><button type="button" class="btn btn-primary" data-wa-send>Enviar mensaje de prueba</button><button type="button" class="btn btn-ghost" data-wa-clear>Limpiar chat</button></div>'
+    +'<ul class="timeline" data-wa-log></ul></div>'
+    +'<div class="wa-phone" role="img" aria-label="Chat de WhatsApp de ejemplo"><div class="wa-top"><b>Cambridge School of Languages</b><small>cuenta de empresa · en línea</small></div><div class="wa-chat" data-wa-chat></div></div></div>',extra=badge("Simulación","warn")))
 page("Automatizaciones.html","Automatizaciones",shell("Automatizaciones","Automatizaciones",
  kpis([("Reglas activas",'<span data-reglas-activas>13</span> de <span data-reglas-total>14</span>',"aperturas, reaperturas, cobranza y notas"),("Avisos esta semana","46","enviados sin intervención"),("Cobranza gestionada","$1,360","saldos con aviso automático"),("Notas pendientes","1","grupo por cerrar")]),
- tabs(["Reglas","Plantillas","Registro de envíos","Resumen semanal y parámetros"],"Reglas",panels={
+ tabs(["Reglas","Plantillas","Registro de envíos","Resumen semanal y parámetros","WhatsApp"],"Reglas",panels={
+  "WhatsApp": _wa_sim,
   "Reglas": filters(search("Buscar","Regla o área",w="240px"),sel("Área",["Todas","Aperturas","Reaperturas","Cobranza","Notas","Exámenes"],w="160px"),actions=btn("Nueva regla de automatización",None,True))+_reglas_tbl
        +kv(("Cómo funcionan","cada regla se dispara sola por un evento o por un momento; puedes apagarla sin borrarla"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · hoy los avisos salen por correo y notificación interna</small>')),
   "Plantillas": card("Mensajes que usan las reglas",_plantillas+kv(("Dónde se editan","en Configuración → Plantillas de correo")),extra=badge("Con variables","navy")),
   "Registro de envíos": _registro,
   "Resumen semanal y parámetros": _semana}),
- '<script src="assets/automatizaciones.js"></script>',
+ '<script src="assets/automatizaciones.js"></script><script src="assets/whatsapp.js"></script>',
  subtitle="Aperturas, reaperturas, cobranza y notas: avisos que salen solos, con su plantilla y su registro"),"Automatizaciones")
 
 _ENV=[  # (factura, emitida, cliente, detalle, total, estado, segundos, nota, acción)
@@ -4505,6 +4519,14 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .plan-dims{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;min-height:40px}.chk-inline{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-14)}
 .pie-wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:center}.pie{width:132px;height:132px;border-radius:50%;flex:none;-webkit-mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%);mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%)}
 .pie-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:var(--t-14);min-width:0}.pie-leg li{display:flex;align-items:center;gap:8px}.pie-leg i{width:10px;height:10px;border-radius:2px;flex:none}.pie-leg b{font-variant-numeric:tabular-nums}.pie-leg small{color:var(--mute)}
+/* whatsapp simulado */
+.wa-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}.wa-controls{display:flex;flex-direction:column;gap:14px;min-width:0}
+.wa-phone{border:1px solid var(--line-strong);border-radius:var(--r-lg);overflow:hidden;background:#ECE5DD;display:flex;flex-direction:column;height:430px}
+.wa-top{background:#075E54;color:#fff;padding:10px 14px;display:flex;flex-direction:column}.wa-top small{opacity:.8}
+.wa-chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.wa-msg{max-width:84%;padding:8px 10px;border-radius:8px;font-size:var(--t-14);box-shadow:0 1px 1px rgba(0,0,0,.08)}.wa-msg p{margin:0 0 4px}.wa-msg small{display:block;text-align:right;color:var(--mute);font-size:11px}
+.wa-out{align-self:flex-end;background:#DCF8C6}.wa-out.is-read small{color:#1D3F8F}.wa-in{align-self:flex-start;background:#fff}
+@media(max-width:900px){.wa-grid{grid-template-columns:1fr}}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}

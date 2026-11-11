@@ -44,3 +44,10 @@ Reportes → **Constructor de reportes** → área "Ventas y facturación": "¿C
 ## Ya estaba o es dependencia
 - **Integrar Kommo con la plataforma** (sin registros manuales): ya existe Leads → Matrícula desde un lead; la conexión real depende de lo que exponga la API de Kommo.
 - **Sincronizar reportes de sedes**: Tablero comercial → "Consolidado por sede" y el Plan estratégico.
+
+## 11. WhatsApp simulado (como se vería con la API de WhatsApp Business)
+Automatizaciones → pestaña **WhatsApp**:
+1. Revisa "Conexión" (número, estado, calidad) y "Plantillas aprobadas por Meta" (aprobada, en revisión, rechazada).
+2. En "Probar el envío" elige estudiante y plantilla; ves el texto con sus variables y pulsas **Enviar mensaje de prueba**.
+3. En el teléfono aparece el mensaje y pasa de Enviando a Enviado, Entregado y Leído; unos segundos después llega una respuesta de ejemplo. El registro de la izquierda y los contadores se actualizan.
+Todo es simulación: no se envía nada real. Sigue siendo propuesta fuera del alcance del contrato.
