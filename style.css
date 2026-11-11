@@ -602,6 +602,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .wa-msg{max-width:84%;padding:8px 10px;border-radius:8px;font-size:var(--t-14);box-shadow:0 1px 1px rgba(0,0,0,.08)}.wa-msg p{margin:0 0 4px}.wa-msg small{display:block;text-align:right;color:var(--mute);font-size:11px}
 .wa-out{align-self:flex-end;background:#DCF8C6}.wa-out.is-read small{color:#1D3F8F}.wa-in{align-self:flex-start;background:#fff}
 @media(max-width:900px){.wa-grid{grid-template-columns:1fr}}
+.profile .actions .btn.btn-portal{flex:1 1 100%;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:10px 14px;text-align:left}.btn-portal small{font-weight:400;color:var(--mute);font-size:var(--t-13)}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}
