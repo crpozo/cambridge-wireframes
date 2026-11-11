@@ -604,6 +604,19 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media(max-width:900px){.wa-grid{grid-template-columns:1fr}}
 .profile .actions .btn.btn-portal{flex:1 1 100%;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:10px 14px;text-align:left}.btn-portal small{font-weight:400;color:var(--mute);font-size:var(--t-13)}
 .rep-flash{animation:repflash .9s ease}@keyframes repflash{from{background:var(--navy-50)}to{background:transparent}}
+/* cambio de matrícula y RIDE */
+.ctl.is-invalid,.is-invalid{border-color:var(--bad)!important;box-shadow:0 0 0 2px var(--bad-50)}
+.plan-nota.is-warn{color:var(--warn)}.plan-nota.is-bad{color:var(--bad)}.plan-nota.is-ok{color:var(--mute)}
+.ride{background:#fff;border:1px solid var(--line-strong);border-radius:var(--r);padding:28px;max-width:860px;display:flex;flex-direction:column;gap:16px;font-size:var(--t-14)}
+.ride-head{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.ride-logo{height:44px;width:auto}.ride-head p{margin:8px 0 0;line-height:1.5}
+.ride-box{border:1px solid var(--ink);padding:12px 16px;display:flex;flex-direction:column;gap:4px;min-width:240px}.ride-box b{font-size:var(--t-20)}
+.ride-auth,.ride-cli{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;border-top:1px solid var(--line);padding-top:12px}.ride-auth small,.ride-cli small,.ride-foot small{display:block;color:var(--mute)}
+.ride-auth .mono{word-break:break-all;font-size:12px}
+.ride-t,.ride-tot{width:100%;border-collapse:collapse}.ride-t th,.ride-t td{padding:8px;border-bottom:1px solid var(--line);text-align:left}.ride-t th{border-bottom:2px solid var(--ink)}.ride-t .n,.ride-tot .n{text-align:right;font-variant-numeric:tabular-nums}
+.ride-foot{display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start}.ride-foot p{margin:2px 0 10px}.ride-tot td,.ride-tot th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}.ride-tot th{border-bottom:0;border-top:2px solid var(--ink)}
+.ride-note{margin:0;color:var(--mute);font-size:var(--t-13)}
+@media(max-width:700px){.ride-foot{grid-template-columns:1fr}.ride{padding:16px}}
+@media print{.ride{border:0;max-width:none;padding:0}}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}

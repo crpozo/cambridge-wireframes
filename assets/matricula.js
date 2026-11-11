@@ -64,7 +64,62 @@
     toast('Datos del estudiante copiados a la factura');
   });
 
-  function init() { estado(); }
+  /* 3. Plazo de crédito editable (paso 4): días entre cuotas y número de cuotas, con aviso si pasa de 30 días */
+  var PLANES = { 'Contado': [1, 0], '2 cuotas · cada 15 días': [2, 15], '2 cuotas · cada 30 días': [2, 30], '3 cuotas · cada 30 días': [3, 30] };
+  function dias(f, n) { var d = new Date(); d.setDate(d.getDate() + f * n); var m = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()]; return d.getDate() + ' ' + m + ' ' + d.getFullYear(); }
+  function credito(origen) {
+    var plan = campo('Plan de pago'), dd = campo('Días entre cuotas'), nn = campo('Número de cuotas'), out = document.querySelector('[data-credito-out]');
+    if (!plan || !dd || !nn || !out) return;
+    if (origen === 'plan' && PLANES[plan.value]) { nn.value = PLANES[plan.value][0]; dd.value = PLANES[plan.value][1]; }
+    else if (origen === 'dias' || origen === 'n') { for (var i = 0; i < plan.options.length; i++) if (/^Personalizado/.test(plan.options[i].text)) plan.selectedIndex = i; }
+    var d = +dd.value || 0, n = Math.max(1, Math.min(12, +nn.value || 1));
+    var totalEl = document.querySelector('[data-total-for="lgv"]'), total = totalEl ? parseFloat(totalEl.textContent.replace(/[^\d.]/g, '')) || 980 : 980;
+    var cr = campo('Crédito'); if (cr) cr.value = n > 1 ? 'Sí · ' + d + ' días entre cuotas' : 'No · contado';
+    var aviso = '', cls = 'is-ok';
+    if (n > 1 && d < 15) { aviso = 'El mínimo entre cuotas es 15 días.'; cls = 'is-bad'; }
+    else if (d > 60) { aviso = 'El máximo es 60 días entre cuotas; por encima necesita aprobación de Dirección Comercial.'; cls = 'is-bad'; }
+    else if (d > 30) { aviso = 'Más de 30 días: solo con convenio de crédito (por ejemplo, la empresa del paso 1, como Farma que pide hasta 2 meses).'; cls = 'is-warn'; }
+    var porCuota = (total / n).toFixed(2), fechas = [];
+    for (var k = 0; k < n; k++) fechas.push(dias(k, d));
+    out.className = 'plan-nota ' + cls;
+    out.textContent = n + (n === 1 ? ' pago' : ' cuotas') + ' de $' + porCuota + ' · vencen ' + fechas.join(', ') + (aviso ? ' · ' + aviso : '');
+  }
+  document.addEventListener('change', function (e) {
+    var t = e.target; if (t.tagName !== 'SELECT' && t.tagName !== 'INPUT') return;
+    var lab = t.id && document.querySelector('label[for="' + t.id + '"]'), tx = lab ? lab.textContent.trim() : '';
+    if (/^Plan de pago/i.test(tx)) credito('plan');
+    if (/^Días entre cuotas/i.test(tx)) credito('dias');
+    if (/^Número de cuotas/i.test(tx)) credito('n');
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target, lab = t.id && document.querySelector('label[for="' + t.id + '"]'), tx = lab ? lab.textContent.trim() : '';
+    if (/^Días entre cuotas/i.test(tx)) credito('dias');
+    if (/^Número de cuotas/i.test(tx)) credito('n');
+    // 4. Nombres y apellidos de la ficha: siempre en mayúsculas
+    if (t.tagName === 'INPUT' && /^(Nombres|Apellidos)/i.test(tx)) { var p = t.selectionStart; t.value = t.value.toLocaleUpperCase('es'); try { t.setSelectionRange(p, p); } catch (_) {} }
+    if (t.classList && t.classList.contains('is-invalid')) t.classList.remove('is-invalid');
+  });
+
+  /* 5. Campos obligatorios de la ficha: no deja guardar si falta alguno */
+  var OBLIG = ['Nombres', 'Apellidos', 'Cédula / ID', 'Fecha de nacimiento', 'Ocupación', 'Lugar de estudio o trabajo', 'Provincia', 'Cantón', 'Parroquia', 'Calle principal', 'Calle secundaria', 'Email', 'Teléfono'];
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('a,button') : null; if (!b || !campo('Calle secundaria') || !campo('Cédula / ID')) return;
+    if (!/^(Guardar estudiante|Guardar y matricular)/i.test(b.textContent.trim())) return;
+    var faltan = [];
+    OBLIG.forEach(function (n) {
+      var i = campo(n); if (!i) return;
+      var v = (i.value || '').trim(), mal = !v || /^Otra parroquia/.test(v);
+      if (n === 'Cédula / ID' && v && !/^\d{10}$/.test(v) && !/^[A-Za-z0-9]{6,}$/.test(v)) mal = true;
+      i.classList.toggle('is-invalid', mal); if (mal) faltan.push(n);
+    });
+    if (faltan.length) {
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      toast('Faltan datos obligatorios: ' + faltan.join(', '));
+      var f = document.querySelector('.is-invalid'); if (f) f.focus();
+    }
+  }, true);
+
+  function init() { estado(); credito(''); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 500);
 })();
