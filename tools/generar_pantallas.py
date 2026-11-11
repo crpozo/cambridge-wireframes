@@ -1411,6 +1411,35 @@ def calendario_curso(inicio="2027-02-01", dias=(1,2,3,4), hps="2", total="36"):
             +'<dl class="cal-out" aria-live="polite"><div><dt>Primera clase</dt><dd data-cal-first>—</dd></div><div><dt>Fin del curso</dt><dd data-cal-end>—</dd></div><div><dt>Sesiones</dt><dd data-cal-sessions>—</dd></div><div class="cal-skip"><dt>Feriados saltados</dt><dd data-cal-skipped>—</dd></div></dl></div>'
             +'<script src="assets/cursos.js"></script>')
 
+METODOS_PAGO=["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Nota de crédito","Pago en línea (link)","Otro (cheque, retención, cruce de cuentas, gift card)"]
+def _comp():
+    return field("Comprobante (PDF, JPG o PNG)","","file",None,True,"El que mandó el cliente por WhatsApp o el del historial de la plataforma")
+def pago_linea(n, metodo, monto, visible=True):
+    """Una línea de pago: el método define qué datos se piden y si se adjunta comprobante. Fecha de cierre de caja = día en que Contabilidad lo revisa."""
+    deps={
+     "Efectivo": form([("Recibo de caja","0432","text",None,False,"Automático"),("Entregado por","Camila Sánchez","text",None,False)],cols=2),
+     "Tarjeta de débito": form([("Datáfono","Datafast · Banco Pichincha","select",["Datafast · Banco Pichincha","Medianet · Produbanco"],True),("Lote","0193","text",None,True),("Número de autorización","209832","text",None,True,"Está en el voucher del datáfono")],cols=3)+_comp(),
+     "Tarjeta de crédito": form([("Datáfono","Datafast · Banco Pichincha","select",["Datafast · Banco Pichincha","Medianet · Produbanco"],True),("Lote","0193","text",None,True),("Número de autorización","209832","text",None,True,"Está en el voucher del datáfono"),("Tipo de pago","Corriente","select",["Corriente","Diferido 3 meses","Diferido 6 meses","Diferido 12 meses"],True)],cols=2)+_comp(),
+     "Depósito": form([("Banco","Banco Pichincha","select",["Banco Pichincha","Otro banco"],True),("Número de papeleta","55120","text",None,True),("Cuenta de destino","Cuenta de ahorros Cambridge · Quito","text",None,False,"Automático")],cols=3)+_comp(),
+     "Transferencia": form([("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],True,"Si es de otro banco, el número puede no coincidir con el del banco: se concilia por monto y fecha"),("Número de comprobante","928390","text",None,True,"Cópialo del comprobante que mandó el cliente"),("Cuenta de destino","Banco Pichincha · Quito","text",None,False,"Automático")],cols=3)+_comp(),
+     "Nota de crédito": form([("Nota de crédito a aplicar","NC-000000313 · $25.00 · vigente","select",["NC-000000313 · $25.00 · vigente","NC-000000311 · $250.00 · vigente"],True,"Vigencia de 12 meses desde su emisión"),("Número de la nota","NC-000000313","text",None,False,"Automático")],cols=2),
+     "Pago en línea (link)": form([("Código de autorización","209832","text",None,True,"Está en el historial de links de pago"),("Link de pago","LP-4471 · Datafast","text",None,False)],cols=2)+row(btn("Traer del historial de links",kind="ghost"))+_comp(),
+     "Otro (cheque, retención, cruce de cuentas, gift card)": form([("Tipo","Cheque","select",["Cheque","Retención","Cruce de cuentas","Gift card"],True),("Número del documento","000118","text",None,True)],cols=2)+_comp()}
+    head='<div class="pago-head"><b>Pago '+str(n)+'</b>'+('' if n==1 else '<button type="button" class="btn btn-ghost" data-pago-del>Quitar</button>')+'</div>'
+    comun=form([("Monto",monto,"number",None,True,"Lo que paga con este método"),("Fecha del pago","2026-10-23","date",None,True),("Fecha de cierre de caja","2026-10-23","date",None,True,"El día en que se cierra la caja; Contabilidad revisa el pago con esa fecha")],cols=3)
+    return '<div class="pago-line" data-pago-line'+('' if visible else ' hidden')+'>'+head+dep_select("Método de pago",METODOS_PAGO,metodo,deps)+comun+'</div>'
+def pagos_bloque(total):
+    t=float(total)
+    lineas=pago_linea(1,"Transferencia",f"{t:.2f}")+pago_linea(2,"Tarjeta de crédito","0.00",False)+pago_linea(3,"Efectivo","0.00",False)
+    tabla=table(["Método","Qué se registra","Comprobante adjunto"],[
+      ["Efectivo","recibo de caja (automático)","No"],["Tarjeta de débito","datáfono, lote y número de autorización del voucher","Sí · foto del voucher"],["Tarjeta de crédito","lo mismo, y si es corriente o diferido","Sí · foto del voucher"],
+      ["Depósito","banco y número de papeleta","Sí"],["Transferencia","banco de origen y número de comprobante","Sí · el del cliente"],["Nota de crédito","la nota que se aplica (vigencia de 12 meses)","No · queda ligada"],
+      ["Pago en línea (link)","código de autorización del historial de links","Sí · se trae del historial"],["Otro","tipo (cheque, retención, cruce de cuentas, gift card) y número","Sí"]],wide=0)
+    return ('<div data-pagos data-total="'+f"{t:.2f}"+'">'+lineas
+            +'<div class="pago-bar"><button type="button" class="btn btn-ghost" data-pago-add>Agregar otro método de pago</button><span class="pagos-sum" data-pagos-sum aria-live="polite"></span></div></div>'
+            +'<details class="policy"><summary>Qué se pide según el método</summary>'+tabla+kv(("Fecha de cierre de caja","cada pago lleva el día de cierre con el que Contabilidad lo revisa"),("Comprobantes","quedan adjuntos al pago y a la factura; no hace falta imprimirlos ni pegarlos en hojas"))+'</details>'
+            +'<script src="assets/pagos.js"></script>')
+
 def aprob_descuento(lid):
     """Bloque 'Aprobado por': aparece solo si el descuento lo exige (más del límite del asesor, hermanos o beneficios) y bloquea el guardado hasta registrarlo. JS: assets/descuentos.js"""
     return (f'<div class="appr" data-appr-for="{lid}" data-appr-required="0" hidden><div class="appr-head"><b>Aprobación del descuento</b><span data-appr-msg></span></div>'
@@ -1462,6 +1491,7 @@ ACTIONS.update({
  "Pedir excepción de fecha":("Se envía la solicitud a Coordinación Académica para inscribir con menos de 20 días de anticipación. No está garantizada: el cliente queda informado. Queda en Aprobaciones. "+AUDIT,None),
  "Enviar resumen al cliente":("Se envía por correo el resumen con datos, examen y fecha para que el cliente los verifique. No se imprime nada.",None),
  "Guardar pendiente de cédula":("El candidato queda 'Falta cédula': la factura y el pago ya están registrados, se pide el PDF y se reserva el cupo hasta el cierre de inscripción (20 días antes). Si no llega a tiempo se avisa a Coordinación. "+AUDIT,"ExamenesInternacionales.html"),
+ "Traer del historial de links":("Se abre el historial de links de pago, eliges el pago y se traen el código de autorización y el comprobante. No hay que descargar nada de la pasarela ni copiar números a mano.",None),
  "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -1755,13 +1785,8 @@ page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factur
    +'<h4 class="section-title">Valores y descuento</h4>'
    +_rm_ledger+disc_field("lgr",10)+aprob_descuento("lgr")+politica_descuentos()
    +kv(("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
-  +card("4 · Pago y comprobante",
-   form([("Método de pago","Transferencia","select",["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Pago en línea (link)","Nota de crédito"],True),
-         ("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],False,"Si es de otro banco el número del comprobante puede no coincidir con el del banco: se concilia por monto y fecha"),
-         ("Número de comprobante","884512","text",None,True),("Fecha del pago","2026-10-23","date",None,True),
-         ("Comprobante (PDF o foto)","","file",None,True,"El que mandó el estudiante por WhatsApp o correo")],cols=2)
-   +row(btn("Agregar pago",kind="ghost"))
-   +kv(("Conciliación","al guardar, la plataforma busca el ingreso en el extracto del banco; si coincide, el pago queda Validado sin que nadie lo digite"),("Más de un pago","se agregan los que haga falta: efectivo, tarjeta, transferencia…")))
+  +card("4 · Pago y comprobante",pagos_bloque("450.00")
+   +kv(("Conciliación","al guardar, la plataforma busca el ingreso en el extracto del banco; si coincide, el pago queda Validado sin que nadie lo digite")))
   +'</div>',
   card("Resumen",kv(("Estudiante","Camila Sánchez"),("Matrícula","001-202603262 · módulo 7"),("Bolsa","módulo 8 · pagado, sin curso"),("Total",'<span data-total-for="lgr">$450</span>'),("Estado al guardar",badge("Matriculada · facturada · pago por conciliar","warn")))
    +flow([("Se crea la matrícula","001-202603262 y cupo en 0001-2026-0772"),("Se emite la factura","servicios y productos por separado, firmada y enviada al SRI"),("Se registra el pago","con su comprobante adjunto"),("Se avisa al estudiante","correo con el comprobante y el enlace de clase"),("Si hay libro, se crea la entrega","pendiente de firma en la tablet")],horizontal=False)),
@@ -3169,7 +3194,7 @@ P_CAJA=(
 filters(sel("Caja",["Quito","Valle","Ambato"],w="140px",col=False),dates("Día","2026-10-19","2026-10-19"))
    +two(card("Cobros por método", table(["Método","Pagos","Monto"],[["Efectivo","6","$640.00"],["Tarjeta de crédito","3","$870.00"],["Transferencia","5","$1,420.00"],["Depósito","1","$230.00"],["Total del día","15","$3,160.00"]])),
         card("Recibos del día", table(["Recibo","Estudiante","Monto","Acción"],[["0431","Martín Ortega","$230.00",btn("Imprimir recibo")],["0430","Camila Sánchez","$475.00",btn("Imprimir recibo")],["0429","Sofía Herrera","$250.00",btn("Imprimir recibo")]])))
-   +row(btn("Cerrar caja",None,True),btn("Exportar")))
+   +kv(("Fecha de cierre de caja","cada pago lleva el día de cierre con el que Contabilidad lo revisa; los comprobantes quedan adjuntos al pago"))+row(btn("Cerrar caja",None,True),btn("Exportar")))
 P_REMAT=(
 table(["Estudiante","Siguiente curso","Solicitada","Monto","Pago","Acción"],[[c2('<a href="Ficha360.html">Sofía Herrera</a>',"desde el portal · 12 oct"),c2("ESL · Virtual · Grupal · B1 módulo 7","inicia 3 nov"),"12 oct","$250.00",badge("Transferencia reportada","warn"),row(btn("Confirmar pago",None,True),btn("Ver ficha","Ficha360.html"),gap=8)],[c2('<a href="Ficha360.html">Daniela Ríos</a>',"desde el portal · 11 oct · terminó B1+"),c2("ESL · Presencial · Grupal · B2 módulo 11","inicia 9 ene"),"11 oct","$275.00",badge("Sin pago aún","bad"),row(btn("Enviar recordatorio"),btn("Ver ficha","Ficha360.html"),gap=8)],[c2('<a href="Ficha360.html">Martín Ortega</a>',"desde el portal · 10 oct"),c2("Teens · Virtual · Grupal · A2 módulo 3","inicia 3 nov"),"10 oct","$230.00",badge("Pagado en caja","ok"),row(btn("Confirmar pago",None,True),gap=8)]],wide=0)+kv(("Cómo funciona","el estudiante se rematricula desde el portal cuando el Muro marca avance total y nota ≥ 7; queda 'Pendiente de pago' y Secretaría solo confirma el pago")))
 P_NOTAS=(
@@ -3438,7 +3463,7 @@ page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual"
 # 36 Registrar pago
 page("RegistrarPago.html","Registrar pago",shell("Registrar pago","Facturación",
  hero([("Estudiante",'<a href="Ficha360.html">Camila Sánchez</a>'),("Factura",'<a href="DetalleFactura.html">000021094</a>'),("Venta","A2–B1 · Ambato"),("Total","$950.00"),("Pagado","$475.00"),("Saldo","$475.00"),("Crédito","Sí · 30 días"),("Vence","11 nov 2026")],tag='<span class="hero-code">000021094</span>'+badge("Parcial","warn")),
- form(title="Nuevo pago", fields=[("Monto","475.00",'number',None,True,"Saldo pendiente $475.00"),("Fecha de pago","",'date',None,True),("Método","Transferencia",'select',["Transferencia","Efectivo","Tarjeta","Depósito"],True),("Referencia / comprobante","Banco Pichincha · ref. 902211"),"Comprobante (archivo)","Observación"]),
+ card("Pagos de esta factura",pagos_bloque("475.00"),extra=badge("Saldo $475.00","warn")),
  card("Resultado", flow(["Pago registrado","Cubre el saldo → Pagada","Parcial → Pendiente con nuevo saldo","Notificación al asesor"])),
  foot(btn("Registrar pago",None,True,"Se registra el pago, se actualiza el estado de cobro y queda en el audit log.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Estado de cobro por factura, no por módulo"),"Registrar pago")
@@ -4076,6 +4101,11 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}
+/* pagos con varios métodos */
+.pago-line{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.pago-line[hidden]{display:none}.pago-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:var(--t-14)}
+.pago-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.pagos-sum{font-size:var(--t-14);font-weight:600;color:var(--mute)}.pagos-sum.is-ok{color:var(--ok)}.pagos-sum.is-warn{color:var(--warn)}.pagos-sum.is-bad{color:var(--bad)}
 /* inscripción a exámenes: documento obligatorio */
 .doc-req{display:flex;flex-direction:column;gap:10px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r);background:var(--bad-50)}
 .doc-req.is-ok{border-left-color:var(--ok);background:var(--ok-50)}.doc-req.is-missing{box-shadow:0 0 0 2px var(--bad)}

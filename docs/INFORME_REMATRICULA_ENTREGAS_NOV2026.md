@@ -315,3 +315,24 @@ Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fe
 
 ## 17. Corrección: los libros no tienen código de barras (10 nov)
 Se retiró todo lo relacionado con escanear libros: el campo y botón de escáner de la **entrega** (ahora se busca la entrega por nombre, cédula o matrícula del estudiante, o se elige de la lista de pendientes) y el escáner de la **recepción de pedidos** (ahora el conteo es manual con botones **+** y **−** y un botón "Marcar todo como recibido"). También se corrigieron las referencias en este informe, en `docs/PANTALLAS.md` y en `CLAUDE.md`. No se reintroducirá un escáner salvo que el cliente lo pida.
+
+
+## 18. Métodos de pago y registro de comprobantes (revisión de 10 nov)
+**Lo que dijo Secretaría**: los métodos más comunes son efectivo, tarjeta de débito, tarjeta de crédito, depósito, transferencia, nota de crédito y pago en línea (links generados en la plataforma). Para transferencias y links hay que bajar el comprobante del WhatsApp o del historial de la plataforma, anexarlo, ingresar el número de autorización o de comprobante y la fecha de cierre de caja para que Contabilidad revise. Hoy el sistema solo permite dos métodos de pago por factura.
+
+**Qué había en `main`**: `RegistrarPago.html` con un formulario único (monto, fecha, método entre cuatro opciones, un campo de referencia y un adjunto de texto). La matrícula tenía una lista de métodos más larga, pero sin datos por método. **Faltaba** que cada método pidiera lo suyo, adjuntar el comprobante, la fecha de cierre de caja y permitir más de un método por pago.
+
+**Qué se agregó al prototipo** (en Registrar pago y en Matrícula y factura)
+- **Ocho métodos**: efectivo, tarjeta de débito, tarjeta de crédito, depósito, transferencia, nota de crédito, pago en línea (link) y "Otro" (cheque, retención, cruce de cuentas, gift card, que el contrato también menciona).
+- **Cada método pide sus datos**: efectivo, recibo de caja; tarjetas, datáfono, lote, número de autorización y si es corriente o diferido; depósito, banco y papeleta; transferencia, banco de origen (con aviso de las interbancarias) y número de comprobante; nota de crédito, cuál se aplica (vigencia de 12 meses); link, código de autorización con "Traer del historial de links".
+- **Comprobante adjunto** (PDF, JPG o PNG) en todos los métodos que lo necesitan, y **fecha de cierre de caja** en cada pago.
+- **Varios métodos por factura**: se agregan y quitan líneas de pago; una barra verifica la suma (cuadra, faltan o sobran) y deja saldo pendiente si falta. Ya no hay límite de dos.
+- Una guía desplegable "Qué se pide según el método" y, en Caja del día, la nota de que cada pago lleva su fecha de cierre y comprobante adjunto.
+
+**Viabilidad**: **viable y dentro del alcance** (M5: "método de pago y estado de cobro"). La conciliación automática con el banco está en la sección 4 (importar el extracto).
+
+**Por confirmar con el cliente**
+- **"Traer del historial de links"**: el historial vive en la pasarela de pagos (Datafast o Nuvei). Traerlo automáticamente requiere una integración que no está en el contrato (punto 11 del contexto: verificación con Nuvei); sin ella el número se sigue copiando a mano. En el prototipo es una demostración.
+- La lista final de métodos y qué datos exige cada uno (por ejemplo, si se necesita el nombre del titular de la tarjeta).
+- Si el **cierre de caja** debe ser un documento digital firmado: hoy Secretaría imprime y entrega la lista de pagos a Contabilidad. Hacerlo digital queda como siguiente mejora.
+- Los plazos de diferido y los datáfonos de ejemplo son supuestos.
