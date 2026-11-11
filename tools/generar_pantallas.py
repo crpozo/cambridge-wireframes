@@ -1396,7 +1396,8 @@ def origen_fields(origen="Instagram", canal="Meta Ads · Instagram", como="Facha
     pag=origen in ORIGENES_PAGADOS; wk=origen=="Walk in"
     return (f'<div class="field"><label for="{a}">Origen del lead{em}</label><select id="{a}" class="ctl"{rq} data-origen="{b},{c}">{oo}</select><small class="field-hint">Mismo catálogo en Kommo y en la plataforma; se conserva al pasar a Ganado</small></div>'
             f'<div class="field" data-origen-pauta{"" if pag else " hidden"}><label for="{b}">Canal de la estrategia pagada{em}</label><select id="{b}" class="ctl">{co}</select><small class="field-hint">Para pauta: de qué canal llegó exactamente</small></div>'
-            f'<div class="field" data-origen-walkin{"" if wk else " hidden"}><label for="{c}">¿Cómo nos conoció? (walk-in){em}</label><select id="{c}" class="ctl">{wo}</select><small class="field-hint">Si el lead entró solo como Walk-in, el asesor lo completa a mano</small></div>')
+            f'<div class="field" data-origen-walkin{"" if wk else " hidden"}><label for="{c}">¿Cómo nos conoció? (walk-in){em}</label><select id="{c}" class="ctl">{wo}</select><small class="field-hint">Si el lead entró solo como Walk-in, el asesor lo completa a mano</small></div>'
+            +dep_select("¿Es referido?",["No","Sí"],"No",{"Sí": field("Referido por","",'text',None,True,"Nombre o cédula del estudiante o exalumno que lo recomendó; se usa para el descuento por referido y el reporte de referidos")},req=False,hint="Márcalo aunque el lead haya entrado como Walk in o por WhatsApp"))
 def pills(items, on=0, multi=False, sede=False):
     """sede=True: las pastillas controlan el selector de sede global (una, varias combinadas o 'Consolidado' = Todas); las cifras sv() se suman."""
     out="".join(f'<button type="button" class="pill{" on" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else ""}" aria-pressed="{"true" if (i in on if isinstance(on,(list,tuple,set)) else i==on) else "false"}">{t}</button>' for i,t in enumerate(items))
@@ -1495,6 +1496,7 @@ ACTIONS.update({
  "Recordar al profesor":("Se envía un recordatorio al profesor para cerrar las notas del módulo. Sin notas cerradas no se puede rematricular a nadie del curso.",None),
  "Guardar reglas de rematrícula":("Las reglas de la rematrícula se guardan y se aplican desde el próximo cierre de notas. "+AUDIT,None),
  "Matricular y facturar":("Se crea la matrícula 001-202603262 en el siguiente curso, se emite la factura con servicios educativos y materiales por separado (el módulo pagado por adelantado queda ligado a la bolsa) y se registra el pago con su comprobante. Si es transferencia queda 'Por conciliar' hasta que el extracto del banco la confirme. "+AUDIT,"DetalleFactura.html"),
+ "Enviar enlace de compra con aceptación":("Se envía al estudiante por correo un enlace de compra con la casilla de aceptación de términos, política de no reembolso y datos ya marcada (puede desmarcarla). Al aceptar se guarda fecha, hora y dispositivo y le llega el comprobante. Requerimiento: falta la validación del equipo legal.",None),
  "Agregar pago":("Se agrega otra línea de pago (p. ej. parte en efectivo y parte con transferencia) con su comprobante.",None),
  "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
  "Volver a generar ítems":("Se vuelven a leer los datos de la matrícula (módulos, descuento y material del nivel) y se recalculan los ítems de la factura. Los ítems que agregaste a mano se conservan.",None),
@@ -1862,43 +1864,40 @@ P_CONC=(
 # ===== Tablero comercial · pestaña "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
 # Tarjetas, líneas para evolución, barras para comparar, circulares para %, embudo de Kommo y matriz exportable. Cifras ficticias de ejemplo.
 def tablero_plan():
-    meses=["Jun","Jul","Ago","Sep","Oct"]
-    tarjetas1=kpis([("Ingreso total",sv("$21,940","$12,640","$5,420","$3,880","$2,310"),"octubre · todos los conceptos"),("Matrículas",sv(42,24,11,7,6),"nuevas, reingresos y continuidad"),("Niveles vendidos",sv(38,21,9,8,7),"1 nivel = 2 módulos"),
-                    ("Ticket promedio",sv("$522","$527","$493","$554","$385"),"ingreso total / matrículas"),("One to one vendidos",sv(7,4,2,1,1),"programas de horas"),("Cumplimiento de la meta",sv("93%","98%","86%","88%","85%"),"meta: mismo mes 2025 + 15%")])
-    tarjetas2=kpis([("Certificados vendidos",sv(14,8,3,3,2),"exámenes internacionales"),("Traducciones vendidas",sv(3,1,1,1,0),"las registra Secretaría"),("Total de servicios",sv(17,9,4,4,2),"certificados + traducciones"),
-                    ("Ticket de servicios",sv("$118","$124","$109","$112","$98"),"servicios / servicios vendidos"),("Variación vs 2025",sv("+5%","+14%","-15%","+17%","+9%"),"matrículas, mismo período")])
-    lineas=two(card("Ingresos mensuales · 2026 frente a 2025 (miles de USD)",linechart(meses,{"2026":[17.9,19.4,18.2,20.6,21.9],"2025":[16.8,18.0,17.6,19.1,20.8]})),
-               card("Matrículas mensuales · 2026 frente a 2025",linechart(meses,{"2026":[36,39,37,41,42],"2025":[35,38,36,40,40]})))
-    lineas2=two(card("Resultado real frente a la meta proyectada (miles de USD)",linechart(meses,{"Real":[17.9,19.4,18.2,20.6,21.9],"Meta (2025 + 15%)":[19.3,20.7,20.2,22.0,23.9]})),
-                card("Ticket promedio mensual (USD)",areachart(meses,[497,497,492,502,522],unit="")))
-    lineas3=card("Evolución de la conversión y la deserción (%)",linechart(meses,{"Conversión lead → matrícula":[15.2,16.0,16.4,16.9,16.8],"Deserción mensual":[9.1,8.4,8.8,8.0,7.6]})
-        +kv(("Conversión","matrículas ganadas / leads recibidos en el mes (Kommo)"),("Deserción",badge("Requerimiento · definición por confirmar")+'<small> · propuesta: estudiantes que terminan un módulo y no se rematriculan en 30 días</small>')))
-    barras1=two(card("Ingresos por sede (USD)",hbars([("Quito",12640),("Valle",5420),("Ambato",3880),("Cuenca · reporte aparte",2310)],unit="$")),
-                card("Ingresos por línea de negocio (USD)",hbars([("Servicios educativos",16760),("Materiales",2390),("Inscripción",1240),("Exámenes internacionales",1120),("Traducciones",260),("Mercadería",170)],unit="$")))
-    barras2=two(card("Servicios educativos por programa (USD)",hbars([("Adults",8020),("Teens",3490),("Kids",2630),("Business",1560),("Tailored",1060)],unit="$")),
-                card("Certificaciones, traducciones y servicios vendidos",hbars([("Certificaciones (exámenes)",14),("Simuladores",5),("Traducciones",3),("Cursos de español",2)])))
-    asesor=card("Resultado por asesor",table(["Asesor","Sede","Matrículas","Facturación","Conversión","Referidos","Upsell"],[
-        ["Carla M.","Quito","14","$7,420","21%","4","36%"],["Andrea S.","Quito","6","$3,350","17%","2","28%"],["Luis P.","Quito","4","$1,870","12%","1","20%"],
-        ["Diego R.","Valle","11","$5,420","14%","3","25%"],["Sofía L.","Ambato","7","$3,880","18%","2","33%"],["Ana P.","Cuenca","6","$2,310","12%","1","20%"]],sede=1,wide=0)
-        +kv(("Upsell","% de ventas del asesor que incluyen un servicio adicional: examen, tutorías, simulador o niveles extra"),("Quién ve qué","cada asesor ve su propio reporte; Dirección Comercial ve el consolidado de Quito, Valle y Ambato")))
-    origen=two(card("Matrículas por origen del lead",hbars([("Instagram · Meta Ads",14),("Referencia / Referido",9),("Walk in",6),("Exalumno",4),("Convenios empresariales",3),("Contacto Web",3)])),
-               card("Conversión por canal (%)",hbars([("Referencia / Referido",38),("Walk in",31),("Exalumno",29),("Convenios empresariales",25),("Instagram · Meta Ads",16),("Test Online",11),("TikTok",6)])))
-    circ=card("Participación sobre el total de matrículas",
-        row(gauge(64,"Estudiantes en planes de nivel",color=CH[0]),gauge(21,"Matrículas por referidos",color=CH[2]),gauge(89,"Leads atendidos",color=CH[3]),gap=32)
-        +'<h4 class="section-title">Ventas one to one frente a programas regulares</h4>'+stacked([("Regulares (grupal)",78),("One to one",22)])
-        +'<h4 class="section-title">Distribución de matrículas por programa</h4>'+stacked([("Adults",46),("Teens",24),("Kids",20),("Otros",10)])
-        +'<h4 class="section-title">Upsell por asesor</h4>'+hbars([("Carla M.",36),("Sofía L.",33),("Andrea S.",28),("Diego R.",25),("Luis P.",20),("Ana P.",20)]))
-    embudo=card("Embudo comercial · fuente: Kommo",funnel([("Leads recibidos",310),("Asignados y atendidos por asesores",276),("Cotizados",120),("Ganados · matrícula",52)])
-        +kv(("En prospección","34 leads"),("Perdidos","31 leads · precio y horario, las causas más comunes"),("Conversión total lead → matrícula","16.8%"))
+    """Plan estratégico: todo se recalcula en el navegador (assets/plan.js) con los filtros; los datos de ejemplo son ficticios (tools/plan_datos.py)."""
+    import json as _j, sys as _s
+    _s.path.insert(0, os.path.join(ROOT, "tools"))
+    import plan_datos
+    datos=plan_datos.build(ORIGENES, WALKIN_COMO)
+    blob=_j.dumps({"S":datos["S"],"L":datos["L"],"D":datos["D"],"dim":datos["dim"]},ensure_ascii=False,separators=(",",":"))
+    per=["Este mes","Hoy","Ayer","Esta semana","Mes anterior","Este trimestre","Trimestre anterior","Este año"]
+    def pf(key,label,opts,w="170px"):
+        return f'<label class="field" style="width:{w}">{label}<select class="ctl" data-pf="{key}">'+"".join(f"<option>{o}</option>" for o in opts)+'</select></label>'
+    barra=('<div class="filters plan-filters" aria-label="Filtros del plan estratégico">'
+      +pf("periodo","Período",per)
+      +'<label class="field" style="width:170px">Día específico<input type="date" class="ctl" data-pf="dia" min="2025-06-01" max="2026-10-23"></label>'
+      +pf("ase","Asesor",["Todos"]+plan_datos.ASES,"150px")
+      +pf("prog","Programa",["Todos"]+plan_datos.PROGS,"150px")
+      +pf("prod","Producto o servicio",["Todos"]+plan_datos.PROD,"180px")
+      +pf("orig","Origen del lead",["Todos"]+ORIGENES,"200px")
+      +pf("walk","Clasificación de walk-in",["Todas"]+WALKIN_COMO,"210px")
+      +'<div class="filters-actions"><button type="button" class="btn btn-ghost" data-pf-reset>Limpiar filtros</button>'+btn("Exportar Excel")+'</div></div>')
+    ctx='<p class="plan-ctx" data-plan-ctx aria-live="polite"></p>'
+    etbl=('<div class="plan-tools"><label class="field" style="width:200px">Agrupar por<select class="ctl" data-pf="egrupo"><option>Sede</option><option>Asesor</option><option>Canal</option><option>Mes</option></select></label></div>'
+          '<div class="tbl-wrap" data-plan-etbl><div class="wf-table tbl" data-cols="[]"></div></div>')
+    embudo=card("Embudo comercial · fuente: Kommo",'<div data-plan-out="embudo"></div>'+etbl
         +kv(("Qué se trae de Kommo","solo los totales por etapa, período, sede, asesor y canal; el lead individual pasa a la plataforma al ganarse, con origen, asesor, programa, sede, fecha y valor"),("Etapas","se conservan todas las del proceso de Kommo")),
         extra=badge("Depende de la API de Kommo","warn"))
-    matriz=card("Matriz consultable y exportable",filters(search("Buscar","Asesor, programa o canal",w="240px"),sel("Sede",["Todas","Quito","Valle","Ambato"],w="130px",col="Sede"),sel("Asesor",["Todos","Carla M.","Andrea S.","Diego R.","Sofía L."],w="140px",col="Asesor"),sel("Canal",["Todos","Instagram","Referido","Walk in","Convenios"],w="150px",col="Canal"),actions=btn("Exportar Excel"))
-        +table(["Sede","Asesor","Programa · producto","Canal","Matrículas","Facturación","Conversión"],[
-          ["Quito","Carla M.",c2("Adults","niveles · virtual"),"Instagram","6","$3,120","22%"],["Quito","Carla M.",c2("Adults","one to one"),"Referido","3","$1,980","38%"],["Quito","Andrea S.",c2("Teens","niveles · presencial"),"Walk in","4","$2,010","31%"],
-          ["Valle","Diego R.",c2("Kids","niveles · presencial"),"Referido","5","$2,150","36%"],["Valle","Diego R.",c2("Adults","certificación · examen"),"Instagram","3","$1,020","14%"],["Ambato","Sofía L.",c2("Business","convenio empresarial"),"Convenios","4","$2,400","25%"],
-          ["Ambato","Sofía L.",c2("Adults","niveles · virtual"),"Instagram","3","$1,480","16%"],["Quito","Luis P.",c2("Kids","niveles · presencial"),"Walk in","2","$990","12%"]],wide=2)
-        +kv(("Filtros de todo el panel","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in")))
-    return (card("Indicadores principales",tarjetas1+tarjetas2,extra=badge("Octubre 2026","navy"))+lineas+lineas2+lineas3+barras1+barras2+asesor+origen+circ+embudo+matriz)
+    dims="".join(f'<label class="chk-inline"><input type="checkbox" class="chk" data-mdim="{i}"{" checked" if i<2 else ""}> {n}</label>' for i,n in enumerate(["Sede","Asesor","Programa","Producto","Canal"]))
+    matriz=card("Matriz consultable y exportable",
+        '<div class="plan-tools"><div class="plan-dims" role="group" aria-label="Agrupar la matriz por"><span class="k">Agrupar por</span>'+dims+'</div>'
+        '<label class="field" style="width:260px">Buscar en la matriz<input type="search" class="ctl" data-pf-mbus placeholder="Asesor, programa o canal"></label></div>'
+        '<div class="tbl-wrap" data-plan-mtbl><div class="wf-table tbl" data-cols="[]"></div></div>'
+        '<p class="plan-nota" data-plan-minfo></p>'
+        +kv(("Filtros","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in"),("Exportar","descarga en Excel lo que ves, con el gráfico y la tabla")),
+        extra=badge("Se recalcula con los filtros","navy"))
+    return ('<div data-plan>'+barra+ctx+'<div data-plan-out="todo"></div><div class="plan-sec">'+embudo+matriz+'</div>'
+            +'<script id="plan-data" type="application/json">'+blob+'</script><script src="assets/plan.js"></script></div>')
 
 
 # 1 Login
@@ -2212,7 +2211,7 @@ ficha=shell("María Andrade","Estudiantes",
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Sector</b>Quito Norte · La Carolina (ubicada en el mapa)</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
     <div class="section"><h3>Logros y certificados</h3><div class="awards"><div><i></i>Certificado A1 · dic 2025</div><div><i></i>Certificado A2 · jun 2026 · nota 85</div><div><i></i>Asistencia perfecta · módulo 5</div><div><i></i>Mejor progreso del grupo · módulo 6</div><div><i></i>Referido: trajo a 1 estudiante</div></div></div>
-    <div class="actions">{btn("Nueva matrícula",None,True)}<a href="PortalEstudiante.html" class="btn" title="Ver como estudiante" aria-label="Ver como estudiante" style="flex:0 0 46px">{ico("user")}</a><a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a></div></div></aside>
+    <div class="actions">{btn("Nueva matrícula",None,True)}<a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div class="grid" style="grid-template-columns:1.25fr 1fr">
       {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip" style="background:var(--tint-navy)"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip" style="background:var(--tint-red)"><b>1 h</b>Club de conversación</span><span class="chip" style="background:var(--tint-sky)"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
@@ -2224,7 +2223,7 @@ ficha=shell("María Andrade","Estudiantes",
 </div>''',
  tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
   "Datos": two(card("Datos personales", form([("Nombres","María"),("Apellidos","Andrade"),("Cédula / ID","1712345678"),"Fecha de nacimiento",("Email","maria.andrade@ejemplo.com",'email'),("Teléfono","099 000 0001",'tel'),"@@DIR@@","Sede"])),
-               card("Comercial y origen", form(["Asesor asignado","Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
+               card("Comercial y origen", form(["Asesor asignado",("Canal de contacto (editable)","Walk in","select",ORIGENES,True,"Si entró como Walk in pero era un referido, se corrige aquí"),"Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+'<p class="plan-nota" data-canal-log hidden></p><script src="assets/matricula.js"></script>'+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
   "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],hide=(0,2,4,5),wide=1,rows=[
      ["001-202602794",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Virtual · Grupal · B1</a>',"001-202602794 · 0001-2026-0767 · módulo 7 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$305","$305","$0","90%","—",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202601245",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Presencial · Grupal · A2</a>',"001-202601245 · 0001-2026-0620 · módulo 4 · Lu-Mi 14:00–16:00"),"Lu-Mi 14:00–16:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
@@ -2275,7 +2274,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
       "Examen internacional": field("Cédula escaneada","",'file',None,True,"Para el registro con el centro examinador")+field("Fecha de nacimiento","2001-05-14",'date',None,True)+field("Correo del candidato","nombre@ejemplo.com",'email',None,True,"Recibe la confirmación y los horarios del examen"),
       "Solo facturación (simuladores, traducciones, otros servicios)": field("Servicio","Simulador (Mock Test) · B2",'select',["Simulador (Mock Test) · B2","Traducción · por página","Mercadería","Otro servicio"],True,"No crea ficha de estudiante: solo factura")},hint="Define qué datos se piden en los pasos siguientes")
    +field("Estudiante","María Andrade · CED 1712345678","text",None,True,"Busca por cédula, pasaporte o nombre")+field("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True,"Obligatorio: recibe el contrato, el enlace de clase y los recordatorios")
-   +field("Clasificación","Continuidad","select",["Nueva","Reingreso (exestudiante)","Continuidad"],True,"Se sugiere sola; puede corregirse")+field("Oportunidad Kommo","KM-48213 · contacto: madre","text",None,False,"El contacto puede no ser el estudiante")
+   +field("Clasificación","Continuidad","select",["Nueva","Reingreso (exestudiante)","Continuidad"],True,"Se sugiere sola; puede corregirse")+field("Tiempo sin matrícula","1 mes","select",["Sin historial (primera vez)","1 mes","2 meses","3 meses","4 a 5 meses","6 meses o más"],False,"Activo hasta 2 meses; inactivo de 3 a 5; nuevo desde 6")+field("Oportunidad Kommo","KM-48213 · contacto: madre","text",None,False,"El contacto puede no ser el estudiante")
    +field("Asesor (vendor)","Carla M.","select",["Carla M.","Diego R.","Andrea S.","Luis P."],True)+origen_fields()
    +dep_select("¿Menor de 18 años?",["No","Sí"],"No",{"Sí": field("Representante · nombre","",'text',None,True)+field("Representante · teléfono","099 000 0000",'tel',None,True)+field("Representante · correo","nombre@ejemplo.com",'email',None,True,"Recibe el contrato para aceptarlo y los recordatorios de cuotas")},req=False,hint="Se calcula desde la fecha de nacimiento; si es menor, firma el representante")
    +field("¿Indexado?","No","select",["No","Sí · entra al curso de indexados con 100% de descuento (regular ≥ 48 h · urgente < 24 h con autorización)"],False,"Como el campo Indexed? de TeamDesk")
@@ -2283,12 +2282,12 @@ venta=shell("Nueva matrícula","Nueva matrícula",
       "Alianza · paga el estudiante con el descuento de la alianza": field("Alianza","Banco del Valle · 10%",'select',["Banco del Valle · 10%","Colegio Los Andes · 20% (Kids y Teens)"],True,"Factura normal al estudiante con el descuento"),
       "Convenio · paga la empresa": field("Convenio","Grupo Nova · 15% · crédito 30 días",'select',["Grupo Nova · 15% · crédito 30 días","Clínica Santa Fe · 10% · crédito 30 días"],True,"Factura al estudiante en $0 (validar con el contador) y factura global a la empresa a crédito; Secretaría concilia el cobro")},req=False,hint="Alianza y convenio no se mezclan")
    +field("Sede","Quito","text",None,False,"Automático")+'</div>'
-   +row(btn("Buscar estudiante"),btn("Nuevo estudiante","NuevoEstudiante.html",kind="ghost")),"Viene del lead de Kommo o de la búsqueda; si ya existe se reutiliza su ficha"),
+   +'<p class="plan-nota" data-estado-out aria-live="polite"></p>'+row(btn("Buscar estudiante"),btn("Nuevo estudiante","NuevoEstudiante.html",kind="ghost")),"Viene del lead de Kommo o de la búsqueda; si ya existe se reutiliza su ficha"),
   ("Programa y cursos", '<div class="form-grid cols-3">'+field("Programa","English for Adults","select",PROGRAMAS,True)
    +dep_select("Qué compra",["Módulos (grupal)","Horas (one to one o personalizado)"],"Módulos (grupal)",{
       "Módulos (grupal)": field("Desde el módulo","7 · B1","select",[f"{n} · {lv}" for n,lv in [(1,"A1"),(2,"A1"),(3,"A2"),(4,"A2"),(5,"A2+"),(6,"A2+"),(7,"B1"),(8,"B1"),(9,"B1+"),(10,"B1+"),(11,"B2"),(12,"B2"),(13,"C1"),(14,"C1")]],True,"Puede empezar en un módulo par, por ejemplo el 8")+field("Cantidad de módulos","4","number",None,True,"7 niveles = 14 módulos; no se obliga a vender en pares"),
       "Horas (one to one o personalizado)": field("Cantidad de horas","20","number",None,True,"Se liquidan por hora dictada")+field("Tipo de clase","One to one","select",["One to one","One to one reducido","One to one Business","Personalizado (grupo cerrado)"],True)},hint="N módulos desde el módulo X, o N horas")
-   +'</div>'+kv(("Lo que compra",'<b>4 módulos desde el 7</b> · 7, 8, 9 y 10 (B1 y B1+)'),("Se matricula ahora","módulos 7 y 8 · 0001-2026-0767"),("Quedan en la bolsa","módulos 9 y 10 · pagados, sin curso todavía · visibles para Secretaría"))
+   +field("Nivel de ingreso (editable)","B1","select",["A1","A2","A2+","B1","B1+","B2","C1"],True,"Lo sugiere el test; edítalo si no hay horario exacto para ese nivel, por ejemplo en B2")+field("Horario (editable)","Lu-Ma-Mi-Ju 19:00–21:00","select",["Lu-Ma-Mi-Ju 19:00–21:00","Lu-Ma-Mi-Ju 07:00–09:00","Sábados 09:00–13:00","Otro horario · se acuerda con Académico"],True,"Puedes cambiarlo mientras matriculas; el curso se elige abajo")+'</div>'+kv(("Lo que compra",'<b>4 módulos desde el 7</b> · 7, 8, 9 y 10 (B1 y B1+)'),("Se matricula ahora","módulos 7 y 8 · 0001-2026-0767"),("Quedan en la bolsa","módulos 9 y 10 · pagados, sin curso todavía · visibles para Secretaría"))
    +form([("Curso para el módulo 7","En curso · 0001-2026-0767 · Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · inició 1/09/2026 · P. Gómez · 12/15","select",["En curso · 0001-2026-0767 · Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · inició 1/09/2026 · P. Gómez · 12/15","Por abrir · 0001-2026-0983 · Virtual · QUITO INDEXADO · Lu-Ma-Mi-Ju 07:00–09:00 · inicia 26/10/2026","Por abrir · 0001-2026-0985 · Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · inicia 9/11/2026 · L. Vega","Por abrir · 0001-2026-1005 · Presencial Quito · Sa 09:00–13:00 · inicia 9/11/2026 · S. Jiménez","Por abrir · 0001-2026-0772 · Virtual Valle · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026","LLENO · 0001-2026-0990 · Virtual · Lu-Ma-Mi-Ju 19:00–21:00 · 15/15 · bloqueado, no se puede matricular"],True,"Estado · código · modalidad · horario · inicio · profesor · cupo. El cupo se define al crear el grupo según el aula; al llenarse se bloquea. En virtuales compartidos el cupo suma todas las sedes")],cols=3)
    +mods+row(addmod_btn(),more_menu(btn("Agregar a lista de espera"),"Más")),
    "Una matrícula por módulo. Solo aparecen cursos del programa y módulo elegidos, con cupo y sin choque de horario"),
@@ -2301,7 +2300,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
    form([("Facturar a","María Andrade · CED 1712345678","select",["María Andrade · CED 1712345678","Consumidor final","Grupo Nova · RUC 1790012345001","Clínica Santa Fe · RUC 1790055555001","Otro cliente…"],True),("Identificación","Cédula","select",["Cédula","RUC","Pasaporte"],True),
          ("RUC especial","No","select",["No","Sí · verificado en el SRI"],False,"Solo si verificaste el RUC en el SRI"),("Plan de pago","2 cuotas · cada 30 días","select",["Contado","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días"],True),
          ("Crédito","Sí · 30 días","text",None,False,"Automático"),("Actualizar datos de facturación en la ficha","No","select",["No","Sí · reemplazar en la ficha del estudiante"],False)],cols=3)
-   +card("Ítems de la factura · todos con su código", table(["Ítem","Cant.","Valor"],[
+   +card("Datos de la factura",'<div class="form-grid cols-3">'+field("Nombre o razón social","",'text',None,True)+field("Número de identificación","",'text',None,True)+field("Correo para la factura","",'email',None,True)+field("Dirección","",'text',None,False)+field("Teléfono de la factura","",'tel',None,False)+'</div>'+row('<button type="button" class="btn" data-copy-est>Usar los datos del estudiante</button>')+'<p class="plan-nota" data-copy-out>Un clic copia nombre, identificación, correo, dirección y teléfono de la ficha; no hay que volver a escribirlos.</p>')+card("Aceptación de términos y condiciones",'<label class="check"><input type="checkbox" data-acepta><span><b>El estudiante acepta los términos, la política de no reembolso y el tratamiento de sus datos</b><small>Como en una compra en línea: el estudiante marca la casilla y recibe el comprobante por correo</small></span></label>'+'<p class="plan-nota" data-acepta-out>Sin aceptación: no se puede confirmar la matrícula por canales digitales</p>'+kv(("Registro","fecha, hora, enlace y correo quedan guardados con la matrícula"),("Validación legal",badge("Requerimiento · por consultar con el equipo legal")))+row(btn("Enviar enlace de compra con aceptación",kind="ghost")))+card("Ítems de la factura · todos con su código", table(["Ítem","Cant.","Valor"],[
       [c2("Módulo 7 · B1","SRV-MOD-07 · course fee · virtual"),"1","$250.00"],[c2("Módulo 8 · B1","SRV-MOD-08 · course fee · virtual"),"1","$250.00"],
       [c2("Módulo 9 · B1+","SRV-MOD-09 · pagado por adelantado · bolsa"),"1","$250.00"],[c2("Módulo 10 · B1+","SRV-MOD-10 · pagado por adelantado · bolsa"),"1","$250.00"],
       [c2("Empower B1 Combo A","1141 · material del primer nivel · físico"),"1","$80.00"],[c2("Horas extra de nivelación · one to one","SRV-1TO1-H · opcional"),"0","$0.00"],[c2("Tomatodo Cambridge","1999 · merch · descuenta inventario"),"0","$0.00"]],wide=0)
@@ -2317,6 +2316,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
   ("Confirmación", review+'<h4 class="section-title">Qué pasa al confirmar</h4>'
    +flow([("Se crean 2 matrículas y 2 módulos quedan en la bolsa","001-202602794 y 001-202602795 (módulos 7 y 8); los módulos 9 y 10 quedan pagados sin curso, visibles para Secretaría"),("Se emite 1 factura con todos los ítems","módulos, material y lo demás, cada uno con su código; firmada y enviada al SRI"),("Las cuotas pasan a la cartera","cuota 2 de $490 vence el 27 sep · recordatorios automáticos con copia al asesor"),("Se crea la entrega digital del libro","Empower B1 Combo A (primer nivel) · queda pendiente de firma en la tablet; no se imprime nada"),("Se envía el contrato para aceptación","al estudiante o a su representante"),("Entra al grupo de Teams","y recibe el enlace de clase"),("La comisión del asesor queda pendiente","se paga al cobrar todo")]),
    "Revisa antes de emitir: la factura no se puede deshacer sin nota de crédito")], venta_sum),
+ '<script src="assets/matricula.js"></script>',
  foot(btn("Confirmar matrícula y emitir factura",None,True),btn("Guardar borrador",kind="ghost"),btn("Salir sin guardar")),
  subtitle="Una venta = N módulos desde el módulo X (o N horas), una factura con todos los ítems y una matrícula por módulo que inicia")
 page("NuevaVenta.html","Nueva matrícula",venta,"Nueva matrícula (una por módulo, factura multi-módulo)")
@@ -2802,6 +2802,8 @@ page("Insights.html","Insights de IA",shell("Insights de IA","Insights de IA",
 # 29 Constructor de reportes (guiado, para usuarios no técnicos)
 PREG=[("¿Cuántos estudiantes nuevos tuvimos?","Por mes y por sede, con quién los trajo","users"),
       ("¿Quiénes nos deben dinero?","Matrículas con saldo, cuánto y desde cuándo","coin"),
+      ("¿Cuánto facturamos en total este mes?","Suma de las facturas por sede y asesor, sin armar el Excel a mano","doc"),
+      ("¿Qué matrículas están pagadas por completo y cuáles son abonos?","Para comisiones: cuenta el mes en que se completa el pago","coin"),
       ("¿Cómo van las ventas de cada asesor?","Niveles vendidos, meta y comisión","chart"),
       ("¿Qué facturamos y cobramos este mes?","Facturas, pagos, notas de crédito y XML del SRI","doc")]
 PREG_COO=[("¿Qué cursos terminaron sin calificar?","Bloquean certificados y rematrícula","cal"),
@@ -2825,6 +2827,8 @@ PREG_AREAS=[("Estudiantes y matrículas",[
       ("¿Qué facturamos y cobramos este mes?","Facturas, pagos y notas de crédito por sede","doc"),
       ("¿Quiénes nos deben dinero?","Facturas con saldo, días de atraso y asesor","coin"),
       ("¿Qué facturas faltan por autorizar o enviar?","Estado SRI y comprobantes sin enviar","check"),
+      ("¿Cuánto facturamos en total este mes?","Suma de las facturas por sede y asesor, sin armar el Excel a mano","doc"),
+      ("¿Qué matrículas están pagadas por completo y cuáles son abonos?","Para comisiones: cuenta el mes en que se completa el pago","coin"),
       ("¿Cómo van las ventas de cada asesor?","Niveles vendidos, meta y comisión","chart"),
       ("¿Qué descuentos dio cada asesor?","Porcentaje, monto, motivo y si fue aprobado","coin"),
       ("¿Este mes vs el anterior?","Ventas, matrículas y cobros comparados","trend"),
@@ -3423,13 +3427,14 @@ page("ConstructorReportes.html","Reportes self-service",shell("Arma tu reporte",
  card("", step(1,"¿Qué quieres saber?",picker_areas(PREG_AREAS,(0,0)),"Elige una pregunta; no necesitas saber nombres de tablas ni columnas")
   +step(2,"¿De cuándo y de dónde?",'<div class="pill-row"><span>Período</span>'+pills(["Este mes","Mes pasado","Últimos 3 meses","Este año","Elegir fechas…"],0)+'</div><div class="pill-row"><span>Sede</span>'+pills(["Todas","Quito","Valle","Ambato"],0)+'</div>')
   +step(3,"¿Cómo lo quieres ver?",'<div class="pill-row"><span>Vista</span>'+pills(["Por mes","Por sede","Por asesor","Lista de estudiantes"],0)+'</div><div class="pill-row"><span>Agregar</span>'+pills(["Teléfono de contacto","Asesor","Programa y nivel","Saldo"],[1],multi=True)+'</div>',"Puedes cambiarlo después sin volver a empezar")
-  +row(btn("Ver resultado",None,True),btn("Guardar como reporte"))),
+  +row('<button type="button" class="btn btn-primary" data-rep-run>Ver resultado</button>',btn("Guardar como reporte"))),
  card("Resultado · Estudiantes nuevos · este mes · todas las sedes",
-   '<p class="plain">Este mes entraron <b>52 estudiantes nuevos</b>: 28 en Quito, 15 en Valle y 9 en Ambato. Es <b>8% más</b> que el mes pasado.'+only("ADM,GER,DIR,SUC",' Carla M. trajo 21, Diego R. 17 y Sofía L. 14.',True)+'</p>'
+   '<div data-rep-body><p class="plain">Este mes entraron <b>52 estudiantes nuevos</b>: 28 en Quito, 15 en Valle y 9 en Ambato. Es <b>8% más</b> que el mes pasado.'+only("ADM,GER,DIR,SUC",' Carla M. trajo 21, Diego R. 17 y Sofía L. 14.',True)+'</p>'
    +two(vbars([("Ago",[32,18,11]),("Sep",[40,22,14]),("Oct",[28,15,9])],["Quito","Valle","Ambato"],h=160),
-        table(["Mes","Quito","Valle","Ambato","Total"],[["Agosto","32","18","11","61"],["Septiembre","40","22","14","76"],["Octubre (en curso)","28","15","9","52"]]))
+        table(["Mes","Quito","Valle","Ambato","Total"],[["Agosto","32","18","11","61"],["Septiembre","40","22","14","76"],["Octubre (en curso)","28","15","9","52"]]))+'</div>'
    +row(btn("Exportar Excel"),btn("Exportar PDF"),btn("Enviar por correo"),btn("Ver la lista de estudiantes","Estudiantes.html"))),
  card("Reportes guardados", '<div class="saved-grid">'+saved_cards+'</div>',extra=btn("Nuevo reporte","ConstructorReportes.html")),
+ '<script src="assets/reportes.js"></script>',
  subtitle="Pregunta en tus palabras, elige período y sede, y listo"),"Arma tu reporte")
 
 # 30 Dashboard ejecutivo
@@ -3555,6 +3560,8 @@ page("RecepcionPedido.html","Recibir pedido",shell("Recibir pedido #P-041","Movi
 _REGLAS=[  # (área, regla, cuándo, qué hace, canal, activa)
  ("Aperturas","Crear el curso en el LMS","72 h antes del inicio","Recuerda a Coordinación crear el curso en Cambridge One y GradeKeeper","Notificación",True),
  ("Aperturas","Correo informativo de inicio","48 h antes del inicio","Envía horario, aula o enlace, libro y profesor a los estudiantes","Correo",True),
+ ("Aperturas","Bienvenida al matricularse","al confirmar la matrícula","Envía el curso, horarios, taller de inducción y contactos de soporte","WhatsApp (propuesta) y correo",True),
+ ("Aperturas","Grupo y mensaje de apertura","48 h antes del inicio","Académico agrega al grupo de WhatsApp y envía el mensaje de apertura; si entra con el curso iniciado, avisa de inmediato y pide libro y licencia","WhatsApp (propuesta) y tarea",True),
  ("Aperturas","Alerta de ocupación baja","14 días antes · menos del 50 % de ocupación proyectada","Avisa a Secretaría y Coordinación para reforzar el contacto o decidir si abre","Notificación y correo",True),
  ("Aperturas","Curso por abrir sin profesor","14 días antes del inicio","Avisa a Coordinación para asignar profesor","Notificación",True),
  ("Reaperturas","Contacto al llegar al 75 % del curso","cuando el grupo llega al 75 % de avance","Crea la tarea de contacto: mensaje, llamada y nota de voz, con la plantilla de rematrícula","Tarea y WhatsApp (propuesta)",True),
@@ -3562,6 +3569,7 @@ _REGLAS=[  # (área, regla, cuándo, qué hace, canal, activa)
  ("Cobranza","Cuota por vencer","3 días antes del vencimiento","Recuerda el pago al estudiante o a su representante, con copia al asesor","Correo y WhatsApp (propuesta)",True),
  ("Cobranza","Cuota vencida","a los 1, 7 y 15 días","Mensajes de cobro; a los 15 días avisa al asesor y a los 30 a Dirección Comercial","Correo y WhatsApp (propuesta)",True),
  ("Cobranza","Saldo con el curso en marcha","cuando el estudiante cursa con saldo pendiente","Alerta a Secretaría para cobrar antes de la rematrícula","Notificación",False),
+ ("Notas","Fin de módulo: aviso del siguiente curso","al cerrar las notas del módulo","Avisa al estudiante cuál es su siguiente curso y cómo matricularse; baja las consultas repetidas a Secretaría","Correo y WhatsApp (propuesta)",True),
  ("Notas","Notas pendientes","72 h después de la última clase","Recuerda al profesor cerrar notas; a las 48 h más avisa a Coordinación","Correo y notificación",True),
  ("Exámenes","Certificado recibido","al registrar que llegó el certificado","Avisa al candidato por correo: dónde y cuándo retirarlo y qué traer (cédula o pasaporte)","Correo",True)]
 def _sw(i,activa,nombre):
@@ -3573,11 +3581,15 @@ def _pl(cuerpo,vars_,cuando,canal,estado):
     return ('<div class="msg-prev"><small>Vista previa · '+canal+'</small><p>'+cuerpo+'</p></div>'
             +kv(("Variables",chips),("Cuándo se usa",cuando),("Estado",estado))+row(btn("Editar regla",kind="ghost")))
 _ok=badge("Lista","ok"); _wa=badge("Propuesta · fuera del alcance del contrato actual")+'<small> · Meta debe aprobar cada plantilla</small>'
-_plantillas=seg(["Rematrícula","Cuota por vencer","Cuota vencida","Inicio de curso","Pocas inscripciones"],[
+_plantillas=seg(["Rematrícula","Cuota por vencer","Cuota vencida","Bienvenida","Inicio de curso","Recordatorio al grupo","Fin de módulo","Pocas inscripciones"],[
+  _pl("¡Hola {nombre}! Bienvenido(a) a Cambridge. Te matriculaste en {curso}. Horario: {horario}. Inicia el {fecha}. Si tienes dudas escribe a {contacto}.",["{nombre}","{curso}","{horario}","{fecha}","{contacto}"],"al confirmar la matrícula","WhatsApp o correo",_wa),
+
   _pl("Hola {nombre}, te vas acercando al final de {curso}. Tu siguiente módulo empieza el {fecha} y te reservamos el cupo. Si pagas los dos módulos tienes descuento. ¿Te ayudamos a matricularte?",["{nombre}","{curso}","{fecha}"],"al llegar al 75 % del curso","WhatsApp o correo",_wa),
   _pl("Hola {nombre}, te recordamos que tu cuota de {saldo} vence el {fecha}. Puedes pagar por transferencia o con el link de pago. Gracias.",["{nombre}","{saldo}","{fecha}"],"3 días antes del vencimiento","WhatsApp o correo",_wa),
   _pl("Hola {nombre}, tu cuota de {saldo} venció el {fecha}. Si ya pagaste, envíanos el comprobante; si necesitas acordar una fecha, respóndenos este mensaje.",["{nombre}","{saldo}","{fecha}"],"a los 1, 7 y 15 días de vencida","WhatsApp o correo",_wa),
   _pl("Hola {nombre}, tu curso {curso} empieza el {fecha}. Horario: {horario}. Aula o enlace: {aula}. Profesor: {profesor}. Recuerda retirar tu libro en la sede.",["{nombre}","{curso}","{fecha}","{horario}","{aula}","{profesor}"],"48 h antes del inicio","Correo",_ok),
+  _pl("Hola {nombre}, mañana empieza {curso} a las {hora}. Ya te agregamos al grupo de tu clase. Tu enlace o aula: {aula}. Recuerda tu libro y tu licencia digital.",["{nombre}","{curso}","{hora}","{aula}"],"48 h antes del inicio, desde el área académica","WhatsApp o correo",_wa),
+  _pl("Hola {nombre}, terminaste {curso}. Tu siguiente módulo es {siguiente} y empieza el {fecha}. Puedes matricularte aquí: {enlace}.",["{nombre}","{curso}","{siguiente}","{fecha}","{enlace}"],"al cerrar las notas del módulo","WhatsApp o correo",_wa),
   _pl("Alerta: el curso {curso} ({sede}) empieza el {fecha} y tiene {inscritos} de {capacidad} cupos ({ocupacion}). Revisa si reforzar el contacto o decidir la apertura.",["{curso}","{sede}","{fecha}","{inscritos}","{capacidad}","{ocupacion}"],"14 días antes · ocupación baja","Notificación interna",_ok)],label="Plantilla")
 _LOG=[("23 oct 09:10","Rematrícula al cerrar notas","María Andrade","Correo","Enviado"),("23 oct 09:10","Rematrícula al cerrar notas","Sofía Herrera","Correo","Enviado"),("23 oct 08:00","Cuota por vencer","Camila Sánchez","Correo","Enviado"),
       ("23 oct 08:00","Cuota por vencer","Martín Ortega","Correo","Rebotó"),("23 oct 08:00","Cuota vencida · 7 días","Pedro Mora","Correo","Enviado"),("23 oct 08:00","Cuota vencida · 7 días","Gabriela Núñez","Correo","Omitido"),
@@ -3599,15 +3611,29 @@ _semana=(card("Resumen semanal · sale cada lunes 08:00",table(["Grupo que termi
   +card("Parámetros",form([("Capacidad estándar por aula","12","number",None,True,"Se usa cuando el aula no tiene una capacidad propia"),("Mínimo de inscritos para abrir","6","number",None,True),("Alerta de ocupación baja (%)","50","number",None,True,"Por debajo de este porcentaje se avisa"),
         ("Anticipación de la alerta de apertura (días)","14","number",None,True),("Resumen semanal","Lunes · 08:00","select",["Lunes · 08:00","Lunes · 07:00","Viernes · 17:00"],True),("Destinatarios","Secretaría, Coordinación y Dirección Comercial","text",None,False)],cols=3)
         +row(btn("Guardar parámetros",None,True)),extra=badge("Se usan en todas las alertas","navy")))
+_wa_sim=(card("Conexión con WhatsApp Business",kv(("Proveedor","API de WhatsApp Business (Meta) · simulada"),("Número","+593 99 000 0000 · ejemplo"),("Estado",badge("Conectado · simulación","ok")),("Calidad del número",badge("Alta","ok")),("Mensajes de hoy",'<span data-wa-sent>0</span> enviados · <span data-wa-resp>0</span> respuestas'))
+    +kv(("Importante",badge("Propuesta · fuera del alcance del contrato actual")+"<small> · esta pantalla simula la integración; no envía nada real</small>")),extra=badge("Simulación","warn"))
+  +card("Plantillas aprobadas por Meta",table(["Plantilla","Categoría","Estado en Meta","Cuándo se usa"],[
+    ["Bienvenida al matricularse","Utilidad",badge("Aprobada","ok"),"al confirmar la matrícula"],["Mensaje de apertura","Utilidad",badge("Aprobada","ok"),"48 h antes del inicio"],
+    ["Fin de módulo","Utilidad",badge("Aprobada","ok"),"al cerrar las notas"],["Cuota por vencer","Utilidad",badge("En revisión","warn"),"3 días antes del vencimiento"],["Promoción de rematrícula","Marketing",badge("Rechazada","bad"),"se debe reescribir"]],wide=0)
+    +kv(("Cómo funciona","cada plantilla la aprueba Meta antes de usarla; fuera de las 24 h de una conversación solo se pueden enviar plantillas aprobadas"),("Cuestan","Meta cobra por conversación; el valor depende del país y la categoría")))
+  +card("Probar el envío",'<div class="wa-grid"><div class="wa-controls">'
+    +'<label class="field">Estudiante<select class="ctl" data-wa-est><option>María Andrade</option><option>Pedro Mora</option></select></label>'
+    +'<label class="field">Plantilla<select class="ctl" data-wa-plan><option>Bienvenida al matricularse</option><option>Mensaje de apertura (48 h antes)</option><option>Fin de módulo</option><option>Cuota por vencer</option></select></label>'
+    +'<div class="msg-prev"><small>Lo que se enviará</small><p data-wa-prev></p></div>'
+    +'<div class="row"><button type="button" class="btn btn-primary" data-wa-send>Enviar mensaje de prueba</button><button type="button" class="btn btn-ghost" data-wa-clear>Limpiar chat</button></div>'
+    +'<ul class="timeline" data-wa-log></ul></div>'
+    +'<div class="wa-phone" role="img" aria-label="Chat de WhatsApp de ejemplo"><div class="wa-top"><b>Cambridge School of Languages</b><small>cuenta de empresa · en línea</small></div><div class="wa-chat" data-wa-chat></div></div></div>',extra=badge("Simulación","warn")))
 page("Automatizaciones.html","Automatizaciones",shell("Automatizaciones","Automatizaciones",
- kpis([("Reglas activas",'<span data-reglas-activas>10</span> de <span data-reglas-total>11</span>',"aperturas, reaperturas, cobranza y notas"),("Avisos esta semana","46","enviados sin intervención"),("Cobranza gestionada","$1,360","saldos con aviso automático"),("Notas pendientes","1","grupo por cerrar")]),
- tabs(["Reglas","Plantillas","Registro de envíos","Resumen semanal y parámetros"],"Reglas",panels={
+ kpis([("Reglas activas",'<span data-reglas-activas>13</span> de <span data-reglas-total>14</span>',"aperturas, reaperturas, cobranza y notas"),("Avisos esta semana","46","enviados sin intervención"),("Cobranza gestionada","$1,360","saldos con aviso automático"),("Notas pendientes","1","grupo por cerrar")]),
+ tabs(["Reglas","Plantillas","Registro de envíos","Resumen semanal y parámetros","WhatsApp"],"Reglas",panels={
+  "WhatsApp": _wa_sim,
   "Reglas": filters(search("Buscar","Regla o área",w="240px"),sel("Área",["Todas","Aperturas","Reaperturas","Cobranza","Notas","Exámenes"],w="160px"),actions=btn("Nueva regla de automatización",None,True))+_reglas_tbl
        +kv(("Cómo funcionan","cada regla se dispara sola por un evento o por un momento; puedes apagarla sin borrarla"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · hoy los avisos salen por correo y notificación interna</small>')),
   "Plantillas": card("Mensajes que usan las reglas",_plantillas+kv(("Dónde se editan","en Configuración → Plantillas de correo")),extra=badge("Con variables","navy")),
   "Registro de envíos": _registro,
   "Resumen semanal y parámetros": _semana}),
- '<script src="assets/automatizaciones.js"></script>',
+ '<script src="assets/automatizaciones.js"></script><script src="assets/whatsapp.js"></script>',
  subtitle="Aperturas, reaperturas, cobranza y notas: avisos que salen solos, con su plantilla y su registro"),"Automatizaciones")
 
 _ENV=[  # (factura, emitida, cliente, detalle, total, estado, segundos, nota, acción)
@@ -4484,6 +4510,26 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
 .msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}
 .msg-file{align-self:flex-start;font-family:var(--font-mono);font-size:var(--t-13);padding:4px 8px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface)}
+/* plan estratégico */
+.plan-filters{margin-bottom:12px}.plan-ctx{margin:0 0 16px;font-size:var(--t-14);color:var(--mute)}.plan-ctx b{color:var(--ink);font-weight:600}
+.plan-sec{display:flex;flex-direction:column;gap:20px;margin-top:20px}[data-plan-out=todo]>.plan-sec{margin-top:0}
+.plan-empty{margin:0;padding:24px 0;text-align:center;color:var(--mute);font-size:var(--t-14)}
+.plan-nota{margin:0;font-size:var(--t-13);color:var(--mute)}
+.plan-kv{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:var(--t-14);color:var(--mute);margin:12px 0}.plan-kv b{color:var(--ink);font-size:var(--t-16);font-variant-numeric:tabular-nums}
+.plan-tools{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:12px}
+.plan-dims{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;min-height:40px}.chk-inline{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-14)}
+.pie-wrap{display:flex;flex-wrap:wrap;gap:20px;align-items:center}.pie{width:132px;height:132px;border-radius:50%;flex:none;-webkit-mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%);mask:radial-gradient(circle 38px at center,transparent 97%,#000 100%)}
+.pie-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:var(--t-14);min-width:0}.pie-leg li{display:flex;align-items:center;gap:8px}.pie-leg i{width:10px;height:10px;border-radius:2px;flex:none}.pie-leg b{font-variant-numeric:tabular-nums}.pie-leg small{color:var(--mute)}
+/* whatsapp simulado */
+.wa-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}.wa-controls{display:flex;flex-direction:column;gap:14px;min-width:0}
+.wa-phone{border:1px solid var(--line-strong);border-radius:var(--r-lg);overflow:hidden;background:#ECE5DD;display:flex;flex-direction:column;height:430px}
+.wa-top{background:#075E54;color:#fff;padding:10px 14px;display:flex;flex-direction:column}.wa-top small{opacity:.8}
+.wa-chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.wa-msg{max-width:84%;padding:8px 10px;border-radius:8px;font-size:var(--t-14);box-shadow:0 1px 1px rgba(0,0,0,.08)}.wa-msg p{margin:0 0 4px}.wa-msg small{display:block;text-align:right;color:var(--mute);font-size:11px}
+.wa-out{align-self:flex-end;background:#DCF8C6}.wa-out.is-read small{color:#1D3F8F}.wa-in{align-self:flex-start;background:#fff}
+@media(max-width:900px){.wa-grid{grid-template-columns:1fr}}
+.profile .actions .btn.btn-portal{flex:1 1 100%;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:10px 14px;text-align:left}.btn-portal small{font-weight:400;color:var(--mute);font-size:var(--t-13)}
+.rep-flash{animation:repflash .9s ease}@keyframes repflash{from{background:var(--navy-50)}to{background:transparent}}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}

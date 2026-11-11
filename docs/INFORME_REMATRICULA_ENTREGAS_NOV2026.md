@@ -512,3 +512,39 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Si el **archivo físico** (certificado firmado y copia de la cédula) sigue siendo obligatorio para el cliente o la auditoría, o basta el digital.
 - Si **un tercero puede retirar** el certificado (el prototipo permite un representante autorizado y pide una autorización).
 - Si los certificados de **Cambridge, Oxford y Anglia** se entregan igual que el de TOEFL, y quién registra la **llegada** del certificado en la sede.
+
+## 27. Plan estratégico del Tablero comercial con filtros reales (revisión de 11 nov)
+
+Se auditó la lista "Proceso comercial" (15 métricas estratégicas, 11 tarjetas, gráficos, embudo de Kommo, filtros, vistas por rol y matriz exportable) contra el tablero. Antes de este cambio las cifras eran estáticas: los filtros de la página solo movían la tabla de ventas.
+
+**Qué se hizo.** La pestaña Plan estratégico (`TableroComercial.html`) ahora se recalcula en el navegador (`assets/plan.js`) con datos de ejemplo ficticios (`tools/plan_datos.py`, calibrados con las cifras de octubre 2026). Filtros propios: período (hoy, ayer, semana, mes, trimestre, año), día específico, asesor, programa, producto o servicio, origen del lead y clasificación de walk-in, más el selector de sedes global (una, varias o consolidado Quito + Valle + Ambato; Cuenca va aparte).
+
+| Requerimiento | Estado |
+|---|---|
+| 11 tarjetas (ingreso, matrículas, niveles, ticket, one to one, meta, certificados, traducciones, servicios, ticket de servicios, variación) | Integrado y filtrable |
+| Líneas: evolución 2026 vs 2025, real vs meta (2025 + 15 %), ticket, conversión y deserción | Integrado y filtrable |
+| Barras: ingresos por sede, línea, producto, programa, origen; resultado por asesor | Integrado (nuevo: producto, origen y asesor) |
+| Porcentuales (circulares): planes de nivel, one to one vs regular, referidos, programa | Integrado |
+| Embudo de Kommo con todas las etapas, % entre etapas, conversión total y totales agrupados por sede, asesor, canal o mes | Integrado; solo totales, el lead individual entra al ganarse |
+| Reporte individual del asesor / consolidado de Dirección | Integrado (rol Asesor ve solo lo suyo) |
+| Matriz consultable por sede, asesor, programa, producto y canal, exportable | Integrado (agrupación elegible, búsqueda y Excel) |
+
+**No viable o por confirmar.** Las cifras reales dependen de lo que exponga la API de Kommo (módulo 11, "sujeto a lo que exponga"). Siguen pendientes de definición con el cliente: deserción (propuesta: no se rematricula en 30 días), upsell (servicio adicional sobre la matrícula), estudiantes en planes de nivel y la regla de "lead atendido". Los datos del tablero son de ejemplo, no reales.
+
+## 28. Cambios de la reunión con Secretaría y Comercial (revisión de 11 nov)
+
+| Requerimiento | Estado |
+|---|---|
+| Representante obligatorio desde los 18 años (antes 22 en TeamDesk) | Ya aplicado en el prototipo (se calcula con la fecha de nacimiento) |
+| Copiar los datos del estudiante a la factura | Nuevo: botón en el paso 4 de la matrícula |
+| Nivel y horario editables al matricular | Nuevo (paso 2) |
+| Marcar referido al registrar | Nuevo: "¿Es referido?" y "Referido por" en todos los formularios de origen |
+| No facturar por separado cada módulo | Ya integrado: una factura por venta con todos los ítems |
+| Activo, inactivo o nuevo por tiempo sin matrícula | Nuevo: 0 a 2 meses activo, 3 a 5 inactivo (sin inscripción), 6 o más nuevo |
+| Total facturado sin intervención manual | Preguntas nuevas en el Constructor de reportes; cifras en el Tablero comercial |
+| Aceptación electrónica con registro | Prototipo (casilla con fecha, hora y comprobante); la validez legal es una consulta pendiente |
+| Mensajes de bienvenida, apertura y fin de módulo | Reglas y plantillas nuevas; WhatsApp es propuesta fuera de alcance, el correo está dentro |
+| Canal de contacto editable | Nuevo en la Ficha 360, con historial |
+| Integrar Kommo y sincronizar reportes de sedes | Ya existe; la conexión real depende de la API de Kommo |
+
+**Por confirmar:** si el corte de 3 y 6 meses se mide desde el fin del último módulo o desde la última matrícula, si el plazo de 3 meses para repetir el test es suficiente, y el texto legal de la aceptación.
