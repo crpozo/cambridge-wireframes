@@ -548,3 +548,15 @@ Se auditó la lista "Proceso comercial" (15 métricas estratégicas, 11 tarjetas
 | Integrar Kommo y sincronizar reportes de sedes | Ya existe; la conexión real depende de la API de Kommo |
 
 **Por confirmar:** si el corte de 3 y 6 meses se mide desde el fin del último módulo o desde la última matrícula, si el plazo de 3 meses para repetir el test es suficiente, y el texto legal de la aceptación.
+
+## 29. Pendientes de la reunión llevados al prototipo (revisión de 11 nov)
+
+| Pendiente | Qué se hizo |
+|---|---|
+| Plazos de crédito por convenio | Días entre cuotas y número de cuotas editables en el paso 4; avisos de 15 a 30, 31 a 60 y más de 60 días |
+| Campos obligatorios de la ficha | Mayúsculas en nombres y apellidos, calle principal y secundaria, y bloqueo del guardado si falta cédula, fecha de nacimiento, ocupación, lugar de estudio, parroquia, calles, correo o teléfono |
+| Cambio de horario o curso sin perder matrícula | Nueva pantalla `CambioMatricula.html`: la matrícula se conserva y el cambio queda como movimiento; explica la discrepancia 64 frente a 68 |
+| Cambio de modalidad | Misma pantalla: Comercial solo si el estudiante es nuevo y el curso no inició; si no, Académico con justificación; Facturación emite la nota de crédito |
+| RIDE visual | Nueva pantalla `RIDE.html` con vista previa en PDF y botón de envío |
+
+**Por confirmar:** el umbral de avance a partir del cual solo decide Académico (se usó 80 %), el plazo máximo de crédito y el código de barras del RIDE, que genera Dora.
