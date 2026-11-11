@@ -153,3 +153,20 @@ Matrícula confirmada
 
 ## 8. Archivos
 Nuevos: `EntregasLibros.html`, `EntregarLibro.html`, `ReciboEntrega.html`, `Rematricula.html`, `RematriculaFactura.html`, `assets/entregas.js`, este informe. Modificados: `tools/generar_pantallas.py` (todo se genera desde ahí) y las páginas que reflejan el nuevo menú.
+
+## 9. Datos del curso nuevo y creación de módulos (revisión de fuentes, 10 nov)
+Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fecha de fin, horas totales, progreso y código del LMS, y debe permitir crear un módulo nuevo?
+
+| Dato | ¿Lo piden las fuentes? | Estado |
+|---|---|---|
+| Docente | Sí. `docs/PROYECTO.md` (M3): "asignación de profesor con validación de contrato activo". | En alcance |
+| Aula | Sí. M3: "creación de cursos (programa, nivel, modalidad, horario, aula)". | En alcance |
+| Progreso del curso | Sí, literal. Contrato, Cláusula Tercera, M3: "gestión, seguimiento (tracking) y progreso". | En alcance |
+| Fecha de finalización y horas totales | No literal. Son parte del horario del curso; ya estaba decidido calcular la fecha de fin saltando feriados (`docs/DECISIONES.md`). | En alcance como detalle de M3 |
+| Código y plataforma LMS | **No**. Ni el contrato ni la propuesta lo piden como campo. Solo existe como proceso manual (crear el curso en Cambridge One y GradeKeeper 72 h antes, `docs/PROCESOS_INTERNOS.md`) y Moodle figura en M11 "sujeto a la API que expongan". Nació en la sesión del 5 nov. | Requerimiento nuevo |
+
+- **Código LMS**: guardarlo como campo informativo es trivial y cabe en M3; **sincronizarlo con el LMS** depende de M11 y de lo que Moodle o Cambridge One expongan. Se dejó como campo de texto con esa advertencia. Conviene confirmarlo con el cliente.
+- **Crear un módulo nuevo**: sí debe permitirlo. M3 incluye la creación de cursos y `NuevoCurso.html` ya existía. En la sesión, Secretaría crea a mano cada módulo siguiente (módulo 3, 4…) y la plataforma calcula el fin con los feriados cargados. Falta decidir si algún día se crean solos los módulos que quedan en la bolsa; hoy no está pedido.
+
+**Cambios en el prototipo**: en `RematriculaFactura.html` la nueva tarjeta "2 · Curso nuevo" muestra el curso con programa, módulo, docente, aula, plataforma LMS, días y horario, inicio, fin, horas totales, cupo, valor y progreso. Si el módulo aún no tiene curso, la segunda opción permite **crearlo sin salir de la matrícula** (docente, aula, código LMS, horario, fecha de inicio, fin calculado, horas y cupo) o abrir el formulario completo. `NuevoCurso.html` y el detalle del curso suman el campo "Código en el LMS".
+

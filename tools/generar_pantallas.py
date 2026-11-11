@@ -1418,6 +1418,7 @@ ACTIONS.update({
  "Guardar reglas de rematrícula":("Las reglas de la rematrícula se guardan y se aplican desde el próximo cierre de notas. "+AUDIT,None),
  "Matricular y facturar":("Se crea la matrícula 001-202603262 en el siguiente curso, se emite la factura con servicios educativos y materiales por separado (el módulo pagado por adelantado queda ligado a la bolsa) y se registra el pago con su comprobante. Si es transferencia queda 'Por conciliar' hasta que el extracto del banco la confirme. "+AUDIT,"DetalleFactura.html"),
  "Agregar pago":("Se agrega otra línea de pago (p. ej. parte en efectivo y parte con transferencia) con su comprobante.",None),
+ "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
  "Matricular sin facturar":("La matrícula queda en rojo ('Matriculado · sin factura') y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -1638,19 +1639,36 @@ page("Rematricula.html","Rematrícula",shell("Rematrícula","Rematrícula",
  actions=btn("Rematricular seleccionados",None,True)),"Rematrícula")
 
 # ---- Matrícula y factura en una sola pantalla (rematrícula de un estudiante) ----
-_rm_ledger=ledger_calc([("Valor del curso","course fee · módulos 5 y 6 · 2 × $250 · servicio educativo",500,True),("Inscripción","tuition fee · estudiante antiguo, exonerado",0,False),("Libros y materiales","producto · sin material: ya lo tiene del primer nivel",0,False)],10,"lgr")
+_rm_ledger=ledger_calc([("Valor del curso","course fee · módulos 7 y 8 · 2 × $250 · servicio educativo",500,True),("Inscripción","tuition fee · estudiante antiguo, exonerado",0,False),("Libros y materiales","producto · sin material: ya lo tiene del primer nivel",0,False)],10,"lgr")
+_curso_abierto=(
+ form([("Curso","Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","select",["Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","Teens B1 · 0001-2026-0791 · Presencial Ambato · Vi 15:00–19:00 · inicia 20/11/2026 · cupo 3/10"],True,"Solo aparecen cursos del módulo, con cupo y sin choque de horario")],cols=1)
+ +facts([("Programa","English for Teens · Virtual · Grupal"),("Módulo",'Módulo 7 · B1'),("Docente",'<a href="FichaProfesor.html">P. Gómez</a> · contrato activo'),("Aula","Teams 1 (virtual)"),
+         ("Plataforma LMS","Cambridge One · CSL-TB1-0772"),("Días y horario","Lu-Ma-Mi-Ju 17:00–19:00"),("Inicio","2 nov 2026 · primera clase el 4 (feriados 2 y 3)"),("Fin","3 dic 2026 · calculada, salta feriados"),
+         ("Horas totales","36 h · 18 sesiones de 2 h"),("Cupo","6 de 12 · "+badge("Con cupo","ok")),("Valor del módulo","$250 · virtual"),("Progreso del curso",progress(0,"Aún no inicia")) ])
+ +row(btn("Ver curso completo","DetalleCurso.html",kind="ghost")))
+_curso_crear=(
+ kv(("Qué pasa","el módulo 7 todavía no tiene un curso abierto: lo creas aquí sin salir de la matrícula y vuelves con el curso ya elegido"))
+ +form([("Programa","English for Teens","select",["English for Teens","English for Adults","English for Kids","Business English"],True),("Modalidad","Virtual","select",["Virtual","Presencial"],True),("Módulo","7 · B1","select",["6 · A2+","7 · B1","8 · B1"],True),
+        ("Docente","P. Gómez · contrato activo · 14 de 20 h","select",["P. Gómez · contrato activo · 14 de 20 h","L. Vega · contrato activo · 18 de 20 h","D. Paredes · tarifa en aprobación"],True,"Solo docentes con contrato activo y libres en ese horario"),
+        ("Aula o enlace virtual","Teams 1 (virtual)","select",["Teams 1 (virtual)","Zoom 1 (virtual)","Zoom 2 (virtual)"],True,"Capacidad SETEC · el cupo no puede superarla"),("Código en el LMS","CSL-TB1-0790","text",None,False,"El código del curso en Cambridge One / Moodle; hoy se copia a mano"),
+        ("Horario","Regular tarde · Lu-Ma-Mi-Ju 17:00–19:00 · 2 h","select",["Regular tarde · Lu-Ma-Mi-Ju 17:00–19:00 · 2 h","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h","Sábados intensivo · Sa 09:00–13:00 · 4 h"],True),("Fecha de inicio","2026-12-07","date",None,True),
+        "Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36","number",None,True),("Cupo máximo","12","number",None,True,"≤ capacidad del aula")],cols=2)
+ +row(btn("Crear curso y continuar",None,True),btn("Abrir el formulario completo","NuevoCurso.html",kind="ghost")))
+
 page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factura","Rematrícula",
  two('<div class="deliver-main">'+
-  card("1 · Estudiante y siguiente curso",
+  card("1 · Estudiante",
    facts([("Estudiante",'<a href="Ficha360.html">Camila Sánchez</a>'),("Curso que terminó",'<a href="DetalleCurso.html">Teens A2 · 0001-2025-0330</a>'),("Notas","8.1 · asistencia 92% · aprobó"),("Cuotas","al día · sin deuda vencida")])
-   +form([("Siguiente curso","Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","select",["Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","Teens B1 · por crear · Presencial Ambato · Vi 15:00–19:00"],True,"Ya viene propuesto por el cierre de notas; solo aparecen cursos con cupo y sin choque de horario"),
-          ("Módulos que paga ahora","2 · módulo 5 y módulo 6 (por adelantado)","select",["1 · solo el módulo 5","2 · módulo 5 y módulo 6 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 6 aún no tiene curso: queda en la bolsa y la factura queda ligada a él, no suelta"),
+   +form([("Módulos que paga ahora","2 · módulo 7 y módulo 8 (por adelantado)","select",["1 · solo el módulo 7","2 · módulo 7 y módulo 8 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 8 aún no tiene curso propio: queda en la bolsa y la factura queda ligada a él, no suelta"),
           ("Descuento aprobado por","—","text",None,False,"Obligatorio si el descuento es mayor a 10%")],cols=2))
-  +card("2 · Factura que se genera con la matrícula",
+  +card("2 · Curso nuevo",
+   seg(["Curso abierto","El módulo aún no tiene curso"],[_curso_abierto,_curso_crear],label="Curso del siguiente módulo"),
+   extra=badge("Propuesto por el cierre de notas","navy"))
+  +card("3 · Factura que se genera con la matrícula",
    _rm_ledger+disc_field("lgr",10)
-   +table(["Ítem","Tipo","Valor"],[[c2("Módulo 5 · A2+","SRV-MOD-05 · course fee · virtual"),"Servicio educativo","$250.00"],[c2("Módulo 6 · A2+","SRV-MOD-06 · pagado por adelantado · bolsa"),"Servicio educativo","$250.00"],[c2("Empower A2+ Combo","sin material: ya lo tiene del primer nivel"),"Producto","$0.00"]],wide=0)
+   +table(["Ítem","Tipo","Valor"],[[c2("Módulo 7 · B1","SRV-MOD-07 · course fee · virtual"),"Servicio educativo","$250.00"],[c2("Módulo 8 · B1","SRV-MOD-08 · pagado por adelantado · bolsa"),"Servicio educativo","$250.00"],[c2("Empower B1 Combo A","sin material: ya lo tiene del primer nivel"),"Producto","$0.00"]],wide=0)
    +kv(("Servicios y productos","van en líneas distintas para saber cuántos módulos se facturan de verdad"),("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
-  +card("3 · Pago y comprobante",
+  +card("4 · Pago y comprobante",
    form([("Método de pago","Transferencia","select",["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Pago en línea (link)","Nota de crédito"],True),
          ("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],False,"Si es de otro banco el número del comprobante puede no coincidir con el del banco: se concilia por monto y fecha"),
          ("Número de comprobante","884512","text",None,True),("Fecha del pago","2026-10-23","date",None,True),
@@ -1658,7 +1676,7 @@ page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factur
    +row(btn("Agregar pago",kind="ghost"))
    +kv(("Conciliación","al guardar, la plataforma busca el ingreso en el extracto del banco; si coincide, el pago queda Validado sin que nadie lo digite"),("Más de un pago","se agregan los que haga falta: efectivo, tarjeta, transferencia…")))
   +'</div>',
-  card("Resumen",kv(("Estudiante","Camila Sánchez"),("Matrícula","001-202603262 · módulo 5"),("Bolsa","módulo 6 · pagado, sin curso"),("Total",'<span data-total-for="lgr">$450</span>'),("Estado al guardar",badge("Matriculada · facturada · pago por conciliar","warn")))
+  card("Resumen",kv(("Estudiante","Camila Sánchez"),("Matrícula","001-202603262 · módulo 7"),("Bolsa","módulo 8 · pagado, sin curso"),("Total",'<span data-total-for="lgr">$450</span>'),("Estado al guardar",badge("Matriculada · facturada · pago por conciliar","warn")))
    +flow([("Se crea la matrícula","001-202603262 y cupo en 0001-2026-0772"),("Se emite la factura","servicios y productos por separado, firmada y enviada al SRI"),("Se registra el pago","con su comprobante adjunto"),("Se avisa al estudiante","correo con el comprobante y el enlace de clase"),("Si hay libro, se crea la entrega","pendiente de firma en la tablet")],horizontal=False)),
   ratio="7fr 5fr"),
  foot(btn("Matricular y facturar",None,True),btn("Matricular sin facturar",kind="ghost"),btn("Volver a rematrícula","Rematricula.html",kind="ghost")),
@@ -2460,7 +2478,7 @@ page("Cursos.html","Cursos",cursos,"Listado de cursos")
 
 # 8 Detalle curso
 det=shell("English for Adults B1 Virtual","Cursos",
- hero([("Programa","English for Adults"),("Nivel","B1 · módulos 7–8"),("Modalidad","Virtual · Zoom 2"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Cupo","12 / 15"),("Libro","Empower B1+ Combo B")],
+ hero([("Programa","English for Adults"),("Nivel","B1 · módulos 7–8"),("Modalidad","Virtual · Zoom 2"),("Plataforma LMS","Cambridge One · CSL-B1-0767"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Cupo","12 / 15"),("Libro","Empower B1+ Combo B")],
   btn("Registrar sesión",None,True)+btn("Enviar enlace de clase")+btn("Hoja de asistencia")+only("ADM,GER,SUC,SEC",btn("Rematricular estudiantes","Rematricula.html"),True)+only("ADM,GER,SUC,COO",btn("Calificar profesor")+btn("Editar curso"),True),
   progress(60,"Avance del curso · 22 de 36 horas dictadas · termina en 7 semanas"),
   tag='<span class="hero-code">0001-2026-0767</span>'+badge("En curso","ok")+badge("Quito","navy")),
@@ -2794,7 +2812,7 @@ page("ImportExport.html","Importar / exportar",shell("Importar / exportar estudi
 
 # 18 Nuevo curso
 page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
- form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
+ form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Código en el LMS (Cambridge One / Moodle)","CSL-B1-0773",'text',None,False,"El código del curso en la plataforma de aprendizaje; hoy se crea y se copia a mano. Sincronizarlo solo es posible si el LMS expone su API"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
  card("Horario personalizado", horario_builder(), extra='<small class="card-hint">Se muestra al elegir "Personalizado" en Horario</small>'),
  card("Profesor", filters(search("Buscar profesor","Nombre, especialidad o sede",w="300px"),sel("Contrato",["Todos","Activo","Vencido"],w="130px"),sel("Disponible en el horario",["Todos","Sí","No"],w="170px"),actions=kv(("Seleccionado",'<b>P. Gómez</b> · contrato activo · 14 de 20 h')))
    +table(["Profesor","Contrato","Carga","Disponible en el horario","Especialidad","Acción"],[
