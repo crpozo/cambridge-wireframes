@@ -973,11 +973,29 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0, tid=None):
     import json as _j, re as _re
     n=len(cols); hide=set(hide)
     def cls(i): return ' td-hide' if i in hide else ''
-    hd="".join(f'<div class="th{cls(i)}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
+    # Columnas numéricas (montos, días, cantidades): encabezado y valores se alinean a la derecha
+    def _txt(c): return _re.sub(r'<[^>]+>','',str(c)).strip()
+    numcols=set()
+    for i in range(n):
+        vals=[_txt(r[i]) for r in rows if i<len(r) and _txt(r[i])]
+        if not vals or i==wide: continue
+        money=[v for v in vals if _MONEY.match(v)]
+        guiones=[v for v in vals if v in ("—","–","-")]
+        enteros=[v for v in vals if _re.fullmatch(r"\d+(?:[.,]\d+)?%?",v)]
+        cifras=[v for v in vals if _re.fullmatch(r"[+\-−]?\$?[\d,]+(?:\.\d+)?%?",v)]
+        # columna numérica: puros importes, o importes y cifras (cantidades, porcentajes) sin texto en medio
+        if money and len(cifras)+len(guiones)==len(vals): numcols.add(i)
+        elif money and len(money)+len(guiones)>=0.6*len(vals): numcols.add(i)
+        elif enteros and len(enteros)+len(guiones)==len(vals) and _re.search(r"d[ií]as|cant|intentos|[ií]tems|horas|sesiones",str(cols[i]),_re.I): numcols.add(i)
+    hd="".join(f'<div class="th{cls(i)}{" th-num" if i in numcols else ""}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
         cells=""
         for i,c in enumerate(r):
             html,extra=_cell(c)
+            if i in numcols and "is-num" not in extra and _txt(c) and not _re.search(r"<(a|button)",str(c)):
+                html=f'<span class="mono">{html}</span>'; extra=" is-num"
+            elif i not in numcols and "is-num" in extra:
+                extra=extra.replace(" is-num","")  # columna mixta (importes entre texto): todo a la izquierda, como su encabezado
             cells+=f'<div class="td{cls(i)}{" td-wide" if i==wide else ""}{extra}" data-label="{cols[i] if i<n else ""}">{html}</div>'
         sd=""
         if sede is not None:
@@ -4056,6 +4074,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .tbl{display:grid;min-width:min(100%,640px)}
 .wf-row{display:contents}.wf-row[hidden]{display:none}
 .td-hide{display:none!important}
+.th-num{justify-content:flex-end;text-align:right;white-space:nowrap}
 .th{padding:0 16px;min-height:40px;display:flex;align-items:center;font-weight:600;font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--surface)}
 .td{padding:12px 16px;min-height:48px;font-size:var(--t-14);border-bottom:1px solid var(--line);display:flex;align-items:center;min-width:0;overflow-wrap:normal;word-break:normal;transition:background var(--dur-1) var(--ease)}
 .td.td-wide{overflow-wrap:anywhere}
