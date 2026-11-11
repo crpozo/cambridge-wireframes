@@ -3427,13 +3427,14 @@ page("ConstructorReportes.html","Reportes self-service",shell("Arma tu reporte",
  card("", step(1,"¿Qué quieres saber?",picker_areas(PREG_AREAS,(0,0)),"Elige una pregunta; no necesitas saber nombres de tablas ni columnas")
   +step(2,"¿De cuándo y de dónde?",'<div class="pill-row"><span>Período</span>'+pills(["Este mes","Mes pasado","Últimos 3 meses","Este año","Elegir fechas…"],0)+'</div><div class="pill-row"><span>Sede</span>'+pills(["Todas","Quito","Valle","Ambato"],0)+'</div>')
   +step(3,"¿Cómo lo quieres ver?",'<div class="pill-row"><span>Vista</span>'+pills(["Por mes","Por sede","Por asesor","Lista de estudiantes"],0)+'</div><div class="pill-row"><span>Agregar</span>'+pills(["Teléfono de contacto","Asesor","Programa y nivel","Saldo"],[1],multi=True)+'</div>',"Puedes cambiarlo después sin volver a empezar")
-  +row(btn("Ver resultado",None,True),btn("Guardar como reporte"))),
+  +row('<button type="button" class="btn btn-primary" data-rep-run>Ver resultado</button>',btn("Guardar como reporte"))),
  card("Resultado · Estudiantes nuevos · este mes · todas las sedes",
-   '<p class="plain">Este mes entraron <b>52 estudiantes nuevos</b>: 28 en Quito, 15 en Valle y 9 en Ambato. Es <b>8% más</b> que el mes pasado.'+only("ADM,GER,DIR,SUC",' Carla M. trajo 21, Diego R. 17 y Sofía L. 14.',True)+'</p>'
+   '<div data-rep-body><p class="plain">Este mes entraron <b>52 estudiantes nuevos</b>: 28 en Quito, 15 en Valle y 9 en Ambato. Es <b>8% más</b> que el mes pasado.'+only("ADM,GER,DIR,SUC",' Carla M. trajo 21, Diego R. 17 y Sofía L. 14.',True)+'</p>'
    +two(vbars([("Ago",[32,18,11]),("Sep",[40,22,14]),("Oct",[28,15,9])],["Quito","Valle","Ambato"],h=160),
-        table(["Mes","Quito","Valle","Ambato","Total"],[["Agosto","32","18","11","61"],["Septiembre","40","22","14","76"],["Octubre (en curso)","28","15","9","52"]]))
+        table(["Mes","Quito","Valle","Ambato","Total"],[["Agosto","32","18","11","61"],["Septiembre","40","22","14","76"],["Octubre (en curso)","28","15","9","52"]]))+'</div>'
    +row(btn("Exportar Excel"),btn("Exportar PDF"),btn("Enviar por correo"),btn("Ver la lista de estudiantes","Estudiantes.html"))),
  card("Reportes guardados", '<div class="saved-grid">'+saved_cards+'</div>',extra=btn("Nuevo reporte","ConstructorReportes.html")),
+ '<script src="assets/reportes.js"></script>',
  subtitle="Pregunta en tus palabras, elige período y sede, y listo"),"Arma tu reporte")
 
 # 30 Dashboard ejecutivo
@@ -4528,6 +4529,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .wa-out{align-self:flex-end;background:#DCF8C6}.wa-out.is-read small{color:#1D3F8F}.wa-in{align-self:flex-start;background:#fff}
 @media(max-width:900px){.wa-grid{grid-template-columns:1fr}}
 .profile .actions .btn.btn-portal{flex:1 1 100%;flex-direction:column;align-items:flex-start;gap:2px;height:auto;padding:10px 14px;text-align:left}.btn-portal small{font-weight:400;color:var(--mute);font-size:var(--t-13)}
+.rep-flash{animation:repflash .9s ease}@keyframes repflash{from{background:var(--navy-50)}to{background:transparent}}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}

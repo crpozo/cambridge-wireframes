@@ -51,3 +51,9 @@ Automatizaciones → pestaña **WhatsApp**:
 2. En "Probar el envío" elige estudiante y plantilla; ves el texto con sus variables y pulsas **Enviar mensaje de prueba**.
 3. En el teléfono aparece el mensaje y pasa de Enviando a Enviado, Entregado y Leído; unos segundos después llega una respuesta de ejemplo. El registro de la izquierda y los contadores se actualizan.
 Todo es simulación: no se envía nada real. Sigue siendo propuesta fuera del alcance del contrato.
+
+## 12. Arma tu reporte con filtros que cambian el resultado
+Reportes → pestaña **Reportes self-service**:
+1. Elige una pregunta y en "¿De cuándo y de dónde?" cambia **Período** (este mes, mes pasado, 3 meses, este año) y **Sede**.
+2. En "¿Cómo lo quieres ver?" elige **Vista** (por mes, por sede, por asesor, lista de estudiantes) y marca columnas en **Agregar**.
+3. Pulsa **Ver resultado**: el texto, el gráfico (barras por período, barras por sede o por asesor) y la tabla se redibujan con esos filtros. Con una sola sede, "Por sede" se abre por programa; "Lista de estudiantes" muestra las columnas que agregaste. Las cifras son de ejemplo.
