@@ -470,3 +470,24 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Qué comprobante vale para Contabilidad: el de Datafast, el voucher o ambos.
 - Si el mismo flujo aplica a **Nuvei**, que también aparece en la tienda en línea.
 - Datos de prueba: las autorizaciones y números del prototipo son de ejemplo.
+
+
+## 25. Pagos con tarjeta de crédito: vouchers, cierre de lote y archivo (revisión de 10 nov)
+**Lo que dijo Secretaría**: en los pagos con tarjeta se verifica que el **valor y la referencia** sean correctos, se **pegan los vouchers en una hoja de reciclaje** junto con el **cierre de lote del datáfono** y se **anexa la factura**. Los comprobantes originales, los recibos impresos (incluida la **copia amarilla**) y los anexos se organizan y se envían a Contabilidad, y se conserva una copia como respaldo físico.
+
+**Qué había**: la columna de comprobante de la lista de pagos, el método "Tarjeta" con datáfono, lote y autorización (sección 18) y el cierre de caja digital (sección 22). **Faltaba** reemplazar la hoja con vouchers pegados: verificar cada voucher, comparar el cierre de lote y dejar todo anexado a su factura.
+
+**Qué se agregó al prototipo**: una pestaña **"Tarjetas y vouchers"** en el cierre de caja:
+- **Cierre de lote del datáfono**: se escribe el total que imprime el datáfono y se adjunta su foto; la plataforma lo compara con la suma de los vouchers y dice si **cuadra**.
+- **Vouchers de tarjeta**: por cada pago se ve lo que está en el sistema (autorización y valor) frente a **lo que dice el voucher**, y el voucher adjunto como foto. La verificación marca **Coincide**, **Referencia distinta**, **Valor distinto** o **Falta voucher**; si el error es del sistema, "Corregir en el sistema" lo iguala al voucher y la lista de pagos se actualiza sola.
+- **Anexo automático**: cada voucher queda ligado a su factura y al cierre de lote; ya no se pega nada en una hoja. La copia amarilla y los recibos se guardan como archivo en el pago.
+- **El cierre no se puede enviar a Contabilidad** mientras falten vouchers por verificar o el lote no cuadre; el estado y el aviso lo dicen.
+- Las autorizaciones de ejemplo de las tarjetas se cambiaron para que no se confundan con las de los links de pago (sección 24).
+
+**Viabilidad**: **viable y dentro del alcance** (M5 cobros y archivo de comprobantes, M1 audit log). La plataforma **no lee el voucher por sí sola**: la persona escribe o confirma la autorización y el valor; leerlos de la foto (OCR) está fuera del alcance (punto 11 del contexto).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad y la auditoría aceptan la foto del voucher** en lugar del original en papel. Los vouchers térmicos se desvanecen con el tiempo, por lo que la foto también protege el respaldo, pero el original puede seguir siendo exigible.
+- Qué es exactamente la **copia amarilla** y quién la conserva; el prototipo la trata como un archivo más del pago.
+- El **plazo de conservación** del archivo digital y de los originales, que lo define Contabilidad.
+- Si cada **datáfono o lote** (por sede o por banco) necesita su propio cierre y su propia foto.

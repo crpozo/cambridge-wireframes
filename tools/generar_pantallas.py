@@ -3648,7 +3648,7 @@ page("EnviosSRI.html","Envíos al SRI",shell("Envíos a Dora y al SRI","Facturac
 
 _CP=[("08:10","Camila Sánchez","Efectivo","Recibo 0427","$100.00","Conciliado"),("08:45","Martín Ortega","Efectivo","Recibo 0428","$120.00","Conciliado"),("09:20","Sofía Herrera","Efectivo","Recibo 0429","$80.00","Conciliado"),
      ("10:05","Pedro Mora","Efectivo","Recibo 0430","$150.00","Conciliado"),("11:30","Valeria Cedeño","Efectivo","Recibo 0431","$90.00","Conciliado"),("12:40","Luis Torres","Efectivo","Recibo 0432","$100.00","Conciliado"),
-     ("09:00","Renata Salazar","Tarjeta de crédito","Lote 0193 · aut. 209832","$450.00","Conciliado"),("13:15","Tomás Villacrés","Tarjeta de crédito","Lote 0193 · aut. 209833","$220.00","Conciliado"),("15:00","Lucía Benítez","Tarjeta de crédito","Lote 0193 · aut. 209834","$200.00","Conciliado"),
+     ("09:00","Renata Salazar","Tarjeta de crédito","Lote 0193 · aut. 310451","$450.00","Conciliado"),("13:15","Tomás Villacrés","Tarjeta de crédito","Lote 0193 · aut. 310452","$220.00","Conciliado"),("15:00","Lucía Benítez","Tarjeta de crédito","Lote 0193 · aut. 310453","$200.00","Conciliado"),
      ("09:40","Sebastián Ríos","Transferencia","Comprobante 928390","$450.00","Conciliado"),("10:50","Isabela Aguirre","Transferencia","Comprobante 928391","$280.00","Conciliado"),("11:15","Gabriela Núñez","Transferencia","Otro banco · IB-90312","$330.00","Diferencia"),
      ("14:20","Dana Pérez","Transferencia","Comprobante 928392","$200.00","Conciliado"),("16:05","Daniela Ríos","Transferencia","Comprobante 928393","$160.00","Conciliado"),("16:50","Andrés Pazmiño","Depósito","Papeleta 55120","$230.00","Conciliado")]
 _bp={"Conciliado":badge("Conciliado","ok"),"Diferencia":badge("Diferencia","bad")}
@@ -3666,6 +3666,24 @@ _cc_mat=(table(["Matrícula","Estudiante","Curso","Valor","Factura","Asesor"],[
    ['<span class="mono">001-202603272</span>',"Tomás Villacrés","Adults A2 · 0001-2026-0620","$500.00","000021114","Andrea S."],['<span class="mono">001-202603273</span>',"Lucía Benítez","Kids 2 · 0001-2026-0328","$380.00","000021115","Luis P."],
    ['<span class="mono">001-202603274</span>',"Isabela Aguirre","Adults A1 · 0001-2026-0430","$250.00","000021116","Carla M."],['<span class="mono">001-202603275</span>',"Daniela Ríos","Adults B2 · 0001-2026-0838","$495.00","000021120","Andrea S."]],wide=0)
    +kv(("Matrículas del día","6"),("Cada matrícula","ligada a su factura; las que no tienen factura aparecen en rojo en 'Matrículas sin factura'")))
+_VCH=[("Renata Salazar","000021113","310451","450.00","310451","450.00","voucher_310451.jpg",True),
+      ("Tomás Villacrés","000021114","310452","220.00","310425","220.00","voucher_310452.jpg",True),
+      ("Lucía Benítez","000021115","310453","200.00","310453","200.00","Falta",False)]
+def _vch_row(n,f,sa,sv,va,vv,adj,ok):
+    return [c2(n,"factura "+f+" · anexada"),
+            '<span class="nowrap"><span class="mono" data-vch-sis-aut>'+sa+'</span> · $<span data-vch-sis-val>'+sv+'</span></span>',
+            '<div class="vch-in"><input class="ctl rec-in" data-vch-aut value="'+va+'" aria-label="Autorización del voucher de '+n+'"><input class="ctl rec-in" data-vch-val value="'+vv+'" aria-label="Valor del voucher de '+n+'"></div>',
+            '<span data-vch-adj data-adjunto="'+("1" if ok else "0")+'">'+adj+'</span> <label class="btn btn-ghost vch-file">'+("Cambiar" if ok else "Adjuntar")+'<input type="file" accept="image/*,application/pdf" hidden data-vch-file></label>',
+            '<span class="badge badge-neutral" data-vch-res>—</span>',
+            '<button type="button" class="btn btn-ghost" data-vch-fix hidden>Corregir en el sistema</button>']
+_cc_tarj=(card("Cierre de lote del datáfono",table(["Datáfono y lote","Vouchers","Total del cierre de lote","Total en el sistema","Diferencia","Foto del cierre de lote"],[
+      ["Datafast · Banco Pichincha · lote 0193","3",'<input type="number" step="0.01" class="ctl rec-in" data-lote-in value="870.00" aria-label="Total del cierre de lote">','<span data-lote-sis>$870.00</span>','<span class="badge badge-ok" data-lote-dif>Cuadra</span>',
+       '<span data-lote-adj data-adjunto="1">cierre_lote_0193.jpg</span> <label class="btn btn-ghost vch-file">Cambiar<input type="file" accept="image/*,application/pdf" hidden data-lote-file></label>']],wide=0)
+     +kv(("Qué se hace","se escribe el total que imprime el datáfono al cerrar el lote y se adjunta su foto; la plataforma lo compara con la suma de los vouchers")),extra=badge("Reemplaza la hoja con vouchers pegados","navy"))
+   +card("Vouchers de tarjeta",table(["Cliente y factura","En el sistema (autorización · valor)","Lo que dice el voucher","Voucher adjunto","Verificación","Acción"],[_vch_row(*r) for r in _VCH],wide=0)
+     +'<p class="cc-res" data-vch-resumen aria-live="polite"></p>'
+     +kv(("Qué se verifica","que el valor y la referencia (autorización) del voucher sean los del sistema; el voucher se adjunta como foto"),("Anexo","cada voucher queda ligado a su factura y al cierre de lote; ya no se pega nada en una hoja"),("Copia amarilla y recibos","se guardan como archivo en el pago, junto al voucher"),
+         ("Respaldo","el archivo digital reemplaza la copia física que se conservaba; el plazo de conservación lo define Contabilidad")),extra=badge("Valor y referencia","ok")))
 _cc_obs=(kpis([("Observaciones abiertas",'<span data-cc-abiertas>1</span>',"de Contabilidad, sobre la versión enviada"),("Versión enviada",'v1',"23 oct 17:40"),("Plazo de revisión","1 día","Contabilidad responde con un acuse"),])
    +table(["Observación","Documento","Quién","Estado","Acción"],[
      [c2("La referencia del comprobante no coincide con el extracto (otro banco)","pago de Gabriela Núñez · transferencia $330.00"),"Lista de pagos",c2("Contabilidad","23 oct 17:52"),'<span class="badge badge-warn" data-obs-estado data-obs>Abierta</span>','<button type="button" class="btn" data-obs-corregir>Corregir solo este pago</button>'],
@@ -3685,8 +3703,9 @@ page("CierreCaja.html","Cierre de caja",shell("Cierre de caja · Quito · 23 oct
    '<button type="button" class="btn btn-primary" data-cc-enviar aria-disabled="true">Reenviar a Contabilidad</button>'+btn("Descargar paquete PDF")+btn("Exportar Excel"),
    tag='<span class="hero-code">CC-2026-1023-Q</span>'+badge("Sin papel","ok")),
  _cc_cuadre,
- card("Qué reemplaza",flow([("Se arman solas las tres listas","pagos, ventas (con las facturas a crédito) y matrículas del día"),("Se verifica el cuadre","efectivo contra lo contado; tarjetas y transferencias contra el datáfono y el banco"),("Se cierra y se envía a Contabilidad","con su versión; no se imprime nada ni se arman copias"),("Contabilidad revisa y confirma","el acuse digital reemplaza la copia que regresaba firmada"),("Queda el respaldo","para la auditoría: cada versión, quién cambió qué y el acuse")],horizontal=False),extra=badge("Reemplaza las impresiones","navy")),
- tabs(["Lista de pagos","Lista de ventas","Lista de matrículas","Revisión de Contabilidad","Historial"],"Lista de pagos",counts={"Revisión de Contabilidad":1},panels={
+ card("Qué reemplaza",flow([("Se arman solas las tres listas","pagos, ventas (con las facturas a crédito) y matrículas del día"),("Se verifica el cuadre","efectivo contra lo contado; tarjetas y transferencias contra el datáfono y el banco"),("Tarjetas: voucher, cierre de lote y factura juntos","cada voucher se adjunta como foto, se compara con el sistema y queda anexado a su factura; ya no se pegan en una hoja"),("Se cierra y se envía a Contabilidad","con su versión; no se imprime nada ni se arman copias"),("Contabilidad revisa y confirma","el acuse digital reemplaza la copia que regresaba firmada"),("Queda el respaldo","para la auditoría: cada versión, quién cambió qué y el acuse")],horizontal=False),extra=badge("Reemplaza las impresiones","navy")),
+ tabs(["Lista de pagos","Lista de ventas","Lista de matrículas","Tarjetas y vouchers","Revisión de Contabilidad","Historial"],"Lista de pagos",counts={"Revisión de Contabilidad":1,"Tarjetas y vouchers":2},panels={
+   "Tarjetas y vouchers":_cc_tarj,
    "Lista de pagos":_cc_pagos,"Lista de ventas":_cc_ventas,"Lista de matrículas":_cc_mat,"Revisión de Contabilidad":_cc_obs,"Historial":card("Historial de versiones",_cc_hist)}),
  '<script src="assets/cierre.js"></script>',
  subtitle="Las listas de pagos, ventas y matrículas se entregan a Contabilidad en digital, con versión, correcciones solo de lo observado y acuse"),"Cierre de caja")
@@ -4337,6 +4356,9 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .vt-row.is-diff{background:var(--bad-50)}.vt-row span{min-width:0;word-break:break-word}
 .mail-data{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;margin:0;font-size:var(--t-14)}.mail-data dt{color:var(--mute)}.mail-data dd{margin:0;font-weight:500}
 @media (max-width:600px){.vt-row{grid-template-columns:1fr 1fr}.vt-head{display:none}.vt-row b{grid-column:1/-1}}
+/* vouchers de tarjeta */
+.nowrap{white-space:nowrap}
+.vch-in{display:flex;gap:6px;flex-wrap:wrap}.vch-file{cursor:pointer;margin-left:6px}
 /* cierre de caja */
 .cc-res{margin:12px 0 0;padding:10px 14px;border-radius:var(--r);font-size:var(--t-14);font-weight:600;background:var(--surface-2);border:1px solid var(--line)}
 .cc-res.is-ok{color:var(--ok);background:var(--ok-50);border-color:var(--ok)}.cc-res.is-bad{color:var(--bad);background:var(--bad-50);border-color:var(--bad)}

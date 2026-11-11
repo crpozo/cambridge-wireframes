@@ -47,14 +47,14 @@
     ol.insertBefore(li, ol.firstChild);
   }
   function refrescar() {
-    var n = abiertas();
+    var n = abiertas(), tp = window.__tarjPend || 0;
     var c = q('[data-cc-abiertas]'); if (c) c.textContent = n;
     var env = q('[data-cc-enviar]');
-    if (env && !env.hasAttribute('data-enviado')) env.setAttribute('aria-disabled', n ? 'true' : 'false');
+    if (env && !env.hasAttribute('data-enviado')) env.setAttribute('aria-disabled', (n || tp) ? 'true' : 'false');
     var est = q('[data-cc-estado]');
     if (est && !q('[data-cc-ver]').hasAttribute('data-enviado')) {
-      est.textContent = n ? 'Con observaciones' : 'Lista para reenviar';
-      est.className = 'badge ' + (n ? 'badge-warn' : 'badge-navy');
+      est.textContent = n ? 'Con observaciones' : (tp ? 'Faltan vouchers de tarjeta' : 'Lista para reenviar');
+      est.className = 'badge ' + ((n || tp) ? 'badge-warn' : 'badge-navy');
     }
   }
 
@@ -77,7 +77,7 @@
     }
     var env = t.closest('[data-cc-enviar]');
     if (env) {
-      if (env.getAttribute('aria-disabled') === 'true') { toast('Falta resolver ' + abiertas() + ' observación(es) de Contabilidad'); return; }
+      if (env.getAttribute('aria-disabled') === 'true') { toast(abiertas() ? 'Falta resolver ' + abiertas() + ' observación(es) de Contabilidad' : 'Faltan ' + (window.__tarjPend || 0) + ' vouchers de tarjeta por verificar'); return; }
       version += 1; env.setAttribute('data-enviado', '1');
       var v = q('[data-cc-ver]'); v.textContent = 'v' + version; v.setAttribute('data-enviado', '1');
       var est = q('[data-cc-estado]'); est.textContent = 'Enviada · esperando acuse'; est.className = 'badge badge-navy';
@@ -92,7 +92,58 @@
     }
   });
 
-  function init() { cuadre(); refrescar(); }
+
+  // ---- Tarjetas: voucher, referencia y cierre de lote ----
+  function vouchers() {
+    var pend = 0, sisTotal = 0;
+    document.querySelectorAll('[data-vch-res]').forEach(function (rs) {
+      var f = rs.closest('.wf-row') || rs.closest('tr') || rs.parentElement.parentElement;
+      var sa = f.querySelector('[data-vch-sis-aut]').textContent.trim(), sv = parseFloat(f.querySelector('[data-vch-sis-val]').textContent) || 0;
+      var va = (f.querySelector('[data-vch-aut]').value || '').trim(), vv = parseFloat(f.querySelector('[data-vch-val]').value) || 0;
+      var adj = f.querySelector('[data-vch-adj]').getAttribute('data-adjunto') === '1';
+      var res = f.querySelector('[data-vch-res]'), fix = f.querySelector('[data-vch-fix]');
+      var txt, cls, malo = false;
+      if (!adj) { txt = 'Falta voucher'; cls = 'badge-warn'; }
+      else if (va !== sa) { txt = 'Referencia distinta'; cls = 'badge-bad'; malo = true; }
+      else if (Math.abs(vv - sv) > 0.001) { txt = 'Valor distinto'; cls = 'badge-bad'; malo = true; }
+      else { txt = 'Coincide'; cls = 'badge-ok'; }
+      res.textContent = txt; res.className = 'badge ' + cls;
+      if (fix) fix.hidden = !malo;
+      if (txt !== 'Coincide') pend++;
+      sisTotal += sv;
+    });
+    var ls = q('[data-lote-sis]'); if (ls) ls.textContent = $(sisTotal);
+    var li = q('[data-lote-in]'), ld = q('[data-lote-dif]');
+    if (li && ld) {
+      var d = Math.round(((parseFloat(li.value) || 0) - sisTotal) * 100) / 100;
+      ld.textContent = d === 0 ? 'Cuadra' : (d > 0 ? 'Sobran ' + $(d) : 'Faltan ' + $(-d));
+      ld.className = 'badge ' + (d === 0 ? 'badge-ok' : 'badge-bad'); if (d !== 0) pend++;
+    }
+    var foto = q('[data-lote-adj]'); if (foto && foto.getAttribute('data-adjunto') !== '1') pend++;
+    var r = q('[data-vch-resumen]');
+    if (r) { r.textContent = pend ? 'Faltan ' + pend + ' por verificar: el cierre no se puede enviar a Contabilidad' : 'Los vouchers y el cierre de lote coinciden: la caja de tarjetas está lista'; r.className = 'cc-res ' + (pend ? 'is-bad' : 'is-ok'); }
+    var tab = document.querySelector('[data-tab="Tarjetas y vouchers"]');
+    window.__tarjPend = pend; refrescar();
+  }
+  document.addEventListener('input', function (e) { if (e.target.matches && e.target.matches('[data-vch-aut],[data-vch-val],[data-lote-in]')) vouchers(); });
+  document.addEventListener('change', function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches('[data-vch-file],[data-lote-file]')) return;
+    var fila = f.closest('.wf-row') || f.closest('.card');
+    var adj = fila.querySelector('[data-vch-adj],[data-lote-adj]');
+    if (adj && f.files && f.files[0]) { adj.textContent = f.files[0].name; adj.setAttribute('data-adjunto', '1'); }
+    vouchers();
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-vch-fix]') : null; if (!b) return;
+    var f = b.closest('.wf-row');
+    f.querySelector('[data-vch-sis-aut]').textContent = f.querySelector('[data-vch-aut]').value.trim();
+    f.querySelector('[data-vch-sis-val]').textContent = (parseFloat(f.querySelector('[data-vch-val]').value) || 0).toFixed(2);
+    log('Corregida la referencia del voucher', 'El sistema quedó igual al voucher (autorización ' + f.querySelector('[data-vch-aut]').value.trim() + '); la lista de pagos se actualizó sola');
+    vouchers(); toast('Corregido en el sistema: ya coincide con el voucher');
+  });
+
+  function init() { cuadre(); vouchers(); refrescar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 500);
 })();

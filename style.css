@@ -515,6 +515,9 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .vt-row.is-diff{background:var(--bad-50)}.vt-row span{min-width:0;word-break:break-word}
 .mail-data{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;margin:0;font-size:var(--t-14)}.mail-data dt{color:var(--mute)}.mail-data dd{margin:0;font-weight:500}
 @media (max-width:600px){.vt-row{grid-template-columns:1fr 1fr}.vt-head{display:none}.vt-row b{grid-column:1/-1}}
+/* vouchers de tarjeta */
+.nowrap{white-space:nowrap}
+.vch-in{display:flex;gap:6px;flex-wrap:wrap}.vch-file{cursor:pointer;margin-left:6px}
 /* cierre de caja */
 .cc-res{margin:12px 0 0;padding:10px 14px;border-radius:var(--r);font-size:var(--t-14);font-weight:600;background:var(--surface-2);border:1px solid var(--line)}
 .cc-res.is-ok{color:var(--ok);background:var(--ok-50);border-color:var(--ok)}.cc-res.is-bad{color:var(--bad);background:var(--bad-50);border-color:var(--bad)}
