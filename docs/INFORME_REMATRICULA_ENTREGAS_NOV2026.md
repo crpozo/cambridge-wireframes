@@ -99,7 +99,7 @@ Además: 11 tarjetas principales (ingreso, matrículas, niveles, ticket, one to 
 ```
 Matrícula confirmada
    └─ se crea sola la entrega pendiente (libro del nivel, solo el del primer nivel)
-        └─ Secretaría abre la entrega en la tablet (busca al estudiante o escanea el código de barras)
+        └─ Secretaría abre la entrega en la tablet (busca al estudiante por nombre, cédula o matrícula)
              └─ revisa: libro correcto · completo y en buen estado · datos del estudiante
                   └─ firma: con el dedo en la tablet, o desde su celular con un QR (menor de 18: firma el representante)
                        └─ confirmar → recibo en PDF (estudiante, libro, fecha, hora, quién entregó, firma)
@@ -111,7 +111,7 @@ Matrícula confirmada
 
 **Estados de una entrega**: Lista para entregar · Sin stock (esperando compra) · Sin retirar (más de 7 días) · Entregada.
 
-**Pantalla de la tablet** (`EntregarLibro.html`): campo grande para escanear, tres pasos numerados, casillas de 24 px (objetivo táctil ≥ 44 px), zona de firma de 230 px de alto con trazo real (se puede dibujar en el prototipo), alternativa por QR con simulación de "firma recibida", y el botón de confirmar fijo abajo. Si falta revisar o firmar, avisa qué falta. En el prototipo la firma dibujada **sí aparece en el recibo**.
+**Pantalla de la tablet** (`EntregarLibro.html`): campo grande para buscar al estudiante, tres pasos numerados, casillas de 24 px (objetivo táctil ≥ 44 px), zona de firma de 230 px de alto con trazo real (se puede dibujar en el prototipo), alternativa por QR con simulación de "firma recibida", y el botón de confirmar fijo abajo. Si falta revisar o firmar, avisa qué falta. En el prototipo la firma dibujada **sí aparece en el recibo**.
 
 **Reportes pedidos**:
 - *Matriculados que aún no retiran su libro*: pestaña "Sin retirar" con días transcurridos, a quién se contactó y recordatorios.
@@ -122,13 +122,13 @@ Matrícula confirmada
 ## 4. Lo que no jala, no es viable o necesita adenda
 
 1. **Envío del recibo por WhatsApp** (y recordatorios por WhatsApp): fuera del alcance (punto 12 del contexto). Requiere la API oficial de Meta, plantillas aprobadas y tiene costo por mensaje. Se dejó solo por correo y con etiqueta "Propuesta".
-2. **Escaneo con la cámara de la tablet**: en el prototipo está **simulado**. En la plataforma real la lectura por cámara en el navegador es inconsistente (iOS y algunos navegadores); lo seguro es una librería de lectura (por ejemplo ZXing) o un **lector USB**, que se comporta como teclado y ya funciona con el campo de la pantalla. Conviene confirmar qué tablet usarán.
+2. **Libros sin código de barras**: los libros de Cambridge no traen código de barras, así que no hay escaneo. La entrega se abre buscando al estudiante (nombre, cédula o matrícula) o desde la lista de pendientes, y la recepción de pedidos se cuenta con botones + y −.
 3. **Firma desde el celular con QR**: el QR del prototipo es de ejemplo y no se puede escanear. En la realidad necesita un enlace de un solo uso, con vencimiento, y una página móvil mínima. Es viable pero es una pieza extra de desarrollo.
 4. **Firma como evidencia legal**: es firma simple (como la aceptación electrónica del contrato). Si Cambridge necesita firma certificada, es adenda (punto 9).
 5. **Rematrícula 100 % automática sin Secretaría**: depende del Muro y de la creación de grupos; no se puede prometer hasta confirmar qué expone Moodle (punto 14).
 6. **Conexión directa con el banco, OCR de comprobantes y verificación con Nuvei**: no viables sin terceros; ver 2.4.
 7. **Embudo desde Kommo**: viable solo si el plan de Kommo expone la API necesaria (ya figura como pendiente de accesos: plan Advanced).
-8. **Si el prototipo se muestra como "ya funciona"**: no. Es una maqueta navegable; la firma, el QR y el escáner son demostraciones.
+8. **Si el prototipo se muestra como "ya funciona"**: no. Es una maqueta navegable; la firma y el QR son demostraciones.
 
 ## 5. Preguntas abiertas para el cliente
 - **Deserción mensual**: ¿cómo se define? Propuesta: estudiantes que terminan un módulo y no se rematriculan en 30 días, sobre los que terminaron.
@@ -146,10 +146,369 @@ Matrícula confirmada
 
 ## 7. Cómo probar el prototipo
 1. `python -m http.server 8765` dentro de la carpeta del repo, y abrir `http://localhost:8765/`.
-2. Entrar con cualquier rol (por ejemplo Secretaría, con "Ver como") → Inventario → **Entregas de libros** → "Abrir entrega con escáner".
-3. En la tablet: escanear, marcar las tres revisiones, firmar con el dedo (o con el mouse) y confirmar. El recibo muestra la firma que dibujaste.
+2. Entrar con cualquier rol (por ejemplo Secretaría, con "Ver como") → Inventario → **Entregas de libros** → "Abrir entrega".
+3. En la tablet: buscar la entrega, marcar las tres revisiones, firmar con el dedo (o con el mouse) y confirmar. El recibo muestra la firma que dibujaste.
 4. Académico → **Rematrícula** → "Matricular y facturar" en un estudiante con alerta enviada.
 5. Facturación → Cobros → **Conciliación bancaria**. Cursos → "Capacidad y ocupación". Tablero comercial → **Plan estratégico**.
 
 ## 8. Archivos
 Nuevos: `EntregasLibros.html`, `EntregarLibro.html`, `ReciboEntrega.html`, `Rematricula.html`, `RematriculaFactura.html`, `assets/entregas.js`, este informe. Modificados: `tools/generar_pantallas.py` (todo se genera desde ahí) y las páginas que reflejan el nuevo menú.
+
+## 9. Datos del curso nuevo y creación de módulos (revisión de fuentes, 10 nov)
+Pregunta: ¿alguna fuente dice que la plataforma debe contener docente, aula, fecha de fin, horas totales, progreso y código del LMS, y debe permitir crear un módulo nuevo?
+
+| Dato | ¿Lo piden las fuentes? | Estado |
+|---|---|---|
+| Docente | Sí. `docs/PROYECTO.md` (M3): "asignación de profesor con validación de contrato activo". | En alcance |
+| Aula | Sí. M3: "creación de cursos (programa, nivel, modalidad, horario, aula)". | En alcance |
+| Progreso del curso | Sí, literal. Contrato, Cláusula Tercera, M3: "gestión, seguimiento (tracking) y progreso". | En alcance |
+| Fecha de finalización y horas totales | No literal. Son parte del horario del curso; ya estaba decidido calcular la fecha de fin saltando feriados (`docs/DECISIONES.md`). | En alcance como detalle de M3 |
+| Código y plataforma LMS | **No**. Ni el contrato ni la propuesta lo piden como campo. Solo existe como proceso manual (crear el curso en Cambridge One y GradeKeeper 72 h antes, `docs/PROCESOS_INTERNOS.md`) y Moodle figura en M11 "sujeto a la API que expongan". Nació en la sesión del 5 nov. | Requerimiento nuevo |
+
+- **Código LMS**: guardarlo como campo informativo es trivial y cabe en M3; **sincronizarlo con el LMS** depende de M11 y de lo que Moodle o Cambridge One expongan. Se dejó como campo de texto con esa advertencia. Conviene confirmarlo con el cliente.
+- **Crear un módulo nuevo**: sí debe permitirlo. M3 incluye la creación de cursos y `NuevoCurso.html` ya existía. En la sesión, Secretaría crea a mano cada módulo siguiente (módulo 3, 4…) y la plataforma calcula el fin con los feriados cargados. Falta decidir si algún día se crean solos los módulos que quedan en la bolsa; hoy no está pedido.
+
+**Cambios en el prototipo**: en `RematriculaFactura.html` la nueva tarjeta "2 · Curso nuevo" muestra el curso con programa, módulo, docente, aula, plataforma LMS, días y horario, inicio, fin, horas totales, cupo, valor y progreso. Si el módulo aún no tiene curso, la segunda opción permite **crearlo sin salir de la matrícula** (docente, aula, código LMS, horario, fecha de inicio, fin calculado, horas y cupo) o abrir el formulario completo. `NuevoCurso.html` y el detalle del curso suman el campo "Código en el LMS".
+
+
+
+## 10. Notas académicas → matrícula: aviso automático al cerrar las notas (revisión de 10 nov)
+**Dolor**: el sistema actual no conecta la aprobación de notas con la matrícula. Secretaría espera a que Académico termine y le avise; cada correo y cada matrícula se hacen a mano.
+
+**Qué había en `main`**: `CalificarCurso.html` con reglas de cierre (≥ 7 aprueba, 6.50–6.99 recuperación, deuda bloquea la nota), el protocolo manual de reaperturas y, desde esta rama, `Rematricula.html` con los estados y las reglas. Faltaba **mostrar qué se dispara al cerrar las notas**, el **correo** que recibe el estudiante y el **registro** de lo enviado.
+
+**Qué se agregó al prototipo**
+- `CalificarCurso.html`: tarjeta "Qué se dispara solo al cerrar las notas" con cuatro grupos (aprobados sin deuda, aprobados con deuda, bloqueados por asistencia, reprobados), qué recibe cada uno y qué queda en el sistema.
+- `Rematricula.html`, pestaña **Avisos automáticos**: vista previa del correo en tres variantes (aprobado, recuperación, con deuda), cifras de envío (confirmaron, abiertos, sin abrir, rebotaron) y registro por estudiante. Reglas: reenvío a las 48 h; a las 72 h se libera el cupo y se avisa a Secretaría.
+- Secretaría recibe una **notificación** y una **tarea** en su Inicio ("Notas cerradas: A1 Sábados · 8 listos para rematricular"): ya no espera a que Académico le avise.
+- Los aprobados con deuda no reciben la nota hasta regularizar; los de recuperación o bloqueados por asistencia no se rematriculan solos (decide Coordinación).
+
+**Viabilidad y condiciones**
+- **El disparador funciona solo si las notas se registran en la plataforma** (M3 incluye "notas pass/fail"). El proceso actual del cliente registra las notas en **GradeKeeper** (`docs/PROCESOS_INTERNOS.md`) y el contrato solo contempla integraciones con Kommo, Moodle y Dora (M11). Si las notas siguen viviendo en GradeKeeper, esta automatización necesita una integración que **no está en el contrato**. Es la pregunta clave para el cliente.
+- **"Sin intervención manual" total**: el aviso y la matrícula propuesta sí son automáticos. La confirmación final depende del pago del estudiante y de que exista el curso siguiente con cupo; si no existe, se avisa a Coordinación para crearlo.
+- **Correo al estudiante**: la plataforma ya necesita enviar correos por el contrato (aceptación del contrato, recordatorios de cuotas), pero las notificaciones a estudiantes "más allá de las internas" figuran como fuera de alcance (punto 17 del contexto) y dependen de un proveedor de correo transaccional. Conviene **confirmar si el aviso de rematrícula entra en ese correo ya contratado**. **WhatsApp**: propuesta aparte (punto 12).
+- **Enlace "Confirmar mi matrícula y pagar"**: apunta al portal del estudiante, que es una propuesta fuera del alcance. Sin portal, el enlace llevaría a una página de pago simple o el estudiante respondería al correo.
+- El texto de los correos, los plazos (48 h, 72 h) y quién puede cerrar notas son supuestos por confirmar con Coordinación Académica.
+
+
+## 11. Descuentos, políticas de módulos y aprobador (revisión de 10 nov)
+**Lo que dijo Secretaría**: al crear la matrícula se aplican descuentos por pagar dos módulos o el nivel completo (la política más común), y otros casos como hermanos que necesitan revisión y aprobación administrativa. Antes de guardar la matrícula en estado pendiente de facturación se debe registrar el nombre de quien aprobó el descuento.
+
+**Qué había en `main`**
+- Tabla de descuentos con motivos (referido, hermanos, promoción, convenio, "Beneficio cancela 2 módulos", indexado) y regla "hasta 10 % lo aplica el asesor; más pasa a aprobación" (`docs/DECISIONES.md`).
+- Bandeja de Aprobaciones y `SolicitudDescuento.html`.
+- **Faltaba**: dónde se registra **quién aprobó**. En la rematrícula era un campo de texto libre y opcional; en Nueva matrícula no existía. Los hermanos entraban como "10 %" sin aprobación.
+
+**Qué se agregó al prototipo**
+- **Bloque "Aprobación del descuento"** (aprobado por, referencia, fecha y hora automática) en Nueva matrícula, Matrícula desde lead y Matrícula y factura. **Solo aparece cuando hace falta**: descuento por encima del límite del asesor, hermanos o beneficios por pago de módulos.
+- **Bloqueo al guardar**: mientras no se elija quién aprobó, los botones de confirmar o guardar la matrícula no avanzan y avisan qué falta. Con aprobador registrado, se abre la confirmación normal.
+- "Hermano o familiar matriculado" ahora figura "requiere aprobación".
+- Tarjeta desplegable **"Ver políticas de descuento"** junto al selector, con cada motivo, su porcentaje y si necesita aprobación.
+- `DetalleMatricula.html` muestra "Aprobado por" (en el ejemplo, "No requerido · dentro del límite del asesor").
+- "Matricular sin facturar" deja la matrícula en **estado pendiente de facturación** con el aprobador registrado.
+
+**Por confirmar con el cliente**
+- **Los porcentajes reales.** Hay una inconsistencia que ya existía: el manual de procesos habla de **10 %** por pagar 2 módulos (reaperturas) y la tabla de ejemplo del prototipo dice **20 % y pasa a aprobación**. La tabla real la deben enviar Dirección Comercial y Administración. Hasta entonces los valores son ilustrativos.
+- **Quién puede aprobar** cada tipo (el prototipo ofrece Dirección Comercial, Administración General y Gerencia General) y si la aprobación se pide dentro de la plataforma (bandeja de Aprobaciones) o se registra después de aprobarla por fuera.
+- **Hermanos**: ¿siempre requieren aprobación, o solo a partir de cierto porcentaje?
+- **Validación real**: en el prototipo el bloqueo es una demostración en el navegador. En la plataforma debe validarse en el servidor y quedar en el audit log (aprobador, fecha, descuento, matrícula).
+
+
+## 12. Facturación vinculada a la matrícula, sin cambiar de pestaña (revisión de 10 nov)
+**Lo que dijo Secretaría**: hoy hay que pasar de cursos a matrículas y de ahí a facturas, lo cual es tedioso. Al estar matriculado el estudiante, la matrícula se vincula y genera los ítems de la factura, con **servicios educativos** y **productos** (materiales) claramente diferenciados. Hoy, al registrarse todo como "producto", no se puede saber cuántos módulos se facturan realmente.
+
+**Qué había en `main`**: Nueva matrícula ya incluía factura y pago en un solo asistente para ventas nuevas; la factura ya tenía columna "Tipo" (servicio o producto); la vista "Sin vincular" cubre las facturas sin matrícula. Faltaba el camino inverso y el caso real de Secretaría: **partir de una matrícula o de un curso y facturar desde ahí**.
+
+**Qué se agregó al prototipo**
+- **Matrícula y factura** (`RematriculaFactura.html`): la factura muestra "Ítems generados desde la matrícula 001-…", vinculada a ella, con botón "Volver a generar ítems". Los ítems se separan en **Servicios educativos** (módulos, inscripción, con su código y origen: matrícula o bolsa de módulos) y **Productos** (libros y materiales), cada uno con su subtotal y un botón "Agregar producto". Se muestra cuántos módulos se facturan.
+- **Detalle de curso**: en la lista de estudiantes aparece el estado "Matriculada · sin factura" (en rojo, como en TeamDesk) con la acción **Facturar** directa, y un filtro "Sin factura". El saldo del curso se actualiza.
+- **Detalle de matrícula**: botón "Generar factura" (aquí deshabilitado porque la matrícula ya está facturada, con el motivo) y, en la pestaña de facturas, la vinculación: "la factura 000021090 está ligada a esta matrícula: servicios educativos $900 y productos $80".
+- **Facturación**: nueva vista **"Matrículas sin factura"** (cifras: cuántas, valor por facturar, más de 24 h, con acción Facturar por fila) y la opción **"Desde una matrícula existente"** en el menú "Nueva factura".
+
+**Viabilidad**: **viable y dentro del alcance** (M5, con M2 y M3): el contexto del proyecto ya dice "factura con varios ítems con código y material sugerido editable" y "una factura por venta con todos los ítems". La separación entre servicios y productos permite contar módulos facturados, lo que hoy no se puede; depende de definir bien los códigos de los ítems en el catálogo (Configuración).
+
+**Por confirmar**: si el **IVA** o las reglas del SRI son distintos entre servicios educativos y productos (el prototipo muestra servicios con IVA 0 %); el catálogo real de códigos por módulo y por libro; y si la factura puede editarse una vez generada o solo regenerarse. Las pantallas de Facturar de cursos y matrículas apuntan a una misma pantalla de ejemplo (la de Camila Sánchez); en la plataforma real cargarían los datos de cada matrícula.
+
+
+## 13. Cursos futuros sin crear, fechas de fin con feriados y multimódulos (revisión de 10 nov)
+**Lo que dijo Secretaría**: cuando un estudiante paga varios módulos por adelantado, los cursos futuros (por ejemplo los de febrero) todavía no existen y se crean a mano, calculando la fecha de fin y los feriados. En la primera factura se usa la sección de multimódulos para registrar cuántos módulos se pagaron; cuando no hay matrícula vinculada, hay que buscar a mano el producto del módulo (el 5 o el 6) y agregarlo a una factura suelta para asignarlo después a un curso.
+
+**Qué había en `main`**: `NuevoCurso.html` con una fecha de fin "calculada" (solo un texto), un calendario de feriados 2026 en Programas, y la bolsa de módulos visible solo en la ficha y el portal del estudiante. **Faltaba**: calcular la fecha de fin de verdad, ver **qué cursos hay que crear** según lo que ya se pagó y **asignar** esos módulos sin una factura suelta.
+
+**Qué se agregó al prototipo**
+- **Calendario del curso con cálculo real** (Nuevo curso y la creación de un curso dentro de la matrícula): se elige fecha de inicio, días de clase, horas por sesión y total de horas, y la pantalla calcula la **primera clase, el fin, el número de sesiones y los feriados saltados**. Ejemplo: desde el 1 de febrero de 2027, con Lu-Ma-Mi-Ju y 36 h, salta el Carnaval (8 y 9 feb) y termina el 4 de marzo. El resultado llena el campo "Fecha fin".
+- **Bolsa de módulos** (`Rematricula.html`, nueva pestaña): "Cursos que faltan por crear" (cuántos estudiantes ya pagaron cada módulo, fecha sugerida y cuántos faltan para el mínimo de 6) y "Quién pagó qué módulo" (estudiante, módulo, factura y fecha de pago). Cada fila lleva a **Crear curso**, y hay una acción **"Matricular a los que ya pagaron"**.
+- **Nuevo curso** suma "Estudiantes con este módulo ya pagado": al crear el curso se matriculan con su módulo, **sin emitir otra factura**.
+- **Sin factura suelta**: el módulo adelantado queda guardado en la factura original y en la bolsa (ver sección 12); ya no hay que buscar el producto del módulo y agregarlo a mano.
+
+**Viabilidad**: **viable y dentro del alcance** (M3 creación de cursos, M5 bolsa de módulos y factura multi-módulo).
+
+**Por confirmar con el cliente**
+- **Feriados**: los de 2027 del prototipo son de ejemplo. Los feriados móviles y los "puentes" los fija el Gobierno por decreto, así que el calendario debe cargarse cada año y poder editarse; también los locales (por ejemplo, el 6 de diciembre en Quito).
+- **Creación automática**: hoy la persona crea el curso a mano con la ayuda de la bolsa. Crear automáticamente los cursos cuando se junte la demanda no está pedido ni contratado; es una posible mejora.
+- **Mínimo para abrir (6)** y la **regla de una o dos semanas** que mencionó Secretaría sobre la duración según el horario: hay que confirmarlas.
+- La fecha de fin depende de las sesiones regulares; **reposiciones, recuperaciones o cambios de profesor** no se reflejan en el cálculo.
+
+
+## 14. Facturas sueltas y notas de crédito por cambio de modalidad o de curso (revisión de 10 nov)
+**Lo que dijo Secretaría**: los servicios adicionales (tutorías, simuladores) generan facturas sueltas sin matrícula, y para encontrar la factura del módulo siguiente hay que revisarlas todas a mano. Además, cuando hay un cambio de modalidad o de curso que modifica el valor se hace una **nota de crédito**, y la factura original queda en el historial.
+
+**Qué había en `main`**: una vista "Sin vincular" con tres casos y un botón de vincular sin contexto; `NotaCredito.html` como formulario simple con las reglas del contrato de servicios; y un listado de notas de crédito. **Faltaba** distinguir las facturas que de verdad hay que revisar de las que no, sugerir a dónde pertenece cada una, y **calcular** qué corresponde cuando cambia el valor.
+
+**Qué se agregó al prototipo**
+- **Facturas sueltas clasificadas por concepto** (Facturación → Facturas → "Sin vincular"): cada factura lleva su concepto (módulo adelantado, matrícula, convenio, tutoría, simulador, traducción, libro) y un estado: **"Requiere acción"** (módulos o matrículas sin vincular) o **"Servicio independiente"** (tutorías, simuladores, traducciones y libros, que se ligan a la ficha del estudiante y no necesitan matrícula). Con cifras y filtros, solo las que requieren acción quedan pendientes (en el ejemplo, 4 de 8).
+- **Sugerencia del sistema** por cada una ("Bolsa de módulos · módulo 5, coincide valor y fecha", "Matrícula 001-202603265, misma persona y valor") y acciones: vincular a la bolsa, vincular a matrícula, asignar estudiantes de un convenio.
+- **Nota de crédito con cálculo** (`NotaCredito.html`): motivos "Cambio de modalidad" y "Cambio de curso u horario". Al elegir modalidad actual, modalidad nueva y número de módulos, la pantalla dice si corresponde **nota de crédito** (el valor baja), **cobro adicional** (sube) o **solo mover la matrícula** (igual), y llena el monto. Ejemplo: presencial $275 a virtual $250 da una nota de crédito de $25. Incluye la decisión de **volver a facturar** y el flujo "qué pasa con la factura original".
+- **Historial**: la factura original **no se borra**: queda con el estado **"Ajustada · NC-…"** en el listado y la nota de crédito enlaza a la factura nueva (listado de notas con el nuevo caso).
+
+**Viabilidad**: **viable y dentro del alcance** (M5 incluye "notas de crédito" y el contexto del proyecto ya describe la factura con ítems con código). Clasificar las facturas depende de que cada ítem del catálogo (Configuración) tenga su tipo: módulo, tutoría, simulador, traducción, libro.
+
+**Por confirmar con el cliente**
+- Los **precios por modalidad** del cálculo ($250 virtual y $275 presencial por módulo) salen de los datos de ejemplo; deben venir del catálogo real.
+- **Devoluciones en dinero**: el contrato de servicios retiene el 10 % antes de iniciar y no devuelve inscripción; la calculadora cubre solo el cambio de valor, no esas devoluciones.
+- **SRI**: la nota de crédito debe autorizarse en el SRI. La plataforma la registra, pero emitirla directamente al SRI no está contratado (depende de Dora, módulo 11, o es adenda).
+- **Facturas ya pagadas**: si la factura original está pagada y la nota de crédito deja saldo a favor, hay que decidir si se devuelve o se aplica al siguiente módulo (hoy el prototipo ofrece "queda como saldo a favor").
+- Hasta cuándo se puede ajustar una factura (cierre contable del mes) y quién puede emitir la nota de crédito.
+
+
+## 15. Stock negativo y recepción de libros físicos (revisión de 10 nov)
+**Lo que dijo Secretaría**: el inventario muestra negativos (-1, -4) cuando se venden libros en línea que hay que comprar. Cuando llega la compra, quien recibe verifica los artículos contra el documento, revisa si la entrega está completa, la marca como recibida en el sistema, imprime las etiquetas, las separa a mano y etiqueta cada libro para mantener actualizado el inventario. Si el pedido llega incompleto no se puede marcar como recibido.
+
+**Qué había en `main`**: stock por sede con alerta de negativos y el correo diario de las 07:00, ingresos de proveedor ya registrados con su estado ("Recibido" o "Con pendientes"), pedido sugerido por forecast y los códigos de activación (módulo 7, M7). **Faltaba** explicar qué significa el negativo, armar la lista de compra y, sobre todo, la **pantalla de recepción**: contar lo que llegó, compararlo con el pedido y el documento, y qué pasa al marcarlo recibido.
+
+**Qué se agregó al prototipo**
+- **Lista de compra de esta semana** (Inventario): se arma sola con los títulos en negativo, la sede, los libros vendidos sin stock y la cantidad a comprar, con "Crear pedido con esta lista". Aclara que el negativo son libros ya vendidos que aún no están en la sede.
+- **Recibir pedido** (`RecepcionPedido.html`, desde Inventario, Movimientos, Pedidos a proveedor "Recibir" y el Inicio de Secretaría): datos del pedido, **documento del proveedor** (número, total y adjunto), **conteo por libro contra lo pedido** con diferencia y estado (completo, faltan, sobran) y botones + y − (o "Marcar todo como recibido") para contar, porque los libros no traen código de barras.
+- **Regla de la sesión**: "Marcar como recibido" solo se habilita si el pedido está **completo**; con faltantes o sobrantes avisa qué pasa. Existe "Registrar recepción parcial", que suma lo recibido y deja el pedido "Con pendientes".
+- **"Qué pasa al recibirlo"**: el stock de la sede sube, los saldos negativos se cubren y **los libros ya vendidos se asignan solos a su entrega digital** (de "Sin stock" a "Lista para entregar", sección de Entregas de libros) o a su pedido de la tienda en línea. Cada libro muestra para quién es.
+- **Sin etiquetas**: el paso de imprimir y pegar etiquetas desaparece; la tablet muestra a quién va cada libro al entregarlo.
+
+**Viabilidad**: **viable y dentro del alcance** (M7 incluye "inventario bajo demanda y tracking de pedidos"). La asignación automática de lo recibido a las entregas pendientes se apoya en el flujo de entregas digitales.
+
+**Por confirmar con el cliente**
+- Si **las etiquetas físicas** se pueden eliminar del todo. Si necesitan identificar físicamente el libro de cada estudiante, se puede mantener una etiqueta opcional.
+- Si se permite **recibir parcialmente** (el prototipo lo permite, con pendientes) o solo pedidos completos como hoy.
+- **Sin código de barras**: el conteo de la recepción es manual (botones + y −). Se retiró el escáner que tenía el prototipo.
+- Cómo se vinculan las ventas **en línea** con el stock negativo: depende de la sincronización con la tienda (WooCommerce), que figura como fuera del alcance del contrato (punto 4 del contexto).
+- Quién puede registrar una recepción y si hace falta una segunda persona que la valide.
+
+
+## 16. Exámenes internacionales: factura previa, cédula en PDF y 20 días (revisión de 10 nov)
+**Lo que dijo Secretaría**: para que una persona externa rinda un examen internacional hay que emitir primero la factura, verificar los datos y adjuntar obligatoriamente el PDF de la cédula. La política exige hacer el trámite con 20 días de anticipación. Hubo un caso en que el cliente pagó, pero nunca envió la cédula y no se pudo registrar.
+
+**Qué había en `main`**: `NuevaInscripcionExamen.html` con 5 pasos (cliente, examen y pago, datos, fecha del calendario, verificación). La identificación era un adjunto opcional, la regla de 20 días era solo un texto, un paso terminaba en "Imprimir y enviar" y no había forma de saber quién pagó y no completó el trámite. El módulo está marcado como **propuesta fuera del alcance del contrato** (punto 3 del contexto).
+
+**Qué se agregó al prototipo**
+- **Factura primero**: el paso del pago pide el **número de factura** como campo obligatorio y explica el orden: factura, datos y cédula, fecha, inscripción.
+- **Cédula en PDF obligatoria**: sin el PDF no se puede inscribir. La pantalla lo marca en rojo, rechaza archivos que no sean PDF y se pone verde al adjuntarlo. Se puede **pedir al cliente** la cédula o todos los datos con un botón.
+- **Guardar pendiente de cédula**: para el caso del pago hecho sin documento, el candidato queda con el estado **"Falta cédula"** (factura y pago registrados, cupo reservado hasta el cierre de inscripción) en lugar de perderse. En el listado de exámenes hay una cifra y un filtro "Falta cédula" y una acción "Pedir cédula".
+- **Regla de 20 días visible**: el calendario muestra la fecha del examen, el cierre de inscripción, los días que faltan y si está disponible; una fecha con menos de 20 días permite **pedir excepción** a Coordinación (queda en Aprobaciones).
+- Ya no se imprime: el paso final es **"Enviar resumen al cliente"** por correo.
+
+**Viabilidad**: es viable de construir, pero es un módulo **fuera del alcance del contrato**, así que su construcción y cualquier envío por WhatsApp (plantilla de datos) requieren cotización aparte. El bloqueo sin cédula en el prototipo es una demostración; en la plataforma real debe validarse en el servidor y guardar el documento en el expediente.
+
+**Por confirmar con el cliente**
+- Si **siempre** hace falta la cédula (también para estudiantes que ya la tienen en su ficha) o solo para clientes externos.
+- Quién puede autorizar una **excepción de la regla de 20 días** y si el centro examinador la acepta.
+- Plazo máximo para completar la cédula antes de liberar el cupo y qué pasa con el pago si no se completa.
+- Los feriados y el calendario anual se cargan una vez al año (ver sección 13).
+
+## 17. Corrección: los libros no tienen código de barras (10 nov)
+Se retiró todo lo relacionado con escanear libros: el campo y botón de escáner de la **entrega** (ahora se busca la entrega por nombre, cédula o matrícula del estudiante, o se elige de la lista de pendientes) y el escáner de la **recepción de pedidos** (ahora el conteo es manual con botones **+** y **−** y un botón "Marcar todo como recibido"). También se corrigieron las referencias en este informe, en `docs/PANTALLAS.md` y en `CLAUDE.md`. No se reintroducirá un escáner salvo que el cliente lo pida.
+
+
+## 18. Métodos de pago y registro de comprobantes (revisión de 10 nov)
+**Lo que dijo Secretaría**: los métodos más comunes son efectivo, tarjeta de débito, tarjeta de crédito, depósito, transferencia, nota de crédito y pago en línea (links generados en la plataforma). Para transferencias y links hay que bajar el comprobante del WhatsApp o del historial de la plataforma, anexarlo, ingresar el número de autorización o de comprobante y la fecha de cierre de caja para que Contabilidad revise. Hoy el sistema solo permite dos métodos de pago por factura.
+
+**Qué había en `main`**: `RegistrarPago.html` con un formulario único (monto, fecha, método entre cuatro opciones, un campo de referencia y un adjunto de texto). La matrícula tenía una lista de métodos más larga, pero sin datos por método. **Faltaba** que cada método pidiera lo suyo, adjuntar el comprobante, la fecha de cierre de caja y permitir más de un método por pago.
+
+**Qué se agregó al prototipo** (en Registrar pago y en Matrícula y factura)
+- **Ocho métodos**: efectivo, tarjeta de débito, tarjeta de crédito, depósito, transferencia, nota de crédito, pago en línea (link) y "Otro" (cheque, retención, cruce de cuentas, gift card, que el contrato también menciona).
+- **Cada método pide sus datos**: efectivo, recibo de caja; tarjetas, datáfono, lote, número de autorización y si es corriente o diferido; depósito, banco y papeleta; transferencia, banco de origen (con aviso de las interbancarias) y número de comprobante; nota de crédito, cuál se aplica (vigencia de 12 meses); link, código de autorización con "Traer del historial de links".
+- **Comprobante adjunto** (PDF, JPG o PNG) en todos los métodos que lo necesitan, y **fecha de cierre de caja** en cada pago.
+- **Varios métodos por factura**: se agregan y quitan líneas de pago; una barra verifica la suma (cuadra, faltan o sobran) y deja saldo pendiente si falta. Ya no hay límite de dos.
+- Una guía desplegable "Qué se pide según el método" y, en Caja del día, la nota de que cada pago lleva su fecha de cierre y comprobante adjunto.
+
+**Viabilidad**: **viable y dentro del alcance** (M5: "método de pago y estado de cobro"). La conciliación automática con el banco está en la sección 4 (importar el extracto).
+
+**Por confirmar con el cliente**
+- **"Traer del historial de links"**: el historial vive en la pasarela de pagos (Datafast o Nuvei). Traerlo automáticamente requiere una integración que no está en el contrato (punto 11 del contexto: verificación con Nuvei); sin ella el número se sigue copiando a mano. En el prototipo es una demostración.
+- La lista final de métodos y qué datos exige cada uno (por ejemplo, si se necesita el nombre del titular de la tarjeta).
+- Si el **cierre de caja** debe ser un documento digital firmado: hoy Secretaría imprime y entrega la lista de pagos a Contabilidad. Hacerlo digital queda como siguiente mejora.
+- Los plazos de diferido y los datáfonos de ejemplo son supuestos.
+
+
+## 19. Automatizaciones: aperturas, reaperturas, cobranza y notas (revisión de 10 nov)
+**Lo que dijo Secretaría**: se pueden programar alertas automáticas y plantillas de WhatsApp para aperturas, reaperturas de cursos y seguimiento de cobranzas a quienes tienen saldos pendientes. La capacidad estándar de las aulas es de 12 estudiantes. Hoy Secretaría revisa a mano, semana a semana, los grupos que terminan y sus notas pendientes para planear la apertura y los procesos comerciales.
+
+**Qué había en `main`**: pedazos sueltos: el protocolo de reaperturas y el botón "Enviar reporte semanal" en Cursos, recordatorios de cuota en la matrícula, la cartera, plantillas en Configuración y alertas en Insights. **No había un lugar** para ver qué avisos salen solos, apagarlos, ver a quién llegaron ni los parámetros (capacidad estándar, mínimo para abrir).
+
+**Qué se agregó al prototipo**: pantalla nueva **Automatizaciones** (menú Dirección; Secretaría, Coordinación y Dirección la ven), con cuatro pestañas:
+- **Reglas** (10, por área): aperturas (crear el curso en el LMS a las 72 h, correo informativo a las 48 h, alerta de ocupación baja y curso sin profesor a los 14 días), reaperturas (contacto al 75 % del curso, reporte semanal), cobranza (cuota por vencer, cuota vencida a los 1, 7 y 15 días con escalamiento, saldo con el curso en marcha) y notas pendientes. Cada una con su momento, qué hace, canal y un **interruptor** para activarla o apagarla sin borrarla (el conteo de reglas activas se actualiza).
+- **Plantillas**: vista previa con variables ({nombre}, {curso}, {fecha}, {saldo}…) de cinco mensajes (rematrícula, cuota por vencer, cuota vencida, inicio de curso, pocas inscripciones).
+- **Registro de envíos**: qué salió, a quién, por qué canal y si se envió, rebotó u fue omitido (por ejemplo, un cobro que se salta porque el estudiante prometió pagar).
+- **Resumen semanal y parámetros**: el resumen del lunes con los grupos que terminan, sus notas pendientes y la ocupación del siguiente curso, y los **parámetros** (capacidad estándar 12, mínimo para abrir 6, alerta bajo 50 %, anticipación de 14 días, día y hora del resumen).
+- Accesos desde Cursos ("Configurar avisos automáticos") y desde la Cartera ("Automatizar cobranza").
+
+**Viabilidad**
+- **Alertas internas y correos: viables y dentro del alcance** (M5 incluye recordatorios de cuota y cobranza; M3 los cursos y M8 los reportes). El resumen semanal y el reporte de reaperturas entran en su versión básica.
+- **WhatsApp: fuera del alcance** (punto 12 del contexto): requiere la API oficial de Meta, **plantillas aprobadas una por una por Meta** y tiene costo por mensaje. Las reglas lo marcan como propuesta y hoy salen por correo y notificación.
+- **Crear el curso en el LMS** no se puede automatizar sin la API de Cambridge One o Moodle (M11 "sujeto a lo que expongan"); por eso la regla solo recuerda a Coordinación.
+
+**Por confirmar con el cliente**
+- La **propuesta externa de automatización** que ya existe (ver sección 6 del contexto): decidir si se absorbe en la plataforma o convive con Kommo, para no duplicar avisos.
+- Los **plazos y escalamientos** (3 días antes, días 1, 7 y 15, 72 h) son supuestos tomados de las reuniones y del manual.
+- Si la **capacidad estándar de 12** reemplaza a la capacidad por aula (norma SETEC) cuando una aula tiene una propia, o solo se usa si falta.
+- Quién puede encender y apagar reglas, y quién recibe cada alerta.
+
+
+## 20. Envío automático de facturas a Dora y al SRI, con espera de 2 horas (revisión de 10 nov)
+**Lo que dijo Secretaría**: la emisión de facturas electrónicas, su carga al SRI y al sistema contable a través de **Dora** está automatizada. Pasan exactamente **2 horas** después de emitir la factura para que el sistema la suba sola y se actualice un **contador numérico** (normalmente en cero). Ese margen sirve para manejar cualquier error o inconveniente técnico. A veces el SRI no autoriza la factura y se queda retenida.
+
+**Qué había en `main`**: la columna "SRI" del listado de facturas (autorizada, sin autorizar, rechazada), el botón "Reintentar autorización" en el detalle y una fila de Dora "por definir" en Integraciones. **No se veía** la espera de 2 horas, el contador ni qué facturas están esperando, ya salieron o fallaron. Además, la factura de ejemplo se autorizaba 1 minuto después de emitirla, lo que contradecía esa espera.
+
+**Qué se agregó al prototipo**
+- **Pantalla "Envíos a Dora y al SRI"** (desde el menú "Más acciones" de Facturación y desde el detalle de la factura): cifras (en espera, **sin subir**, autorizadas, rechazadas y con error) y el flujo en cinco pasos: se emite, ventana de corrección de 2 horas, sale sola a Dora, Dora la autoriza en el SRI y la sube a contabilidad, y si falla se avisa.
+- **Estado por factura con cuenta regresiva en vivo** ("Sube en 01:17:50"). Dentro de la espera se puede **Corregir** (datos o anular sin dejar rastro en el SRI) o **Enviar ahora**; al salir, el estado cambia a "Enviada", el contador de "sin subir" baja y **Corregir se bloquea** (después se corrige con nota de crédito).
+- **Facturas con problemas**: la rechazada por el SRI ("cédula inválida", con "Corregir y reenviar") y la que falló por Dora ("Reintentar envío").
+- **Parámetros**: ventana de corrección (sin espera, 1, 2 o 4 horas), reintentos automáticos y alerta si no se autoriza en 24 horas.
+- Se corrigió la **factura de ejemplo**: emitida a las 10:11, enviada a Dora a las 12:11, autorizada a las 12:12 y comprobante a las 12:14, con su línea en el historial. El listado de facturas suma el estado "En espera" y un filtro.
+
+**Viabilidad**: **registrar la factura, la espera y el seguimiento: viable** (M5 y M8). **El envío en sí depende de Dora**: M11 contempla Dora "sujeto a lo que exponga" y la **emisión directa al SRI sin Dora es adenda** (punto 10 del contexto). Mientras no haya API de Dora, la plataforma no puede enviar sola y esta pantalla sería solo de seguimiento.
+
+**Por confirmar con el cliente**
+- Si **hoy el envío automático lo hace otra herramienta** (la propuesta externa) y cómo convivirá con la plataforma.
+- Qué expone Dora (API, estado de la autorización, motivo del rechazo) y si el **contador** es el de Dora o uno propio.
+- Si las **2 horas** son una regla del negocio o un límite técnico de la herramienta actual; el prototipo la deja configurable.
+- Qué hacer con las facturas que el SRI no autoriza: cuánto tiempo pueden quedar retenidas y quién las corrige.
+
+
+## 21. Facturas retenidas y problemas de integración con el SRI (revisión de 10 nov)
+**Lo que dijo Secretaría**: el sistema del SRI presenta problemas recurrentes de integración automática y algunos comprobantes no se suben de inmediato, por falta de una integración total de la facturación electrónica. Aunque el proceso actual es automático (antes era manual), las facturas con inconvenientes **simplemente no se autorizan y se quedan retenidas**, lo que obliga a una **revisión minuciosa** para evitar inconsistencias.
+
+**Qué había en `main`** (y en la sección 20): la lista de estados de envío, el botón de reintentar y una fila de Dora. **Faltaba** tratar las facturas retenidas como un problema con causa, tiempo y consecuencias, no solo como un estado.
+
+**Qué se agregó al prototipo** (pantalla "Envíos a Dora y al SRI", ahora con cuatro pestañas)
+- **Retenidas y revisión**: cuántas hay, desde cuándo, cuántos intentos llevan, el motivo (identificación inválida, Dora no respondió, secuencial ya registrado, servicio del SRI no disponible) y **qué hay que revisar** en cada una (por ejemplo, "pagada y libro entregado sin comprobante autorizado" o "posible duplicado").
+- **Antes de reintentar**: una lista de cinco preguntas para no crear inconsistencias: si la factura ya existe en el SRI (**consultar por la clave de acceso para no duplicarla**), si el dato es corregible, si hay un pago cobrado, si hay comisión o entrega de libro asociadas y si hay saltos en la numeración.
+- **Inconsistencias detectadas**: pagada y entregada sin autorizar, comisión generada sobre una factura retenida, posible duplicado y saltos de numeración, cada una con su acción ("Marcar como revisada" deja constancia en el audit log).
+- **Plan B**: reintentos automáticos (3 veces cada 30 min), aviso a Secretaría y Contabilidad y, pasadas 24 horas, **emisión en contingencia** (a mano en el portal del SRI) registrando la clave de acceso y la fecha, y la factura queda marcada "Emitida fuera de la plataforma".
+- **Salud del envío**: autorizadas a la primera, tiempo medio de emisión a autorización, caídas del SRI de la semana y los motivos de retención de 30 días.
+- Una **notificación** a Secretaría y Contabilidad cuando una factura queda retenida con riesgo de duplicado, y las acciones nuevas "Consultar estado en el SRI" y "Emitir en contingencia".
+
+**Viabilidad**: el **seguimiento, la revisión y las alertas son viables** (M5 y M8). **Resolver la causa depende de terceros**: la integración total con el SRI no está en la plataforma; M11 contempla Dora "sujeto a lo que exponga" y la emisión directa al SRI es adenda (punto 10 del contexto). La plataforma puede registrar, avisar y ordenar la revisión, pero no puede evitar las caídas del SRI. Las cifras y los motivos de la pantalla son de ejemplo.
+
+**Por confirmar con el cliente**
+- Los **motivos de rechazo reales** que devuelve Dora o el SRI, para clasificarlos bien (lo del prototipo son descripciones generales, no códigos oficiales).
+- Si el **plan B en contingencia** es aceptable para Contabilidad y el SRI en su forma de registrar la clave de acceso, y quién lo autoriza.
+- Qué hacer con la **comisión del asesor y la entrega del libro** mientras la factura está retenida (el prototipo las marca "pendientes de autorización").
+- Con qué frecuencia ocurren hoy las retenciones, para dimensionar el tiempo que ahorra la pantalla.
+
+
+## 22. Documentos físicos para Contabilidad: cierre de caja digital (revisión de 10 nov)
+**Lo que dijo Secretaría**: el flujo exige imprimir la lista de pagos, la lista de ventas (con las facturas a crédito) y la lista de matrículas para entregarlas a Contabilidad. Se hacen copias de respaldo: dos copias de la lista de pagos, una de las cuales regresa a Secretaría. Si se detecta un error hay que **reimprimir toda la caja**, algo crítico por las quejas de la auditoría.
+
+**Qué había en `main`**: una pestaña "Caja del día" con los cobros por método y un botón "Cerrar caja" que solo mostraba un aviso, más botones para imprimir cada recibo. En la sección 18 ya se había dejado "cierre de caja digital" como mejora pendiente.
+
+**Qué se agregó al prototipo**: pantalla nueva **Cierre de caja** (desde "Cerrar caja" en Facturación y desde el Inicio de Secretaría):
+- **Las tres listas se arman solas**: pagos (con método, comprobante y verificación contra el banco o el datáfono), ventas (con las facturas a crédito y su saldo) y matrículas (ligadas a su factura), con filtros y exportación a Excel.
+- **Cuadre de caja**: efectivo contra lo contado, tarjetas contra el cierre del lote y transferencias contra el extracto; si cambias el efectivo contado, la pantalla muestra la diferencia.
+- **Envío digital a Contabilidad con versión** (v1, v2…) y **acuse digital** de recepción, que reemplaza la copia que regresaba firmada.
+- **Corregir solo lo observado**: Contabilidad deja una observación y Secretaría corrige **ese ítem** y reenvía una versión nueva, **sin rehacer toda la caja**. Todo queda en un historial de versiones (quién cambió qué y cuándo).
+- **Paquete para auditoría** descargable (PDF) y Excel: el respaldo que antes se guardaba impreso.
+- Los recibos de caja ya no se imprimen: se **envían por correo** al estudiante y quedan en su ficha.
+
+**Viabilidad**: **viable y dentro del alcance** (M5 cobros y reportes, M8 reportería, M1 audit log). Lo que **no** controla la plataforma es que **Contabilidad acepte el cierre digital**: depende de su proceso y de la auditoría (ver abajo).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad y la auditoría aceptan** el cierre digital en lugar del papel; algunos controles pueden exigir firma física o un documento específico.
+- Si el **acuse digital** tiene validez para ellos o se necesita firma electrónica (certificada sería adenda, punto 9 del contexto).
+- Los **comprobantes físicos** (vouchers, papeletas): hoy se pegan en hojas; en el prototipo se adjuntan al pago, pero hay que acordar cuánto tiempo se conserva el original.
+- Quién cierra la caja, a qué hora y si una caja aprobada se puede reabrir.
+- La **verificación contra el correo de Contabilidad** (confirmación de pagos) se trata en la sección siguiente de la reunión.
+
+
+## 23. Verificación de transferencias contra la confirmación de Contabilidad (revisión de 10 nov)
+**Lo que dijo Secretaría**: para verificar una transferencia, entra al correo y busca la confirmación de pago con el número de comprobante (por ejemplo 92839). Revisa que los datos de la confirmación, de la lista de pagos y del sistema **coincidan exactamente** en valor, fecha y detalles. Las transferencias **interbancarias**, a diferencia de las del Banco Pichincha, suelen generar un documento oficial con otro número, lo que obliga a **modificar el sistema y reimprimir** los comprobantes de la caja.
+
+**Qué había en `main`**: "Pagos por validar" (Contabilidad valida en el banco y Secretaría confirma), la conciliación contra el extracto del banco (sección 4) y, en el cierre de caja, una columna de verificación. **Faltaba** la comparación campo por campo de las tres versiones del dato, y quitar la búsqueda manual del correo.
+
+**Qué se agregó al prototipo**: pantalla nueva **Verificar transferencias** (desde Cobros → Conciliación bancaria y desde el cierre de caja):
+- **Contabilidad confirma dentro de la plataforma**, registrando el número oficial, el valor y la fecha del banco. Ya no hay que buscar el correo: la confirmación se ve como el correo de siempre, pero dentro de la pantalla.
+- **Comparación automática campo por campo** (número de comprobante, valor, fecha, banco y factura) entre lo registrado en el sistema, la lista de pagos y la confirmación, con lo distinto resaltado.
+- **Búsqueda por número**: escribir parte del número (por ejemplo "92839") trae todos los pagos que lo contienen.
+- **Interbancarias**: cuando el número del cliente (IB-90312) difiere del oficial del banco (6720458), se ve la diferencia y se corrige **solo ese dato**: el número oficial pasa al pago y el del cliente queda como referencia. La tabla, las cifras, la **lista de pagos y el cierre de caja se actualizan solos** y queda en el audit log; **no hay que reimprimir nada**.
+- La acción "Validar pago" de Contabilidad se redactó para que registre los datos oficiales y la plataforma los compare.
+
+**Viabilidad**: **viable y dentro del alcance** (M5, con el audit log de M1). La comparación depende de que **Contabilidad confirme en la plataforma**; si siguiera confirmando solo por correo, habría que registrar el número a mano o leer los correos con una integración (no contratada). La lectura automática de comprobantes (OCR) y la verificación con Nuvei están fuera del alcance (punto 11 del contexto).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad acepta confirmar los pagos dentro de la plataforma** en lugar de por correo, y quién tiene el permiso.
+- Qué **datos oficiales** devuelve cada banco para las interbancarias (número del documento, fecha de acreditación) y si la fecha puede diferir un día.
+- Qué se hace con una confirmación que llega **después del cierre de caja** (el prototipo la actualiza en la versión vigente y la deja en el historial).
+- Si la verificación aplica también a depósitos y a pagos con tarjeta.
+
+
+## 24. Pagos en línea con Datafast: links y su historial (revisión de 10 nov)
+**Lo que dijo Secretaría**: para revisar un pago en línea usa Datafast y el **código de autorización** (por ejemplo 209832) para buscar en el **historial de links**. Cuando el departamento comercial crea el link, la información **no llega al usuario de Secretaría**: hay que entrar a la factura, sacar el comprobante que adjuntó Comercial e imprimirlo.
+
+**Qué había en `main` y en esta rama**: el método "Pago en línea (link)" con un código de autorización escrito a mano y un botón "Traer del historial" que solo mostraba un aviso (sección 18). **No existía** ninguna pantalla de links ni de su historial.
+
+**Qué se agregó al prototipo**
+- **Links de pago** (`LinksPago.html`, desde "Más acciones" de Facturación): historial con link, quién lo creó (Comercial) y su sede, cliente, concepto o factura, monto, estado (pagado, pendiente, vencido), código de autorización y si ya está **registrado en la Caja del día**. Cifras y filtros, y **búsqueda por código de autorización**: escribir 209832 trae el link, la factura y el comprobante.
+- **El link nace ligado a la factura o matrícula**: el formulario "Generar un link de pago" obliga a elegir a qué pago corresponde. Al pagarse, el pago se **registra solo** en la factura con su autorización y su comprobante; Secretaría lo ve sin entrar a ninguna factura ni imprimir nada.
+- **Comprobante de la transacción** (autorización, lote, tarjeta, valor y fecha) guardado en la factura y descargable en PDF.
+- **Visibilidad**: Secretaría y Contabilidad ven los links de su sede aunque los haya creado Comercial; cada asesor ve los suyos.
+- En **Registrar pago** (y en Matrícula y factura), el método "Pago en línea" ahora trae un **selector del historial**: al elegir el link se llenan solos el código de autorización, el link y el monto, y la suma de pagos se actualiza.
+- Un caso "falta conciliar con Datafast" (pagado pero sin confirmar contra el historial) y una fila de Datafast en Integraciones.
+
+**Viabilidad**: **registrar y buscar los pagos en línea es viable** (M5). Que el pago **se registre solo** depende de que **Datafast avise a la plataforma** (conexión o API), algo que **no está en el contrato** (la verificación con Nuvei figura como fuera de alcance, punto 11 del contexto). Mientras no exista, hay un camino intermedio viable: **importar el reporte de transacciones** que se descarga de Datafast y buscar cada pago por su código de autorización.
+
+**Por confirmar con el cliente**
+- Si **Datafast ofrece una API o un aviso automático** al cobrar y qué datos devuelve (autorización, lote, tarjeta enmascarada).
+- Si los **links los seguirá creando Comercial en el portal de Datafast** (y se importan) o se generan desde la plataforma (requiere API).
+- Qué comprobante vale para Contabilidad: el de Datafast, el voucher o ambos.
+- Si el mismo flujo aplica a **Nuvei**, que también aparece en la tienda en línea.
+- Datos de prueba: las autorizaciones y números del prototipo son de ejemplo.
+
+
+## 25. Pagos con tarjeta de crédito: vouchers, cierre de lote y archivo (revisión de 10 nov)
+**Lo que dijo Secretaría**: en los pagos con tarjeta se verifica que el **valor y la referencia** sean correctos, se **pegan los vouchers en una hoja de reciclaje** junto con el **cierre de lote del datáfono** y se **anexa la factura**. Los comprobantes originales, los recibos impresos (incluida la **copia amarilla**) y los anexos se organizan y se envían a Contabilidad, y se conserva una copia como respaldo físico.
+
+**Qué había**: la columna de comprobante de la lista de pagos, el método "Tarjeta" con datáfono, lote y autorización (sección 18) y el cierre de caja digital (sección 22). **Faltaba** reemplazar la hoja con vouchers pegados: verificar cada voucher, comparar el cierre de lote y dejar todo anexado a su factura.
+
+**Qué se agregó al prototipo**: una pestaña **"Tarjetas y vouchers"** en el cierre de caja:
+- **Cierre de lote del datáfono**: se escribe el total que imprime el datáfono y se adjunta su foto; la plataforma lo compara con la suma de los vouchers y dice si **cuadra**.
+- **Vouchers de tarjeta**: por cada pago se ve lo que está en el sistema (autorización y valor) frente a **lo que dice el voucher**, y el voucher adjunto como foto. La verificación marca **Coincide**, **Referencia distinta**, **Valor distinto** o **Falta voucher**; si el error es del sistema, "Corregir en el sistema" lo iguala al voucher y la lista de pagos se actualiza sola.
+- **Anexo automático**: cada voucher queda ligado a su factura y al cierre de lote; ya no se pega nada en una hoja. La copia amarilla y los recibos se guardan como archivo en el pago.
+- **El cierre no se puede enviar a Contabilidad** mientras falten vouchers por verificar o el lote no cuadre; el estado y el aviso lo dicen.
+- Las autorizaciones de ejemplo de las tarjetas se cambiaron para que no se confundan con las de los links de pago (sección 24).
+
+**Viabilidad**: **viable y dentro del alcance** (M5 cobros y archivo de comprobantes, M1 audit log). La plataforma **no lee el voucher por sí sola**: la persona escribe o confirma la autorización y el valor; leerlos de la foto (OCR) está fuera del alcance (punto 11 del contexto).
+
+**Por confirmar con el cliente**
+- Si **Contabilidad y la auditoría aceptan la foto del voucher** en lugar del original en papel. Los vouchers térmicos se desvanecen con el tiempo, por lo que la foto también protege el respaldo, pero el original puede seguir siendo exigible.
+- Qué es exactamente la **copia amarilla** y quién la conserva; el prototipo la trata como un archivo más del pago.
+- El **plazo de conservación** del archivo digital y de los originales, que lo define Contabilidad.
+- Si cada **datáfono o lote** (por sede o por banco) necesita su propio cierre y su propia foto.
+
+
+## 26. Entrega y registro de certificaciones internacionales (revisión de 10 nov)
+**Lo que dijo Secretaría**: cuando llega un certificado internacional se **envía un correo** a la persona, se le pide la **cédula**, se **saca una copia** y se entrega el certificado físico firmado. Después se entra al sistema de exámenes internacionales, se busca a la persona, se registra la **calificación**, la **firma**, y se **escanea el documento junto con la copia de la cédula** para el archivo digital y físico, como **comprobante ante un posible reclamo** de entrega.
+
+**Qué había**: `ExamenesInternacionales.html` con los estados (inscrito, esperando resultados, listo para retirar, entregado) y un botón genérico "Registrar resultado"; la entrega digital de libros (sección 3) con firma en pantalla. **Faltaba** la entrega del certificado con su identificación, su firma y su comprobante.
+
+**Qué se agregó al prototipo** (el módulo sigue marcado como propuesta fuera del alcance, ver sección 16)
+- **Aviso de que llegó el certificado**: botón "Avisar que llegó un certificado" y una **regla automática** (Automatizaciones, área Exámenes) que envía el correo al candidato con dónde y cuándo retirarlo y **qué traer** (cédula o pasaporte).
+- **Entregar certificado** (`EntregaCertificado.html`, desde "Entregar certificado" en el listado de "Listo para retirar"): identifica al candidato, registra el **puntaje, nivel, número y fecha de emisión**, y verifica que el certificado coincide con el candidato y está completo.
+- **Identificación sin fotocopia**: la cédula o el pasaporte se adjunta como **foto o PDF** y es **obligatoria**: sin ella no se puede confirmar la entrega (el prototipo rechaza archivos que no sean foto o PDF).
+- **Firma en la tablet o por QR**, la misma de la entrega de libros.
+- **Acta de entrega** (`ActaCertificado.html`): documento en PDF con el candidato, el documento, el examen, el resultado, la firma, la **imagen de la identificación**, quién entregó y cuándo; se **archiva en el expediente**, sale por correo y es el **comprobante ante un reclamo**. El examen pasa a "Entregado" con "Ver acta".
+
+**Viabilidad**: **viable de construir**, pero es parte del módulo de **exámenes internacionales, fuera del alcance del contrato** (punto 3 del contexto): requiere cotización aparte. La firma es simple, no certificada (punto 9).
+
+**Por confirmar con el cliente**
+- **Datos personales**: la imagen de la cédula o el pasaporte es un dato sensible; hay que definir quién la ve, cuánto tiempo se conserva y cómo se protege (el contrato incluye una cláusula de protección de datos).
+- Si el **archivo físico** (certificado firmado y copia de la cédula) sigue siendo obligatorio para el cliente o la auditoría, o basta el digital.
+- Si **un tercero puede retirar** el certificado (el prototipo permite un representante autorizado y pide una autorización).
+- Si los certificados de **Cambridge, Oxford y Anglia** se entregan igual que el de TOEFL, y quién registra la **llegada** del certificado en la sede.

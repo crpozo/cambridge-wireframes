@@ -59,7 +59,7 @@ ACTIONS={
  "Nuevo candidato":("Se inscribe un candidato: datos personales, examen, fecha y sede; se emite la factura del examen.",None),
  "Importar notas del Muro":("Se traen las notas de participación, quiz y examen registradas en el Muro (Moodle) para este módulo.",None),
  "Guardar borrador de notas":("Las notas se guardan sin cerrar el módulo; puedes seguir editándolas.",None),
- "Cerrar módulo y emitir certificados":("Se cierran las notas del módulo 7: los aprobados avanzan al módulo 8 de su compra y, al cerrar el nivel, reciben su certificado con código único de verificación. Los bloqueados por asistencia van a Coordinación. "+AUDIT,"DetalleCurso.html"),
+ "Cerrar módulo y emitir certificados":("Se cierran las notas del módulo 7: los aprobados avanzan al módulo 8 de su compra y, al cerrar el nivel, reciben su certificado con código único de verificación. Los bloqueados por asistencia van a Coordinación. Al cerrar, la plataforma envía sola el correo de rematrícula a los aprobados sin deuda (8), deja propuesta su matrícula en el siguiente curso con el cupo reservado 72 h y avisa a Secretaría; los que tienen deuda no reciben la nota hasta regularizar. "+AUDIT,"Rematricula.html"),
  "Confirmar mi cupo":("Confirmas que sigues en el mismo grupo para el módulo 8. No hay pago: ya está incluido en tu compra. Te llega el enlace de clase el día anterior.",None),
  "Enviar solicitud":("La solicitud va a la bandeja de Dirección Comercial. La venta queda en espera; verás aprobado o rechazado en Notificaciones y en tus pendientes de Inicio, y al aprobarse retomas la venta. "+AUDIT,"Home.html"),
  "Nuevo estudiante":"NuevoEstudiante.html","Importar / Exportar":"ImportExport.html","Nuevo curso":"NuevoCurso.html","Editar curso":"NuevoCurso.html",
@@ -206,7 +206,7 @@ NAV=[
  ("Académico",[("Programas","Programas.html",ALL),("Cursos","Cursos.html",ALL),("Rematrícula","Rematricula.html","ADM,GER,DIR,SUC,SEC"),("Estudiantes","Estudiantes.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO"),("Contratación","ContratacionProfesores.html","ADM,GER,DIR,SUC,COO"),("Exámenes","ExamenesInternacionales.html","ADM,GER,SUC,COO,SEC")]),
  ("Comercial",[("Leads","Leads.html",COMERCIAL),("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Empresas","Empresas.html","ADM,GER,DIR,SUC,ASE"),("Tienda en línea","Pedidos.html",COMERCIAL+",SEC"),("Tablero comercial","TableroComercial.html","ADM,GER,DIR,SUC,ASE,CON"),("Facturación","Facturas.html",COMERCIAL+",CON"),("Comisiones","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Entregas de libros","EntregasLibros.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
- ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR")]),
+ ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR"),("Automatizaciones","Automatizaciones.html","ADM,GER,DIR,SUC,COO,SEC")]),
  ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM"),("Reclutamiento","ReclutamientoAdministrativo.html","ADM,GER,SUC")]),
 ]
 # alias: nombre antiguo de sección activa → ítem del menú
@@ -815,7 +815,7 @@ SVG={
 }
 def ico(name, cls="nav-ico"):
     return f'<span class="{cls}" aria-hidden="true"><svg viewBox="0 0 24 24">{SVG.get(name,"")}</svg></span>'
-ICON={"Contratación":"id","Reclutamiento":"users","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Entregas de libros":"check","Rematrícula":"swap","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug"}
+ICON={"Contratación":"id","Reclutamiento":"users","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Entregas de libros":"check","Rematrícula":"swap","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug","Automatizaciones":"cog"}
 
 def btn(label, href=None, primary=False, action=None, next=None, kind=None, disabled_reason=None, save=None):
     """save='lista': al confirmar (o al navegar) guarda los campos del formulario en localStorage y la lista destino (ltable) muestra el registro nuevo."""
@@ -918,6 +918,8 @@ def shell(title, active, *parts, subtitle="", actions=""):
 
 # Notificaciones: (roles, tipo, tinte, símbolo, título, detalle, destino, cuándo, leída). Cada rol ve solo las suyas (campana y Notificaciones.html).
 NOTIFS=[
+ ("ADM,SUC,SEC,CON","SRI","red","!","Factura retenida: 000021117 · posible duplicado","El SRI informa que el secuencial ya está registrado · hoy 06:10","EnviosSRI.html","Hoy",False),
+ ("ADM,GER,SUC,SEC","Rematrícula","navy","→","Notas cerradas: A1 Sábados · 8 listos para rematricular","El aviso al estudiante ya salió solo · hoy 09:10","Rematricula.html","Hoy",False),
  ("ADM,GER,DIR","Aprobación","yellow","!","Descuento 42% pendiente de tu aprobación","Gabriela Núñez · Carla M. · hace 1 día","Aprobaciones.html","Ayer",False),
  ("ADM,GER,SUC,SEC","Inventario","red","−","Stock negativo: Empower B1+ en Valle","Correo de las 07:00 enviado · hoy","Inventario.html","Hoy",False),
  ("ADM,GER,SUC,COO","Pagos","navy","$","Payment sheet de octubre lista para revisión","3 alertas · ayer 17:30","PaymentSheet.html","Ayer",False),
@@ -971,11 +973,29 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0, tid=None):
     import json as _j, re as _re
     n=len(cols); hide=set(hide)
     def cls(i): return ' td-hide' if i in hide else ''
-    hd="".join(f'<div class="th{cls(i)}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
+    # Columnas numéricas (montos, días, cantidades): encabezado y valores se alinean a la derecha
+    def _txt(c): return _re.sub(r'<[^>]+>','',str(c)).strip()
+    numcols=set()
+    for i in range(n):
+        vals=[_txt(r[i]) for r in rows if i<len(r) and _txt(r[i])]
+        if not vals or i==wide: continue
+        money=[v for v in vals if _MONEY.match(v)]
+        guiones=[v for v in vals if v in ("—","–","-")]
+        enteros=[v for v in vals if _re.fullmatch(r"\d+(?:[.,]\d+)?%?",v)]
+        cifras=[v for v in vals if _re.fullmatch(r"[+\-−]?\$?[\d,]+(?:\.\d+)?%?",v)]
+        # columna numérica: puros importes, o importes y cifras (cantidades, porcentajes) sin texto en medio
+        if money and len(cifras)+len(guiones)==len(vals): numcols.add(i)
+        elif money and len(money)+len(guiones)>=0.6*len(vals): numcols.add(i)
+        elif enteros and len(enteros)+len(guiones)==len(vals) and _re.search(r"d[ií]as|cant|intentos|[ií]tems|horas|sesiones",str(cols[i]),_re.I): numcols.add(i)
+    hd="".join(f'<div class="th{cls(i)}{" th-num" if i in numcols else ""}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
         cells=""
         for i,c in enumerate(r):
             html,extra=_cell(c)
+            if i in numcols and "is-num" not in extra and _txt(c) and not _re.search(r"<(a|button)",str(c)):
+                html=f'<span class="mono">{html}</span>'; extra=" is-num"
+            elif i not in numcols and "is-num" in extra:
+                extra=extra.replace(" is-num","")  # columna mixta (importes entre texto): todo a la izquierda, como su encabezado
             cells+=f'<div class="td{cls(i)}{" td-wide" if i==wide else ""}{extra}" data-label="{cols[i] if i<n else ""}">{html}</div>'
         sd=""
         if sede is not None:
@@ -1342,7 +1362,7 @@ def ledger_calc(items, disc=10, lid=None):
         rows+=(f'<div>{c}<small>{d}</small></div><div class="n">${v:,}</div><div class="n ld"{" data-dc" if ok else ""}>{f"{disc}%" if ok and disc else "—"}</div><div class="n" data-sub data-v="{v}">${v-dv:,}</div>')
     return (f'<div class="ledger" data-ledger="{lid}"><div class="lh">Concepto</div><div class="lh n">Valor</div><div class="lh n ld">Dcto.</div><div class="lh n">Subtotal</div>{rows}'
             f'<div class="lt">Total</div><div class="lt n"></div><div class="lt n ld" data-ldisc>{f"-${dsc:,}" if dsc else "—"}</div><div class="lt n" data-ltotal>${tot:,}</div></div>')
-DESCUENTOS=[(0,"Sin descuento"),(10,"Referido · 10%"),(10,"Hermano o familiar matriculado · 10%"),(10,"Promoción vigente · 10%"),(5,"Pronto pago · 5%"),(15,"Convenio Grupo Nova · 15% (se aplica solo si en el paso 1 paga la empresa)"),(10,"Alianza Banco del Valle · 10% (paga el estudiante)"),(20,"Beneficio cancela 2 módulos · 20% · pasa a aprobación"),(100,"Indexado · 100%")]
+DESCUENTOS=[(0,"Sin descuento"),(10,"Referido · 10%"),(10,"Hermano o familiar matriculado · 10% · requiere aprobación"),(10,"Promoción vigente · 10%"),(5,"Pronto pago · 5%"),(15,"Convenio Grupo Nova · 15% (se aplica solo si en el paso 1 paga la empresa)"),(10,"Alianza Banco del Valle · 10% (paga el estudiante)"),(20,"Beneficio cancela 2 módulos · 20% · pasa a aprobación"),(100,"Indexado · 100%")]
 def disc_field(lid, value=10, limit=10, opts=None):
     """Selector de descuento ligado a un ledger_calc, con la tabla de descuentos (DESCUENTOS: la real la envían Dayana y Estefanía). Por encima del límite del asesor avisa que pasa a aprobación."""
     _FID[0]+=1; i=f"f{_FID[0]}"
@@ -1399,12 +1419,70 @@ def step(n, title, inner, sub=""):
 # ================= FIN TEMA =================
 
 # ================= PROTOTIPO nov 2026 · rematrícula, matrícula + factura, capacidad, conciliación y entregas digitales =================
+def calendario_curso(inicio="2027-02-01", dias=(1,2,3,4), hps="2", total="36"):
+    """Calendario del curso: calcula primera clase, fin y feriados saltados. JS: assets/cursos.js"""
+    nombres=["Lu","Ma","Mi","Ju","Vi","Sa"]
+    chips="".join(f'<label class="daychip"><input type="checkbox" data-cal-day value="{i+1}"{" checked" if (i+1) in dias else ""}><span>{n}</span></label>' for i,n in enumerate(nombres))
+    return ('<div class="cal" data-cal><div class="cal-in">'
+            +field("Fecha de inicio",inicio,"date",None,True)
+            +'<div class="field"><span class="lbl">Días de clase</span><div class="daychips" role="group" aria-label="Días de clase">'+chips+'</div></div>'
+            +field("Horas por sesión",hps,"select",["1","2","4"],True)+field("Total de horas",total,"number",None,True,"One to one: paquete de 20 o 40 h")+'</div>'
+            +'<dl class="cal-out" aria-live="polite"><div><dt>Primera clase</dt><dd data-cal-first>—</dd></div><div><dt>Fin del curso</dt><dd data-cal-end>—</dd></div><div><dt>Sesiones</dt><dd data-cal-sessions>—</dd></div><div class="cal-skip"><dt>Feriados saltados</dt><dd data-cal-skipped>—</dd></div></dl></div>'
+            +'<script src="assets/cursos.js"></script>')
+
+METODOS_PAGO=["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Nota de crédito","Pago en línea (link)","Otro (cheque, retención, cruce de cuentas, gift card)"]
+def _comp():
+    return field("Comprobante (PDF, JPG o PNG)","","file",None,True,"El que mandó el cliente por WhatsApp o el del historial de la plataforma")
+def pago_linea(n, metodo, monto, visible=True):
+    """Una línea de pago: el método define qué datos se piden y si se adjunta comprobante. Fecha de cierre de caja = día en que Contabilidad lo revisa."""
+    deps={
+     "Efectivo": form([("Recibo de caja","0432","text",None,False,"Automático"),("Entregado por","Camila Sánchez","text",None,False)],cols=2),
+     "Tarjeta de débito": form([("Datáfono","Datafast · Banco Pichincha","select",["Datafast · Banco Pichincha","Medianet · Produbanco"],True),("Lote","0193","text",None,True),("Número de autorización","209832","text",None,True,"Está en el voucher del datáfono")],cols=3)+_comp(),
+     "Tarjeta de crédito": form([("Datáfono","Datafast · Banco Pichincha","select",["Datafast · Banco Pichincha","Medianet · Produbanco"],True),("Lote","0193","text",None,True),("Número de autorización","209832","text",None,True,"Está en el voucher del datáfono"),("Tipo de pago","Corriente","select",["Corriente","Diferido 3 meses","Diferido 6 meses","Diferido 12 meses"],True)],cols=2)+_comp(),
+     "Depósito": form([("Banco","Banco Pichincha","select",["Banco Pichincha","Otro banco"],True),("Número de papeleta","55120","text",None,True),("Cuenta de destino","Cuenta de ahorros Cambridge · Quito","text",None,False,"Automático")],cols=3)+_comp(),
+     "Transferencia": form([("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],True,"Si es de otro banco, el número puede no coincidir con el del banco: se concilia por monto y fecha"),("Número de comprobante","928390","text",None,True,"Cópialo del comprobante que mandó el cliente"),("Cuenta de destino","Banco Pichincha · Quito","text",None,False,"Automático")],cols=3)+_comp(),
+     "Nota de crédito": form([("Nota de crédito a aplicar","NC-000000313 · $25.00 · vigente","select",["NC-000000313 · $25.00 · vigente","NC-000000311 · $250.00 · vigente"],True,"Vigencia de 12 meses desde su emisión"),("Número de la nota","NC-000000313","text",None,False,"Automático")],cols=2),
+     "Pago en línea (link)": form([("Código de autorización","209832","text",None,True,"Está en el historial de links de pago"),("Link de pago","LP-4471 · Datafast","text",None,False)],cols=2)+field("Traer del historial de links","— elegir —","select",["— elegir —","LP-4471 · Andrea Villacís · $545.00 · aut. 209832","LP-4472 · Roberto Salgado · $225.00 · aut. 209833","LP-4475 · Martín Ortega · $160.00 · aut. 209835"],False,"Trae el código de autorización, el link y el comprobante; no hay que copiar nada")+_comp(),
+     "Otro (cheque, retención, cruce de cuentas, gift card)": form([("Tipo","Cheque","select",["Cheque","Retención","Cruce de cuentas","Gift card"],True),("Número del documento","000118","text",None,True)],cols=2)+_comp()}
+    head='<div class="pago-head"><b>Pago '+str(n)+'</b>'+('' if n==1 else '<button type="button" class="btn btn-ghost" data-pago-del>Quitar</button>')+'</div>'
+    comun=form([("Monto",monto,"number",None,True,"Lo que paga con este método"),("Fecha del pago","2026-10-23","date",None,True),("Fecha de cierre de caja","2026-10-23","date",None,True,"El día en que se cierra la caja; Contabilidad revisa el pago con esa fecha")],cols=3)
+    return '<div class="pago-line" data-pago-line'+('' if visible else ' hidden')+'>'+head+dep_select("Método de pago",METODOS_PAGO,metodo,deps)+comun+'</div>'
+def pagos_bloque(total):
+    t=float(total)
+    lineas=pago_linea(1,"Transferencia",f"{t:.2f}")+pago_linea(2,"Tarjeta de crédito","0.00",False)+pago_linea(3,"Efectivo","0.00",False)
+    tabla=table(["Método","Qué se registra","Comprobante adjunto"],[
+      ["Efectivo","recibo de caja (automático)","No"],["Tarjeta de débito","datáfono, lote y número de autorización del voucher","Sí · foto del voucher"],["Tarjeta de crédito","lo mismo, y si es corriente o diferido","Sí · foto del voucher"],
+      ["Depósito","banco y número de papeleta","Sí"],["Transferencia","banco de origen y número de comprobante","Sí · el del cliente"],["Nota de crédito","la nota que se aplica (vigencia de 12 meses)","No · queda ligada"],
+      ["Pago en línea (link)","código de autorización del historial de links","Sí · se trae del historial"],["Otro","tipo (cheque, retención, cruce de cuentas, gift card) y número","Sí"]],wide=0)
+    return ('<div data-pagos data-total="'+f"{t:.2f}"+'">'+lineas
+            +'<div class="pago-bar"><button type="button" class="btn btn-ghost" data-pago-add>Agregar otro método de pago</button><span class="pagos-sum" data-pagos-sum aria-live="polite"></span></div></div>'
+            +'<details class="policy"><summary>Qué se pide según el método</summary>'+tabla+kv(("Fecha de cierre de caja","cada pago lleva el día de cierre con el que Contabilidad lo revisa"),("Comprobantes","quedan adjuntos al pago y a la factura; no hace falta imprimirlos ni pegarlos en hojas"))+'</details>'
+            +'<script src="assets/pagos.js"></script>')
+
+def aprob_descuento(lid):
+    """Bloque 'Aprobado por': aparece solo si el descuento lo exige (más del límite del asesor, hermanos o beneficios) y bloquea el guardado hasta registrarlo. JS: assets/descuentos.js"""
+    return (f'<div class="appr" data-appr-for="{lid}" data-appr-required="0" hidden><div class="appr-head"><b>Aprobación del descuento</b><span data-appr-msg></span></div>'
+            +form([("Aprobado por","","select",["Selecciona quién aprobó…","Dirección Comercial","Administración General","Gerencia General"],True,"Obligatorio antes de guardar la matrícula"),
+                   ("Referencia de la aprobación","","text",None,False,"Ej.: solicitud en Aprobaciones o correo"),
+                   ("Fecha y hora de la aprobación","se registra al guardar","text",None,False,"Automático")],cols=3)
+            +'</div><script src="assets/descuentos.js"></script>')
+def politica_descuentos():
+    """Tabla de políticas (supuestos hasta recibir la tabla real de Dirección Comercial y Administración)."""
+    rows=[]
+    for pct,t in DESCUENTOS:
+        if pct==0: continue
+        nombre=t.split(" · ")[0].split(" (")[0]
+        aprob="Sí · registra quién aprobó" if (pct>10 or "aprobaci" in t.lower() or "hermano" in t.lower()) else "No · hasta 10% lo aplica el asesor"
+        rows.append([nombre,f"{pct}%",aprob])
+    return ('<details class="policy"><summary>Ver políticas de descuento</summary>'+table(["Motivo","Descuento","¿Necesita aprobación?"],rows,wide=0)
+            +kv(("Regla","hasta 10% lo aplica el asesor; más de 10%, hermanos y beneficios por pago de módulos necesitan aprobación"),("Registro","el nombre de quien aprobó, la fecha y la referencia quedan en la matrícula antes de guardarla"),
+                ("Tabla real",badge("Por confirmar")+'<small> · la envían Dirección Comercial y Administración</small>'))+'</details>')
+
 # Helpers y acciones compartidos por Cursos, Rematrícula, Facturas, Tablero y las pantallas de entrega de libros.
 import urllib.parse
 ACTIONS.update({
  # Entrega digital de libros
  "Buscar entrega":("Se busca la entrega pendiente por nombre, cédula, matrícula o ISBN. Si el estudiante tiene varias, se listan para elegir.",None),
- "Escanear código de barras":("Se abre la cámara de la tablet (o el lector USB) y se lee el ISBN del libro; la plataforma abre la entrega pendiente que lo lleva.",None),
  "Crear entrega manual":("Para un libro vendido sin matrícula (factura suelta) o una reposición: se crea una entrega ligada a la factura, con el mismo flujo de firma y recibo.","EntregarLibro.html"),
  "Enviar recordatorio de retiro":("Se envía un correo al estudiante (o a su representante) recordándole retirar el libro en su sede. Queda anotado en la entrega. El envío por WhatsApp es una propuesta aparte.",None),
  "Enviar recordatorio a todos":("Se envía el recordatorio de retiro a todos los matriculados de la lista que aún no retiran su libro. "+AUDIT,None),
@@ -1418,7 +1496,45 @@ ACTIONS.update({
  "Guardar reglas de rematrícula":("Las reglas de la rematrícula se guardan y se aplican desde el próximo cierre de notas. "+AUDIT,None),
  "Matricular y facturar":("Se crea la matrícula 001-202603262 en el siguiente curso, se emite la factura con servicios educativos y materiales por separado (el módulo pagado por adelantado queda ligado a la bolsa) y se registra el pago con su comprobante. Si es transferencia queda 'Por conciliar' hasta que el extracto del banco la confirme. "+AUDIT,"DetalleFactura.html"),
  "Agregar pago":("Se agrega otra línea de pago (p. ej. parte en efectivo y parte con transferencia) con su comprobante.",None),
- "Matricular sin facturar":("La matrícula queda en rojo ('Matriculado · sin factura') y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
+ "Crear curso y continuar":("Se crea el curso del módulo 7 (0001-2026-0790) con el docente, el aula, el horario y el código del LMS indicados; la fecha de fin se calcula saltando feriados, se reserva el cupo y se avisa a Coordinación para crearlo en el LMS. Vuelves a la matrícula con este curso ya elegido. "+AUDIT,None),
+ "Volver a generar ítems":("Se vuelven a leer los datos de la matrícula (módulos, descuento y material del nivel) y se recalculan los ítems de la factura. Los ítems que agregaste a mano se conservan.",None),
+ "Agregar producto":("Se agrega un producto del inventario (libro, merchandising) a la sección Productos de la factura; descuenta stock al emitirla.",None),
+ "Matricular a los que ya pagaron":("Los estudiantes con el módulo pagado se matriculan en el curso elegido usando ese módulo: no se emite otra factura, la matrícula queda ligada a la factura original y reciben el enlace de clase. "+AUDIT,None),
+ "Asignar a un curso existente":("Se elige un curso abierto del mismo módulo y se matricula al estudiante con el módulo que ya pagó. No se emite otra factura. "+AUDIT,None),
+ "Vincular a la bolsa":("Se liga la factura al módulo pagado de la bolsa del estudiante; queda disponible para matricularlo cuando exista el curso. No se emite nada nuevo y el saldo se recalcula. "+AUDIT,None),
+ "Registrar recepción parcial":("Se suma al stock lo que llegó, el pedido queda 'Con pendientes' con los libros que faltan y se avisa al proveedor. Los libros ya vendidos se asignan a su entrega solo cuando lleguen. "+AUDIT,"Movimientos.html"),
+ "Crear pedido con esta lista":("Se crea el pedido a Books & Bits con las cantidades de la lista de compra de la semana y queda En camino. Secretaría de la sede lo recibe cuando llegue. "+AUDIT,"Movimientos.html"),
+ "Pedir los datos al cliente":("Se envía al cliente la plantilla de datos para el registro (correo; el envío por WhatsApp es una propuesta aparte): apellidos, nombres, cédula, fecha de nacimiento, celular, correo y el PDF de la cédula.",None),
+ "Pedir la cédula al cliente":("Se envía un recordatorio al cliente pidiendo el PDF de la cédula del candidato. Sin ese documento no se puede registrar el examen, aunque el pago ya esté hecho.",None),
+ "Pedir cédula":("Se envía un recordatorio al cliente pidiendo el PDF de la cédula. El candidato sigue en 'Falta cédula' y se muestra la fecha límite de inscripción para que no se pase de los 20 días.",None),
+ "Pedir excepción de fecha":("Se envía la solicitud a Coordinación Académica para inscribir con menos de 20 días de anticipación. No está garantizada: el cliente queda informado. Queda en Aprobaciones. "+AUDIT,None),
+ "Enviar resumen al cliente":("Se envía por correo el resumen con datos, examen y fecha para que el cliente los verifique. No se imprime nada.",None),
+ "Guardar pendiente de cédula":("El candidato queda 'Falta cédula': la factura y el pago ya están registrados, se pide el PDF y se reserva el cupo hasta el cierre de inscripción (20 días antes). Si no llega a tiempo se avisa a Coordinación. "+AUDIT,"ExamenesInternacionales.html"),
+ "Traer del historial de links":("Se abre el historial de links de pago, eliges el pago y se traen el código de autorización y el comprobante. No hay que descargar nada de la pasarela ni copiar números a mano.",None),
+ "Editar regla":("Se abre la regla para cambiar cuándo se dispara, a quién avisa, por qué canal y con qué plantilla. Los cambios aplican desde el próximo envío. "+AUDIT,None),
+ "Nueva regla de automatización":("Se crea una regla nueva: eliges el evento (apertura, reapertura, cobranza o notas), el momento, los destinatarios, el canal y la plantilla. Queda apagada hasta que la actives. "+AUDIT,None),
+ "Guardar parámetros":("Los parámetros se guardan y todas las alertas de ocupación, apertura y el resumen semanal los usan desde el próximo cálculo. "+AUDIT,None),
+ "Enviar resumen ahora":("Se envía ahora el resumen semanal a Secretaría, Coordinación y Dirección Comercial, sin esperar al lunes. No cambia el envío programado.",None),
+ "Reintentar envío":("Se vuelve a enviar la factura a Dora. Si Dora la recibe, sigue el camino normal: autorización del SRI y subida al sistema contable. Queda el intento en el registro. "+AUDIT,None),
+ "Corregir y reenviar":("Se corrige el dato que rechazó el SRI (por ejemplo, la cédula del cliente) y la factura se envía de nuevo. Si ya estaba autorizada, se emite una nota de crédito y se refactura. "+AUDIT,None),
+ "Guardar ventana de envío":("Se guarda la ventana de corrección y los reintentos. Aplican a las facturas que se emitan desde ahora. "+AUDIT,None),
+ "Consultar estado en el SRI":("Se consulta en el SRI, con la clave de acceso, si la factura ya fue registrada. Si existe, se trae su autorización y NO se reenvía; si no existe, se puede reenviar con seguridad. Así se evitan facturas duplicadas. "+AUDIT,None),
+ "Emitir en contingencia":("La factura se emite a mano en el portal del SRI y aquí se registra su clave de acceso y la fecha de autorización, para no frenar la venta. Queda marcada como 'Emitida fuera de la plataforma' y Contabilidad la revisa. "+AUDIT,None),
+ "Marcar como revisada":("Se registra que alguien revisó esta inconsistencia y qué decidió. Queda en el audit log con tu usuario y fecha. "+AUDIT,None),
+ "Enviar recibo":("Se envía el recibo de caja en PDF al estudiante por correo y queda guardado en su ficha. No se imprime.",None),
+ "Descargar paquete PDF":("Se descarga el cierre de caja completo (lista de pagos, de ventas y de matrículas, con su versión y el acuse de Contabilidad) para auditoría. Es el respaldo que antes se guardaba impreso.",None),
+ "Validar pago":("Contabilidad confirma que la transferencia o el depósito llegó al banco y registra el número oficial del documento, el valor y la fecha. La plataforma los compara sola con lo que registró Secretaría y con la lista de pagos; si algo no coincide, avisa. El pago pasa a 'Validado'. "+AUDIT,None),
+ "Generar link de pago":("Se genera el link en Datafast ligado a la factura o matrícula elegida y se envía al cliente. Cuando pague, Datafast avisa y el pago se registra solo en la factura, con su código de autorización y su comprobante, y aparece en la Caja del día. "+AUDIT,None),
+ "Reenviar link":("Se reenvía el mismo link al cliente por correo. Sigue ligado a su factura y vence en la fecha original.",None),
+ "Generar de nuevo":("Se genera un link nuevo con el mismo valor y la misma factura, porque el anterior venció. El viejo queda anulado. "+AUDIT,None),
+ "Ver comprobante":("Se abre el comprobante de la transacción de Datafast (autorización, lote, tarjeta, valor y fecha) guardado en la factura y en el pago. No hay que imprimirlo.",None),
+ "Importar historial de Datafast":("Eliges el reporte de transacciones que descargas de Datafast (Excel o CSV). Cada pago aprobado se busca por su código de autorización y se registra en la factura de su link, con su comprobante. Sirve mientras no haya conexión directa. "+AUDIT,None),
+ "Descargar comprobante PDF":("Se descarga el comprobante de Datafast (autorización, lote, tarjeta, valor y fecha) en PDF: el mismo que queda guardado en la factura y en el pago. No hace falta imprimirlo.",None),
+ "Conciliar con Datafast":("Se compara el pago registrado con el historial de Datafast por código de autorización; si coincide, queda conciliado. "+AUDIT,None),
+ "Avisar que llegó un certificado":("Se envía un correo al candidato avisando que su certificado llegó a la sede, con el horario de entrega y qué traer: su cédula o pasaporte. No se imprime nada. "+AUDIT,None),
+ "Descargar acta PDF":("Se descarga el acta de entrega en PDF, con los datos del certificado, la identificación del candidato y su firma. Es el comprobante ante un reclamo y el mismo que queda en su expediente.",None),
+ "Reenviar acta por correo":("Se reenvía el acta de entrega al correo del candidato. "+AUDIT,None),
+ "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
  "Conciliar ahora":("Se concilian los ingresos del extracto con los pagos 'Por validar': la coincidencia exacta valida el pago y marca la factura como Pagada; las dudosas quedan para revisión. "+AUDIT,None),
@@ -1473,7 +1589,7 @@ def capacidad_tbl(tid="capacidad"):
     return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra sólida = inscritos hoy · rayada = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
 
 # ===== Entregas de libros 100% digitales (módulo Inventario) =====
-# Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet o escanea el libro → el estudiante firma
+# Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet buscando al estudiante → el estudiante firma
 # con el dedo o desde su celular (QR) → recibo PDF con firma en la ficha y por correo → se descuenta el stock. Nada se imprime.
 def _est_ent(s):
     return {"Lista para entregar":badge("Lista para entregar","navy"),"Sin retirar":badge("Sin retirar","warn"),"Sin stock":badge("Sin stock","bad"),"Entregada":badge("Entregada","ok")}[s]
@@ -1516,7 +1632,7 @@ page("EntregasLibros.html","Entregas de libros",shell("Entregas de libros","Entr
        ("Papel impreso","0","recibos y etiquetas")]),
  tabs(["Entregas","Sin retirar","Alertas de stock","Cómo funciona"],"Entregas",panels={
   "Entregas": filters(search("Buscar","Estudiante, matrícula, libro o ISBN",w="280px"),sel("Estado",["Todos","Lista para entregar","Sin retirar","Sin stock","Entregada"],w="190px"),sel("Sede",["Todas","Quito","Valle","Ambato"],w="140px",col=False),sel("Período",PERIODOS,w="170px",col="@Creada"),
-      actions=btn("Abrir entrega con escáner","EntregarLibro.html",True)+btn("Crear entrega manual")+btn("Exportar Excel"))+_ent_tbl+pager(sv(48,22,14,12)),
+      actions=btn("Abrir entrega","EntregarLibro.html",True)+btn("Crear entrega manual")+btn("Exportar Excel"))+_ent_tbl+pager(sv(48,22,14,12)),
   "Sin retirar": card("Matriculados que aún no retiran su libro",
       kv(("Criterio","más de 7 días desde que la entrega quedó lista"),("Recordatorio","automático al 7.º y 14.º día por correo al estudiante o a su representante"))
       +_sin_retirar+row(btn("Enviar recordatorio a todos",None,True),btn("Exportar Excel")),extra=badge("Reporte","navy")),
@@ -1525,14 +1641,19 @@ page("EntregasLibros.html","Entregas de libros",shell("Entregas de libros","Entr
       +row(btn("Editar umbrales de stock"),btn("Nuevo pedido a proveedor","NuevoPedido.html",kind="ghost")),extra=badge("Alertas","warn")),
   "Cómo funciona": two(card("El flujo, sin imprimir nada",flow([
       ("Se confirma la matrícula","se crea sola la entrega con el libro del nivel (solo el primer nivel; el asesor puede cambiar físico por licencia digital)","Automático","done"),
-      ("El encargado abre la entrega","desde la tablet de la sede, buscando al estudiante o escaneando el código de barras del libro","Tablet","now"),
+      ("El encargado abre la entrega","desde la tablet de la sede, buscando al estudiante por nombre, cédula o matrícula, o desde la lista de pendientes","Tablet","now"),
       ("El estudiante firma","con el dedo en la pantalla, o desde su celular escaneando un QR. Si es menor de 18, firma el representante",""," "),
       ("Se genera el recibo en PDF","estudiante, libro, fecha, hora, quién entregó y la firma; queda en la ficha y sale por correo",""," "),
       ("Se descuenta el stock","en el mismo momento de confirmar, en la sede donde se entregó",""," ")])),
-    card("Qué reemplaza y qué queda fuera",kv(("Reemplaza","recibo impreso en la impresora de facturas, cinta, firma a mano y etiquetas por libro"),("Reportes","matriculados sin retiro y stock bajo por nivel y sede (pestañas de esta pantalla)"),("Correo","incluido: el recibo sale por el correo transaccional de la plataforma"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'),("Escáner","la cámara de la tablet lee el código de barras; también sirve un lector USB como teclado"))))}),
+    card("Qué reemplaza y qué queda fuera",kv(("Reemplaza","recibo impreso en la impresora de facturas, cinta, firma a mano y etiquetas por libro"),("Reportes","matriculados sin retiro y stock bajo por nivel y sede (pestañas de esta pantalla)"),("Correo","incluido: el recibo sale por el correo transaccional de la plataforma"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'),("Búsqueda","por nombre, cédula o matrícula del estudiante; los libros no tienen código de barras"))))}),
  subtitle="Entrega digital del libro de cada matrícula: firma en pantalla, recibo en PDF y stock al instante",
- actions=btn("Abrir entrega con escáner","EntregarLibro.html",True)),"Entregas de libros")
+ actions=btn("Abrir entrega","EntregarLibro.html",True)),"Entregas de libros")
 
+
+_msg_wa='<div class="msg-prev"><small>Vista previa del mensaje</small><p>Hola María, gracias por retirar tu libro en Cambridge Quito. Aquí está tu recibo de entrega.</p><span class="msg-file">recibo-EN-2026-0431.pdf</span></div>'
+_canal_correo=form([("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True,"Recibe el recibo en PDF como adjunto")],cols=1)
+_canal_wa=form([("Celular con WhatsApp","099 000 0001","tel",None,True,"Recibe el recibo en PDF por WhatsApp")],cols=1)+_msg_wa+kv(("Estado",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'))
+_canal_ambos=form([("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True),("Celular con WhatsApp","099 000 0001","tel",None,True)],cols=2)+_msg_wa
 # ---- Pantalla de entrega (pensada para la tablet) ----
 _firma_tab=('<div class="sigpad" data-sigpad><canvas aria-label="Zona de firma: firma aquí con el dedo o el lápiz"></canvas><span class="sig-hint">Firma aquí con el dedo o el lápiz</span></div>'
   '<div class="sig-bar"><button type="button" class="btn btn-ghost" data-sig-clear>Borrar y firmar de nuevo</button><span class="sig-status" data-sig-status role="status">Sin firma todavía</span></div>')
@@ -1544,18 +1665,19 @@ _firma_qr=('<div class="qrbox">'+qr_svg(11)+'<div class="qr-side"><b>Escanea con
 page("EntregarLibro.html","Entregar libro",shell("Entregar libro","Entregas de libros",
  '<div class="deliver"><div class="deliver-main">'
  +card("1 · Identifica la entrega",
-   '<div class="scan"><label class="sr" for="scan-in">Código de barras o ISBN</label><input id="scan-in" class="ctl" data-scan-input placeholder="Escanea el código de barras del libro…" inputmode="numeric" autocomplete="off"><button type="button" class="btn btn-primary" data-scan>Escanear código de barras</button>'+btn("Buscar entrega",kind="ghost")+'</div>'
+   '<div class="scan"><label class="sr" for="scan-in">Buscar entrega</label><input id="scan-in" class="ctl" data-scan-input placeholder="Busca por nombre, cédula o matrícula del estudiante…" autocomplete="off"><button type="button" class="btn btn-primary" data-scan>Buscar entrega</button></div>'
    +facts([("Entrega",'<span class="mono">EN-2026-0431</span> '+badge("Lista para entregar","navy")),("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrícula",'<span class="mono">001-202602794</span>'),("Curso",'<span class="mono">0001-2026-0767</span> · B1 virtual'),
            ("Libro","Empower B1 Combo A (digital pack)"),("ISBN",'<span class="mono">9781108961516</span>'),("Sede","Quito"),("Stock de la sede","4 → 3 al confirmar"),("Creada","hoy 09:15, al confirmar la matrícula")]))
  +card("2 · Revisa el libro",'<div class="checks">'
-   '<label class="check"><input type="checkbox" data-check><span><b>El libro coincide con la entrega</b><small>Mismo título e ISBN que el código escaneado</small></span></label>'
+   '<label class="check"><input type="checkbox" data-check><span><b>El libro coincide con la entrega</b><small>Mismo título que el de la entrega</small></span></label>'
    '<label class="check"><input type="checkbox" data-check><span><b>Está completo y en buen estado</b><small>Si es digital pack, el código de activación viene dentro y queda asignado al estudiante</small></span></label>'
    '<label class="check"><input type="checkbox" data-check><span><b>Los datos del estudiante son correctos</b><small>Nombre, correo para el recibo y, si es menor de 18 años, el representante que firma</small></span></label></div>')
  +card("3 · Firma de recepción",
    '<div data-signer-wrap>'+form([("¿Quién firma?","Estudiante · mayor de edad","select",["Estudiante · mayor de edad","Representante · estudiante menor de 18 años"],True,"Si el estudiante es menor de 18 años firma su representante")],cols=1)+'</div>'
    +seg(["En esta tablet","Desde el celular (QR)"],[_firma_tab,_firma_qr],label="Cómo firma"))
+ +card("4 · Envío del recibo",'<div data-canal-wrap>'+seg(["Correo","WhatsApp","Correo y WhatsApp"],[_canal_correo,_canal_wa,_canal_ambos],label="Enviar recibo por")+'</div>'+kv(("Siempre","el recibo queda guardado en la ficha del estudiante, se elija el canal que se elija")))
  +'</div><aside class="deliver-aside">'
- +card("Al confirmar",flow([("Se guarda la firma","con fecha, hora y quién entregó"),("Se genera el recibo en PDF","queda en la ficha del estudiante"),("Sale por correo","maria.andrade@ejemplo.com"),("Se descuenta el stock","Quito · 1 libro"),("La entrega pasa a Entregada","y el checklist de bienvenida se marca solo")],horizontal=False))
+ +card("Al confirmar",flow([("Se guarda la firma","con fecha, hora y quién entregó"),("Se genera el recibo en PDF","queda en la ficha del estudiante, en Archivos y certificados"),("Se envía el recibo","<span data-canal-resumen>por correo · maria.andrade@ejemplo.com</span>"),("Se descuenta el stock","Quito · 1 libro"),("La entrega pasa a Entregada","y el checklist de bienvenida se marca solo")],horizontal=False))
  +card("Quién entrega",kv(("Entrega","Secretaría Quito"),("Fecha y hora","23 oct 2026 · se toma al confirmar"),("Papel","ninguno: sin recibo impreso ni etiquetas")))
  +'</aside></div><script src="assets/entregas.js"></script>',
  foot('<button type="button" class="btn btn-primary" data-sig-confirm data-next="ReciboEntrega.html">Confirmar entrega y generar recibo</button>',btn("Volver a entregas","EntregasLibros.html",kind="ghost")),
@@ -1571,9 +1693,9 @@ page("ReciboEntrega.html","Recibo de entrega",shell("Recibo de entrega EN-2026-0
    '<dt>Sede</dt><dd>Quito</dd><dt>Entregó</dt><dd>Secretaría Quito</dd><dt>Recibió</dt><dd data-sig-por>Estudiante · mayor de edad</dd></dl>'
    '<div class="receipt-sign"><div><div class="sig-line"><img data-sig-img src="'+SIGN_SVG+'" alt="Firma de quien recibe"></div><span>Firma de quien recibe</span><small data-sig-via>Firmado en la tablet de la sede</small></div><div><div class="sig-line"><b>Secretaría Quito</b></div><span>Quien entregó · usuario con sesión iniciada</span></div></div>'
    '<footer class="receipt-foot"><span>Código de verificación <span class="mono">EN0431-7K2Q</span> · verificable en la plataforma</span><span>Documento digital · no requiere impresión</span></footer></article>',
-   card("Qué pasó al confirmar",flow([("Firma capturada","en la tablet · 23 oct 10:42","Hecho","done"),("PDF generado y guardado","en la ficha de María Andrade, pestaña Documentos","Hecho","done"),("Enviado por correo","maria.andrade@ejemplo.com · 10:42","Hecho","done"),
+   card("Qué pasó al confirmar",flow([("Firma capturada","en la tablet · 23 oct 10:42","Hecho","done"),("PDF generado y guardado","en la ficha de María Andrade · <a href=\"Ficha360.html\">Archivos y certificados</a>","Hecho","done"),('<span data-canal-titulo>Enviado por correo</span>','<span data-canal-detalle>maria.andrade@ejemplo.com · 10:42</span>',"Hecho","done"),
       ("Stock descontado","Quito · Empower B1 Combo A: 4 → 3","Hecho","done"),("Checklist de bienvenida","libro entregado marcado en la matrícula","Hecho","done"),("Audit log","entrega, firma y envío con tu usuario, fecha y sede","Hecho","done")],horizontal=False)
-      +kv(("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · hoy solo sale por correo</small>'))
+      +kv(("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · requiere la API oficial de Meta y tiene costo por mensaje</small>'))
       +row(btn("Descargar recibo PDF",None,True),btn("Reenviar recibo por correo"),btn("Ver ficha del estudiante","Ficha360.html",kind="ghost")),
       extra=badge("Enviado","ok")),ratio="7fr 5fr")
  +'<script src="assets/entregas.js"></script>',
@@ -1601,13 +1723,51 @@ _ACC={"calif":'<a href="CalificarCurso.html">Calificar curso</a>',"mat":'<a href
 _re_tbl=table(["Estudiante","Sede","Curso que terminó","Notas","Siguiente curso","Estado","Acción"],
   [[c2(f'<a href="Ficha360.html">{r[0]}</a>',r[1]),r[1],c2(r[2],r[3]),r[4],c2(r[5],r[6]),_est_re(r[7]),_ACC[r[8]]] for r in RE],sede=1,hide=(1,),wide=0,tid="remat")
 
+def _mail(asunto,para,cuerpo,cta,href,nota=""):
+    return (f'<article class="mail" aria-label="Vista previa del correo"><dl class="mail-head"><div><dt>De</dt><dd>Cambridge School of Languages</dd></div><div><dt>Para</dt><dd>{para}</dd></div><div><dt>Asunto</dt><dd><b>{asunto}</b></dd></div></dl>'
+            f'<div class="mail-body">{cuerpo}<a class="btn btn-primary" href="{href}">{cta}</a>{f"<small>{nota}</small>" if nota else ""}</div></article>')
+_mail_ok=_mail("Aprobaste el módulo 7 · tu módulo 8 empieza el 3 de noviembre","maria.andrade@ejemplo.com",
+  '<p>Hola María,</p><p>Tu profesor cerró las notas de <b>English for Adults B1</b>. Tu nota final fue <b>8.4</b> y aprobaste.</p>'
+  '<p>Tu siguiente módulo: <b>Módulo 8 · B1</b> · Lu-Ma-Mi-Ju 19:00–21:00 · inicia el 3 de noviembre con P. Gómez.</p><p>Te reservamos el cupo hasta el <b>26 de octubre a las 10:00</b>. Valor pendiente: <b>$250.00</b>.</p>',
+  "Confirmar mi matrícula y pagar","PortalEstudiante.html","El enlace es personal. Si ya pagaste varios módulos, tu cupo está asegurado y solo debes confirmar.")
+_mail_rec=_mail("Tu nota del módulo 7 · siguientes pasos","sofia.herrera@ejemplo.com",
+  '<p>Hola Sofía,</p><p>Tu nota final fue <b>6.8</b>. Antes de pasar al módulo 8 necesitas <b>tutorías y el examen de recuperación</b>.</p><p>Coordinación Académica te contactará en las próximas 48 horas para agendarlas.</p>',
+  "Agendar mi tutoría","PortalEstudiante.html","No se te matricula en el siguiente módulo hasta decidirlo con Coordinación.")
+_mail_deuda=_mail("Tienes un saldo pendiente · regularízalo para ver tu nota","pedro.mora@ejemplo.com",
+  '<p>Hola Pedro,</p><p>Tus notas del módulo 7 ya están listas. Tienes un saldo vencido de <b>$500.00</b>; al regularizarlo te enviaremos tu nota y la matrícula de tu siguiente módulo.</p>',
+  "Ver mi estado de cuenta","PortalEstudiante.html","Si ya pagaste, responde este correo con tu comprobante.")
+_AV=[("23 oct 09:10","María Andrade","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Confirmó"),("23 oct 09:10","Martín Ortega","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Abierto"),
+     ("23 oct 09:10","Camila Sánchez","Teens A2 · módulo 6","Aprobado · matrícula propuesta","Correo","Enviado"),("23 oct 09:10","Gabriela Núñez","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Sin abrir"),
+     ("23 oct 09:10","Sofía Herrera","Adults B1 · módulo 7","Recuperación · tutorías","Correo","Abierto"),("23 oct 09:10","Luis Torres","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Rebotó")]
+_bad_av={"Confirmó":badge("Confirmó","ok"),"Abierto":badge("Abierto","navy"),"Enviado":badge("Enviado","neutral"),"Sin abrir":badge("Sin abrir","warn"),"Rebotó":badge("Rebotó","bad")}
+_avisos=(kpis([("Avisos enviados",agg("count","avisos"),"hoy, al cerrar las notas"),("Confirmaron",agg("count:Estado=Confirmó","avisos"),"ya matriculados",{"fset":"Estado=Confirmó"}),("Abiertos",agg("count:Estado=Abierto","avisos"),"sin confirmar todavía",{"fset":"Estado=Abierto"}),
+    ("Sin abrir",agg("count:Estado=Sin abrir","avisos"),"se reenvía a las 48 h",{"fset":"Estado=Sin abrir"}),("Rebotaron",agg("count:Estado=Rebotó","avisos"),"correo inválido: lo corrige Secretaría",{"fset":"Estado=Rebotó"})])
+  +card("Correo que recibe el estudiante",seg(["Aprobado","Recuperación","Con deuda"],[_mail_ok,_mail_rec,_mail_deuda],label="Tipo de aviso")
+         +kv(("Cuándo sale","al cerrar las notas del módulo, sin que nadie lo envíe"),("Si no responde","se reenvía a las 48 h; a las 72 h se libera el cupo y se avisa a Secretaría")))
+  +card("Registro de envíos",table(["Hora","Estudiante","Curso","Aviso","Canal","Estado"],[[h,c2(e,""),c,a,ca,_bad_av[es]] for h,e,c,a,ca,es in _AV],hide=(0,),wide=1,tid="avisos")
+         +kv(("Canal","correo; el aviso por WhatsApp es una propuesta aparte"),("Disparador",badge("Depende de que las notas se registren en la plataforma")+'<small> · si siguen en GradeKeeper hace falta una integración que no está en el contrato</small>'))))
+_BOLSA=[("Gabriela Núñez","Quito","Módulo 5 · A2+","000021074","18 sep"),("Luis Torres","Quito","Módulo 5 · A2+","000021081","26 sep"),("Andrés Pazmiño","Quito","Módulo 5 · A2+","000021069","12 sep"),
+        ("Martín Ortega","Valle","Módulo 6 · A2+","000021098","14 oct"),("Isabela Aguirre","Quito","Módulo 6 · A2+","000021086","1 oct"),
+        ("María Andrade","Quito","Módulo 9 · B1+","000021090","28 ago"),("Daniela Ríos","Quito","Módulo 9 · B1+","000021077","20 sep"),("Sofía Herrera","Quito","Módulo 9 · B1+","000021083","28 sep"),("Pedro Mora","Valle","Módulo 9 · B1+","000021080","25 sep")]
+_bolsa_grupos=table(["Curso que falta crear","Estudiantes que ya pagaron","Fecha sugerida","Estado","Acción"],[
+   [c2("Adults A2+ · módulo 5","Quito · virtual"),"3",c2("lun 15 feb 2027","después de Carnaval (8 y 9 feb)"),badge("Faltan 3 para el mínimo (6)","warn"),'<a href="NuevoCurso.html">Crear curso</a>'],
+   [c2("Adults A2+ · módulo 6","Valle y Quito · virtual"),"2",c2("lun 15 feb 2027","después de Carnaval (8 y 9 feb)"),badge("Faltan 4 para el mínimo (6)","bad"),'<a href="NuevoCurso.html">Crear curso</a>'],
+   [c2("Adults B1+ · módulo 9","Quito · presencial"),"4",c2("lun 1 feb 2027","salta Carnaval en el cálculo"),badge("Faltan 2 para el mínimo (6)","warn"),'<a href="NuevoCurso.html">Crear curso</a>']],wide=0)
+_bolsa_est=table(["Estudiante","Sede","Módulo pagado","Factura","Pagado el","Estado","Acción"],[[c2(f'<a href="Ficha360.html">{e}</a>',sd),sd,m,f'<a href="DetalleFactura.html">{f}</a>',p,badge("Pagado · sin curso","warn"),'<a href="NuevoCurso.html">Crear curso</a>'] for e,sd,m,f,p in _BOLSA],hide=(1,),wide=0,tid="bolsa")
+_bolsa_tab=(kpis([("Módulos pagados sin curso",agg("count","bolsa"),"en la bolsa de módulos"),("Estudiantes",agg("distinct:Estudiante","bolsa"),"con al menos un módulo pagado"),("Cursos por crear","3","con la demanda de estos módulos")])
+  +card("Cursos que faltan por crear",_bolsa_grupos+kv(("Para qué sirve","Secretaría ve de un vistazo qué cursos de febrero hay que crear y cuántos estudiantes ya los pagaron"),("Al crear el curso","los que pagaron se matriculan solos con su módulo, sin una factura nueva"))
+        +row(btn("Matricular a los que ya pagaron",None,True),btn("Nuevo curso","NuevoCurso.html",kind="ghost")),extra=badge("Módulos pagados por adelantado","navy"))
+  +card("Quién pagó qué módulo",filters(search("Buscar","Estudiante o factura",w="260px"),sel("Módulo pagado",["Todos","Módulo 5 · A2+","Módulo 6 · A2+","Módulo 9 · B1+"],w="190px",col="Módulo pagado"),sel("Sede",["Todas","Quito","Valle"],w="130px",col=False))
+        +_bolsa_est+kv(("Sin factura suelta","cada módulo pagado queda ligado a su factura y a la bolsa; ya no hay que buscar el producto del módulo ni agregarlo a una factura aparte"))))
 page("Rematricula.html","Rematrícula",shell("Rematrícula","Rematrícula",
  kpis([("Terminaron el módulo",agg("count","remat"),"según filtros y sede"),("Esperando notas",agg("count:Estado=Esperando notas","remat"),"bloquean la rematrícula",{"fset":"Estado=Esperando notas"}),
        ("Alerta enviada",agg("count:Estado=Alerta enviada","remat"),"listos para matricular",{"fset":"Estado=Alerta enviada"}),
        ("Sin factura",agg("count:Estado=Sin factura","remat"),"matriculados en rojo",{"fset":"Estado=Sin factura"}),
        ("Por conciliar",agg("count:Estado=Por conciliar","remat"),"pago reportado, sin validar",{"fset":"Estado=Por conciliar"}),
        ("Confirmadas",agg("count:Estado=Confirmada","remat"),"cupo asegurado",{"fset":"Estado=Confirmada"})]),
- tabs(["Estudiantes","Capacidad del siguiente curso","Reglas"],"Estudiantes",panels={
+ tabs(["Estudiantes","Avisos automáticos","Bolsa de módulos","Capacidad del siguiente curso","Reglas"],"Estudiantes",counts={"Bolsa de módulos":9},panels={
+  "Avisos automáticos": _avisos,
+  "Bolsa de módulos": _bolsa_tab,
   "Estudiantes": card("Del cierre de notas a la matrícula",flow([
       ("El profesor cierra las notas del módulo","nota ≥ 7 y asistencia ≥ 75%","Automático","done"),
       ("La plataforma avisa al estudiante","correo: 'Tu nota es … tu siguiente nivel empieza el …' con enlace para confirmar y pagar","Automático","done"),
@@ -1632,27 +1792,45 @@ page("Rematricula.html","Rematrícula",shell("Rematrícula","Rematrícula",
  actions=btn("Rematricular seleccionados",None,True)),"Rematrícula")
 
 # ---- Matrícula y factura en una sola pantalla (rematrícula de un estudiante) ----
-_rm_ledger=ledger_calc([("Valor del curso","course fee · módulos 5 y 6 · 2 × $250 · servicio educativo",500,True),("Inscripción","tuition fee · estudiante antiguo, exonerado",0,False),("Libros y materiales","producto · sin material: ya lo tiene del primer nivel",0,False)],10,"lgr")
+_rm_ledger=ledger_calc([("Valor del curso","course fee · módulos 7 y 8 · 2 × $250 · servicio educativo",500,True),("Inscripción","tuition fee · estudiante antiguo, exonerado",0,False),("Libros y materiales","producto · sin material: ya lo tiene del primer nivel",0,False)],10,"lgr")
+_curso_abierto=(
+ form([("Curso","Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","select",["Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","Teens B1 · 0001-2026-0791 · Presencial Ambato · Vi 15:00–19:00 · inicia 20/11/2026 · cupo 3/10"],True,"Solo aparecen cursos del módulo, con cupo y sin choque de horario")],cols=1)
+ +facts([("Programa","English for Teens · Virtual · Grupal"),("Módulo",'Módulo 7 · B1'),("Docente",'<a href="FichaProfesor.html">P. Gómez</a> · contrato activo'),("Aula","Teams 1 (virtual)"),
+         ("Plataforma LMS","Cambridge One · CSL-TB1-0772"),("Días y horario","Lu-Ma-Mi-Ju 17:00–19:00"),("Inicio","2 nov 2026 · primera clase el 4 (feriados 2 y 3)"),("Fin","3 dic 2026 · calculada, salta feriados"),
+         ("Horas totales","36 h · 18 sesiones de 2 h"),("Cupo","6 de 12 · "+badge("Con cupo","ok")),("Valor del módulo","$250 · virtual"),("Progreso del curso",progress(0,"Aún no inicia")) ])
+ +row(btn("Ver curso completo","DetalleCurso.html",kind="ghost")))
+_curso_crear=(
+ kv(("Qué pasa","el módulo 7 todavía no tiene un curso abierto: lo creas aquí sin salir de la matrícula y vuelves con el curso ya elegido"))
+ +form([("Programa","English for Teens","select",["English for Teens","English for Adults","English for Kids","Business English"],True),("Modalidad","Virtual","select",["Virtual","Presencial"],True),("Módulo","7 · B1","select",["6 · A2+","7 · B1","8 · B1"],True),
+        ("Docente","P. Gómez · contrato activo · 14 de 20 h","select",["P. Gómez · contrato activo · 14 de 20 h","L. Vega · contrato activo · 18 de 20 h","D. Paredes · tarifa en aprobación"],True,"Solo docentes con contrato activo y libres en ese horario"),
+        ("Aula o enlace virtual","Teams 1 (virtual)","select",["Teams 1 (virtual)","Zoom 1 (virtual)","Zoom 2 (virtual)"],True,"Capacidad SETEC · el cupo no puede superarla"),("Código en el LMS","CSL-TB1-0790","text",None,False,"El código del curso en Cambridge One / Moodle; hoy se copia a mano"),
+        ("Cupo máximo","12","number",None,True,"≤ capacidad del aula")],cols=2)
+ +'<h4 class="section-title">Calendario del curso</h4>'+calendario_curso()
+ +row(btn("Crear curso y continuar",None,True),btn("Abrir el formulario completo","NuevoCurso.html",kind="ghost")))
+
 page("RematriculaFactura.html","Matrícula y factura",shell("Matrícula y factura","Rematrícula",
  two('<div class="deliver-main">'+
-  card("1 · Estudiante y siguiente curso",
+  card("1 · Estudiante",
    facts([("Estudiante",'<a href="Ficha360.html">Camila Sánchez</a>'),("Curso que terminó",'<a href="DetalleCurso.html">Teens A2 · 0001-2025-0330</a>'),("Notas","8.1 · asistencia 92% · aprobó"),("Cuotas","al día · sin deuda vencida")])
-   +form([("Siguiente curso","Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","select",["Teens B1 · 0001-2026-0772 · Virtual · Lu-Ma-Mi-Ju 17:00–19:00 · inicia 2/11/2026 · cupo 6/12","Teens B1 · por crear · Presencial Ambato · Vi 15:00–19:00"],True,"Ya viene propuesto por el cierre de notas; solo aparecen cursos con cupo y sin choque de horario"),
-          ("Módulos que paga ahora","2 · módulo 5 y módulo 6 (por adelantado)","select",["1 · solo el módulo 5","2 · módulo 5 y módulo 6 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 6 aún no tiene curso: queda en la bolsa y la factura queda ligada a él, no suelta"),
-          ("Descuento aprobado por","—","text",None,False,"Obligatorio si el descuento es mayor a 10%")],cols=2))
-  +card("2 · Factura que se genera con la matrícula",
-   _rm_ledger+disc_field("lgr",10)
-   +table(["Ítem","Tipo","Valor"],[[c2("Módulo 5 · A2+","SRV-MOD-05 · course fee · virtual"),"Servicio educativo","$250.00"],[c2("Módulo 6 · A2+","SRV-MOD-06 · pagado por adelantado · bolsa"),"Servicio educativo","$250.00"],[c2("Empower A2+ Combo","sin material: ya lo tiene del primer nivel"),"Producto","$0.00"]],wide=0)
-   +kv(("Servicios y productos","van en líneas distintas para saber cuántos módulos se facturan de verdad"),("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
-  +card("3 · Pago y comprobante",
-   form([("Método de pago","Transferencia","select",["Efectivo","Tarjeta de débito","Tarjeta de crédito","Depósito","Transferencia","Pago en línea (link)","Nota de crédito"],True),
-         ("Banco de origen","Banco Pichincha","select",["Banco Pichincha","Otro banco (interbancaria)"],False,"Si es de otro banco el número del comprobante puede no coincidir con el del banco: se concilia por monto y fecha"),
-         ("Número de comprobante","884512","text",None,True),("Fecha del pago","2026-10-23","date",None,True),
-         ("Comprobante (PDF o foto)","","file",None,True,"El que mandó el estudiante por WhatsApp o correo")],cols=2)
-   +row(btn("Agregar pago",kind="ghost"))
-   +kv(("Conciliación","al guardar, la plataforma busca el ingreso en el extracto del banco; si coincide, el pago queda Validado sin que nadie lo digite"),("Más de un pago","se agregan los que haga falta: efectivo, tarjeta, transferencia…")))
+   +form([("Módulos que paga ahora","2 · módulo 7 y módulo 8 (por adelantado)","select",["1 · solo el módulo 7","2 · módulo 7 y módulo 8 (por adelantado)","4 · nivel completo con descuento"],True,"El módulo 8 aún no tiene curso propio: queda en la bolsa y la factura queda ligada a él, no suelta")],cols=2))
+  +card("2 · Curso nuevo",
+   seg(["Curso abierto","El módulo aún no tiene curso"],[_curso_abierto,_curso_crear],label="Curso del siguiente módulo"),
+   extra=badge("Propuesto por el cierre de notas","navy"))
+  +card("3 · Factura que se genera con la matrícula",
+   '<div class="linked"><div><b>Ítems generados desde la matrícula <a class="mono" href="DetalleMatricula.html">001-202603262</a></b><span>La factura queda vinculada a la matrícula. Servicios educativos y productos van en secciones separadas.</span></div>'+btn("Volver a generar ítems",kind="ghost")+'</div>'
+   +'<h4 class="section-title">Servicios educativos</h4>'
+   +table(["Ítem","Código","Origen","Valor"],[[c2("Módulo 7 · B1","course fee · virtual · matrícula 001-202603262"),'<span class="mono">SRV-MOD-07</span>',"Matrícula","$250.00"],[c2("Módulo 8 · B1","pagado por adelantado"),'<span class="mono">SRV-MOD-08</span>',"Bolsa de módulos","$250.00"],[c2("Inscripción","tuition fee · estudiante antiguo, exonerado"),'<span class="mono">SRV-INS</span>',"Matrícula","$0.00"]],wide=0)
+   +kv(("Subtotal servicios educativos","$500.00"),("Módulos facturados","2 · se pueden contar en reportes"))
+   +'<h4 class="section-title">Productos</h4>'
+   +table(["Ítem","Código","Origen","Valor"],[[c2("Empower B1 Combo A","ya lo tiene del primer nivel · no se cobra ni descuenta stock"),'<span class="mono">1141</span>',"Material del nivel","$0.00"]],wide=0)
+   +row(btn("Agregar producto",kind="ghost"))+kv(("Subtotal productos","$0.00"))
+   +'<h4 class="section-title">Valores y descuento</h4>'
+   +_rm_ledger+disc_field("lgr",10)+aprob_descuento("lgr")+politica_descuentos()
+   +kv(("Módulo de pago","queda guardado en la factura: ya no hay que buscar la factura suelta del módulo siguiente")))
+  +card("4 · Pago y comprobante",pagos_bloque("450.00")
+   +kv(("Conciliación","al guardar, la plataforma busca el ingreso en el extracto del banco; si coincide, el pago queda Validado sin que nadie lo digite")))
   +'</div>',
-  card("Resumen",kv(("Estudiante","Camila Sánchez"),("Matrícula","001-202603262 · módulo 5"),("Bolsa","módulo 6 · pagado, sin curso"),("Total",'<span data-total-for="lgr">$450</span>'),("Estado al guardar",badge("Matriculada · facturada · pago por conciliar","warn")))
+  card("Resumen",kv(("Estudiante","Camila Sánchez"),("Matrícula","001-202603262 · módulo 7"),("Bolsa","módulo 8 · pagado, sin curso"),("Total",'<span data-total-for="lgr">$450</span>'),("Estado al guardar",badge("Matriculada · facturada · pago por conciliar","warn")))
    +flow([("Se crea la matrícula","001-202603262 y cupo en 0001-2026-0772"),("Se emite la factura","servicios y productos por separado, firmada y enviada al SRI"),("Se registra el pago","con su comprobante adjunto"),("Se avisa al estudiante","correo con el comprobante y el enlace de clase"),("Si hay libro, se crea la entrega","pendiente de firma en la tablet")],horizontal=False)),
   ratio="7fr 5fr"),
  foot(btn("Matricular y facturar",None,True),btn("Matricular sin facturar",kind="ghost"),btn("Volver a rematrícula","Rematricula.html",kind="ghost")),
@@ -1675,7 +1853,7 @@ P_CONC=(
  flow(["Se importa el extracto del banco (archivo Excel o CSV)","La plataforma busca cada ingreso por monto, fecha y referencia","Si coincide: el pago pasa a Validado y la factura a Pagada, sin digitar nada","Si hay duda: queda para revisión de Contabilidad con el motivo"],horizontal=False)
  +kpis([("Ingresos del extracto",agg("count","conc"),"del 19 al 23 oct"),("Conciliados solos",agg("count:Resultado=Conciliado solo","conc"),"sin tocar nada"),("Por revisar",agg("count:Resultado=Revisar","conc"),"referencia o monto distintos"),("Sin pago en la plataforma",agg("count:Resultado=Sin pago","conc"),"alguien pagó y nadie lo registró")])
  +filters(search("Buscar","Ordenante o referencia",w="240px"),sel("Resultado",["Todos","Conciliado solo","Revisar","Sin pago"],w="170px",col=False),sel("Banco",["Todos","Pichincha","Interbancaria"],w="150px"),
-    actions=btn("Importar extracto bancario",None,True)+btn("Conciliar ahora")+btn("Exportar Excel"))
+    actions=btn("Importar extracto bancario",None,True)+btn("Conciliar ahora")+btn("Verificar con Contabilidad","VerificarTransferencias.html")+btn("Exportar Excel"))
  +table(["Fecha","Ref. banco","Ordenante","Banco","Monto","Pago en la plataforma","Resultado","Acción"],
    [[f,c2(f'<span class="mono">{rf}</span>',bn),o,bn,m,c2(p.split(' (')[0],_DET_CON[res]),_res_con(res),_acc_con(a)] for f,rf,o,bn,m,p,res,a in _CON],hide=(3,),wide=2,tid="conc")
  +kv(("Banco Pichincha","el número del comprobante coincide con el del banco"),("Otros bancos","el número del comprobante del cliente suele ser distinto al del banco; se concilia por monto, fecha y nombre"),
@@ -1981,7 +2159,7 @@ page("Pedidos.html","Tienda en línea",shell("Tienda en línea · pedidos WooCom
 # 2 Home
 home=shell("Inicio","Inicio",
  only("ADM,GER,DIR,SUC", tasks([("Aprobar descuento de 42% · Gabriela Núñez","pedido por Carla M. ayer · supera el límite de 10%",badge("Espera tu decisión","warn"),"Aprobaciones.html"),("Revisar la payment sheet de octubre","3 alertas: diferencia de $26 y una factura sin sesiones",badge("Pendiente","warn"),"PaymentSheet.html"),("Cobrar $12,450 en matrículas con saldo","el 60% en 4 cursos que terminan en noviembre",badge("Por vencer","warn"),"Facturas.html"),("Ambato sin matrículas nuevas hace 2 semanas","2 cursos por abrir con menos de 5 inscritos",badge("Requiere acción","bad"),"Cursos.html")]))+
- only("SEC", tasks([("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
+ only("SEC", tasks([("Rematricular a 8 estudiantes","el profesor cerró las notas de A1 Sábados; el aviso ya salió solo",badge("Listos","ok"),"Rematricula.html"),("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Cerrar la caja de hoy","15 pagos · 1 con diferencia por revisar · las listas se arman solas",badge("Abierta","warn"),"CierreCaja.html"),("Recibir el pedido #P-041","Books & Bits · llega hoy · 12 libros para Valle",badge("En camino","navy"),"RecepcionPedido.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
  only("ASE", tasks([("Contactar 5 leads de Kommo","2 llevan más de 3 días sin respuesta",badge("Sin contactar","bad"),"Leads.html"),("Seguir tu solicitud de descuento de 42%","Gabriela Núñez · espera a Dirección Comercial",badge("En revisión","info"),"SolicitudDescuento.html"),("Llamar a 4 estudiantes con saldo vencido","$1,420 en total",badge("Vencida","bad"),"Facturas.html")]))+
  only("COO,PRO", tasks([("Confirmar 3 sesiones de esta semana","2 de P. Gómez · Teens A2 lleva 2 días",badge("Pendiente","warn"),"Sesiones.html"),("Calificar Adults A1 Sábados","terminó hace 5 días · 14 estudiantes esperan su certificado",badge("Requiere acción","bad"),"CalificarCurso.html"),("Asignar profesor a Teens B1 Virtual","abre en 2 semanas · P. Gómez tiene horario libre",badge("Sin profesor","warn"),"Cursos.html")]))+
  only("SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"en tu sede"),("Rematrículas por confirmar",sv(2,1,1,0),"pago reportado desde el portal"),("Cobrado hoy",sv("$3,160","$1,420","$980","$760"),"15 pagos · caja abierta"),("Facturas sin autorizar",sv(2,2,0,0),"1 rechazada por el SRI")]))+
@@ -2058,7 +2236,8 @@ ficha=shell("María Andrade","Estudiantes",
      card("Resumen financiero", kv(("Factura","000021090 (módulos 7–10)"),("Total","$980"),("Pagado","$980"),("Saldo","$0"),("Descuento","10% referido · dentro del límite del asesor"))+hbars([("Facturado",1880),("Cobrado",1880),("Notas de crédito",45)],"$")+row('<a href="DetalleFactura.html" style="font-size:13px">Ver factura 000021090</a>')))+
      card("Cursos tomados", table(["Curso","Nivel","Profesor","Estado","Nota"],[["Adults B1 Virtual","B1","P. Gómez","En curso","—"],["Adults A2","A2","L. Vega","Pass","85"]])),
   "Facturas y pagos": row(btn("Enviar estado de cuenta"),btn("Descargar facturas pendientes"))+table(["Factura","Concepto","Total","Pagado","Saldo","Estado","Acción"],[["000021090","Venta multi-módulo · módulos 7 a 10","$980","$980","$0","Pagada",btn("Ver","DetalleFactura.html")],["000020411","A2 · módulos 3 a 6","$450","$450","$0","Pagada",btn("Ver","DetalleFactura.html")],["000019872","A1 · módulos 1 y 2","$450","$450","$0","Pagada",btn("Ver","DetalleFactura.html")],["NC-000000298","Nota de crédito · libro devuelto","-$45","—","—","Aplicada",btn("Ver","DetalleFactura.html")]])+row(btn("Nueva venta","NuevaVenta.html",True),btn("Registrar pago")),
-  "Archivos y certificados": two(card("Archivos", table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["matricula-001-202602794.pdf","Matrícula firmada","Carla M.","28 ago"],["comprobante_transferencia_884512.pdf","Comprobante de pago","Secretaría","28 ago"]])+row(upload("Adjuntar archivo","PDF, JPG o PNG · máx. 10 MB"),btn("Subir archivo",None,True))),
+  "Archivos y certificados": card("Recibos de entrega de libros", table(["Recibo","Libro","Fecha y hora","Enviado por","Acción"],[[c2('<span class="mono">EN-2026-0431</span>',"firmado en la tablet de Quito"),"Empower B1 Combo A (digital pack)","23 oct 2026 · 10:42",'<span data-recibo-canal>Correo</span>','<a href="ReciboEntrega.html">Ver recibo</a>']],wide=0)+kv(("Cada entrega","genera un recibo en PDF con la firma y queda aquí automáticamente"))+'<script src="assets/entregas.js"></script>',extra=badge("Digital","ok"))
+   +two(card("Archivos", table(["Archivo","Tipo","Subido por","Fecha"],[["cedula_maria_andrade.pdf","Identificación","Carla M.","12 ene"],["matricula-001-202602794.pdf","Matrícula firmada","Carla M.","28 ago"],["comprobante_transferencia_884512.pdf","Comprobante de pago","Secretaría","28 ago"]])+row(upload("Adjuntar archivo","PDF, JPG o PNG · máx. 10 MB"),btn("Subir archivo",None,True))),
      card("Certificados emitidos", table(["Nivel","Nota","Emitido","Acción"],[["A1","80 · Pass","dic 2025",btn("Descargar PDF")],["A2","85 · Pass","jun 2026",btn("Descargar PDF")]])+row(btn("Emitir certificado"))+note("Los exámenes internacionales (tabla International Exams de TeamDesk) no están en los 11 módulos del contrato: se migran como archivo histórico y se confirma con el cliente si se gestionan aquí."))),
   "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["27 sep 17:20","Secretaría","Registró pago","Cuota 2 de 2 · $490 · tarjeta"],["28 ago 10:11","Carla M.","Creó venta","Módulos 7 a 10 · 4 matrículas · factura 000021090 · 10% referido"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["10 jul 2025","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+note("Vista filtrada del audit log para este estudiante. El registro completo está en Configuración → Audit log."),
  }),
@@ -2115,7 +2294,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
    "Una matrícula por módulo. Solo aparecen cursos del programa y módulo elegidos, con cupo y sin choque de horario"),
   ("Valores y descuentos",
    two(ledger+kv(("Tu límite sin aprobación","10%"),("Aplicado",'<span data-disc-for="lgv">10% · -$100</span>'),("Más de 10%",'<a href="SolicitudDescuento.html">pasa a aprobación de Dirección Comercial</a>'),("Tabla de descuentos","se administra en Configuración; la tabla real la envían Dayana y Estefanía"),("Empresa","si en el paso 1 elegiste alianza o convenio, su descuento se aplica solo y no se suma a otro")),
-       disc_field("lgv",10)+form([("Motivo del descuento","Referido","select",["Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Beneficio cancela 2 módulos","Indexado","Otro"],True,"Obligatorio si hay descuento"),
+       disc_field("lgv",10)+aprob_descuento("lgv")+politica_descuentos()+form([("Motivo del descuento","Referido","select",["Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Beneficio cancela 2 módulos","Indexado","Otro"],True,"Obligatorio si hay descuento"),
              ("Observaciones","","textarea",None,False,"Ej.: matrícula condicionada, ingresa a medio nivel"),("Contrato y Reglamento del Estudiante","Enviar para aceptación electrónica al estudiante (mayor de edad)","select",["Enviar para aceptación electrónica al estudiante (mayor de edad)","Enviar para aceptación electrónica al representante (menor de 18 años)","Adjuntar contrato firmado en papel (PDF)"],True,"Se envía solo al confirmar la matrícula, por correo y WhatsApp; la aceptación queda en el expediente con fecha, hora y código de verificación. Reemplaza Jotform")],cols=1),ratio="7fr 5fr"),
    "Cada concepto tiene su propio descuento, como en TeamDesk"),
   ("Factura y pago",
@@ -2163,7 +2342,7 @@ venta_lead=shell("Nueva matrícula · desde lead","Nueva matrícula",
   +step(3,"Valores y descuentos",
    ledger_calc([("Derecho de matrícula","tuition fee · estudiante nuevo",25,False),("Valor del curso","course fee · 2 módulos × $225 · virtual",450,True),("Libros y materiales","Empower A1 Starter SB with digital pack",70,False)],0,"lgl")
    +kv(("Tu límite sin aprobación","10%"),("Aplicado",'<span data-disc-for="lgl">sin descuento</span>'))
-   +'<div class="form-grid cols-3">'+disc_field("lgl",0)+field("Motivo del descuento","Sin descuento","select",["Sin descuento","Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Otro"],False,"Obligatorio si hay descuento")+field("Matrícula firmada","","file",None,True,"Adjunta la matrícula original firmada (PDF)")+'</div>',
+   +'<div class="form-grid cols-3">'+disc_field("lgl",0)+field("Motivo del descuento","Sin descuento","select",["Sin descuento","Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Otro"],False,"Obligatorio si hay descuento")+field("Matrícula firmada","","file",None,True,"Adjunta la matrícula original firmada (PDF)")+'</div>'+aprob_descuento("lgl")+politica_descuentos(),
    sub="Mismos conceptos que una venta normal; el asesor puede aplicar hasta 10% con motivo")
   +step(4,"Factura y forma de pago",
    form([("Facturar a","Andrea Villacís · cédula por completar","select",["Andrea Villacís · cédula por completar","Consumidor final","Otro cliente…"],True),("Plan de pago","Contado","select",["Contado","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días"],True),("Crédito","No","text",None,False,"Automático")],cols=3)
@@ -2184,13 +2363,13 @@ ACTIONS.update({
 })
 page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-202602794","Estudiantes",
  hero([("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Curso",'<a href="DetalleCurso.html">0001-2026-0767</a>'),("Programa","English for Adults (ESL) · Virtual · Grupal"),("Nivel","Módulo 7 · B1"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Asesor (vendor)","Carla M."),("Plan de pago","2 cuotas · cada 30 días"),("Contrato",badge("Aceptado · 28 ago 10:40 · María Andrade","ok")+'<small> · código por correo · IP registrada</small>'),("Indexado","No"),("Tipo de estudiante","Antiguo · 3.ª matrícula"),("Documento de matrícula",'<a href="#">matricula-001-202602794.pdf</a>'),("Comisión del asesor","Pendiente · se paga al cobrar")],
-  only(COMERCIAL+",COO",btn("Cambio de curso"),True)+only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True)+only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True)+btn("Ver venta completa","DetalleVenta.html")+btn("Reenviar contrato para aceptación")+btn("Imprimir matrícula")+btn("Agregar comentario")+only("ASE,DIR,ADM",btn("Eliminar matrícula"),True)+only("ADM,GER,DIR,SUC",btn("Reversar y anular"),True),
+  only(COMERCIAL,btn("Generar factura",None,False,disabled_reason="Ya está facturada: 000021090"),True)+only(COMERCIAL+",COO",btn("Cambio de curso"),True)+only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True)+only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True)+btn("Ver venta completa","DetalleVenta.html")+btn("Reenviar contrato para aceptación")+btn("Imprimir matrícula")+btn("Agregar comentario")+only("ASE,DIR,ADM",btn("Eliminar matrícula"),True)+only("ADM,GER,DIR,SUC",btn("Reversar y anular"),True),
   tag='<span class="hero-code">001-202602794</span>'+badge("En curso","ok")+badge("Quito","navy")+badge("Antiguo","neutral")),
  only(COMERCIAL,
  two(card("Resumen", kv(("Subtotal","$330.00"),("Descuento","-$25.00 · referido"),("Total","$305.00"),("Pagado","$305.00"),("Saldo","$0 · venta pagada en 2 cuotas"))+progress(100,"Pagado de esta matrícula")
        +kv(("Venta","multi-módulo · 4 matrículas en la factura 000021090"),("Canal de contacto","Kommo · WhatsApp"),("Paga la empresa","No"),("Matrícula firmada",'<a href="#">matricula-001-202602794.pdf</a>'))),
      card("Valores y descuentos", table(["Concepto","Valor","Dcto.","Subtotal"],[[c2("Derecho de matrícula (tuition fee)","estudiante antiguo · exonerado"),"$0","—","$0"],[c2("Valor del curso (course fee)","módulo 7 · B1"),"$250","10%","$225"],[c2("Libros y materiales","Empower B1 Combo A + B1+ Combo B"),"$80","—","$80"]])
-       +kv(("Motivo del descuento","Referido · dentro del límite del asesor"),("Observaciones","Continúa en el mismo grupo para el módulo 8"))))),
+       +kv(("Motivo del descuento","Referido · dentro del límite del asesor"),("Aprobado por","No requerido · 10% está dentro del límite del asesor"),("Observaciones","Continúa en el mismo grupo para el módulo 8"))))),
  only("COO,PRO", card("Resumen académico", kv(("Módulo","7 · B1"),("Asistencia","10/11 · 90%"),("Nota parcial","8.4"),("Estado",badge("En curso","ok")))+progress(60,"Avance del módulo 7"))),
  tabs(["Matrículas de la venta","Estado de la matrícula","Facturas y pagos","Cartera","Códigos de libros","Asistencia","Portafolio","Certificados","Comisión","Historial"],"Matrículas de la venta",roles={"Estado de la matrícula":COMERCIAL+",COO","Facturas y pagos":COMERCIAL,"Cartera":COMERCIAL,"Comisión":"ADM,GER,DIR,ASE"},panels={
   "Estado de la matrícula": flow(["Reservada","En curso","Congelada (máx. 3 meses)","Reactivada","Terminada · aprobada o reprobada","Retirada"])
@@ -2201,14 +2380,14 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
        [c2("Retiro","deja el instituto"),"Nota de crédito, devolución o saldo a favor según la política","Administración de sucursal",btn("Retirar estudiante")],
        [c2("Transferir saldo","a otro estudiante"),"Nota de crédito aquí y saldo a favor en el otro","Administración de sucursal",btn("Transferir saldo")]],wide=0),
   "Matrículas de la venta": table(["Matrícula","Módulo","Curso","Total","Estado","Acción"],[["001-202602794","7 · B1",c2("0001-2026-0767","Virtual · Lu-Ma-Mi-Ju 19:00–21:00"),"$305",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602795","8 · B1",c2("Mismo grupo","se asigna al cerrar el módulo 7"),"$225",badge("Reservada","navy"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602796","9 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602797","10 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>']],wide=2),
-  "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["000021090","28 ago 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
+  "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["000021090","28 ago 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+kv(("Vinculación","la factura 000021090 está ligada a esta matrícula: servicios educativos $900 y productos $80"),("Si no tuviera factura","aquí se genera con un clic, con los ítems de la matrícula"))+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
   "Cartera": table(["Cuota","Vence","Monto","Pagado","Días vencidos","Estado"],[["1 de 2","28 ago 2026","$490","$490","—",badge("Pagada","ok")],["2 de 2","27 sep 2026","$490","$490","—",badge("Pagada","ok")]])+row(btn("Enviar estado de cuenta"),btn("Registrar pago")),
   "Códigos de libros": table(["Material","ISBN","Código de activación","Entregado","Acción"],[["Empower B1 Combo A (digital pack)","9781108961516","EMP-B1-7K2Q-••••",'<a href="ReciboEntrega.html">28 ago 2026 · recibo firmado</a>',badge("Activado","ok")],["Empower B1+ Combo B (digital pack)","9781108961523","EMP-B1P-3M9X-•••• · reservado",'<a href="EntregasLibros.html">entrega pendiente · módulo 9</a>',btn("Asignar código",None,False)]]),
   "Asistencia": table(["Sesión","Fecha","Presente","Observación"],[["8","13 oct · 19:00","✓","—"],["9","14 oct · 19:00","✓","—"],["10","15 oct · 19:00","✗","Aviso previo"],["11","19 oct · 19:00","✓","—"]])+kv(("Asistencia","10 de 11 sesiones · 90%"),("Mínimo para aprobar","75%")),
   "Portafolio": table(["Módulo","Documento","Generado","Acción"],[["7",c2("Student Report · módulo 7","notas, asistencia y comentarios del profesor"),"al cerrar el módulo",badge("Se genera al calificar","neutral")],["6",c2("Student Report · módulo 6","A2 · nota 8.1 · asistencia 92%"),"28 ago 2026",btn("Ver PDF")],["5",c2("Student Report · módulo 5","A2 · nota 7.9 · asistencia 88%"),"3 jul 2026",btn("Ver PDF")]],wide=1)+kv(("Portafolio","un Student Report en PDF por módulo cerrado, como la pestaña Portfolio de TeamDesk; se adjunta al expediente y lo ve el estudiante en el portal")),
   "Certificados": table(["Módulo","Programa · modalidad · curso","Nota","Certificado","Acción"],[["7",c2("English for Adults (ESL) · Virtual · Grupal","0001-2026-0767 · P. Gómez · Quito"),"8.4 · en curso",badge("Al cerrar el módulo","neutral"),"—"],["8",c2("English for Adults (ESL) · Virtual · Grupal","0001-2026-0767 · P. Gómez · Quito"),"—",badge("Pendiente","neutral"),"—"]],wide=1)+kv(("Certificado de nivel B1","se emite al aprobar los módulos 7 y 8 con nota ≥ 7, con código único de verificación"))+row(btn("Emitir certificado")),
   "Comisión": kv(("Asesor","Carla M."),("Regla","Rango 11+ · 4% virtual"),("Monto","$39.20 por la venta de 4 módulos"),("Estado",badge("Pagada en el cierre de septiembre","ok")))+row('<a href="DetalleComision.html">Ver detalle de comisiones del asesor</a>'),
-  "Historial": table(["Fecha","Usuario","Acción"],[["28 ago 10:11","Carla M.","Creó la venta multi-módulo (4 matrículas) y la factura 000021090"],["28 ago 10:12","Sistema","Factura autorizada por el SRI y enviada al cliente"],["28 ago 10:15","Carla M.","Adjuntó la matrícula firmada"],["31 ago 09:00","Sistema","Envió el enlace de clase y agregó a la estudiante al equipo de Teams"],["27 sep 17:20","Secretaría","Registró el pago de la cuota 2"]]),
+  "Historial": table(["Fecha","Usuario","Acción"],[["28 ago 10:11","Carla M.","Creó la venta multi-módulo (4 matrículas) y la factura 000021090"],["28 ago 10:15","Carla M.","Adjuntó la matrícula firmada"],["28 ago 12:14","Sistema","Factura enviada a Dora a las 12:11 (2 h después de emitirla), autorizada por el SRI y enviada al cliente"],["31 ago 09:00","Sistema","Envió el enlace de clase y agregó a la estudiante al equipo de Teams"],["27 sep 17:20","Secretaría","Registró el pago de la cuota 2"]]),
  }),
  subtitle="Una matrícula por módulo, como el Enrollment de TeamDesk; la venta agrupa sus módulos en una factura"),"Detalle de matrícula")
 
@@ -2223,7 +2402,14 @@ page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-
    [c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871"),"70%","7.5","6.8","6.4","7.0",badge("Bloqueado · asistencia","bad")],
    [c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875"),"45%","5.0","4.5","—","—",badge("Reprobado","bad")]],wide=0)
    +kv(("Aprobados","10 de 12"),("Bloqueados por asistencia","1 · decide Coordinación"),("Reprobados","1 · repite el módulo"))),
- two(card("Al cerrar el módulo", flow(["Speaking mock y notas en GradeKeeper (48 h)","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación y End of level report","Reprobados: rematrícula del mismo módulo"])),
+ card("Qué se dispara solo al cerrar las notas",table(["Grupo","Estudiantes","Qué recibe","Qué queda"],[
+   [badge("Aprobados sin deuda","ok"),"8",c2("Correo con su nota y el siguiente módulo","enlace para confirmar y pagar"),c2("Matrícula propuesta","cupo reservado 72 h en 0001-2026-0801")],
+   [badge("Aprobados con deuda","warn"),"2",c2("Nada todavía","la nota no se envía con saldo vencido"),c2("Bloqueados","Secretaría los ve en cartera")],
+   [badge("Bloqueado por asistencia","bad"),"1",c2("Aviso a Coordinación","decide si se matricula"),c2("Pendiente de decisión","no se rematricula solo")],
+   [badge("Reprobado","bad"),"1",c2("Llamada de Coordinación","antes de publicar la nota"),c2("Repite el módulo","rematrícula del mismo módulo")]],wide=0)
+   +kv(("Secretaría","recibe la notificación y ve a los 8 listos en Rematrícula, sin esperar a que Académico le avise"),("Quién dispara","el profesor o Coordinación al cerrar el módulo en la plataforma"))
+   +row(btn("Ver los avisos automáticos","Rematricula.html",kind="ghost")),extra=badge("Automático","ok")),
+ two(card("Al cerrar el módulo", flow(["Speaking mock y notas (48 h)","Aprobados avanzan al módulo 8 de su compra","Nivel cerrado → certificado con código de verificación y End of level report","Reprobados: rematrícula del mismo módulo"])),
      card("Reglas del proceso de cierre", table(["Nota final","Qué pasa"],[['<span class="mono">≥ 7.00</span>',"Aprueba · Student Report en PDF a su expediente"],['<span class="mono">6.50 – 6.99</span>',"Tutorías y examen de recuperación antes de decidir"],['<span class="mono">≤ 6.49</span>',"Pierde el módulo · repite con descuento para repetir"],["Cualquiera · con deuda","No se envía la nota ni el certificado hasta regularizar el saldo"],["Menor a 7.00","Coordinación llama al estudiante o representante antes de publicar"]],wide=0)
        +kv(("Plazo","72 h después de la última clase"),("Encuesta","se envía al cerrar; el informe trimestral consolida resultados por sede")))),
  foot(btn("Cerrar módulo y emitir certificados",None,True),btn("Guardar borrador de notas"),btn("Cancelar","DetalleCurso.html")),
@@ -2231,18 +2417,19 @@ page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-
 
 # 8c Exámenes internacionales (propuesta: no está en los 11 módulos del contrato)
 page("ExamenesInternacionales.html","Exámenes internacionales",shell("Exámenes internacionales","Exámenes",
- hero([("Qué es","Inscripción a exámenes Cambridge, Oxford, TOEFL, SIELE y Anglia"),("Cambridge · Oxford · Anglia","se compran en Books and Bits (exams.booksandbits.ec/csol); llega confirmación por registro y cierre diario"),("TOEFL ITP · SIELE · Mock Test","se compran en la tienda en línea (WooCommerce) y Secretaría gestiona el pedido"),("Hoy en TeamDesk","tabla International Exams")],btn("Cargar calendario anual")+btn("Ver pedidos de la tienda","Pedidos.html")+btn("Abrir Books and Bits","https://exams.booksandbits.ec/csol"),tag=badge("Requerimiento de Dirección Comercial · confirmar alcance","warn")),
- kpis([("Candidatos en la lista",agg("count","examenes"),"según filtros y sede"),("Esperando resultados",agg("count:Estado=Esperando","examenes"),"enviados al centro"),("Listos para retirar",agg("count:Estado=Listo","examenes"),"certificado en la sede"),("Entregados",agg("count:Estado=Entregado","examenes"),"cerrados")]),
- filters(search("Buscar","Candidato o cédula",w="220px"),sel("Examen",["Todos","Cambridge","Oxford","TOEFL","Anglia"],w="140px"),sel("Estado",["Todos","Inscrito","Esperando resultados","Listo para retirar","Entregado"],w="190px"),actions=btn("Nuevo candidato","NuevaInscripcionExamen.html",True)),
+ hero([("Qué es","Inscripción a exámenes Cambridge, Oxford, TOEFL, SIELE y Anglia"),("Cambridge · Oxford · Anglia","se compran en Books and Bits (exams.booksandbits.ec/csol); llega confirmación por registro y cierre diario"),("TOEFL ITP · SIELE · Mock Test","se compran en la tienda en línea (WooCommerce) y Secretaría gestiona el pedido"),("Hoy en TeamDesk","tabla International Exams")],btn("Avisar que llegó un certificado")+btn("Cargar calendario anual")+btn("Ver pedidos de la tienda","Pedidos.html")+btn("Abrir Books and Bits","https://exams.booksandbits.ec/csol"),tag=badge("Requerimiento de Dirección Comercial · confirmar alcance","warn")),
+ kpis([("Candidatos en la lista",agg("count","examenes"),"según filtros y sede"),("Esperando resultados",agg("count:Estado=Esperando","examenes"),"enviados al centro"),("Listos para retirar",agg("count:Estado=Listo","examenes"),"certificado en la sede"),("Entregados",agg("count:Estado=Entregado","examenes"),"cerrados"),("Falta cédula",agg("count:Estado=Falta cédula","examenes"),"pagados, sin el PDF",{"fset":"Estado=Falta cédula"})]),
+ filters(search("Buscar","Candidato o cédula",w="220px"),sel("Examen",["Todos","Cambridge","Oxford","TOEFL","Anglia"],w="140px"),sel("Estado",["Todos","Inscrito","Falta cédula","Esperando resultados","Listo para retirar","Entregado"],w="190px"),actions=btn("Nuevo candidato","NuevaInscripcionExamen.html",True)),
  table(["Candidato","Sede","Examen","Factura","Puntaje y nivel","Estado","Acción"],[
   [c2("Lucía Benítez","CED 1716543210 · 17 años"),"Quito",c2("Cambridge · B2 First (FCE)","14 nov 2026"),"000021101 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")],
   [c2("Tomás Villacrés","CED 1719876543"),"Quito",c2("Cambridge · C1 Advanced","10 oct 2026"),"000021043 · pagada","—",badge("Esperando resultados","warn"),btn("Registrar resultado")],
-  [c2("Paula Ortiz","PAS AB123456"),"Valle",c2("TOEFL iBT","26 sep 2026"),"000021020 · pagada","96 · B2",badge("Listo para retirar","ok"),btn("Registrar resultado")],
-  [c2("Daniel Paz","CED 1803456789"),"Ambato",c2("Oxford Test of English","19 sep 2026"),"000020998 · pagada","128 · B2",badge("Entregado","neutral"),btn("Registrar resultado")],
+  [c2("Paula Ortiz","PAS AB123456"),"Valle",c2("TOEFL iBT","26 sep 2026"),"000021020 · pagada","96 · B2",badge("Listo para retirar","ok"),'<a href="EntregaCertificado.html">Entregar certificado</a>'],
+  [c2("Daniel Paz","CED 1803456789"),"Ambato",c2("Oxford Test of English","19 sep 2026"),"000020998 · pagada","128 · B2",badge("Entregado","neutral"),'<a href="ActaCertificado.html">Ver acta</a>'],
   [c2("Emilia Torres","CED 1724567890 · 12 años"),"Valle",c2("Cambridge · A2 Key for Schools","5 dic 2026"),"000021105 · crédito","—",badge("Inscrito","navy"),btn("Registrar resultado")],
-  [c2("Gabriel Mora","CED 1712349876"),"Quito",c2("Anglia · Intermediate","28 nov 2026"),"000021110 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")]],sede=1,wide=0,tid="examenes"),
+  [c2("Gabriel Mora","CED 1712349876"),"Quito",c2("Anglia · Intermediate","28 nov 2026"),"000021110 · pagada","—",badge("Inscrito","navy"),btn("Registrar resultado")],
+  [c2("Sebastián Ríos","Cliente externo · sin cédula adjunta"),"Quito",c2("Cambridge · B1 Preliminary","5 dic 2026 · cierra 15 nov"),"000021112 · pagada","—",badge("Falta cédula","bad"),btn("Pedir cédula")]],sede=1,wide=0,tid="examenes"),
  card("Reporte por examen", table(["Examen","Internos","Externos","Importe","Asesor con más ventas"],[["B2 First (FCE)","12","5","$3,995","Carla M."],["C1 Advanced","4","3","$1,925","Diego R."],["TOEFL iBT","2","6","$1,600","Ana P."]])),
- card("Flujo", flow(["Inscripción y factura","Envío al centro autorizado","Esperando resultados","Puntaje y nivel","Listo para retirar","Entregado con firma"])),
+ card("Flujo", flow(["Factura emitida antes de inscribir","Datos y cédula en PDF (obligatoria)","Fecha con 20 días de anticipación","Inscripción en el centro autorizado","Esperando resultados","Puntaje y nivel","Listo para retirar","Entregado con firma"])),
  subtitle="Propuesta para validar con Cambridge: hoy se gestiona en la tabla International Exams de TeamDesk"),"Exámenes internacionales")
 
 
@@ -2277,15 +2464,15 @@ page("MatriculaContinuidad.html","Matrícula de continuidad",shell("Matrícula d
 
 # Inscripción a examen internacional (venta, factura, pago e inscripción)
 page("NuevaInscripcionExamen.html","Inscripción a examen",shell("Nueva inscripción a examen internacional","Exámenes",
- wizcard(step(1,"Cliente y destinatario de la factura", form([("Tipo de cliente","Estudiante de Cambridge","select",["Estudiante de Cambridge","Cliente externo"],True),("Estudiante","Lucía Benítez · CED 1716543210","text",None,False,"Si es estudiante se reutiliza su ficha"),("Facturar a","Su madre · Carmen Ortiz · CED 1705432198","select",["La misma candidata","Su madre · Carmen Ortiz · CED 1705432198","Empresa","Otra persona"],True,"El destinatario puede ser distinto del candidato")],cols=3))
+ wizcard(step(1,"Cliente y destinatario de la factura", form([("Tipo de cliente","Estudiante de Cambridge","select",["Estudiante de Cambridge","Cliente externo"],True),("Estudiante","Lucía Benítez · CED 1716543210","text",None,False,"Si es estudiante se reutiliza su ficha"),("Facturar a","Su madre · Carmen Ortiz · CED 1705432198","select",["La misma candidata","Su madre · Carmen Ortiz · CED 1705432198","Empresa","Otra persona"],True,"El destinatario puede ser distinto del candidato")],cols=3)+row(btn("Pedir los datos al cliente",kind="ghost")))
   +step(2,"Examen, tarifa y pago", form([("Categoría","Cambridge","select",["Cambridge","Oxford","TOEFL","Anglia"],True),("Examen","B2 First (FCE)","select",["A2 Key","B1 Preliminary","B2 First (FCE)","C1 Advanced"],True),("Tarifa vigente","$235.00","text",None,False,"Automático"),("Forma de pago","Tarjeta de crédito","select",["Efectivo","Tarjeta de crédito","Tarjeta de débito","Transferencia","Depósito"],True)],cols=4)
-     +kv(("Factura","000021101 · se emite al registrar el pago"),("Validación del pago","posterior, por Contabilidad")))
+     +form([("Número de factura","000021101","text",None,True,"Obligatorio: la factura se emite antes de inscribir y es el respaldo del pago")],cols=3)+kv(("Orden","primero la factura y después la inscripción"),("Validación del pago","posterior, por Contabilidad")))
   +step(3,"Datos de quien rendirá el examen", form([("Apellidos","Benítez Ortiz","text",None,True),("Nombres","Lucía","text",None,True),("Género","Femenino","select",["Femenino","Masculino","Otro"],True),("Identificación","1716543210","text",None,True),("Fecha de nacimiento","2001-05-14","date",None,True),("Celular","099 000 0031","tel",None,True),("Correo","lucia.b@ejemplo.com","email",None,True,"Para las comunicaciones del examen")],cols=4)
-     +upload("Identificación del candidato (parte frontal)","Foto o PDF · se contrasta con nombres y fecha de nacimiento"))
-  +step(4,"Fecha del calendario anual", table(["Fecha","Sede","Cierre de inscripción","Disponible"],[["14 nov 2026","Quito","25 oct",badge("Sí · faltan 26 días","ok")],["5 dic 2026","Quito","15 nov",badge("Sí","ok")],["7 nov 2026","Valle","18 oct",badge("No · menos de 20 días","bad")]])
-     +kv(("Regla","la inscripción debe hacerse con al menos 20 días de anticipación")))
-  +step(5,"Verificar con el cliente y enviar", kv(("Revisar","datos, examen y fecha con el cliente (puede enviarse una captura)"))+row(btn("Imprimir y enviar")))),
- foot(btn("Inscribir candidato",None,True),btn("Cancelar","ExamenesInternacionales.html")),
+     +'<div class="doc-req" data-exam-doc>'+field("Cédula del candidato en PDF","","file",None,True,"Obligatoria: sin este documento no se puede registrar el examen")+'<div class="doc-status" data-doc-status role="status"><b>Falta el PDF de la cédula</b><span>Se contrasta con los nombres y la fecha de nacimiento</span></div></div>'+row(btn("Pedir la cédula al cliente",kind="ghost"))+'<script src="assets/examen.js"></script>')
+  +step(4,"Fecha del calendario anual", table(["Fecha del examen","Sede","Cierre de inscripción","Faltan","Disponible","Acción"],[["14 nov 2026","Quito","25 oct","22 días",badge("Sí · cierra en 2 días","warn"),"—"],["5 dic 2026","Quito","15 nov","43 días",badge("Sí","ok"),"—"],["7 nov 2026","Valle","18 oct","15 días",badge("No · menos de 20 días","bad"),btn("Pedir excepción de fecha",kind="ghost")]],wide=0)
+     +kv(("Regla","la inscripción se cierra 20 días antes del examen"),("Hoy","23 oct 2026"),("Con menos de 20 días","solo con excepción de Coordinación; no está garantizada")))
+  +step(5,"Verificar con el cliente y enviar", kv(("Revisar","datos, examen y fecha con el cliente"),("Orden","factura → datos y cédula en PDF → fecha → inscripción"))+row(btn("Enviar resumen al cliente")))),
+ foot('<button type="button" class="btn btn-primary" data-exam-submit data-next="ExamenesInternacionales.html">Inscribir candidato</button>',btn("Guardar pendiente de cédula",kind="ghost"),btn("Cancelar","ExamenesInternacionales.html",kind="ghost")),
  subtitle="Venta, factura, pago e inscripción vinculados; candidato separado del pagador"),"Inscripción a examen")
 
 # Venta de mercadería
@@ -2445,7 +2632,7 @@ cursos=shell("Cursos","Cursos",
     [c2("English for Kids 2 Tarde","0001-2026-0328 · termina 28 nov"),"Valle",c2("Kids 3 Tarde","0001-2026-0812 · upcoming · Sa 09:00"),"8","8","6",c2("1","se muda"),btn("Registrar contacto de reapertura")],
     [c2("English for Adults A2","0001-2026-0620 · termina 4 dic"),"Valle",c2("B1 Presencial","por crear · Lu-Mi 14:00"),"9","3","1",c2("0","—"),btn("Registrar contacto de reapertura")],
     [c2("English for Kids 1 Mañana","0001-2026-0518 · termina 12 dic"),"Ambato",c2("Kids 2 Mañana","por crear"),"7","0","0",c2("0","aún no inicia el contacto"),btn("Registrar contacto de reapertura")]],sede=1,hide=(1,),wide=0)
-   +kv(("Protocolo","al 75% del curso: mensaje de WhatsApp → llamada → nota de voz; 10% de descuento al pagar 2 módulos"),("Cuándo","se crean los cursos de continuidad como 'upcoming' y se revisa el cuadro cada jueves"),("Control","Dirección Académica audita entre el 10% y el 20% de los contactos registrados")))),
+   +kv(("Protocolo","al 75% del curso: mensaje de WhatsApp → llamada → nota de voz; 10% de descuento al pagar 2 módulos"),("Cuándo","se crean los cursos de continuidad como 'upcoming' y se revisa el cuadro cada jueves"),("Control","Dirección Académica audita entre el 10% y el 20% de los contactos registrados"))+row(btn("Configurar avisos automáticos","Automatizaciones.html",kind="ghost")))),
  note("El código de curso conserva el formato de TeamDesk (0001-AAAA-NNNN) para la migración y la reconciliación. Avance = % de horas dictadas sobre el total."),
  only("ADM,GER,SUC,COO", ai([("Adults A1 Sábados terminó hace 5 días sin calificar: 14 estudiantes no pueden matricularse en A2 y hay 3 cupos esperándolos en 0001-2026-0620.","Calificar","DetalleCurso.html"),("Dos cursos 'por abrir' en Ambato tienen menos de 5 inscritos a 2 semanas del inicio. Históricamente no abren con menos de 6.","Ver cursos de Ambato","Cursos.html"),("El aula Q-1 está al 60% de ocupación y C-2 (Valle) al 0%: el nuevo Kids 2 podría ir a C-2 el sábado.","Ver aulas","Configuracion.html")],"Pregunta: ¿qué cursos abren en noviembre y cuántos libros necesitan?")),
  subtitle="Programa, nivel, modalidad, horario y aula por sede")
@@ -2453,17 +2640,18 @@ page("Cursos.html","Cursos",cursos,"Listado de cursos")
 
 # 8 Detalle curso
 det=shell("English for Adults B1 Virtual","Cursos",
- hero([("Programa","English for Adults"),("Nivel","B1 · módulos 7–8"),("Modalidad","Virtual · Zoom 2"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Cupo","12 / 15"),("Libro","Empower B1+ Combo B")],
+ hero([("Programa","English for Adults"),("Nivel","B1 · módulos 7–8"),("Modalidad","Virtual · Zoom 2"),("Plataforma LMS","Cambridge One · CSL-B1-0767"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Cupo","12 / 15"),("Libro","Empower B1+ Combo B")],
   btn("Registrar sesión",None,True)+btn("Enviar enlace de clase")+btn("Hoja de asistencia")+only("ADM,GER,SUC,SEC",btn("Rematricular estudiantes","Rematricula.html"),True)+only("ADM,GER,SUC,COO",btn("Calificar profesor")+btn("Editar curso"),True),
   progress(60,"Avance del curso · 22 de 36 horas dictadas · termina en 7 semanas"),
   tag='<span class="hero-code">0001-2026-0767</span>'+badge("En curso","ok")+badge("Quito","navy")),
  two(card("Profesor asignado", kv(("Profesor",'<a href="FichaProfesor.html">P. Gómez</a>'),("Contrato",badge("Activo hasta dic 2026","ok")),("Horas en este curso","22 h dictadas"))+only("ADM,GER,SUC",kv(("Tarifa","$7.00/h · $154 en este curso")))+only("ADM,GER,SUC,COO",filters(sel("Cambiar profesor",["P. Gómez","L. Vega","M. Castro","R. Salas (contrato vencido)"],w="260px"),actions=btn("Cambiar",None,False,"Si el nuevo profesor no tiene contrato activo, el cambio queda pendiente de aprobación de Coordinación.")))),
      card("Sesiones", table(["Fecha","Horas","Registro"],[["Lu 12 oct","2","Automático"],["Ma 13 oct","2","Automático"],["Mi 14 oct","2","Manual"],["Ju 15 oct","2","Automático"],["Lu 19 oct","2","Pendiente"]]))),
- card("Estudiantes matriculados", only(COMERCIAL, filters(sel("Mostrar",["Todos","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only("ADM,GER,DIR,SUC",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Estado","Acción"],[
+ card("Estudiantes matriculados", only(COMERCIAL, filters(sel("Mostrar",["Todos","Sin factura","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only("ADM,GER,DIR,SUC",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Estado","Acción"],[
   ["001-202602794",c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794 · 099 000 0001"),"90%","$305","$305","$0",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602846",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846 · 099 000 0002"),"85%","$250","$0","$250",badge("Factura vencida","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602871",c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871 · 099 000 0005"),"70%","$230","$230","$0",badge("Riesgo asistencia","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
-  ["001-202602875",c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875 · 099 000 0006"),"45%","$195","$0","$195",badge("Sin pago · riesgo","bad"),'<a href="DetalleMatricula.html">Ver</a>']],hide=(0,),wide=1)+kv(("Matriculados","12/15"),("Saldo pendiente del curso","$445"),("Asistencia promedio","84%")))
+  ["001-202602875",c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875 · 099 000 0006"),"45%","$195","$0","$195",badge("Sin pago · riesgo","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
+  ["001-202603270",c2('<a href="Ficha360.html">Renata Salazar</a>',"001-202603270 · 099 000 0012"),"—","$250","$0","$250",badge("Matriculada · sin factura","bad"),'<a href="RematriculaFactura.html">Facturar</a>']],hide=(0,),wide=1)+kv(("Matriculados","12/15"),("Saldo pendiente del curso","$695"),("Asistencia promedio","84%")))
   +only("COO,PRO", filters(sel("Mostrar",["Todos","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=btn("Calificar curso",None,True)+only("COO",btn("Exportar"),True))+table(["Estudiante","Asistencia","Nota parcial","Muro","Estado","Acción"],[
   [c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794"),"90%","8.4","100% módulo 7",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
   [c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"85%","7.6","90%",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
@@ -2787,7 +2975,8 @@ page("ImportExport.html","Importar / exportar",shell("Importar / exportar estudi
 
 # 18 Nuevo curso
 page("NuevoCurso.html","Nuevo curso",shell("Nuevo curso","Cursos",
- form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
+ form(title="Datos del curso", fields=["Código (automático: 0001-2026-0773)",("Programa","English for Adults",'select',PROGRAMAS,True,"1º programa"),("Modalidad","Virtual",'select',MODALIDADES,True,"2º modalidad"),("Tipo de clase","Grupal",'select',TIPOS_CLASE,True,"3º tipo · define horas por sesión y precio"),("Nivel","B1 · módulos 7–8",'select',NIVEL_OPC,True),"Sede",("Multisucursal","No",'select',["No","Sí · admite estudiantes de varias sedes"]),("Tarifa especial del profesor","No · tabla vigente",'select',["No · tabla vigente","Sí · tarifa especial para este curso (va a aprobación)"]),("Aula o enlace virtual","Q-1 · Quito · 15 pers.",'select',AULAS,True,"Solo aulas de la sede elegida · capacidad SETEC"),("Horario","Regular noche · Lu-Ma-Mi-Ju 19:00–21:00 · 2 h",'select',PLANTILLAS,True,"Plantilla, o 'Personalizado' para elegir días y horas"),"Fecha inicio","Fecha fin (calculada: horas ÷ horas por sesión · salta feriados de Ecuador)",("Total de horas","36",'number',None,True,"One to one: paquete de 20 o 40 h"),("Equipo de Microsoft Teams","Se crea automáticamente · CSL-2026-0773",'text',None,False,"Solo cursos virtuales"),("Código en el LMS (Cambridge One / Moodle)","CSL-B1-0773",'text',None,False,"El código del curso en la plataforma de aprendizaje; hoy se crea y se copia a mano. Sincronizarlo solo es posible si el LMS expone su API"),("Cupo máximo","15",'number',None,True,"≤ capacidad del aula"),("Estudiantes con este módulo ya pagado","3 · se matriculan al crear el curso","select",["3 · se matriculan al crear el curso","Ninguno · solo crear el curso"],False,"Los que pagaron este módulo por adelantado y esperan el curso (bolsa de módulos)"),("Libro / material del nivel","Empower B1+ Combo B",'text',None,False,"Se descuenta del stock al matricular"),("Precio del nivel","$500 virtual · $550 presencial",'text',None,False,"Desde catálogo")]),
+ card("Calendario del curso", calendario_curso(), extra=badge("Feriados de Ecuador cargados","ok")),
  card("Horario personalizado", horario_builder(), extra='<small class="card-hint">Se muestra al elegir "Personalizado" en Horario</small>'),
  card("Profesor", filters(search("Buscar profesor","Nombre, especialidad o sede",w="300px"),sel("Contrato",["Todos","Activo","Vencido"],w="130px"),sel("Disponible en el horario",["Todos","Sí","No"],w="170px"),actions=kv(("Seleccionado",'<b>P. Gómez</b> · contrato activo · 14 de 20 h')))
    +table(["Profesor","Contrato","Carga","Disponible en el horario","Especialidad","Acción"],[
@@ -3000,9 +3189,27 @@ filters(sel("Estudiante",["Pedro Mora","Camila Sánchez","Gabriela Núñez","Mat
     [c2("000021074","18 sep · Quito · A2 · crédito 30 días"),"Gabriela Núñez","18 oct","$450.00","$225.00","$225.00",badge("Parcial","warn"),V2],
     [c2("000021095","11 oct · Ambato · A1 · crédito 15 días"),"Mateo Salazar (menor)","26 oct","$420.00","$0.00","$420.00",badge("Pendiente","warn"),V2]],wide=0)
    +kv(("Facturas con saldo","2"),("Total adeudado","$750.00"),("Correo del estudiante","p.mora@ejemplo.com"),("Último envío","Nunca")))
+_SL=[("000021097","Consumidor final","venta de mostrador","Libro","$45.00","Servicio independiente","no necesita matrícula","ver"),
+     ("000021104","Luis Torres","4 h de refuerzo","Tutoría","$60.00","Servicio independiente","ligada a su ficha","ficha"),
+     ("000021105","Valeria Cedeño","Mock Test B2","Simulador","$35.00","Servicio independiente","ligada a su ficha","ficha"),
+     ("000021106","Isabela Aguirre","3 páginas","Traducción","$45.00","Servicio independiente","ligada a su ficha","ficha"),
+     ("000021101","Paula Cárdenas","módulo 5 · Adults A2+","Módulo adelantado","$250.00","Requiere acción","Bolsa de módulos · módulo 5 (coincide valor y fecha)","bolsa"),
+     ("000021102","Dana Pérez","módulo 6 · Adults A2+","Módulo adelantado","$250.00","Requiere acción","Bolsa de módulos · módulo 6 (coincide valor y fecha)","bolsa"),
+     ("000021071","Andrés Pazmiño","matrícula anulada y vuelta a crear","Matrícula","$195.00","Requiere acción","Matrícula 001-202603265 (misma persona y valor)","mat"),
+     ("000021088","Grupo Nova","factura B2B sin estudiantes","Convenio","$1,200.00","Requiere acción","Asignar a los 8 estudiantes del convenio","b2b")]
+_ACC_SL={"ver":'<a href="DetalleFactura.html">Ver factura</a>',"ficha":'<a href="Ficha360.html">Ver ficha</a>',"bolsa":btn("Vincular a la bolsa",kind="ghost"),"mat":btn("Vincular a matrícula",kind="ghost"),"b2b":'<a href="DetalleEmpresa.html">Asignar estudiantes</a>'}
 P_SIN_VINCULAR=(
-table(["Factura","Cliente","Total","Motivo","Acción"],[["000021097","Consumidor final","$45.00","Venta de libro sin matrícula",btn("Vincular a matrícula")],["000021088",c2("Grupo Nova","RUC 1790012345001"),"$1,200.00","Factura B2B sin estudiantes asignados",btn("Vincular a matrícula")],["000021071","Andrés Pazmiño","$195.00","Matrícula anulada y vuelta a crear",btn("Vincular a matrícula")]])
-   +kv(("Por qué importa","una factura sin matrícula no descuenta saldo ni paga comisión")))
+kpis([("Facturas sueltas",agg("count","sueltas"),"sin matrícula vinculada"),("Requieren acción",agg("count:Estado=Requiere acción","sueltas"),"módulos y matrículas por vincular",{"fset":"Estado=Requiere acción"}),("Servicios independientes",agg("count:Estado=Servicio independiente","sueltas"),"tutorías, simuladores, traducciones y libros",{"fset":"Estado=Servicio independiente"})])
+   +filters(search("Buscar","Factura o cliente",w="240px"),sel("Concepto",["Todos","Módulo adelantado","Matrícula","Convenio","Tutoría","Simulador","Traducción","Libro"],w="190px"),sel("Estado",["Todos","Requiere acción","Servicio independiente"],w="190px"))
+   +table(["Factura","Cliente","Concepto","Total","Estado","Sugerencia del sistema","Acción"],[[f'<span class="mono">{f}</span>',c2(cl,d),co,t,badge(es,"warn" if es=="Requiere acción" else "ok"),su,_ACC_SL[ac]] for f,cl,d,co,t,es,su,ac in _SL],wide=1,tid="sueltas")
+   +kv(("Para no revisarlas todas","cada factura nace con su concepto (módulo, tutoría, simulador…): solo las que requieren acción quedan pendientes y el sistema sugiere a qué matrícula o módulo de la bolsa pertenecen"),("Servicios adicionales","se ligan a la ficha del estudiante, no a una matrícula, y no hace falta vincularlos"),("Por qué importa","un módulo facturado sin matrícula no descuenta saldo ni paga comisión")))
+_SF=[("Renata Salazar","Quito","001-202603270","Adults B1 · 0001-2026-0767","Hoy 09:30","$250.00","Menos de 24 h"),("Tomás Villacrés","Quito","001-202603268","Adults A2 · 0001-2026-0620","Ayer 16:10","$500.00","Menos de 24 h"),
+     ("Lucía Benítez","Valle","001-202603255","Kids 2 · 0001-2026-0328","20 oct","$380.00","Más de 24 h"),("Isabela Aguirre","Quito","001-202603259","Adults A1 · 0001-2026-0430","19 oct","$250.00","Más de 24 h")]
+P_SINFACT=(
+kpis([("Matrículas sin factura",agg("count","sinfact"),"matriculadas, aún sin facturar"),("Valor por facturar",agg("sum:Valor","sinfact","money0"),"servicios y productos"),("Más de 24 h",agg("count:Estado=Más de 24 h","sinfact"),"alerta a Secretaría",{"fset":"Estado=Más de 24 h"})])
+   +filters(search("Buscar","Estudiante, matrícula o curso",w="260px"),sel("Estado",["Todos","Menos de 24 h","Más de 24 h"],w="170px"),actions=btn("Exportar Excel"))
+   +table(["Estudiante","Matrícula","Curso","Matriculada","Valor","Estado","Acción"],[[c2(f'<a href="Ficha360.html">{e}</a>',sd),m,c,f,v,badge(es,"bad" if "Más" in es else "warn"),'<a href="RematriculaFactura.html">Facturar</a>'] for e,sd,m,c,f,v,es in _SF],wide=0,tid="sinfact")
+   +kv(("Cómo se factura","desde aquí, desde el curso o desde la matrícula: los ítems se generan solos con los servicios educativos y los productos de la matrícula"),("Regla","una matrícula sin factura se marca en rojo y a las 24 horas Secretaría recibe una alerta")))
 P_PV=(
 flow(["Asesor registra el pago y sube el comprobante","Contabilidad valida en el banco","Secretaría confirma en el sistema"])
    +table(["Pago","Estudiante · venta","Monto","Comprobante","Estado","Acción"],[
@@ -3024,27 +3231,28 @@ filters(search("Buscar","Estudiante o matrícula",w="220px"),sel("Estado",["Toda
     [c2('<a href="Ficha360.html">Gabriela Núñez</a>',"001-202602863 · 099 000 0004 · Carla M."),"2 de 2","18 oct","$225.00","1",badge("Vencida","bad"),'<a href="RegistrarPago.html">Cobrar</a>'],
     [c2('<a href="Ficha360.html">Camila Sánchez</a>',"000021094 · 099 000 0008 · Sofía L."),"2 de 2","11 nov","$475.00","—",badge("Por vencer","warn"),'<a href="RegistrarPago.html">Cobrar</a>'],
     [c2('<a href="Ficha360.html">Martín Ortega</a>',"000021098 · 099 000 0009 · Carla M."),"2 de 3","25 oct","$160.00","—",badge("Por vencer","warn"),'<a href="RegistrarPago.html">Cobrar</a>']],wide=0)
-   +kv(("Cartera vencida","$725 · 2 cuotas"),("Por vencer en 30 días","$635"),("Seguimiento","cada llamada o mensaje queda anotado en la cuota"))+row(btn("Enviar estado de cuenta"),btn("Exportar")))
+   +kv(("Cartera vencida","$725 · 2 cuotas"),("Por vencer en 30 días","$635"),("Seguimiento","cada llamada o mensaje queda anotado en la cuota"))+row(btn("Enviar estado de cuenta"),btn("Automatizar cobranza","Automatizaciones.html",kind="ghost"),btn("Exportar")))
 P_CAJA=(
 filters(sel("Caja",["Quito","Valle","Ambato"],w="140px",col=False),dates("Día","2026-10-19","2026-10-19"))
    +two(card("Cobros por método", table(["Método","Pagos","Monto"],[["Efectivo","6","$640.00"],["Tarjeta de crédito","3","$870.00"],["Transferencia","5","$1,420.00"],["Depósito","1","$230.00"],["Total del día","15","$3,160.00"]])),
-        card("Recibos del día", table(["Recibo","Estudiante","Monto","Acción"],[["0431","Martín Ortega","$230.00",btn("Imprimir recibo")],["0430","Camila Sánchez","$475.00",btn("Imprimir recibo")],["0429","Sofía Herrera","$250.00",btn("Imprimir recibo")]])))
-   +row(btn("Cerrar caja",None,True),btn("Exportar")))
+        card("Recibos del día", table(["Recibo","Estudiante","Monto","Acción"],[["0431","Martín Ortega","$230.00",btn("Enviar recibo")],["0430","Camila Sánchez","$475.00",btn("Enviar recibo")],["0429","Sofía Herrera","$250.00",btn("Enviar recibo")]])))
+   +kv(("Fecha de cierre de caja","cada pago lleva el día de cierre con el que Contabilidad lo revisa; los comprobantes quedan adjuntos al pago"))+row(btn("Cerrar caja","CierreCaja.html",True),btn("Exportar")))
 P_REMAT=(
 table(["Estudiante","Siguiente curso","Solicitada","Monto","Pago","Acción"],[[c2('<a href="Ficha360.html">Sofía Herrera</a>',"desde el portal · 12 oct"),c2("ESL · Virtual · Grupal · B1 módulo 7","inicia 3 nov"),"12 oct","$250.00",badge("Transferencia reportada","warn"),row(btn("Confirmar pago",None,True),btn("Ver ficha","Ficha360.html"),gap=8)],[c2('<a href="Ficha360.html">Daniela Ríos</a>',"desde el portal · 11 oct · terminó B1+"),c2("ESL · Presencial · Grupal · B2 módulo 11","inicia 9 ene"),"11 oct","$275.00",badge("Sin pago aún","bad"),row(btn("Enviar recordatorio"),btn("Ver ficha","Ficha360.html"),gap=8)],[c2('<a href="Ficha360.html">Martín Ortega</a>',"desde el portal · 10 oct"),c2("Teens · Virtual · Grupal · A2 módulo 3","inicia 3 nov"),"10 oct","$230.00",badge("Pagado en caja","ok"),row(btn("Confirmar pago",None,True),gap=8)]],wide=0)+kv(("Cómo funciona","el estudiante se rematricula desde el portal cuando el Muro marca avance total y nota ≥ 7; queda 'Pendiente de pago' y Secretaría solo confirma el pago")))
 P_NOTAS=(
-table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[[c2("NC-000000312","Emitida por Secretaría Quito"),"000021040",c2('<a href="Ficha360.html">Luis Torres</a>',"001-202602601"),"Libro devuelto · vuelve al stock","$40.00","08 oct",badge("Autorizada","ok")],[c2("NC-000000311","Emitida por Dir. Comercial"),"000021012",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"Cambio de curso","$250.00","30 sep",badge("Autorizada","ok")],[c2("NC-000000310","Emitida por Secretaría Ambato"),"000021061",c2('<a href="Ficha360.html">Diego Vargas (menor)</a>',"001-202602790"),"Anulación total","$380.00","06 sep",badge("Autorizada","ok")]],wide=0)+row(btn("Nueva nota de crédito")))
+table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[[c2("NC-000000313","Emitida por Secretaría Valle"),"000021091",c2('<a href="Ficha360.html">Juan Pérez</a>',"001-202603216"),c2("Cambio de modalidad","presencial → virtual · refacturada 000021110"),"$25.00","22 oct",badge("Autorizada","ok")],[c2("NC-000000312","Emitida por Secretaría Quito"),"000021040",c2('<a href="Ficha360.html">Luis Torres</a>',"001-202602601"),"Libro devuelto · vuelve al stock","$40.00","08 oct",badge("Autorizada","ok")],[c2("NC-000000311","Emitida por Dir. Comercial"),"000021012",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"Cambio de curso","$250.00","30 sep",badge("Autorizada","ok")],[c2("NC-000000310","Emitida por Secretaría Ambato"),"000021061",c2('<a href="Ficha360.html">Diego Vargas (menor)</a>',"001-202602790"),"Anulación total","$380.00","06 sep",badge("Autorizada","ok")]],wide=0)+kv(("Historial","la factura original no se borra: queda 'Ajustada' y enlaza a su nota de crédito y a la factura nueva"),("Cambio de modalidad o de curso","se calcula la diferencia de valor: nota de crédito si baja, cobro adicional si sube"))+row(btn("Nueva nota de crédito")))
 page("Facturas.html","Facturas",shell("Facturación","Facturación",
  kpis([("Facturas en la lista",agg("count","facturas"),"según filtros, período y sede"),("Facturado",agg("sum:Total","facturas","money0"),"total de las facturas visibles"),("Pagadas",agg("pct:Cobro=Pagada","facturas"),agg("count:Cobro=Pagada","facturas")+" facturas"),("Pendientes · vencidas",agg("count:Cobro=Pendiente","facturas")+" · "+agg("count:Cobro=Vencida","facturas"),"por cobrar",{"href":"#go-seg-cartera"}),("Sin autorizar SRI",agg("count:SRI=Sin autorizar","facturas"),"revisar y reenviar",{"fset":"Vista=Sin autorizar SRI"})]),
  tabs(["Facturas","Cobros","Ajustes"],"Facturas",roles={},counts={"Cobros":2,"Ajustes":3},panels={
-  "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular"],[
+  "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular","Matrículas sin factura"],[
    '<div class="quick" data-fgroup role="group" aria-label="Vistas rápidas">'+"".join(f'<button type="button" class="q" data-fset="Vista={v}" aria-pressed="false">{v}</button>' for v in ["Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"])+'</div>'
-   +filters('<div hidden>'+sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],col="Vista")+'</div>',search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
+   +filters('<div hidden>'+sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],col="Vista")+'</div>',search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Ajustada","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","En espera","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
    +'<div class="bulk"><span>Marca facturas para enviarlas juntas</span>'+btn("Enviar comprobantes seleccionados",kind="ghost")+'</div>'
    +table(["","Factura","Sede","Estudiante","Total","Crédito","SRI","Cobro","Vista",""],[
   [fsel(n),fcode(n,f,sd,ase),sd,est,tot,cr,sri,cob,vis,fmenu()] for n,f,sd,ase,est,tot,cr,sri,cob,vis in [
+   ("000021113","Hoy","Quito","Carla M.",c2('<a href="Ficha360.html">Renata Salazar</a>',"001-202603270 · B1"),"$250.00","No",badge("En espera · sale en 1 h 18 min","navy"),badge("Pendiente","warn"),"Por cobrar"),
    ("000021090","28 ago","Quito","Carla M.",c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794 a 797 · módulos 7–10"),"$980.00","Sí · 2 cuotas",badge("Autorizada","ok"),badge("Pagada","ok"),"Todas"),
-   ("000021091","12 oct","Valle","Diego R.",c2('<a href="Ficha360.html">Juan Pérez</a>',"001-202603216 · A2"),"$280.00","No",badge("Autorizada","ok"),badge("Pagada","ok"),"Todas"),
+   ("000021091","12 oct","Valle","Diego R.",c2('<a href="Ficha360.html">Juan Pérez</a>',"001-202603216 · A2"),"$280.00","No",badge("Autorizada","ok"),badge("Ajustada · NC-000000313","neutral"),"Todas"),
    ("000021092","12 oct","Quito","Carla M.",c2('<a href="Ficha360.html">Luis Torres</a>',"Libros · sin matrícula"),"$68.00","No",badge("Sin autorizar · sin enviar","warn"),badge("Pagada","ok"),"Sin autorizar SRI"),
    ("000021093","12 oct","Quito","Carla M.",c2('<a href="Ficha360.html">Ana Ruiz (menor)</a>',"001-202603215 · Kids 2"),"$387.50","No",badge("Autorizada","ok"),badge("Pagada","ok"),"Todas"),
    ("000021094","12 oct","Ambato","Sofía L.",c2('<a href="Ficha360.html">Camila Sánchez</a>',"001-202603217 · A2–B1"),"$950.00","Sí · 30 días",badge("Autorizada","ok"),badge("Parcial · $475 por cobrar","warn"),"Por cobrar"),
@@ -3054,7 +3262,7 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
    ("000021080","25 sep","Valle","Diego R.",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846 · B1"),"$500.00","Sí · 15 días",badge("Autorizada","ok"),badge("Vencida · 9 días","bad"),"Por cobrar · Vencidas"),
    ("000021074","18 sep","Quito","Carla M.",c2('<a href="Ficha360.html">Gabriela Núñez</a>',"001-202602863 · A2"),"$450.00","Sí · 30 días",badge("Autorizada","ok"),badge("Parcial · $225 por cobrar","warn"),"Por cobrar"),
    ("000021061","05 sep","Ambato","Sofía L.",c2('<a href="Ficha360.html">Diego Vargas (menor)</a>',"001-202602790 · Kids 1"),"$380.00","No",badge("Anulada","neutral"),badge("Anulada","neutral"),"Anuladas")]],sede=2,hide=(2,8),wide=3,tid="facturas")+pager(sv(76,40,22,14,10)),
-   P_POR_ESTUDIANTE, P_SIN_VINCULAR],label="Vistas de facturas"),
+   P_POR_ESTUDIANTE, P_SIN_VINCULAR, P_SINFACT],label="Vistas de facturas",counts={"Matrículas sin factura":4}),
 
 
   "Cobros": seg(["Pagos por validar","Conciliación bancaria","Caja del día","Cartera","Calendario de crédito"],[P_PV,P_CONC,P_CAJA,P_CART,credito],label="Vistas de cobros",counts={"Pagos por validar":2,"Conciliación bancaria":3}),
@@ -3062,15 +3270,15 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
  }),
  ai([("2 facturas de hoy aún no están autorizadas por el SRI: la 000021095 fue rechazada (cédula del cliente inválida) y la 000021092 no se ha enviado.","Ver sin autorizar","Facturas.html"),("La factura 000021080 de Pedro Mora venció hace 2 días con $500 de saldo; su asesor es Diego R.","Ver calendario de crédito","Facturas.html"),("Hoy el 100% de las facturas fueron por transferencia; ninguna en efectivo.","Ver reportes","Reportes.html")],"¿Qué facturas de crédito vencen esta semana?"),
  subtitle="Una factura por venta, con pago, autorización SRI y envío del comprobante",
- actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura ▾</button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
+ actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura ▾</button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="RematriculaFactura.html">Desde una matrícula existente</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Links de pago","LinksPago.html")+btn("Envíos al SRI y a Dora","EnviosSRI.html")+btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
 
 # 23 Detalle factura
 page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturación",
- hero([("Fecha","28 ago 2026"),("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrículas",'<a href="DetalleMatricula.html">001-202602794 a 797</a>'),("Venta","Multi-módulo · B1 y B1+ (módulos 7 a 10)"),("Crédito","Sí · 2 cuotas cada 30 días"),("Sede · asesor","Quito · Carla M."),("Pagada el","27 sep 2026"),("Comprobante","Enviado 28 ago 10:14")],
+ hero([("Fecha","28 ago 2026"),("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrículas",'<a href="DetalleMatricula.html">001-202602794 a 797</a>'),("Venta","Multi-módulo · B1 y B1+ (módulos 7 a 10)"),("Crédito","Sí · 2 cuotas cada 30 días"),("Sede · asesor","Quito · Carla M."),("Pagada el","27 sep 2026"),("Comprobante","Enviado 28 ago 12:14")],
   only(COMERCIAL,btn("Registrar pago",None,True),True)+btn("Enviar comprobante")+btn("Descargar PDF")+btn("Descargar XML")+only("ADM,GER,DIR,SUC,SEC",btn("Emitir nota de crédito"),True)+only("ADM,GER,DIR",btn("Anular factura"),True),
   tag='<span class="hero-code">000021090</span>'+badge("Pagada","ok")+badge("SRI · Autorizada","navy")),
  two(card("Datos de facturación (cliente)", kv(("Cliente","María Andrade"),("CED / RUC / PAS","CED · 1712345678"),("Dirección","Quito · La Carolina · Av. Amazonas y NN. UU."),("Teléfono","099 000 0001"),("E-mail","maria.andrade@ejemplo.com"),("RUC especial",badge("No","neutral")),("Empresa / convenio","—"))+row(btn("Editar datos del cliente",None,False,"Se editan en esta misma pantalla los datos de facturación (nombre, CED/RUC/PAS, dirección, teléfono y email). Como la factura ya está autorizada por el SRI, el cambio se guarda en la ficha y aplica a las próximas facturas; para corregir esta se emite una nota de crédito y se refactura. "+AUDIT))),
-     card("Autorización SRI", kv(("Estado",badge("Autorizada","ok")),("Fecha de autorización","28 ago 2026 · 10:12"),("Clave de acceso","2808202601179234567800110010010000210901234567813"),("Ambiente","Producción"),("Comprobante enviado","Sí · 28 ago 10:14 · maria.andrade@ejemplo.com"))+row(btn("Reintentar autorización"),btn("Enviar comprobante")))),
+     card("Autorización SRI", kv(("Estado",badge("Autorizada","ok")),("Fecha de envío a Dora","28 ago 2026 · 12:11 · 2 h después de emitirla"),("Fecha de autorización","28 ago 2026 · 12:12"),("Clave de acceso","2808202601179234567800110010010000210901234567813"),("Ambiente","Producción"),("Comprobante enviado","Sí · 28 ago 12:14 · maria.andrade@ejemplo.com"))+row(btn("Reintentar autorización"),btn("Enviar comprobante"),btn("Ver envíos al SRI","EnviosSRI.html",kind="ghost")))),
  card("Ítems", table(["Tipo","Código","Ítem","Cant.","Precio","% dcto.","Descuento","Subtotal","IVA"],[
    ["Servicio","00139",c2("Servicios educativos · Nivel B1","Módulos 7–8 · English for Adults"),"1","$500.00","10%","-$50.00","$450.00","$0.00"],
    ["Servicio","00139",c2("Servicios educativos · Nivel B1+","Módulos 9–10 · English for Adults"),"1","$500.00","10%","-$50.00","$450.00","$0.00"],
@@ -3079,7 +3287,7 @@ page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturac
    +kv(("Subtotal","$1,080.00"),("Descuento","-$100.00 (10% referido · dentro del límite del asesor)"),("IVA","$0.00 (servicios educativos 0%)"),("Total","$980.00"))),
  two(card("Pagos", table(["Pago","Monto"],[[c2("Cuota 1 · transferencia · 28 ago 2026","Banco Pichincha · ref. 884512"),"$490.00"],[c2("Cuota 2 · tarjeta de crédito · 27 sep 2026","Caja Quito · recibo 0421 · voucher 55120"),"$490.00"]])+kv(("Total pagado","$980.00"),("Saldo","$0.00"))+only(COMERCIAL,row(btn("Registrar pago",None,True)))),
      card("Efecto en la matrícula", kv(("Saldo antes de la factura","$980.00"),("Saldo después","$0.00"),("Módulos habilitados","7 a 10 · 4 matrículas"),("Comisión","Carla M. · 4% virtual · $39.20 · cierre de septiembre"))+table(["Movimiento","Monto"],[[c2("Factura emitida y autorizada","28 ago 2026"),"$980.00"],[c2("Pagos · cuota 1 y cuota 2","28 ago y 27 sep 2026"),"$980.00"],[c2("Nota de crédito","Ninguna emitida"),"—"]]))),
- card("Historial", table(["Fecha","Usuario","Evento"],[["27 sep 17:20","Secretaría","Pago de la cuota 2 · $490 · tarjeta de crédito"],["28 ago 10:14","Sistema","Comprobante PDF + XML enviado a maria.andrade@ejemplo.com"],["28 ago 10:12","Sistema","Autorizada por el SRI"],["28 ago 10:11","Carla M.","Factura emitida desde Nueva matrícula (venta multi-módulo, 4 matrículas)"]])),
+ card("Historial", table(["Fecha","Usuario","Evento"],[["27 sep 17:20","Secretaría","Pago de la cuota 2 · $490 · tarjeta de crédito"],["28 ago 12:14","Sistema","Comprobante PDF + XML enviado a maria.andrade@ejemplo.com"],["28 ago 12:12","Sistema","Autorizada por el SRI y subida al sistema contable"],["28 ago 12:11","Sistema","Enviada a Dora, 2 horas después de emitirla"],["28 ago 10:11","Carla M.","Factura emitida desde Nueva matrícula (venta multi-módulo, 4 matrículas)"]])),
  subtitle="Equivale al registro Invoice de TeamDesk: términos, cliente, montos, pagos, ítems y transacción de la matrícula"),"Detalle de factura")
 
 # 24 Solicitud de descuento
@@ -3139,7 +3347,7 @@ page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Co
 
 # 27 Inventario
 page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
- filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","NuevoPedido.html",True)+btn("Registrar ingreso de proveedor")),
+ filters(search("Buscar","Título o nivel",w="240px"),sel("Programa",["Todos","Adults","Teens","Kids"],w="130px"),sel("Estado",["Todos","Negativo","Bajo mínimo","OK"],w="150px"),actions=btn("Nuevo pedido a proveedor","NuevoPedido.html",True)+btn("Recibir pedido","RecepcionPedido.html")),
  kpis([("Ítems en la lista",agg("count","stock"),"según filtros"),("Con stock negativo",agg("count:Estado=Negativo","stock"),"requieren pedido"),("Bajo mínimo",agg("count:Estado=Bajo mínimo","stock"),"pedir pronto"),("Comprometidos",agg("sum:Comprometido","stock","int"),"reservados en matrículas"),("Códigos de activación pendientes",agg("sum:Códigos pendientes","stock","int"),"comprados, sin asignar")]),
  table(["Producto","Programa","Nivel","Stock por sede","Comprometido","Códigos pendientes","Estado","Acción"],[
   [c2("Empower B1+ Intermediate Combo B (digital pack)","Cód. 1141 · ISBN 9781108961523 · Adults B1+"),"Adults","B1+",c2("4 / -2 / 1","Quito / Valle / Ambato"),"5","1",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
@@ -3150,6 +3358,12 @@ page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
   [c2("Super Minds 2Ed Level 3 SB with eBook","Cód. 1292 · ISBN 9781108812276 · Kids Kids 2"),"Kids","Kids 2",c2("3 / 0 / -2","Quito / Valle / Ambato"),"4","0",badge("Negativo","bad"),'<a href="NuevoPedido.html">Pedir 6</a>'],
   [c2("Prepare 3 WB with Digital Pack 2E","Cód. 1116 · ISBN 9781009030502 · Teens A2"),"Teens","A2",c2("1 / 1 / 1","Quito / Valle / Ambato"),"6","10",badge("Bajo mínimo","warn"),'<a href="NuevoPedido.html">Pedir 4</a>'],
   [c2("Libreta Superpower","Cód. 1999 · ISBN — · — —"),"—","—",c2("25 / 10 / 8","Quito / Valle / Ambato"),"0","—",badge("OK","ok"),'—']],hide=(1,2),wide=0,tid="stock"),
+ card("Lista de compra de esta semana", table(["Libro","Sede","Stock","Vendidos sin stock","A comprar"],[
+   [c2("Empower B1+ Intermediate Combo B (digital pack)","Cód. 1141 · Adults B1+"),"Valle","-2","2","6"],
+   [c2("Super Minds 2Ed Level 3 WB with Digital Pack","Cód. 1293 · Kids 2"),"Ambato","-1","1","4"],
+   [c2("Super Minds 2Ed Level 3 SB with eBook","Cód. 1292 · Kids 2"),"Ambato","-2","2","6"]],sede=1,hide=(1,),wide=0)
+   +kv(("Qué significa el negativo","libros ya vendidos (en línea o en matrícula) que todavía no están en la sede: es lo que hay que comprar"),("Cuándo se compra","los viernes, a Books & Bits"),("Total","16 libros · 3 títulos"))
+   +row(btn("Crear pedido con esta lista",None,True),btn("Recibir pedido","RecepcionPedido.html",kind="ghost")),extra=badge("Se arma sola desde los negativos","navy")),
  two(card("Correo diario de stock negativo", kv(("Se envía","todos los días a las 07:00"),("Destinatarios","Secretaría de cada sede, Administración de sucursal y Gerencia"),("Incluye","ítems con stock negativo y bajo mínimo por sede, pedidos en camino y códigos digitales sin asignar"),("Último envío",sv("Hoy 07:00 · 3 negativos · 4 bajo mínimo","Hoy 07:00 · 0 negativos · 2 bajo mínimo","Hoy 07:00 · 1 negativo · 1 bajo mínimo","Hoy 07:00 · 2 negativos · 1 bajo mínimo")),("Si no hay novedades","no se envía nada"))+row(btn("Enviar resumen ahora",None,True),btn("Editar destinatarios y hora")),extra=badge("Activo","ok")),
      card("Últimos envíos", table(["Fecha","Negativos","Bajo mínimo","Enviado a","Estado"],[["Hoy 07:00","3","4","5 personas",badge("Enviado","ok")],["Ayer 07:00","2","4","5 personas",badge("Enviado","ok")],["10 oct 07:00","0","3","5 personas",badge("Enviado","ok")],["09 oct","0","0","—",badge("Sin novedades","neutral")]]))),
  card("Activos fijos por sede", filters(sel("Categoría",["Todas","Equipos de cómputo","Mobiliario","Audio y video","Climatización"],w="180px"),sel("Estado",["Todos","En uso","En traspaso","Dado de baja"],w="150px"),actions=btn("Nueva solicitud de activo",None,True)+btn("Registrar traspaso"))
@@ -3168,7 +3382,7 @@ page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
 # 28 Movimientos
 page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos y pedidos",
  tabs(["Ingresos de proveedor","Movimientos","Pedidos a proveedor","Códigos de activación","Notas de crédito"],"Ingresos de proveedor",{
-  "Ingresos de proveedor": filters(search("Buscar","Nº de factura del proveedor",w="220px"),sel("Proveedor",["Todos","Books & Bits","Otro"],w="150px"),sel("Estado",["Todos","Recibido","Con pendientes"],w="150px"),dates(),actions=btn("Registrar ingreso de proveedor",None,True))+table(["Ingreso","Proveedor","Sede","Ítems y total","Pendientes","Estado"],[
+  "Ingresos de proveedor": filters(search("Buscar","Nº de factura del proveedor",w="220px"),sel("Proveedor",["Todos","Books & Bits","Otro"],w="150px"),sel("Estado",["Todos","Recibido","Con pendientes"],w="150px"),dates(),actions=btn("Recibir pedido","RecepcionPedido.html",True))+table(["Ingreso","Proveedor","Sede","Ítems y total","Pendientes","Estado"],[
      [c2("IM202610-02","04 oct · factura 000815787 · Books & Bits · Valle"),"Books & Bits","Valle",c2("4 ítems · $145.30","Comprobante: comprobante_2026-10-04.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
      [c2("IM202610-01","01 oct · factura 000814675 · Books & Bits · Valle"),"Books & Bits","Valle",c2("14 ítems · $456.71","Comprobante: comprobante_2026-10-01.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
      [c2("IM202609-12","30 sep · factura 000813312 · Books & Bits · Quito"),"Books & Bits","Quito",c2("22 ítems · $772.29","Comprobante: comprobante_2026-09-30.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")],
@@ -3177,7 +3391,7 @@ page("Movimientos.html","Movimientos",shell("Movimientos y pedidos","Movimientos
      [c2("IM202609-09","24 sep · factura 000809715 · Books & Bits · Ambato"),"Books & Bits","Ambato",c2("9 ítems · $333.03","Comprobante: comprobante_2026-09-24.pdf"),c2("0 libros · 0 códigos","pendientes de entrega"),badge("Recibido","ok")]],sede=2,hide=(1,2),wide=0)
      +card("Detalle del ingreso IM202610-01", kv(("Fecha","1 oct 2026"),("Proveedor","Books & Bits"),("Factura","000814675"),("Subtotal","$456.71"),("Descuento","$0.00"),("Total","$456.71"),("Comprobante","comprobante_books_and_bits_2026-10-01.pdf"))+table(["Código","ISBN","Ítem","Cantidad","Precio","Subtotal"],[["1115","9781009029780","Prepare 3 SB with eBook 2E","3","$34.89","$104.67"],["1116","9781009030502","Prepare 3 WB with Digital Pack 2E","3","$20.03","$60.09"],["1132","9781108961691","Empower A1 Starter SB with digital pack 2nd Ed","1","$62.15","$62.15"],["1141","9781108961523","Empower B1+ Intermediate Combo B with digital pack","1","$35.98","$35.98"],["1292","9781108812276","Super Minds 2Ed Level 3 SB with eBook","1","$31.37","$31.37"],["1271","9781009293891","Four Corners 2ED L4 ESB with DP","2","$35.46","$70.92"]],wide=2)+kv(("Ítems","14"),("Total","$456.71"))+note("Equivale a 'Inventory Management' de TeamDesk: cada ingreso del proveedor con su factura, comprobante de pago, ítems por ISBN y los libros o códigos que quedaron pendientes de entrega.")),
   "Movimientos": filters(search("Buscar","Libro, factura o pedido",w="220px"),sel("Tipo",["Todos","Ingreso","Salida","Traslado","Devolución"],w="140px"),sel("Usuario",["Todos","Carla M.","Secretaría","Diego R."],w="140px"),sel("Período",["Todo el período"]+PERIODOS,w="150px",col="@Fecha"),actions=btn("Registrar movimiento",None,True)+btn("Exportar"))+table(["Fecha","Tipo","Libro","Cantidad","Sede","Vinculado a","Usuario"],[["04 oct","Salida","Adults B1 Student Book","1","Quito","Factura #1234","Carla M."],["03 oct","Ingreso","Kids 2 Workbook","8","Valle","Pedido #P-040","Secretaría"],["02 oct","Devolución","Teens A2 Student Book","1","Ambato","NC-07","Secretaría"],["01 oct","Traslado","Adults B1 Student Book","3","Quito → Valle","—","Secretaría"],["30 sep","Salida","Adults B2 Student Book","1","Quito","Factura #1240","Carla M."],["29 sep","Salida","Teens A2 Student Book","2","Ambato","Factura #1238","Diego R."],["25 sep","Ingreso","Adults A1 Student Book","10","Quito","Pedido #P-039","Secretaría"]],sede=4),
-  "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado"],[["#P-041","Books & Bits","12","$480","02 oct","En camino"],["#P-040","Books & Bits","8","$320","25 sep","Recibido"],["#P-039","Books & Bits","20","$800","10 sep","Recibido"]])+
+  "Pedidos a proveedor": table(["Pedido","Proveedor","Ítems","Total","Fecha","Estado","Acción"],[["#P-041","Books & Bits","12","$480","02 oct",badge("En camino","navy"),'<a href="RecepcionPedido.html">Recibir</a>'],["#P-040","Books & Bits","8","$320","25 sep",badge("Recibido","ok"),"—"],["#P-039","Books & Bits","20","$800","10 sep",badge("Recibido","ok"),"—"]])+
      two(card("Registrar ingreso", form(["Pedido","Cantidad recibida"])+row(btn("Registrar ingreso",None,True))), card("Forecast de libros (noviembre)", table(["Libro","Cursos por abrir","Cupo","Necesarios","Stock","Pedir"],[["Adults B1 Student Book","2","30","30","3","27"],["Kids 2 Workbook","1","10","10","2","8"],["Teens A2","1","10","10","15","0"]])+note("Cursos que abren el próximo mes × cupo = libros necesarios por sede."))),
   "Códigos de activación": filters(sel("Estado",["Todos","Disponible","Asignado","Vencido"],w="140px"),sel("Producto",["Todos","Empower B1+ digital pack","Prepare 3 WB Digital Pack","Empower A1 digital pack"],w="240px"),actions=btn("Asignar código",None,True))+table(["Producto","ISBN","Código","Ingreso","Sede","Estudiante","Estado"],[["Empower B1+ digital pack","9781108961523","EMP-B1-7K2Q-••••","IM202610-01","Valle","María Andrade",badge("Asignado","ok")],["Prepare 3 WB Digital Pack","9781009030502","PRE-3W-91XA-••••","IM202610-01","Valle","—",badge("Disponible")],["Prepare 3 WB Digital Pack","9781009030502","PRE-3W-91XB-••••","IM202610-01","Valle","—",badge("Disponible")],["Empower A1 digital pack","9781108961691","EMP-A1-22QD-••••","IM202609-12","Quito","—",badge("Disponible")],["Empower A1 digital pack","9781108961691","EMP-A1-18ZZ-••••","IM202508-03","Quito","—",badge("Vencido","bad")]],sede=4)+note("Reemplaza 'Purchased Book Codes' y 'Pending codes' de TeamDesk: el código entra con el ingreso del proveedor y se asigna al estudiante al entregar el material."),
   "Notas de crédito": table(["Nota","Factura origen","Estudiante","Motivo","Monto","Fecha","Estado"],[["NC-07","#1234","María Andrade","Libro devuelto","$45","02 oct","Aplicada"],["NC-06","#1180","Juan Pérez","Cambio de modalidad","$50","20 sep","Aplicada"],["NC-05","#1102","Ana Ruiz","Libro con defecto","$45","05 sep","Pendiente"]])+row(btn("Nueva nota de crédito",None,True),btn("Ver facturas","Facturas.html")),
@@ -3243,7 +3457,7 @@ page("Chatbot.html","Asistente interno",shell("Asistente interno","Inicio",chat,
 
 # 32 Integraciones
 page("Integraciones.html","Integraciones",shell("Integraciones","Integraciones",
- table(["Sistema","Uso","Estado","Última sincronización","Acción"],[["Kommo (CRM)",c2("Leads → estudiantes · walk-in → Kommo","un usuario de Kommo por secretaría de sede (hoy solo Quito); el catálogo de orígenes y la etiqueta '¿cómo nos conoció?' se comparten"),"Conectado","Hoy 09:00",btn("Configurar")],["Firma electrónica del contrato",c2("Contrato + Reglamento del Estudiante","enlace de aceptación por correo y WhatsApp al confirmar la matrícula; firma el representante si es menor de 18"),"Proveedor por definir · ver documento de requerimientos","—",btn("Configurar")],["Moodle (LMS)","Matrícula → curso virtual · notas y asistencia","Pendiente de API del proveedor","—",btn("Configurar")],["Dora","Por definir con el cliente","Pendiente","—",btn("Configurar")],["Microsoft 365 (Teams / cuentas)","Enlace de clase virtual y cuenta del estudiante","Fuera del contrato · se evalúa en Fase 1","—",btn("Configurar")],["Email / WhatsApp (plantillas)","Notificaciones a estudiantes (enlace de clase, saldos)","Plantillas migradas de TeamDesk","—",btn("Configurar")],["Google Maps Platform","Dirección del estudiante: autocompletado (Places), posición exacta y provincia/cantón/parroquia por geocodificación inversa (Geocoding), mapa en la ficha (Maps Embed)","Requiere clave de API y facturación de Google (uso bajo: ~1.000 direcciones/mes)","—",btn("Configurar")]]),
+ table(["Sistema","Uso","Estado","Última sincronización","Acción"],[["Kommo (CRM)",c2("Leads → estudiantes · walk-in → Kommo","un usuario de Kommo por secretaría de sede (hoy solo Quito); el catálogo de orígenes y la etiqueta '¿cómo nos conoció?' se comparten"),"Conectado","Hoy 09:00",btn("Configurar")],["Firma electrónica del contrato",c2("Contrato + Reglamento del Estudiante","enlace de aceptación por correo y WhatsApp al confirmar la matrícula; firma el representante si es menor de 18"),"Proveedor por definir · ver documento de requerimientos","—",btn("Configurar")],["Moodle (LMS)","Matrícula → curso virtual · notas y asistencia","Pendiente de API del proveedor","—",btn("Configurar")],["Datafast (pagos en línea)",c2("Links de pago y su historial","los links nacen ligados a la factura o matrícula; al pagarse, el pago se registra solo con su código de autorización y su comprobante"),"Pendiente · sujeto a lo que Datafast exponga","—",btn("Configurar")],["Dora",c2("Facturación electrónica y sistema contable","las facturas salen solas 2 horas después de emitirlas; Dora las autoriza en el SRI y las sube a contabilidad"),"Pendiente · sujeto a lo que Dora exponga (M11)","—",btn("Configurar")],["Microsoft 365 (Teams / cuentas)","Enlace de clase virtual y cuenta del estudiante","Fuera del contrato · se evalúa en Fase 1","—",btn("Configurar")],["Email / WhatsApp (plantillas)","Notificaciones a estudiantes (enlace de clase, saldos)","Plantillas migradas de TeamDesk","—",btn("Configurar")],["Google Maps Platform","Dirección del estudiante: autocompletado (Places), posición exacta y provincia/cantón/parroquia por geocodificación inversa (Geocoding), mapa en la ficha (Maps Embed)","Requiere clave de API y facturación de Google (uso bajo: ~1.000 direcciones/mes)","—",btn("Configurar")]]),
  note("Las tablas 'Microsoft Accounts', 'Email Templates', 'Companies' y 'Portfolio' de TeamDesk no están en los 11 módulos del contrato. Se migran como datos y su gestión se confirma con el cliente (Cláusula Tercera, 3.2)."),
  two(card("API keys y webhooks", table(["Clave","Sistema","Creada","Último uso","Estado"],[["kommo-prod-••••7f2a","Kommo","12 ene","Hoy 09:00",badge("Activa","ok")],["moodle-test-••••91c0","Moodle","20 sep","—",badge("Pendiente","warn")]])+table(["Webhook","Evento","URL"],[["Nuevo lead","lead.created","https://api.cambridge.../kommo"],["Matrícula","enrollment.created","https://moodle.cambridge.../enrol"]])+row('<a href="#" style="font-size:13px">Documentación OpenAPI</a>')), card("Log de sincronización", table(["Fecha","Sistema","Resultado"],[["04 oct","Kommo","12 leads importados"],["03 oct","Kommo","1 error: email duplicado"]]))),
  subtitle="Sujeto al esquema de apificación disponible en cada proveedor"),"Integraciones")
@@ -3292,20 +3506,315 @@ page("RegistrarSesion.html","Registrar sesión",shell("Registrar sesión manual"
 # 36 Registrar pago
 page("RegistrarPago.html","Registrar pago",shell("Registrar pago","Facturación",
  hero([("Estudiante",'<a href="Ficha360.html">Camila Sánchez</a>'),("Factura",'<a href="DetalleFactura.html">000021094</a>'),("Venta","A2–B1 · Ambato"),("Total","$950.00"),("Pagado","$475.00"),("Saldo","$475.00"),("Crédito","Sí · 30 días"),("Vence","11 nov 2026")],tag='<span class="hero-code">000021094</span>'+badge("Parcial","warn")),
- form(title="Nuevo pago", fields=[("Monto","475.00",'number',None,True,"Saldo pendiente $475.00"),("Fecha de pago","",'date',None,True),("Método","Transferencia",'select',["Transferencia","Efectivo","Tarjeta","Depósito"],True),("Referencia / comprobante","Banco Pichincha · ref. 902211"),"Comprobante (archivo)","Observación"]),
+ card("Pagos de esta factura",pagos_bloque("475.00"),extra=badge("Saldo $475.00","warn")),
  card("Resultado", flow(["Pago registrado","Cubre el saldo → Pagada","Parcial → Pendiente con nuevo saldo","Notificación al asesor"])),
  foot(btn("Registrar pago",None,True,"Se registra el pago, se actualiza el estado de cobro y queda en el audit log.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Estado de cobro por factura, no por módulo"),"Registrar pago")
 
 # 37 Nota de crédito
+_nc_calc=('<div class="nc" data-nc>'
+  +form([("Modalidad actual del módulo","Presencial · $275","select",["Virtual · $250","Presencial · $275"],True),("Nueva modalidad o curso","Virtual · $250","select",["Virtual · $250","Presencial · $275"],True,"Si solo cambia de curso u horario, deja la misma modalidad"),("Módulos afectados","1","number",None,True,"Solo los que aún no se han dictado")],cols=3)
+  +'<div class="nc-out" aria-live="polite"><div><span>Valor pagado</span><b data-nc-pagado>—</b></div><div><span>Valor nuevo</span><b data-nc-nuevo>—</b></div><div class="nc-res"><span>Qué corresponde</span><b data-nc-resultado>—</b></div></div></div>'
+  +'<script src="assets/ajustes.js"></script>')
 page("NotaCredito.html","Nota de crédito",shell("Nueva nota de crédito","Facturación",
- form(title="Datos", fields=[("Factura origen","000021092 · Luis Torres · $68.00",'select',["000021092 · Luis Torres · $68.00","000021094 · Camila Sánchez · $950.00","000021080 · Pedro Mora · $500.00"],True),"Estudiante (automático: Luis Torres)","Motivo (devolución / cambio de curso / libro con defecto / anulación total / otro)",("Monto","68.00",'number',None,True,"Hasta el total de la factura"),"Devolver libro al stock (sí / no)","Justificación"]),
- two(card("Qué pasa al emitir", flow(["Se vincula a la factura origen","Se envía al SRI y se autoriza","Ajusta saldo o genera devolución","Libro vuelve al stock (si aplica)","Audit log"])),
+ form(title="Datos", fields=[("Factura origen","000021091 · Juan Pérez · $280.00",'select',["000021091 · Juan Pérez · $280.00","000021092 · Luis Torres · $68.00","000021094 · Camila Sánchez · $950.00","000021080 · Pedro Mora · $500.00"],True),"Estudiante (automático: Juan Pérez)",
+   ("Motivo","Cambio de modalidad",'select',["Cambio de modalidad","Cambio de curso u horario","Devolución antes de iniciar","Libro con defecto","Anulación total","Otro"],True,"En un cambio de modalidad o de curso el valor puede variar: se calcula abajo"),
+   ("Monto de la nota de crédito","25.00",'number',None,True,"Se calcula solo en los cambios de modalidad; hasta el total de la factura"),
+   ("¿Se vuelve a facturar?","Sí · nueva factura por el valor nuevo",'select',["Sí · nueva factura por el valor nuevo","No · queda como saldo a favor","No aplica"],True),"Devolver libro al stock (sí / no)","Justificación"]),
+ card("Cambio de modalidad o de curso",_nc_calc,extra=badge("Se calcula solo","ok")),
+ two(card("Qué pasa con la factura original", flow([("La factura original no se borra","queda en el historial del estudiante con el estado 'Ajustada'"),("La nota de crédito se liga a ella","con su motivo y monto, y se envía al SRI"),("Si corresponde, se emite la factura nueva","con la modalidad o el curso nuevo, ligada a la matrícula"),("La matrícula cambia de curso","y el stock de libros se ajusta si aplica"),("Audit log","quién, cuándo y por qué")],horizontal=False)),
      card("Reglas del contrato de servicios educativos", table(["Caso","Qué aplica"],[["Inscripción (derecho de matrícula)","No se devuelve"],["Devolución antes de iniciar","Se retiene el 10% del valor del curso; el resto se devuelve en hasta 45 días"],["Curso iniciado","No hay devolución en dinero: cambio de horario o modalidad, o nota de crédito"],["Nota de crédito","Vigencia 12 meses desde su emisión"],["Interrupción de 2 meses","Puede retomar con cambio de horario o modalidad o nota de crédito"],["Interrupción de 6 meses o más","Nuevo contrato y prueba de ubicación"],["Reclamos","Por escrito a Coordinación Administrativa de la sede"]],wide=0))),
- foot(btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura. Si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
+ foot(btn("Emitir nota de crédito",None,True,"Se emite la nota de crédito vinculada a la factura origen, que queda en el historial como Ajustada. Si elegiste refacturar, se emite la factura nueva con el valor nuevo y se mueve la matrícula; si marcaste devolución de libro, el stock de la sede se actualiza.","DetalleFactura.html"),btn("Cancelar","DetalleFactura.html")),
  subtitle="Toda devolución o cambio deja rastro contable"),"Nota de crédito")
 
 # 38 Registrar movimiento de inventario
+_REC=[("Empower B1+ Intermediate Combo B","9781108961523",3,3),("Super Minds 2Ed Level 3 WB with Digital Pack","9781108909303",2,2),("Super Minds 2Ed Level 3 SB with eBook","9781108812276",3,3),
+      ("Empower A1 Starter SB with digital pack","9781108961691",2,2),("Prepare 3 WB with Digital Pack 2E","9781009030502",1,0),("Four Corners 2ED L4 ESB with DP","9781009293891",1,1)]
+def _rec_row(n,isbn,ped,rec):
+    d=rec-ped; k="ok" if d==0 else ("warn" if d<0 else "bad"); t="Completo" if d==0 else (f"Faltan {-d}" if d<0 else f"Sobran {d}")
+    return [c2(n,f"ISBN {isbn}"),str(ped),f'<div class="rec-step"><button type="button" class="btn btn-ghost" data-rec-minus aria-label="Quitar uno de {n}">−</button><input type="number" min="0" class="ctl rec-in" value="{rec}" data-rec data-pedido="{ped}" data-isbn="{isbn}" data-nombre="{n}" aria-label="Recibidos de {n}"><button type="button" class="btn btn-ghost" data-rec-plus aria-label="Sumar uno de {n}">+</button></div>',f'<span data-rec-dif>{"0" if d==0 else (f"+{d}" if d>0 else str(d))}</span>',f'<span class="badge badge-{k}" data-rec-est>{t}</span>']
+_rec_tbl=table(["Libro","Pedido","Recibido","Diferencia","Estado"],[_rec_row(*r) for r in _REC],wide=0)
+page("RecepcionPedido.html","Recibir pedido",shell("Recibir pedido #P-041","Movimientos y pedidos",
+ card("Pedido",facts([("Pedido",'<span class="mono">#P-041</span> '+badge("En camino","navy")),("Proveedor","Books & Bits"),("Sede que recibe","Valle"),("Comprado el","2 oct 2026"),("Llegó","hoy · 23 oct"),("Recibe","Secretaría Valle")]))
+ +card("1 · Documento del proveedor",form([("Factura o guía del proveedor","000815900","text",None,True,"El número del documento con que llegan los libros"),("Total del documento","$480.00","text",None,False,"Se compara con el valor del pedido"),("Adjuntar el documento","","file",None,True,"Foto o PDF de la factura o guía")],cols=3)
+       +kv(("Coincide con el pedido",badge("Pedido #P-041 · $480.00","ok")),("Por qué","así queda el respaldo de lo recibido junto al pedido, sin papel")))
+ +card("2 · Cuenta los libros",
+   '<div class="rec-tools"><button type="button" class="btn" data-rec-all>Marcar todo como recibido</button><span>Cuenta con + y −. Los libros no traen código de barras.</span></div>'
+   +_rec_tbl
+   +'<div class="rec-sum" aria-live="polite"><b data-rec-total>Recibidos 11 de 12</b><span data-rec-hint></span></div>',extra=badge("Cuenta contra el pedido","navy"))
+ +card("3 · Qué pasa al recibirlo",flow([("El stock de Valle sube","con lo que llegó; los saldos negativos se cubren"),("Los libros ya vendidos se asignan solos","a su entrega digital: pasan de 'Sin stock' a 'Lista para entregar' y se avisa a Secretaría"),("No se imprimen etiquetas","la tablet muestra a quién va cada libro al entregarlo"),("Queda el respaldo","documento del proveedor, quién recibió y cuándo, en el audit log")],horizontal=False))
+ +card("A quién corresponde cada libro",table(["Libro","Para","Origen","Al recibirlo"],[
+    [c2("Empower B1+ Intermediate Combo B","stock negativo en Valle: -2"),c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),c2("Entrega EN-2026-0428","matrícula del módulo 9"),badge("Pasa a Lista para entregar","ok")],
+    [c2("Empower B1+ Intermediate Combo B","stock negativo en Valle: -2"),c2("Tienda en línea","pedido #WC-10490"),"Venta en línea",badge("Se separa para el pedido","ok")],
+    [c2("Super Minds 2Ed Level 3 WB with Digital Pack","reposición de stock"),"Stock de la sede","Pedido de compra",badge("Entra al stock","neutral")]],wide=0)
+   +row(btn("Ver entregas de libros","EntregasLibros.html",kind="ghost")),extra=badge("Sin etiquetas","ok"))
+ +'<script src="assets/recepcion.js"></script>',
+ foot('<button type="button" class="btn btn-primary" data-rec-confirm data-next="Movimientos.html" aria-disabled="false">Marcar como recibido</button>',btn("Registrar recepción parcial",kind="ghost"),btn("Cancelar","Movimientos.html",kind="ghost")),
+ subtitle="Cuenta lo que llegó contra lo pedido y, si está completo, márcalo como recibido: el stock y las entregas se actualizan solos"),"Recibir pedido")
+
+_REGLAS=[  # (área, regla, cuándo, qué hace, canal, activa)
+ ("Aperturas","Crear el curso en el LMS","72 h antes del inicio","Recuerda a Coordinación crear el curso en Cambridge One y GradeKeeper","Notificación",True),
+ ("Aperturas","Correo informativo de inicio","48 h antes del inicio","Envía horario, aula o enlace, libro y profesor a los estudiantes","Correo",True),
+ ("Aperturas","Alerta de ocupación baja","14 días antes · menos del 50 % de ocupación proyectada","Avisa a Secretaría y Coordinación para reforzar el contacto o decidir si abre","Notificación y correo",True),
+ ("Aperturas","Curso por abrir sin profesor","14 días antes del inicio","Avisa a Coordinación para asignar profesor","Notificación",True),
+ ("Reaperturas","Contacto al llegar al 75 % del curso","cuando el grupo llega al 75 % de avance","Crea la tarea de contacto: mensaje, llamada y nota de voz, con la plantilla de rematrícula","Tarea y WhatsApp (propuesta)",True),
+ ("Reaperturas","Reporte semanal de reaperturas","jueves 08:00","Envía el cuadro de reaperturas: contactados, confirmados y perdidos","Correo",True),
+ ("Cobranza","Cuota por vencer","3 días antes del vencimiento","Recuerda el pago al estudiante o a su representante, con copia al asesor","Correo y WhatsApp (propuesta)",True),
+ ("Cobranza","Cuota vencida","a los 1, 7 y 15 días","Mensajes de cobro; a los 15 días avisa al asesor y a los 30 a Dirección Comercial","Correo y WhatsApp (propuesta)",True),
+ ("Cobranza","Saldo con el curso en marcha","cuando el estudiante cursa con saldo pendiente","Alerta a Secretaría para cobrar antes de la rematrícula","Notificación",False),
+ ("Notas","Notas pendientes","72 h después de la última clase","Recuerda al profesor cerrar notas; a las 48 h más avisa a Coordinación","Correo y notificación",True),
+ ("Exámenes","Certificado recibido","al registrar que llegó el certificado","Avisa al candidato por correo: dónde y cuándo retirarlo y qué traer (cédula o pasaporte)","Correo",True)]
+def _sw(i,activa,nombre):
+    return ('<label class="switch"><input type="checkbox" role="switch" data-regla aria-label="Activar la regla '+nombre+'"'+(' checked' if activa else '')+'><span aria-hidden="true"></span></label> '
+            +'<span class="badge badge-'+('ok' if activa else 'neutral')+'" data-regla-estado>'+('Activa' if activa else 'Apagada')+'</span>')
+_reglas_tbl=table(["Área","Regla","Cuándo se dispara","Qué hace","Canal","Estado","Acción"],[[a,c2(r,""),cu,q,ca,_sw(i,ac,r),btn("Editar regla",kind="ghost")] for i,(a,r,cu,q,ca,ac) in enumerate(_REGLAS)],hide=(0,),wide=1,tid="reglas")
+def _pl(cuerpo,vars_,cuando,canal,estado):
+    chips="".join('<span class="msg-file">'+v+'</span> ' for v in vars_)
+    return ('<div class="msg-prev"><small>Vista previa · '+canal+'</small><p>'+cuerpo+'</p></div>'
+            +kv(("Variables",chips),("Cuándo se usa",cuando),("Estado",estado))+row(btn("Editar regla",kind="ghost")))
+_ok=badge("Lista","ok"); _wa=badge("Propuesta · fuera del alcance del contrato actual")+'<small> · Meta debe aprobar cada plantilla</small>'
+_plantillas=seg(["Rematrícula","Cuota por vencer","Cuota vencida","Inicio de curso","Pocas inscripciones"],[
+  _pl("Hola {nombre}, te vas acercando al final de {curso}. Tu siguiente módulo empieza el {fecha} y te reservamos el cupo. Si pagas los dos módulos tienes descuento. ¿Te ayudamos a matricularte?",["{nombre}","{curso}","{fecha}"],"al llegar al 75 % del curso","WhatsApp o correo",_wa),
+  _pl("Hola {nombre}, te recordamos que tu cuota de {saldo} vence el {fecha}. Puedes pagar por transferencia o con el link de pago. Gracias.",["{nombre}","{saldo}","{fecha}"],"3 días antes del vencimiento","WhatsApp o correo",_wa),
+  _pl("Hola {nombre}, tu cuota de {saldo} venció el {fecha}. Si ya pagaste, envíanos el comprobante; si necesitas acordar una fecha, respóndenos este mensaje.",["{nombre}","{saldo}","{fecha}"],"a los 1, 7 y 15 días de vencida","WhatsApp o correo",_wa),
+  _pl("Hola {nombre}, tu curso {curso} empieza el {fecha}. Horario: {horario}. Aula o enlace: {aula}. Profesor: {profesor}. Recuerda retirar tu libro en la sede.",["{nombre}","{curso}","{fecha}","{horario}","{aula}","{profesor}"],"48 h antes del inicio","Correo",_ok),
+  _pl("Alerta: el curso {curso} ({sede}) empieza el {fecha} y tiene {inscritos} de {capacidad} cupos ({ocupacion}). Revisa si reforzar el contacto o decidir la apertura.",["{curso}","{sede}","{fecha}","{inscritos}","{capacidad}","{ocupacion}"],"14 días antes · ocupación baja","Notificación interna",_ok)],label="Plantilla")
+_LOG=[("23 oct 09:10","Rematrícula al cerrar notas","María Andrade","Correo","Enviado"),("23 oct 09:10","Rematrícula al cerrar notas","Sofía Herrera","Correo","Enviado"),("23 oct 08:00","Cuota por vencer","Camila Sánchez","Correo","Enviado"),
+      ("23 oct 08:00","Cuota por vencer","Martín Ortega","Correo","Rebotó"),("23 oct 08:00","Cuota vencida · 7 días","Pedro Mora","Correo","Enviado"),("23 oct 08:00","Cuota vencida · 7 días","Gabriela Núñez","Correo","Omitido"),
+      ("23 oct 07:00","Alerta de ocupación baja","Secretaría Ambato","Notificación","Enviado"),("20 oct 08:00","Resumen semanal","Coordinación","Correo","Enviado")]
+_bl={"Enviado":badge("Enviado","ok"),"Rebotó":badge("Rebotó","bad"),"Omitido":badge("Omitido","warn")}
+_nota_log={"Omitido":"promesa de pago hasta el 25 oct","Rebotó":"correo inválido"}
+_registro=(kpis([("Avisos de hoy",agg("count","autolog"),"enviados por las reglas"),("Enviados",agg("count:Resultado=Enviado","autolog"),"sin intervención"),("Rebotaron",agg("count:Resultado=Rebotó","autolog"),"Secretaría corrige el dato",{"fset":"Resultado=Rebotó"}),("Omitidos",agg("count:Resultado=Omitido","autolog"),"por una regla (promesa de pago)",{"fset":"Resultado=Omitido"})])
+  +filters(search("Buscar","Regla o destinatario",w="260px"),sel("Resultado",["Todos","Enviado","Rebotó","Omitido"],w="150px"),actions=btn("Exportar Excel"))
+  +table(["Hora","Regla","Destinatario","Canal","Resultado"],[[h,r,c2(d,_nota_log.get(re,"")),ca,_bl[re]] for h,r,d,ca,re in _LOG],wide=1,tid="autolog")
+  +kv(("Para qué sirve","ver qué avisos salieron solos, a quién y cuáles no llegaron, sin revisar a mano"),("Omitidos","una regla puede saltarse un aviso, por ejemplo si el estudiante prometió pagar en una fecha")))
+_semana=(card("Resumen semanal · sale cada lunes 08:00",table(["Grupo que termina","Termina","Notas","Ocupación del siguiente curso","Acción"],[
+    [c2("Adults A1 Sábados","0001-2026-0430 · Quito"),"terminó hace 5 días",badge("Notas pendientes","bad"),progress(87,"B2 · 13 de 15"),btn("Recordar al profesor",kind="ghost")],
+    [c2("Adults B1 Virtual","0001-2026-0767 · Quito"),"20 nov",badge("En curso","neutral"),progress(87,"B1+ · 13 de 15"),'<a href="Rematricula.html">Ver rematrícula</a>'],
+    [c2("Kids 2 Tarde","0001-2026-0328 · Valle"),"28 nov",badge("En curso","neutral"),progress(80,"Kids 3 · 8 de 10"),'<a href="Rematricula.html">Ver rematrícula</a>'],
+    [c2("Adults A2","0001-2026-0620 · Valle"),"4 dic",badge("En curso","neutral"),progress(50,"B1 · 6 de 12",color="var(--warn)"),'<a href="Rematricula.html">Ver rematrícula</a>'],
+    [c2("Kids 1 Mañana","0001-2026-0518 · Ambato"),"12 dic",badge("En curso","neutral"),progress(30,"Kids 2 · 3 de 10",color="var(--bad)"),'<a href="Cursos.html">Ver capacidad</a>']],wide=0)
+  +kv(("Para quién","Secretaría, Coordinación y Dirección Comercial"),("Qué reemplaza","la revisión manual semana a semana de los grupos que terminan y sus notas pendientes"))
+  +row(btn("Enviar resumen ahora",None,True)),extra=badge("Automático","ok"))
+  +card("Parámetros",form([("Capacidad estándar por aula","12","number",None,True,"Se usa cuando el aula no tiene una capacidad propia"),("Mínimo de inscritos para abrir","6","number",None,True),("Alerta de ocupación baja (%)","50","number",None,True,"Por debajo de este porcentaje se avisa"),
+        ("Anticipación de la alerta de apertura (días)","14","number",None,True),("Resumen semanal","Lunes · 08:00","select",["Lunes · 08:00","Lunes · 07:00","Viernes · 17:00"],True),("Destinatarios","Secretaría, Coordinación y Dirección Comercial","text",None,False)],cols=3)
+        +row(btn("Guardar parámetros",None,True)),extra=badge("Se usan en todas las alertas","navy")))
+page("Automatizaciones.html","Automatizaciones",shell("Automatizaciones","Automatizaciones",
+ kpis([("Reglas activas",'<span data-reglas-activas>10</span> de <span data-reglas-total>11</span>',"aperturas, reaperturas, cobranza y notas"),("Avisos esta semana","46","enviados sin intervención"),("Cobranza gestionada","$1,360","saldos con aviso automático"),("Notas pendientes","1","grupo por cerrar")]),
+ tabs(["Reglas","Plantillas","Registro de envíos","Resumen semanal y parámetros"],"Reglas",panels={
+  "Reglas": filters(search("Buscar","Regla o área",w="240px"),sel("Área",["Todas","Aperturas","Reaperturas","Cobranza","Notas","Exámenes"],w="160px"),actions=btn("Nueva regla de automatización",None,True))+_reglas_tbl
+       +kv(("Cómo funcionan","cada regla se dispara sola por un evento o por un momento; puedes apagarla sin borrarla"),("WhatsApp",badge("Propuesta · fuera del alcance del contrato actual")+'<small> · hoy los avisos salen por correo y notificación interna</small>')),
+  "Plantillas": card("Mensajes que usan las reglas",_plantillas+kv(("Dónde se editan","en Configuración → Plantillas de correo")),extra=badge("Con variables","navy")),
+  "Registro de envíos": _registro,
+  "Resumen semanal y parámetros": _semana}),
+ '<script src="assets/automatizaciones.js"></script>',
+ subtitle="Aperturas, reaperturas, cobranza y notas: avisos que salen solos, con su plantilla y su registro"),"Automatizaciones")
+
+_ENV=[  # (factura, emitida, cliente, detalle, total, estado, segundos, nota, acción)
+ ("000021113","Hoy 10:25","Renata Salazar","001-202603270 · Quito","$250.00","En espera",4680,"","esp"),
+ ("000021112","Hoy 09:40","Sebastián Ríos","examen externo · Quito","$235.00","En espera",1980,"","esp"),
+ ("000021118","Hoy 08:40","Valeria Cedeño","B2 · Quito","$495.00","Error de envío",0,"el servicio del SRI no respondió; se reintenta solo (2 intentos)","err"),
+ ("000021117","Hoy 06:10","Paula Cárdenas","Valle","$250.00","Rechazada",0,"secuencial ya registrado: posible duplicado, no reintentar","dup"),
+ ("000021111","Hoy 08:05","Dana Pérez","Valle","$250.00","Enviada",0,"salió a Dora a las 10:05; esperando la autorización del SRI","ok"),
+ ("000021110","Ayer 15:20","Juan Pérez","refactura por cambio de modalidad · Valle","$255.00","Autorizada",0,"autorizada por el SRI y subida a contabilidad","ok"),
+ ("000021095","11 oct","Mateo Salazar (menor)","Ambato","$420.00","Rechazada",0,"el SRI la rechazó: identificación del comprador inválida","rech"),
+ ("000021092","12 oct","Luis Torres","libros · Quito","$68.00","Error de envío",0,"Dora no respondió; no se ha reintentado","err")]
+_BE={"En espera":badge("En espera","navy"),"Enviada":badge("Enviada","navy"),"Autorizada":badge("Autorizada","ok"),"Rechazada":badge("Rechazada","bad"),"Error de envío":badge("Error de envío","bad")}
+def _acc_env(a):
+    if a=="esp": return '<a class="btn btn-ghost" data-envio-corregir href="DetalleFactura.html">Corregir</a><button type="button" class="btn btn-ghost" data-envio-ahora>Enviar ahora</button>'
+    if a=="rech": return btn("Corregir y reenviar",kind="ghost")
+    if a=="dup": return btn("Consultar estado en el SRI",kind="ghost")
+    if a=="err": return btn("Reintentar envío",kind="ghost")
+    return '<a href="DetalleFactura.html">Ver factura</a>'
+def _est_cell(es):
+    return '<span class="badge badge-navy" data-cd-estado>En espera</span>' if es=="En espera" else _BE[es]
+def _env_row(f,em,cl,d,t,es,seg,nota,ac):
+    det='<span class="mono" data-cd="'+str(seg)+'">Sube en '+f"{seg//3600:02d}:{(seg%3600)//60:02d}:{seg%60:02d}"+'</span>' if es=="En espera" else nota
+    return [c2('<span class="mono">'+f+'</span>',em),c2(cl,d),t,_est_cell(es),det,_acc_env(ac)]
+_env_tbl=table(["Factura","Cliente","Total","Estado","Envío a Dora y al SRI","Acción"],[_env_row(*r) for r in _ENV],wide=1,tid="envios")
+# Facturas retenidas: motivo, tiempo, intentos y lo que hay que revisar para no dejar inconsistencias
+_RET=[("000021095","Mateo Salazar (menor)","Identificación del comprador inválida","12 días","1","Matrícula habilitada · sin pago","Corregir y reenviar","corr"),
+      ("000021092","Luis Torres","Dora no respondió","11 días","3","Pagada $68 · libro entregado sin comprobante autorizado","Consultar estado y reintentar","cons"),
+      ("000021117","Paula Cárdenas","Secuencial ya registrado","5 h","1","Posible duplicado: revisar antes de reintentar","Consultar estado en el SRI","cons"),
+      ("000021118","Valeria Cedeño","Servicio del SRI no disponible","3 h","2","Sin pago aún","Se reintenta sola","auto")]
+def _acc_ret(a,t):
+    return {"corr":btn("Corregir y reenviar",kind="ghost"),"cons":btn("Consultar estado en el SRI",kind="ghost"),"auto":"<small>reintento automático</small>"}[a]
+_ret_tbl=table(["Factura","Cliente","Motivo","Retenida hace","Intentos","Qué revisar","Acción"],[[ '<span class="mono">'+f+'</span>',c,m,h,i,badge(r,"bad" if ("sin comprobante" in r or "duplicado" in r) else ("warn" if "habilitada" in r else "neutral")),_acc_ret(a,t)] for f,c,m,h,i,r,t,a in _RET],wide=1,tid="retenidas")
+_retenidas=(kpis([("Retenidas",agg("count","retenidas"),"sin autorización del SRI"),("Más de 24 h",agg("count:Retenida hace=días","retenidas"),"hay que revisarlas hoy",{"fset":"Retenida hace=días"}),("Inconsistencias",'2',"cobradas o entregadas sin autorizar"),("Posible duplicado",'1',"consultar antes de reintentar")])
+  +card("Facturas retenidas",_ret_tbl+kv(("Por qué hay que mirarlas bien","una factura sin autorizar puede estar cobrada, con el libro entregado o con la comisión generada: si no se resuelve, queda una inconsistencia contable")),extra=badge("Revisión manual","warn"))
+  +card("Antes de reintentar",flow([("¿Ya existe en el SRI?","consultar por la clave de acceso: si el SRI ya la tiene, se trae su autorización y no se reenvía (evita duplicados)"),("¿El dato es corregible?","identificación, RUC o correo del comprador: se corrige y se reenvía"),("¿Hay un pago cobrado?","el cliente debe recibir el comprobante en cuanto se autorice"),("¿Hay comisión o entrega de libro?","quedan marcadas como 'pendientes de autorización' hasta que se resuelva"),("¿Hay un salto en la numeración?","Contabilidad lo documenta")],horizontal=False))
+  +card("Inconsistencias detectadas",table(["Tipo","Detalle","Facturas","Acción"],[
+      ["Pagada y entregada sin autorizar","el cliente pagó y retiró su libro, pero la factura no tiene autorización","1",btn("Marcar como revisada",kind="ghost")],
+      ["Comisión generada con factura sin autorizar","la comisión del asesor quedó calculada sobre una factura retenida","1",btn("Marcar como revisada",kind="ghost")],
+      ["Posible duplicado","el SRI informa que el secuencial ya está registrado","1",btn("Consultar estado en el SRI",kind="ghost")],
+      ["Saltos de numeración","secuenciales que faltan entre facturas emitidas","0","—"]],wide=0))
+  +card("Si el SRI no responde: plan B",flow(["Se reintenta sola, 3 veces cada 30 minutos","Si sigue, se avisa a Secretaría y a Contabilidad","Si pasan 24 horas, se puede emitir en contingencia: a mano en el portal del SRI","Aquí se registra la clave de acceso y la fecha de autorización","La factura queda marcada 'Emitida fuera de la plataforma' y Contabilidad la revisa"],horizontal=False)
+        +row(btn("Emitir en contingencia",kind="ghost")),extra=badge("Como hacían antes, pero registrado","navy")))
+_salud=(kpis([("Autorizadas a la primera",'94%',"últimos 30 días"),("De la emisión a la autorización",'2 h 06 min',"promedio · incluye la espera de 2 h"),("Caídas del SRI",'3',"esta semana · lun, mié y vie"),("Retenidas más de 24 h",'2',"ahora")])
+  +two(card("Por qué se retienen (30 días)",table(["Motivo","Facturas"],[["Datos del comprador inválidos","6"],["Servicio del SRI no disponible","4"],["Dora no respondió","2"],["Posible duplicado","1"]],wide=0)),
+       card("Qué significa",kv(("Datos del comprador","los corrige Secretaría; se previenen validando la cédula o el RUC al facturar"),("SRI no disponible","intermitente: el sistema reintenta solo y no hace falta avisar"),("Dora no respondió","revisar la conexión; consultar el estado antes de reintentar"),("Posible duplicado","nunca se reenvía sin consultar primero"))))
+  +kv(("Integración total",badge("Propuesta · sujeto a lo que Dora exponga")+'<small> · mientras no haya API completa, la plataforma solo puede seguir y avisar</small>')))
+page("EnviosSRI.html","Envíos al SRI",shell("Envíos a Dora y al SRI","Facturación",
+ kpis([("En espera de envío",agg("count:Estado=En espera","envios"),"ventana de corrección de 2 h",{"fset":"Estado=En espera"}),("Sin subir",'<span data-cd-total>2</span>',"normalmente en 0: facturas que aún no salen"),
+       ("Autorizadas",agg("count:Estado=Autorizada","envios"),"subidas a contabilidad"),("Rechazadas · con error",agg("count:Estado=Rechazada","envios")+" · "+agg("count:Estado=Error de envío","envios"),"revisar y reenviar",{"fset":"Estado=Rechazada"})]),
+ tabs(["Estado de las facturas","Retenidas y revisión","Salud del envío","Parámetros"],"Estado de las facturas",panels={
+  "Estado de las facturas": card("Cómo sale una factura",flow([("Se emite la factura","queda guardada y firmada en la plataforma"),("Ventana de corrección de 2 horas","puedes corregir los datos o anularla sin dejar rastro en el SRI"),("Sale sola a Dora","pasadas las 2 horas, sin que nadie la envíe"),("Dora la autoriza en el SRI y la sube a contabilidad","el contador de 'sin subir' vuelve a 0"),("Si algo falla","se avisa a Secretaría con el motivo y se puede reintentar")],horizontal=False),extra=badge("Automático","ok"))
+     +card("Estado de las facturas",filters(search("Buscar","Factura o cliente",w="240px"),sel("Estado",["Todos","En espera","Enviada","Autorizada","Rechazada","Error de envío"],w="190px"),actions=btn("Exportar Excel"))+_env_tbl
+       +kv(("Ya salió","para cambiar algo se emite una nota de crédito y se refactura"),("Si el SRI la rechaza o no responde","queda retenida: ver la pestaña Retenidas y revisión"),
+           ("Dora",badge("Propuesta · sujeto a lo que Dora exponga")+'<small> · hoy el envío automático lo hace otra herramienta</small>'))),
+  "Retenidas y revisión": _retenidas,
+  "Salud del envío": _salud,
+  "Parámetros": card("Parámetros del envío",form([("Ventana de corrección antes de enviar","2 horas","select",["Sin espera","1 hora","2 horas","4 horas"],True,"Tiempo para corregir o anular antes de que la factura salga"),("Reintentos automáticos","3 veces · cada 30 min","select",["No reintentar","1 vez","3 veces · cada 30 min","5 veces · cada hora"],True),("Alerta si no se autoriza en","24 horas","select",["12 horas","24 horas","48 horas"],True),("Avisar a","Secretaría y Contabilidad","text",None,False)],cols=2)+row(btn("Guardar ventana de envío",None,True)),extra=badge("Se aplica a facturas nuevas","navy"))}),
+ '<script src="assets/envios.js"></script>',
+ subtitle="Las facturas salen solas a Dora 2 horas después de emitirlas; aquí se ve cuáles esperan, cuáles salieron y cuáles quedaron retenidas"),"Envíos al SRI")
+
+_CP=[("08:10","Camila Sánchez","Efectivo","Recibo 0427","$100.00","Conciliado"),("08:45","Martín Ortega","Efectivo","Recibo 0428","$120.00","Conciliado"),("09:20","Sofía Herrera","Efectivo","Recibo 0429","$80.00","Conciliado"),
+     ("10:05","Pedro Mora","Efectivo","Recibo 0430","$150.00","Conciliado"),("11:30","Valeria Cedeño","Efectivo","Recibo 0431","$90.00","Conciliado"),("12:40","Luis Torres","Efectivo","Recibo 0432","$100.00","Conciliado"),
+     ("09:00","Renata Salazar","Tarjeta de crédito","Lote 0193 · aut. 310451","$450.00","Conciliado"),("13:15","Tomás Villacrés","Tarjeta de crédito","Lote 0193 · aut. 310452","$220.00","Conciliado"),("15:00","Lucía Benítez","Tarjeta de crédito","Lote 0193 · aut. 310453","$200.00","Conciliado"),
+     ("09:40","Sebastián Ríos","Transferencia","Comprobante 928390","$450.00","Conciliado"),("10:50","Isabela Aguirre","Transferencia","Comprobante 928391","$280.00","Conciliado"),("11:15","Gabriela Núñez","Transferencia","Otro banco · IB-90312","$330.00","Diferencia"),
+     ("14:20","Dana Pérez","Transferencia","Comprobante 928392","$200.00","Conciliado"),("16:05","Daniela Ríos","Transferencia","Comprobante 928393","$160.00","Conciliado"),("16:50","Andrés Pazmiño","Depósito","Papeleta 55120","$230.00","Conciliado")]
+_bp={"Conciliado":badge("Conciliado","ok"),"Diferencia":badge("Diferencia","bad")}
+_cc_pagos=(kpis([("Pagos del día",agg("count","cc_pagos"),"15 en total · $3,160.00"),("Conciliados",agg("count:Verificación=Conciliado","cc_pagos"),"coinciden con el banco o el datáfono"),("Con diferencia",agg("count:Verificación=Diferencia","cc_pagos"),"revisar antes de cerrar",{"fset":"Verificación=Diferencia"})])
+   +filters(search("Buscar","Estudiante o comprobante",w="260px"),sel("Método",["Todos","Efectivo","Tarjeta de crédito","Transferencia","Depósito"],w="190px"),actions=btn("Exportar Excel"))
+   +table(["Hora","Estudiante","Método","Comprobante","Monto","Verificación"],[[h,e,m,c,mo,_bp[v]] for h,e,m,c,mo,v in _CP],wide=1,tid="cc_pagos")
+   +kv(("Cada pago","lleva su comprobante adjunto y su fecha de cierre; ya no se imprime ni se pega en una hoja"),("Verificación","cada transferencia se compara con el extracto del banco; la interbancaria se concilia por monto y fecha"))+row(btn("Verificar transferencias","VerificarTransferencias.html",kind="ghost")))
+_cc_ventas=(table(["Factura","Cliente","Total","Crédito","Cobrado hoy","Saldo"],[
+   ['<span class="mono">000021113</span>',"Renata Salazar","$250.00","No","$250.00","$0.00"],['<span class="mono">000021112</span>',"Sebastián Ríos","$235.00","No","$235.00","$0.00"],
+   ['<span class="mono">000021114</span>',"Tomás Villacrés","$500.00",badge("Sí · 30 días","navy"),"$250.00","$250.00"],['<span class="mono">000021115</span>',"Lucía Benítez","$380.00",badge("Sí · 15 días","navy"),"$190.00","$190.00"],
+   ['<span class="mono">000021116</span>',"Isabela Aguirre","$250.00","No","$250.00","$0.00"],['<span class="mono">000021120</span>',"Daniela Ríos","$495.00","No","$495.00","$0.00"]],wide=0)
+   +kv(("Facturado hoy","$2,110.00 · 6 facturas"),("A crédito","2 facturas · saldo $440.00"),("Cobros de ventas de hoy","$1,470.00"),("Cuotas de ventas anteriores","$1,690.00 · completan los $3,160.00 de la lista de pagos")))
+_cc_mat=(table(["Matrícula","Estudiante","Curso","Valor","Factura","Asesor"],[
+   ['<span class="mono">001-202603270</span>',"Renata Salazar","Adults B1 · 0001-2026-0767","$250.00","000021113","Carla M."],['<span class="mono">001-202603271</span>',"Sebastián Ríos","Cambridge B1 Preliminary · examen","$235.00","000021112","Carla M."],
+   ['<span class="mono">001-202603272</span>',"Tomás Villacrés","Adults A2 · 0001-2026-0620","$500.00","000021114","Andrea S."],['<span class="mono">001-202603273</span>',"Lucía Benítez","Kids 2 · 0001-2026-0328","$380.00","000021115","Luis P."],
+   ['<span class="mono">001-202603274</span>',"Isabela Aguirre","Adults A1 · 0001-2026-0430","$250.00","000021116","Carla M."],['<span class="mono">001-202603275</span>',"Daniela Ríos","Adults B2 · 0001-2026-0838","$495.00","000021120","Andrea S."]],wide=0)
+   +kv(("Matrículas del día","6"),("Cada matrícula","ligada a su factura; las que no tienen factura aparecen en rojo en 'Matrículas sin factura'")))
+_VCH=[("Renata Salazar","000021113","310451","450.00","310451","450.00","voucher_310451.jpg",True),
+      ("Tomás Villacrés","000021114","310452","220.00","310425","220.00","voucher_310452.jpg",True),
+      ("Lucía Benítez","000021115","310453","200.00","310453","200.00","Falta",False)]
+def _vch_row(n,f,sa,sv,va,vv,adj,ok):
+    return [c2(n,"factura "+f+" · anexada"),
+            '<span class="nowrap"><span class="mono" data-vch-sis-aut>'+sa+'</span> · $<span data-vch-sis-val>'+sv+'</span></span>',
+            '<div class="vch-in"><input class="ctl rec-in" data-vch-aut value="'+va+'" aria-label="Autorización del voucher de '+n+'"><input class="ctl rec-in" data-vch-val value="'+vv+'" aria-label="Valor del voucher de '+n+'"></div>',
+            '<span data-vch-adj data-adjunto="'+("1" if ok else "0")+'">'+adj+'</span> <label class="btn btn-ghost vch-file">'+("Cambiar" if ok else "Adjuntar")+'<input type="file" accept="image/*,application/pdf" hidden data-vch-file></label>',
+            '<span class="badge badge-neutral" data-vch-res>—</span>',
+            '<button type="button" class="btn btn-ghost" data-vch-fix hidden>Corregir en el sistema</button>']
+_cc_tarj=(card("Cierre de lote del datáfono",table(["Datáfono y lote","Vouchers","Total del cierre de lote","Total en el sistema","Diferencia","Foto del cierre de lote"],[
+      ["Datafast · Banco Pichincha · lote 0193","3",'<input type="number" step="0.01" class="ctl rec-in" data-lote-in value="870.00" aria-label="Total del cierre de lote">','<span data-lote-sis>$870.00</span>','<span class="badge badge-ok" data-lote-dif>Cuadra</span>',
+       '<span data-lote-adj data-adjunto="1">cierre_lote_0193.jpg</span> <label class="btn btn-ghost vch-file">Cambiar<input type="file" accept="image/*,application/pdf" hidden data-lote-file></label>']],wide=0)
+     +kv(("Qué se hace","se escribe el total que imprime el datáfono al cerrar el lote y se adjunta su foto; la plataforma lo compara con la suma de los vouchers")),extra=badge("Reemplaza la hoja con vouchers pegados","navy"))
+   +card("Vouchers de tarjeta",table(["Cliente y factura","En el sistema (autorización · valor)","Lo que dice el voucher","Voucher adjunto","Verificación","Acción"],[_vch_row(*r) for r in _VCH],wide=0)
+     +'<p class="cc-res" data-vch-resumen aria-live="polite"></p>'
+     +kv(("Qué se verifica","que el valor y la referencia (autorización) del voucher sean los del sistema; el voucher se adjunta como foto"),("Anexo","cada voucher queda ligado a su factura y al cierre de lote; ya no se pega nada en una hoja"),("Copia amarilla y recibos","se guardan como archivo en el pago, junto al voucher"),
+         ("Respaldo","el archivo digital reemplaza la copia física que se conservaba; el plazo de conservación lo define Contabilidad")),extra=badge("Valor y referencia","ok")))
+_cc_obs=(kpis([("Observaciones abiertas",'<span data-cc-abiertas>1</span>',"de Contabilidad, sobre la versión enviada"),("Versión enviada",'v1',"23 oct 17:40"),("Plazo de revisión","1 día","Contabilidad responde con un acuse"),])
+   +table(["Observación","Documento","Quién","Estado","Acción"],[
+     [c2("La referencia del comprobante no coincide con el extracto (otro banco)","pago de Gabriela Núñez · transferencia $330.00"),"Lista de pagos",c2("Contabilidad","23 oct 17:52"),'<span class="badge badge-warn" data-obs-estado data-obs>Abierta</span>','<button type="button" class="btn" data-obs-corregir>Corregir solo este pago</button>'],
+     [c2("Falta el plazo del crédito","factura 000021115 · Lucía Benítez"),"Lista de ventas",c2("Contabilidad","23 oct 17:52"),badge("Resuelta","ok"),"—"]],wide=0,hide=())
+   +kv(("Antes","cualquier error obligaba a reimprimir toda la caja"),("Ahora","se corrige solo el ítem observado y se reenvía una versión nueva; el resto no cambia y queda el rastro de cada versión")))
+_cc_hist=('<ol class="proc" data-cc-log>'
+   +'<li class="is-done"><span class="p-t">Contabilidad observó el pago de Gabriela Núñez</span><span class="p-d">23 oct 17:52 · La referencia no coincide con el extracto</span></li>'
+   +'<li class="is-done"><span class="p-t">Caja cerrada y enviada a Contabilidad (v1)</span><span class="p-d">23 oct 17:40 · Secretaría Quito · listas de pagos, ventas y matrículas</span></li>'
+   +'<li class="is-done"><span class="p-t">Cuadre verificado</span><span class="p-d">23 oct 17:35 · efectivo, tarjetas y transferencias contra el sistema</span></li></ol>')
+_cc_cuadre=card("Cuadre de caja",table(["Método","En el sistema","Contado o confirmado","Diferencia"],[
+   ["Efectivo","$640.00",'<input type="number" step="0.01" class="ctl rec-in" value="640.00" data-cuadre-in aria-label="Efectivo contado">','<span class="badge badge-ok" data-cuadre-dif data-sis="640">Cuadra</span>'],
+   ["Tarjeta de crédito","$870.00",'<span data-cuadre-val="870">$870.00 · cierre del lote 0193</span>','<span class="badge badge-ok" data-cuadre-dif data-sis="870">Cuadra</span>'],
+   ["Transferencias y depósitos","$1,650.00",'<span data-cuadre-val="1650">$1,650.00 · extracto del banco</span>','<span class="badge badge-ok" data-cuadre-dif data-sis="1650">Cuadra</span>']],wide=0)
+   +'<p class="cc-res is-ok" data-cuadre-res aria-live="polite"></p>',extra=badge("Cambia el efectivo y verás la diferencia","navy"))
+page("CierreCaja.html","Cierre de caja",shell("Cierre de caja · Quito · 23 oct","Facturación",
+ hero([("Caja","Quito"),("Fecha de cierre","23 oct 2026"),("Responsable","Secretaría Quito"),("Versión",'<span data-cc-ver>v1</span>'),("Estado",'<span class="badge badge-warn" data-cc-estado>Con observaciones</span>'),("Acuse de Contabilidad",'<span data-cc-acuse>Pendiente</span>')],
+   '<button type="button" class="btn btn-primary" data-cc-enviar aria-disabled="true">Reenviar a Contabilidad</button>'+btn("Descargar paquete PDF")+btn("Exportar Excel"),
+   tag='<span class="hero-code">CC-2026-1023-Q</span>'+badge("Sin papel","ok")),
+ _cc_cuadre,
+ card("Qué reemplaza",flow([("Se arman solas las tres listas","pagos, ventas (con las facturas a crédito) y matrículas del día"),("Se verifica el cuadre","efectivo contra lo contado; tarjetas y transferencias contra el datáfono y el banco"),("Tarjetas: voucher, cierre de lote y factura juntos","cada voucher se adjunta como foto, se compara con el sistema y queda anexado a su factura; ya no se pegan en una hoja"),("Se cierra y se envía a Contabilidad","con su versión; no se imprime nada ni se arman copias"),("Contabilidad revisa y confirma","el acuse digital reemplaza la copia que regresaba firmada"),("Queda el respaldo","para la auditoría: cada versión, quién cambió qué y el acuse")],horizontal=False),extra=badge("Reemplaza las impresiones","navy")),
+ tabs(["Lista de pagos","Lista de ventas","Lista de matrículas","Tarjetas y vouchers","Revisión de Contabilidad","Historial"],"Lista de pagos",counts={"Revisión de Contabilidad":1,"Tarjetas y vouchers":2},panels={
+   "Tarjetas y vouchers":_cc_tarj,
+   "Lista de pagos":_cc_pagos,"Lista de ventas":_cc_ventas,"Lista de matrículas":_cc_mat,"Revisión de Contabilidad":_cc_obs,"Historial":card("Historial de versiones",_cc_hist)}),
+ '<script src="assets/cierre.js"></script>',
+ subtitle="Las listas de pagos, ventas y matrículas se entregan a Contabilidad en digital, con versión, correcciones solo de lo observado y acuse"),"Cierre de caja")
+
+_VTD=json.loads(r'''{"PG-1101": {"estudiante": "Sebastián Ríos", "factura": "000021112", "banco": "Banco Pichincha", "valor": "$450.00", "fecha": "23 oct", "sistema": "928390", "lista": "928390", "conf": "928390", "conf_fecha": "23 oct"}, "PG-1102": {"estudiante": "Isabela Aguirre", "factura": "000021116", "banco": "Banco Pichincha", "valor": "$280.00", "fecha": "23 oct", "sistema": "928391", "lista": "928391", "conf": "928391", "conf_fecha": "23 oct"}, "PG-1103": {"estudiante": "Gabriela Núñez", "factura": "000021074", "banco": "Otro banco (interbancaria)", "valor": "$330.00", "fecha": "23 oct", "sistema": "IB-90312", "lista": "IB-90312", "conf": "6720458", "conf_fecha": "23 oct"}, "PG-1104": {"estudiante": "Dana Pérez", "factura": "000021111", "banco": "Banco Pichincha", "valor": "$200.00", "fecha": "23 oct", "sistema": "928392", "lista": "928392", "conf": "928392", "conf_fecha": "23 oct"}, "PG-1105": {"estudiante": "Daniela Ríos", "factura": "000021120", "banco": "Banco Pichincha", "valor": "$160.00", "fecha": "23 oct", "sistema": "928393", "lista": "928393", "conf": "928393", "conf_fecha": "23 oct"}}''')
+def _vt_ok(d): return d["sistema"]==d["lista"]==d["conf"] and d["fecha"]==d["conf_fecha"]
+_vt_tbl=table(["Pago","Estudiante","Banco","Valor","Comprobante en el sistema","Confirmación de Contabilidad","Resultado"],[
+   ['<span class="mono">'+k+'</span>',d["estudiante"],d["banco"],d["valor"],'<span class="mono" data-vt-sis="'+k+'">'+d["sistema"]+'</span>','<span class="mono">'+d["conf"]+'</span>','<span class="badge badge-'+("ok" if _vt_ok(d) else "bad")+'" data-vt-res="'+k+'">'+("Coincide" if _vt_ok(d) else "Diferencia")+'</span>'] for k,d in _VTD.items()],hide=(2,),wide=1,tid="vt")
+_vt_opts="".join('<option value="'+k+'">'+k+' · '+d["estudiante"]+' · '+d["valor"]+'</option>' for k,d in _VTD.items())
+_vt_mail=('<article class="mail" aria-label="Confirmación de pago de Contabilidad"><dl class="mail-head"><div><dt>De</dt><dd>Contabilidad · Cambridge School of Languages</dd></div><div><dt>Asunto</dt><dd><b data-vt-mail-asunto>Confirmación de pago</b></dd></div></dl>'
+          '<div class="mail-body"><p>Se confirmó el pago en el banco con estos datos:</p>'
+          '<dl class="mail-data"><div><dt>Número de factura</dt><dd data-vt-mail-factura>—</dd></div><div><dt>Valor pagado</dt><dd data-vt-mail-valor>—</dd></div><div><dt>Forma de pago</dt><dd data-vt-mail-pago>—</dd></div><div><dt>Detalle</dt><dd data-vt-mail-detalle>—</dd></div><div><dt>Comprobante</dt><dd data-vt-mail-comprobante>—</dd></div></dl>'
+          '<small>Así llegaba por correo y había que buscarlo con el número de comprobante. Ahora la plataforma lo compara sola.</small></div></article>')
+page("VerificarTransferencias.html","Verificar transferencias",shell("Verificar transferencias · 23 oct","Facturación",
+ kpis([("Transferencias del día",agg("count","vt"),"del cierre de caja de Quito"),("Coinciden en todo",agg("count:Resultado=Coincide","vt"),"sistema, lista de pagos y Contabilidad"),("Con diferencia",agg("count:Resultado=Diferencia","vt"),"revisar y corregir",{"fset":"Resultado=Diferencia"})]),
+ card("Qué cambia",flow([("Contabilidad confirma el pago en la plataforma","registra el número oficial, el valor y la fecha del banco"),("La plataforma compara sola","lo registrado, la lista de pagos y la confirmación: valor, fecha y detalles"),("Si coincide, queda verificado","sin buscar el correo ni imprimir nada"),("Si no coincide, se corrige solo ese dato","queda en el audit log y la lista de pagos y el cierre de caja se actualizan solos")],horizontal=False),extra=badge("Reemplaza buscar el correo","navy")),
+ card("Transferencias del día",filters(search("Buscar","Nº de comprobante o estudiante",w="280px"),sel("Resultado",["Todos","Coincide","Diferencia"],w="170px"),actions=btn("Exportar Excel"))+_vt_tbl
+   +kv(("Búsqueda","escribe parte del número de comprobante (por ejemplo 92839) y aparecen todos los que lo contienen"),("Interbancarias","su número suele ser distinto al documento oficial del banco; aquí se ve la diferencia y se corrige"))),
+ card("Comparar un pago",'<div class="field vt-pick"><label for="vt-sel">Pago a comparar</label><select id="vt-sel" class="ctl" data-vt-select>'+_vt_opts+'</select></div>'
+   +'<div class="vt-grid" data-vt-detalle role="table" aria-label="Comparación campo por campo"></div>'
+   +'<p class="cc-res is-ok" data-vt-resultado aria-live="polite"></p>'
+   +row('<button type="button" class="btn btn-primary" data-vt-corregir>Corregir en el sistema</button>',btn("Validar pago",kind="ghost")),extra=badge("Campo por campo","navy"))
+ +two(card("Confirmación de Contabilidad",_vt_mail),
+      card("Por qué pasa con las interbancarias",kv(("Qué ocurre","en una transferencia de otro banco el número del comprobante del cliente es distinto al documento oficial del banco"),("Qué se hace","se registra el número oficial y el del cliente queda como referencia"),("Antes","había que modificar el sistema y reimprimir los comprobantes de la caja"),("Ahora","se corrige en el pago; la lista de pagos y el cierre de caja se actualizan solos")
+         )+'<h4 class="section-title">Cambios de esta sesión</h4><ol class="proc" data-vt-log><li class="is-done"><span class="p-t">Sin correcciones todavía</span><span class="p-d">Pulsa "Corregir en el sistema" en el pago con diferencia</span></li></ol>'))
+ +'<script type="application/json" id="vt-data">'+json.dumps(_VTD,ensure_ascii=False)+'</script><script src="assets/verificar.js"></script>',
+ subtitle="Contabilidad confirma el pago en la plataforma y esta compara sola con lo registrado y con la lista de pagos"),"Verificar transferencias")
+
+_LP=[("LP-4471","Carla M.","Quito","Andrea Villacís","Matrícula 001-202603224 · factura 000021121","$545.00","Pagado","209832","Registrado en caja · 23 oct 10:21","ver"),
+     ("LP-4472","Diego R.","Valle","Roberto Salgado","Kids · módulo 1 · factura 000021122","$225.00","Pagado","209833","Registrado en caja · 23 oct 11:05","ver"),
+     ("LP-4475","Ana P.","Cuenca","Martín Ortega","Cuota 3 · factura 000021099","$160.00","Pagado","209835","Falta conciliar con Datafast","conc"),
+     ("LP-4473","Sofía L.","Ambato","Camila Sánchez","Cuota 2 · factura 000021094","$475.00","Pendiente","—","—","reen"),
+     ("LP-4476","Carla M.","Quito","Daniela Ríos","Módulo 11 · matrícula 001-202603275","$250.00","Pendiente","—","—","reen"),
+     ("LP-4474","Carla M.","Quito","Luis Torres","Tutoría 4 h · factura 000021104","$60.00","Vencido","—","—","nuevo")]
+_EL={"Pagado":badge("Pagado","ok"),"Pendiente":badge("Pendiente","warn"),"Vencido":badge("Vencido","neutral")}
+def _acc_lp(a):
+    return {"ver":btn("Ver comprobante",kind="ghost"),"conc":btn("Conciliar con Datafast",kind="ghost"),"reen":btn("Reenviar link",kind="ghost"),"nuevo":btn("Generar de nuevo",kind="ghost")}[a]
+_lp_tbl=table(["Link","Creado por","Cliente","Concepto","Monto","Estado","Autorización","En caja","Acción"],[
+   ['<span class="mono">'+i+'</span>',c2(cr,sd),cl,co,mo,_EL[es],'<span class="mono">'+au+'</span>',cj,_acc_lp(ac)] for i,cr,sd,cl,co,mo,es,au,cj,ac in _LP],hide=(),wide=3,tid="links")
+page("LinksPago.html","Links de pago",shell("Links de pago · Datafast","Facturación",
+ kpis([("Links generados",agg("count","links"),"del 19 al 23 oct"),("Pagados",agg("count:Estado=Pagado","links"),"con código de autorización"),("Pendientes",agg("count:Estado=Pendiente","links"),"esperando el pago",{"fset":"Estado=Pendiente"}),("Falta conciliar",agg("count:En caja=Falta","links"),"pagados sin confirmar en Datafast",{"fset":"En caja=Falta"})]),
+ card("Qué cambia",flow([("Comercial genera el link ligado a la factura o matrícula","ya no queda suelto: el link sabe a qué pago corresponde"),("El cliente paga","Datafast devuelve el código de autorización y el comprobante"),("El pago se registra solo","en la factura, con su autorización y su comprobante; Secretaría lo ve en la Caja del día"),("Se verifica con el historial","buscando por el código de autorización (por ejemplo 209832), sin entrar a la factura ni imprimir nada")],horizontal=False),extra=badge("Antes: sacar el comprobante de la factura e imprimirlo","warn")),
+ card("Historial de links",filters(search("Buscar","Código de autorización, cliente o link",w="300px"),sel("Estado",["Todos","Pagado","Pendiente","Vencido"],w="150px"),sel("Sede",["Todas","Quito","Valle","Ambato","Cuenca"],w="140px",col=False),actions=btn("Importar historial de Datafast")+btn("Exportar Excel"))+_lp_tbl
+   +kv(("Búsqueda","escribe el código de autorización, por ejemplo 209832, y aparece el link, la factura y el comprobante"),("Quién ve qué","cada asesor ve sus links; Secretaría y Contabilidad ven los de su sede aunque los haya creado Comercial"),("Datafast",badge("Propuesta · sujeto a lo que Datafast exponga")+'<small> · sin conexión directa, se importa su reporte de transacciones</small>'))),
+ two(card("Comprobante del link LP-4471",kv(("Cliente","Andrea Villacís"),("Concepto","Matrícula 001-202603224 · factura 000021121"),("Monto","$545.00"),("Código de autorización",'<span class="mono">209832</span>'),("Lote","0193"),("Tarjeta","Visa · terminada en 4242"),("Fecha","23 oct 2026 · 10:21"),("Estado de Datafast",badge("Aprobada","ok")),("Registrado por","la plataforma, al recibir el aviso de Datafast"))
+       +row(btn("Descargar comprobante PDF",kind="ghost")),extra=badge("Guardado en la factura y en el pago","ok")),
+     card("Generar un link de pago",form([("Cliente","Camila Sánchez","select",["Camila Sánchez","Daniela Ríos","Luis Torres"],True),("Ligar a","Cuota 2 · factura 000021094 · $475.00","select",["Cuota 2 · factura 000021094 · $475.00","Módulo 11 · matrícula 001-202603275 · $250.00","Tutoría 4 h · factura 000021104 · $60.00"],True,"Obligatorio: así el pago se registra solo en la factura"),("Monto","475.00","number",None,True),("Vence en","7 días","select",["3 días","7 días","15 días"],True),("Enviar por","Correo","select",["Correo","Correo y WhatsApp"],True,"WhatsApp es una propuesta aparte")],cols=2)+row(btn("Generar link de pago",None,True))))
+ ,
+ subtitle="Los links nacen ligados a la factura; al pagarse, el pago se registra solo con su autorización y su comprobante"),"Links de pago")
+
+DOC_SVG="data:image/svg+xml;utf8,"+urllib.parse.quote('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 160"><rect x="4" y="4" width="252" height="152" rx="10" fill="#F7F7F5" stroke="#8A93A6" stroke-width="2"/><rect x="20" y="30" width="62" height="78" rx="6" fill="#D6DCEA"/><g fill="#8A93A6"><rect x="100" y="34" width="130" height="10" rx="4"/><rect x="100" y="56" width="104" height="10" rx="4"/><rect x="100" y="78" width="118" height="10" rx="4"/><rect x="100" y="100" width="80" height="10" rx="4"/></g><text x="20" y="136" font-family="monospace" font-size="12" fill="#5E6573">Documento de identidad · imagen adjunta</text></svg>')
+page("EntregaCertificado.html","Entregar certificado",shell("Entregar certificado","Exámenes",
+ '<div class="deliver"><div class="deliver-main">'
+ +card("1 · Identifica al candidato",
+   form([("Candidato","Paula Ortiz · PAS AB123456 · TOEFL iBT","select",["Paula Ortiz · PAS AB123456 · TOEFL iBT"],True,"Solo aparecen los que tienen el certificado listo para retirar")],cols=1)
+   +facts([("Candidato",'<a href="Ficha360.html">Paula Ortiz</a>'),("Documento",'<span class="mono">PAS AB123456</span>'),("Examen","TOEFL iBT · 26 sep 2026"),("Factura",'<a href="DetalleFactura.html">000021020</a> · pagada'),("Sede","Valle"),("Certificado","recibido en la sede el 22 oct")]))
+ +card("2 · Resultado y certificado",
+   form([("Puntaje obtenido","96","number",None,True),("Nivel","B2","select",["A2","B1","B2","C1","C2"],True),("Número del certificado","TOEFL-2026-77412","text",None,True),("Fecha de emisión","2026-10-15","date",None,True)],cols=4)
+   +'<div class="checks"><label class="check"><input type="checkbox" data-check><span><b>El nombre y el examen del certificado coinciden con el candidato</b><small>Se compara con la inscripción y la factura</small></span></label>'
+   '<label class="check"><input type="checkbox" data-check><span><b>El certificado original está completo y en buen estado</b><small>Es el documento físico que se entrega al candidato</small></span></label></div>')
+ +card("3 · Identificación del candidato",
+   '<div class="doc-req" data-cert-doc>'+field("Documento de identidad (foto o PDF)","","file",None,True,"Cédula o pasaporte. Reemplaza la fotocopia")
+   +'<div class="doc-status" data-doc-status role="status"><b>Falta la identificación del candidato</b><span>Cédula o pasaporte, en foto o PDF</span></div></div>'
+   +'<div class="checks"><label class="check"><input type="checkbox" data-check><span><b>El documento corresponde a quien retira el certificado</b><small>Se compara la foto y el nombre con la persona que está en la sede</small></span></label></div>')
+ +card("4 · Firma de recepción",'<div data-signer-wrap>'+form([("¿Quién firma?","El candidato","select",["El candidato","Un representante autorizado"],True,"Si firma otra persona debe traer una autorización")],cols=1)+'</div>'+seg(["En esta tablet","Desde el celular (QR)"],[_firma_tab,_firma_qr],label="Cómo firma"))
+ +'</div><aside class="deliver-aside">'
+ +card("Al confirmar",flow([("Se guarda la firma","con fecha, hora y quién entregó"),("Se genera el acta en PDF","con el certificado, la identificación y la firma"),("Se archiva en el expediente","del candidato, junto con la imagen de su documento"),("Sale por correo","el acta, para que el candidato la conserve"),("El examen pasa a Entregado","y queda el comprobante ante un reclamo")],horizontal=False))
+ +card("Quién entrega",kv(("Entrega","Secretaría Valle"),("Fecha y hora","23 oct 2026 · se toma al confirmar"),("Papel","ninguno: sin fotocopia de la cédula ni copia firmada")))
+ +'</aside></div><script src="assets/entregas.js"></script><script src="assets/certificado.js"></script>',
+ foot('<button type="button" class="btn btn-primary" data-sig-confirm data-next="ActaCertificado.html">Confirmar entrega y generar acta</button>',btn("Volver a exámenes","ExamenesInternacionales.html",kind="ghost")),
+ subtitle="Verifica el certificado y la identificación, y recoge la firma: todo queda archivado en digital"),"Entregar certificado")
+
+page("ActaCertificado.html","Acta de entrega de certificado",shell("Acta de entrega CE-2026-0107","Exámenes",
+ two('<article class="receipt" aria-label="Acta de entrega de certificado">'
+   '<header class="receipt-head"><img src="assets/logo.webp" alt="Cambridge School of Languages"><div class="rc-num"><span class="mono">CE-2026-0107</span><small>Acta de entrega de certificado</small></div></header>'
+   '<h2>Acta de entrega de certificado internacional</h2>'
+   '<dl><dt>Candidato</dt><dd>Paula Ortiz</dd><dt>Documento</dt><dd class="mono">Pasaporte AB123456</dd><dt>Examen</dt><dd>TOEFL iBT · 26 de septiembre de 2026</dd><dt>Resultado</dt><dd>96 puntos · nivel B2</dd>'
+   '<dt>Certificado</dt><dd class="mono">TOEFL-2026-77412</dd><dt>Fecha y hora</dt><dd>23 de octubre de 2026 · 11:20</dd><dt>Sede</dt><dd>Valle</dd><dt>Entregó</dt><dd>Secretaría Valle</dd><dt>Recibió</dt><dd data-sig-por>El candidato</dd></dl>'
+   '<div class="receipt-sign"><div><div class="sig-line"><img data-sig-img src="'+SIGN_SVG+'" alt="Firma de quien recibe"></div><span>Firma de quien recibe</span><small data-sig-via>Firmado en la tablet de la sede</small></div>'
+   '<div><div class="sig-line"><img data-cert-doc-img src="'+DOC_SVG+'" alt="Identificación del candidato"></div><span>Identificación presentada</span><small>archivada en el expediente</small></div></div>'
+   '<footer class="receipt-foot"><span>Código de verificación <span class="mono">CE0107-4M8Z</span></span><span>Documento digital · comprobante de entrega</span></footer></article>',
+   card("Qué pasó al confirmar",flow([("Firma capturada","en la tablet · 23 oct 11:20","Hecho","done"),("Acta generada y archivada","en el expediente de Paula Ortiz · Exámenes internacionales","Hecho","done"),("Identificación archivada","imagen del documento junto al acta; sin fotocopia","Hecho","done"),("Enviada por correo","al candidato · 11:20","Hecho","done"),("Examen marcado como Entregado","con el puntaje y el nivel registrados","Hecho","done"),("Audit log","quién entregó, cuándo y con qué documento","Hecho","done")],horizontal=False)
+      +kv(("Ante un reclamo","esta acta, con la firma y la identificación, prueba que el certificado se entregó a quien correspondía"),("Datos personales",badge("A confirmar")+'<small> · la imagen de la identificación es un dato sensible: acceso restringido y plazo de conservación por definir</small>'))
+      +row(btn("Descargar acta PDF",None,True),btn("Reenviar acta por correo"),btn("Volver a exámenes","ExamenesInternacionales.html",kind="ghost")),extra=badge("Entregado","ok")),ratio="7fr 5fr")
+ +'<script src="assets/entregas.js"></script><script src="assets/certificado.js"></script>',
+ subtitle="Comprobante digital de la entrega, con la firma y la identificación del candidato"),"Acta de entrega de certificado")
+
 page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Movimientos y pedidos",
  form(title="Datos", fields=["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
  note("Una salida sin factura o curso vinculado pide justificación y se marca para revisión.","warn"),
@@ -3350,10 +3859,10 @@ page("NuevaRegla.html","Nueva regla",shell("Nueva regla de aprobación","Configu
 
 rows=[
  ("Acceso y transversales · todos los roles",[("Main.html","Login"),("RecuperarContrasena.html","Recuperar contraseña"),("VerificarCertificado.html","Verificar certificado (público)"),("PortalEstudiante.html","Portal del estudiante (propuesta fuera de alcance)"),("Home.html","Inicio por rol"),("Notificaciones.html","Notificaciones"),("Chatbot.html","Asistente interno")],"Login → Inicio por rol. El menú, las pestañas y los accesos cambian con el tipo de usuario ('Ver como' en la barra superior). Notificaciones y asistente acompañan todos los flujos."),
- ("Académico · Coordinación, profesores, secretaría",[("Programas.html","Programas, modalidades y tipos de clase"),("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("Rematricula.html","Rematrícula (del cierre de notas a la matrícula)"),("RematriculaFactura.html","Matrícula y factura en una pantalla"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("CalificarCurso.html","Calificar curso (cierre de módulo)"),("ExamenesInternacionales.html","Exámenes internacionales (propuesta)"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta de profesor"),("ContratacionProfesores.html","Contratación de profesores (pipeline)"),("DetalleCandidato.html","Detalle de candidato"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
- ("Comercial · Asesores, Dirección Comercial, secretaría",[("Leads.html","Leads y conversión (Kommo)"),("RegistrarWalkIn.html","Registrar walk-in (origen y cómo nos conoció)"),("Pedidos.html","Tienda en línea · pedidos WooCommerce"),("DetallePedido.html","Detalle de pedido (seguimiento)"),("TableroComercial.html","Tablero comercial (diario y mensual)"),("DetalleVenta.html","Detalle de venta (compra completa)"),("MatriculaContinuidad.html","Matrícula de continuidad (saldo a favor)"),("NuevaInscripcionExamen.html","Inscripción a examen internacional"),("VentaMercaderia.html","Venta de mercadería"),("InformeComisiones.html","Informe de comisiones del asesor"),("NuevaVenta.html","Nueva matrícula (por módulo)"),("MatriculaLead.html","Matrícula desde un lead (datos precargados)"),("Empresas.html","Empresas y grupos B2B"),("DetalleEmpresa.html","Detalle de empresa B2B"),("NuevaEmpresa.html","Nueva empresa y convenio"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
- ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("EntregasLibros.html","Entregas de libros (digitales)"),("EntregarLibro.html","Entregar libro (tablet, firma y QR)"),("ReciboEntrega.html","Recibo de entrega en PDF"),("Movimientos.html","Ingresos, movimientos y pedidos"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
- ("Dirección · Gerencia, Dirección Comercial",[("Insights.html","Insights de IA"),("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
+ ("Académico · Coordinación, profesores, secretaría",[("Programas.html","Programas, modalidades y tipos de clase"),("Estudiantes.html","Estudiantes"),("NuevoEstudiante.html","Nuevo estudiante"),("Ficha360.html","Ficha 360°"),("DetalleMatricula.html","Detalle de matrícula"),("ImportExport.html","Importar / exportar"),("Cursos.html","Cursos"),("Rematricula.html","Rematrícula (del cierre de notas a la matrícula)"),("RematriculaFactura.html","Matrícula y factura en una pantalla"),("NuevoCurso.html","Nuevo curso"),("DetalleCurso.html","Detalle de curso"),("CalificarCurso.html","Calificar curso (cierre de módulo)"),("ExamenesInternacionales.html","Exámenes internacionales (propuesta)"),("EntregaCertificado.html","Entregar certificado (identificación, firma y acta)"),("ActaCertificado.html","Acta de entrega de certificado"),("Sesiones.html","Registro de sesiones"),("RegistrarSesion.html","Sesión manual"),("Profesores.html","Profesores"),("FichaProfesor.html","Perfil del profesor"),("AltaProfesor.html","Alta de profesor"),("ContratacionProfesores.html","Contratación de profesores (pipeline)"),("DetalleCandidato.html","Detalle de candidato"),("PaymentSheet.html","Payment sheet")],"Estudiantes → matrículas → cursos con código, aula y profesor validado → sesiones → progreso, pass/fail y certificados. Perfil del profesor con agenda, carga y payment sheet."),
+ ("Comercial · Asesores, Dirección Comercial, secretaría",[("Leads.html","Leads y conversión (Kommo)"),("RegistrarWalkIn.html","Registrar walk-in (origen y cómo nos conoció)"),("Pedidos.html","Tienda en línea · pedidos WooCommerce"),("DetallePedido.html","Detalle de pedido (seguimiento)"),("TableroComercial.html","Tablero comercial (diario y mensual)"),("DetalleVenta.html","Detalle de venta (compra completa)"),("MatriculaContinuidad.html","Matrícula de continuidad (saldo a favor)"),("NuevaInscripcionExamen.html","Inscripción a examen internacional"),("VentaMercaderia.html","Venta de mercadería"),("InformeComisiones.html","Informe de comisiones del asesor"),("NuevaVenta.html","Nueva matrícula (por módulo)"),("MatriculaLead.html","Matrícula desde un lead (datos precargados)"),("Empresas.html","Empresas y grupos B2B"),("DetalleEmpresa.html","Detalle de empresa B2B"),("NuevaEmpresa.html","Nueva empresa y convenio"),("SolicitudDescuento.html","Solicitud de descuento"),("Aprobaciones.html","Bandeja de aprobaciones"),("Facturas.html","Facturas"),("DetalleFactura.html","Detalle de factura"),("RegistrarPago.html","Registrar pago"),("NotaCredito.html","Nota de crédito"),("CierreCaja.html","Cierre de caja digital (listas para Contabilidad)"),("VerificarTransferencias.html","Verificar transferencias (sistema, lista de pagos y Contabilidad)"),("LinksPago.html","Links de pago (Datafast) y su historial"),("EnviosSRI.html","Envíos a Dora y al SRI (espera de 2 horas)"),("Comisiones.html","Período de comisiones"),("DetalleComision.html","Detalle por asesor"),("ReglasComision.html","Reglas de comisión")],"Venta por paquete de niveles → descuento fuera de regla pasa por aprobación → comisión del asesor calculada por reglas y pagada al cobrar."),
+ ("Inventario · Secretaría, Administración de sucursal",[("Inventario.html","Stock por sede"),("EntregasLibros.html","Entregas de libros (digitales)"),("EntregarLibro.html","Entregar libro (tablet, firma y QR)"),("ReciboEntrega.html","Recibo de entrega en PDF"),("Movimientos.html","Ingresos, movimientos y pedidos"),("RecepcionPedido.html","Recibir pedido del proveedor (conteo y documento)"),("NuevoPedido.html","Nuevo pedido"),("RegistrarMovimiento.html","Registrar movimiento")],"Stock por sede y por ISBN, ingresos del proveedor con factura y comprobante, códigos de activación, pedidos con forecast."),
+ ("Dirección · Gerencia, Dirección Comercial",[("Insights.html","Insights de IA"),("Reportes.html","Dashboard por rol"),("ConstructorReportes.html","Constructor de reportes"),("DashboardEjecutivo.html","Dashboard ejecutivo"),("Automatizaciones.html","Automatizaciones (reglas, plantillas y registro)")],"Reportería self-service que reemplaza las vistas de TeamDesk y vista gerencial separada."),
  ("Administración · Administrador General",[("Usuarios.html","Usuarios y roles"),("NuevoUsuario.html","Nuevo usuario"),("Configuracion.html","Configuración"),("DetalleProducto.html","Detalle de producto o servicio"),("NuevaSede.html","Nueva sede"),("NuevoNivel.html","Nuevo nivel"),("NuevaRegla.html","Nueva regla"),("AuditLog.html","Audit log"),("Integraciones.html","Integraciones"),("ReclutamientoAdministrativo.html","Reclutamiento de personal administrativo (propuesta)")],"RBAC, catálogos (sedes, aulas, programas, productos, empresas), reglas configurables, trazabilidad completa e integraciones."),
 ]
 rows=[(t,[(f,n) for f,n in files if f not in HIDDEN],d) for t,files,d in rows]
@@ -3565,6 +4074,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .tbl{display:grid;min-width:min(100%,640px)}
 .wf-row{display:contents}.wf-row[hidden]{display:none}
 .td-hide{display:none!important}
+.th-num{justify-content:flex-end;text-align:right;white-space:nowrap}
 .th{padding:0 16px;min-height:40px;display:flex;align-items:center;font-weight:600;font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--surface)}
 .td{padding:12px 16px;min-height:48px;font-size:var(--t-14);border-bottom:1px solid var(--line);display:flex;align-items:center;min-width:0;overflow-wrap:normal;word-break:normal;transition:background var(--dur-1) var(--ease)}
 .td.td-wide{overflow-wrap:anywhere}
@@ -3896,6 +4406,84 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-key .k-ex dt::before{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--occ,var(--navy))}
 .occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
+[data-canal-wrap] .seg-panel{margin-top:16px}
+.tbl .mono{white-space:nowrap}
+/* verificación de transferencias */
+.vt-pick{max-width:420px;margin-bottom:12px}
+.vt-grid{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.vt-row{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.3fr .9fr;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);font-size:var(--t-14)}
+.vt-row:first-child{border-top:0}.vt-head{background:var(--surface-2);font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.vt-row.is-diff{background:var(--bad-50)}.vt-row span{min-width:0;word-break:break-word}
+.mail-data{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;margin:0;font-size:var(--t-14)}.mail-data dt{color:var(--mute)}.mail-data dd{margin:0;font-weight:500}
+@media (max-width:600px){.vt-row{grid-template-columns:1fr 1fr}.vt-head{display:none}.vt-row b{grid-column:1/-1}}
+/* vouchers de tarjeta */
+.nowrap{white-space:nowrap}
+.vch-in{display:flex;gap:6px;flex-wrap:wrap}.vch-file{cursor:pointer;margin-left:6px}
+/* cierre de caja */
+.cc-res{margin:12px 0 0;padding:10px 14px;border-radius:var(--r);font-size:var(--t-14);font-weight:600;background:var(--surface-2);border:1px solid var(--line)}
+.cc-res.is-ok{color:var(--ok);background:var(--ok-50);border-color:var(--ok)}.cc-res.is-bad{color:var(--bad);background:var(--bad-50);border-color:var(--bad)}
+/* automatizaciones */
+.switch{position:relative;display:inline-block;width:44px;height:26px;vertical-align:middle;margin-right:8px}
+.switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:99px;background:var(--line-strong);transition:background .15s}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+span{background:var(--ok)}.switch input:checked+span::after{transform:translateX(18px)}
+.switch input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+/* pagos con varios métodos */
+.pago-line{display:flex;flex-direction:column;gap:12px;margin-bottom:14px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.pago-line[hidden]{display:none}.pago-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:var(--t-14)}
+.pago-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.pagos-sum{font-size:var(--t-14);font-weight:600;color:var(--mute)}.pagos-sum.is-ok{color:var(--ok)}.pagos-sum.is-warn{color:var(--warn)}.pagos-sum.is-bad{color:var(--bad)}
+/* inscripción a exámenes: documento obligatorio */
+.doc-req{display:flex;flex-direction:column;gap:10px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r);background:var(--bad-50)}
+.doc-req.is-ok{border-left-color:var(--ok);background:var(--ok-50)}.doc-req.is-missing{box-shadow:0 0 0 2px var(--bad)}
+.doc-status{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.doc-status span{color:var(--ink-2);font-size:var(--t-13)}
+/* recepción de pedidos */
+.rec-step{display:inline-flex;align-items:center;gap:6px}.rec-step .btn{min-width:var(--hit);padding:0;font-size:var(--t-16)}
+.rec-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.rec-tools span{font-size:var(--t-13);color:var(--mute)}
+.rec-in{width:96px;min-height:var(--hit);text-align:right;font-family:var(--font-mono)}
+.rec-sum{display:flex;flex-direction:column;gap:2px;margin-top:12px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.rec-sum b{font-size:var(--t-16)}.rec-sum span{font-size:var(--t-13);color:var(--ink-2)}
+/* ajustes: cambio de modalidad o de curso */
+.nc{display:flex;flex-direction:column;gap:12px}
+.nc-out{display:grid;grid-template-columns:1fr 1fr 2fr;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);overflow:hidden}
+.nc-out>div{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:1px solid var(--line)}.nc-out>div:first-child{border-left:0}
+.nc-out span{font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.nc-out b{font-size:var(--t-14);color:var(--ink)}
+.nc[data-nc-tipo="nc"] [data-nc-resultado]{color:var(--ok)}.nc[data-nc-tipo="cobro"] [data-nc-resultado]{color:var(--warn)}
+@media (max-width:600px){.nc-out{grid-template-columns:1fr}.nc-out>div{border-left:0;border-top:1px solid var(--line)}.nc-out>div:first-child{border-top:0}}
+/* calendario del curso */
+.cal{display:flex;flex-direction:column;gap:14px}
+.cal-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;align-items:start}
+.lbl{display:block;font-size:var(--t-13);font-weight:500;margin-bottom:6px}
+.daychips{display:flex;gap:6px;flex-wrap:wrap}.daychip{position:relative}.daychip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.daychip span{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:var(--hit);padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);font-size:var(--t-14);font-weight:500;color:var(--ink-2)}
+.daychip input:checked+span{background:var(--navy);border-color:var(--navy);color:#fff}.daychip input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.cal-out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);overflow:hidden}
+@media (max-width:600px){.cal-out{grid-template-columns:1fr}.cal-out>div{border-left:0;border-top:1px solid var(--line)}.cal-out>div:first-child{border-top:0}}
+.cal-out>div{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border-left:1px solid var(--line)}.cal-out>div:first-child{border-left:0}
+.cal-out dt{font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.cal-out dd{margin:0;font-size:var(--t-14);font-weight:600;color:var(--ink)}
+.cal-out .cal-skip{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.cal.has-skipped .cal-skip dd{color:var(--warn)}
+/* factura vinculada a la matrícula */
+.linked{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 16px;margin-bottom:12px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2)}
+.linked>div{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14);min-width:0}.linked span{color:var(--mute);font-size:var(--t-13)}
+/* aprobación de descuentos */
+.appr{display:flex;flex-direction:column;gap:12px;margin:12px 0;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--r);background:var(--warn-50)}
+.appr[hidden]{display:none}.appr-head{display:flex;flex-direction:column;gap:2px;font-size:var(--t-14)}.appr-head span{color:var(--ink-2);font-size:var(--t-13)}
+.appr .form-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.appr.is-missing{border-left-color:var(--bad);background:var(--bad-50)}
+.policy{margin:12px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.policy>summary{cursor:pointer;padding:12px 16px;font-size:var(--t-14);font-weight:600;color:var(--navy);min-height:var(--hit);display:flex;align-items:center}
+.policy[open]>summary{border-bottom:1px solid var(--line)}.policy>*:not(summary){margin:12px 16px}
+/* vista previa de correo */
+.mail{max-width:560px;border:1px solid var(--line-strong);border-radius:var(--r);background:#fff;overflow:hidden}
+.mail-head{margin:0;padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:var(--t-13)}
+.mail-head>div{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px}.mail-head dt{color:var(--mute)}.mail-head dd{margin:0;color:var(--ink)}
+.mail-body{padding:20px 22px;display:flex;flex-direction:column;gap:12px;font-size:var(--t-14);line-height:1.55;color:var(--ink-2)}.mail-body p{margin:0}
+.mail-body .btn{align-self:flex-start}.mail-body small{color:var(--mute);font-size:var(--t-13)}
+/* vista previa de mensaje */
+.msg-prev{display:flex;flex-direction:column;gap:6px;max-width:440px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--r);background:var(--surface-2);font-size:var(--t-14)}
+.msg-prev small{color:var(--mute);font-size:var(--t-12);text-transform:uppercase;letter-spacing:.04em}.msg-prev p{margin:0;line-height:1.5;color:var(--ink-2)}
+.msg-file{align-self:flex-start;font-family:var(--font-mono);font-size:var(--t-13);padding:4px 8px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface)}
 /* hub */
 .hub{max-width:1100px;margin:0 auto;padding:40px 24px}.hub h1{font-family:var(--font-display)}.hub-head p{color:var(--mute);font-size:var(--t-16);line-height:1.6;max-width:820px}
 .hub section{margin-top:40px;border-top:1px solid var(--line);padding-top:24px}.hub h2{margin:0 0 4px;font-size:var(--t-20);color:var(--ink)}.hub section p{margin:0 0 16px;color:var(--mute);font-size:var(--t-14);max-width:820px}
