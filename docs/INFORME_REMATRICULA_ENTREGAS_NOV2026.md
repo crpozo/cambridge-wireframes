@@ -381,3 +381,25 @@ Se retiró todo lo relacionado con escanear libros: el campo y botón de escáne
 - Qué expone Dora (API, estado de la autorización, motivo del rechazo) y si el **contador** es el de Dora o uno propio.
 - Si las **2 horas** son una regla del negocio o un límite técnico de la herramienta actual; el prototipo la deja configurable.
 - Qué hacer con las facturas que el SRI no autoriza: cuánto tiempo pueden quedar retenidas y quién las corrige.
+
+
+## 21. Facturas retenidas y problemas de integración con el SRI (revisión de 10 nov)
+**Lo que dijo Secretaría**: el sistema del SRI presenta problemas recurrentes de integración automática y algunos comprobantes no se suben de inmediato, por falta de una integración total de la facturación electrónica. Aunque el proceso actual es automático (antes era manual), las facturas con inconvenientes **simplemente no se autorizan y se quedan retenidas**, lo que obliga a una **revisión minuciosa** para evitar inconsistencias.
+
+**Qué había en `main`** (y en la sección 20): la lista de estados de envío, el botón de reintentar y una fila de Dora. **Faltaba** tratar las facturas retenidas como un problema con causa, tiempo y consecuencias, no solo como un estado.
+
+**Qué se agregó al prototipo** (pantalla "Envíos a Dora y al SRI", ahora con cuatro pestañas)
+- **Retenidas y revisión**: cuántas hay, desde cuándo, cuántos intentos llevan, el motivo (identificación inválida, Dora no respondió, secuencial ya registrado, servicio del SRI no disponible) y **qué hay que revisar** en cada una (por ejemplo, "pagada y libro entregado sin comprobante autorizado" o "posible duplicado").
+- **Antes de reintentar**: una lista de cinco preguntas para no crear inconsistencias: si la factura ya existe en el SRI (**consultar por la clave de acceso para no duplicarla**), si el dato es corregible, si hay un pago cobrado, si hay comisión o entrega de libro asociadas y si hay saltos en la numeración.
+- **Inconsistencias detectadas**: pagada y entregada sin autorizar, comisión generada sobre una factura retenida, posible duplicado y saltos de numeración, cada una con su acción ("Marcar como revisada" deja constancia en el audit log).
+- **Plan B**: reintentos automáticos (3 veces cada 30 min), aviso a Secretaría y Contabilidad y, pasadas 24 horas, **emisión en contingencia** (a mano en el portal del SRI) registrando la clave de acceso y la fecha, y la factura queda marcada "Emitida fuera de la plataforma".
+- **Salud del envío**: autorizadas a la primera, tiempo medio de emisión a autorización, caídas del SRI de la semana y los motivos de retención de 30 días.
+- Una **notificación** a Secretaría y Contabilidad cuando una factura queda retenida con riesgo de duplicado, y las acciones nuevas "Consultar estado en el SRI" y "Emitir en contingencia".
+
+**Viabilidad**: el **seguimiento, la revisión y las alertas son viables** (M5 y M8). **Resolver la causa depende de terceros**: la integración total con el SRI no está en la plataforma; M11 contempla Dora "sujeto a lo que exponga" y la emisión directa al SRI es adenda (punto 10 del contexto). La plataforma puede registrar, avisar y ordenar la revisión, pero no puede evitar las caídas del SRI. Las cifras y los motivos de la pantalla son de ejemplo.
+
+**Por confirmar con el cliente**
+- Los **motivos de rechazo reales** que devuelve Dora o el SRI, para clasificarlos bien (lo del prototipo son descripciones generales, no códigos oficiales).
+- Si el **plan B en contingencia** es aceptable para Contabilidad y el SRI en su forma de registrar la clave de acceso, y quién lo autoriza.
+- Qué hacer con la **comisión del asesor y la entrega del libro** mientras la factura está retenida (el prototipo las marca "pendientes de autorización").
+- Con qué frecuencia ocurren hoy las retenciones, para dimensionar el tiempo que ahorra la pantalla.

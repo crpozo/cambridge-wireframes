@@ -918,6 +918,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
 
 # Notificaciones: (roles, tipo, tinte, símbolo, título, detalle, destino, cuándo, leída). Cada rol ve solo las suyas (campana y Notificaciones.html).
 NOTIFS=[
+ ("ADM,SUC,SEC,CON","SRI","red","!","Factura retenida: 000021117 · posible duplicado","El SRI informa que el secuencial ya está registrado · hoy 06:10","EnviosSRI.html","Hoy",False),
  ("ADM,GER,SUC,SEC","Rematrícula","navy","→","Notas cerradas: A1 Sábados · 8 listos para rematricular","El aviso al estudiante ya salió solo · hoy 09:10","Rematricula.html","Hoy",False),
  ("ADM,GER,DIR","Aprobación","yellow","!","Descuento 42% pendiente de tu aprobación","Gabriela Núñez · Carla M. · hace 1 día","Aprobaciones.html","Ayer",False),
  ("ADM,GER,SUC,SEC","Inventario","red","−","Stock negativo: Empower B1+ en Valle","Correo de las 07:00 enviado · hoy","Inventario.html","Hoy",False),
@@ -1499,6 +1500,9 @@ ACTIONS.update({
  "Reintentar envío":("Se vuelve a enviar la factura a Dora. Si Dora la recibe, sigue el camino normal: autorización del SRI y subida al sistema contable. Queda el intento en el registro. "+AUDIT,None),
  "Corregir y reenviar":("Se corrige el dato que rechazó el SRI (por ejemplo, la cédula del cliente) y la factura se envía de nuevo. Si ya estaba autorizada, se emite una nota de crédito y se refactura. "+AUDIT,None),
  "Guardar ventana de envío":("Se guarda la ventana de corrección y los reintentos. Aplican a las facturas que se emitan desde ahora. "+AUDIT,None),
+ "Consultar estado en el SRI":("Se consulta en el SRI, con la clave de acceso, si la factura ya fue registrada. Si existe, se trae su autorización y NO se reenvía; si no existe, se puede reenviar con seguridad. Así se evitan facturas duplicadas. "+AUDIT,None),
+ "Emitir en contingencia":("La factura se emite a mano en el portal del SRI y aquí se registra su clave de acceso y la fecha de autorización, para no frenar la venta. Queda marcada como 'Emitida fuera de la plataforma' y Contabilidad la revisa. "+AUDIT,None),
+ "Marcar como revisada":("Se registra que alguien revisó esta inconsistencia y qué decidió. Queda en el audit log con tu usuario y fecha. "+AUDIT,None),
  "Matricular sin facturar":("La matrícula se guarda en estado pendiente de facturación (en rojo) con el nombre de quien aprobó el descuento, si lo hubo, y a las 24 horas Secretaría recibe una alerta para facturarla. "+AUDIT,"Rematricula.html"),
  # Conciliación de pagos
  "Importar extracto bancario":("Eliges el archivo del banco (Excel o CSV). Se leen fecha, referencia, ordenante y monto. No cambia nada hasta que revises el resultado de la conciliación.",None),
@@ -3577,36 +3581,60 @@ page("Automatizaciones.html","Automatizaciones",shell("Automatizaciones","Automa
 _ENV=[  # (factura, emitida, cliente, detalle, total, estado, segundos, nota, acción)
  ("000021113","Hoy 10:25","Renata Salazar","001-202603270 · Quito","$250.00","En espera",4680,"","esp"),
  ("000021112","Hoy 09:40","Sebastián Ríos","examen externo · Quito","$235.00","En espera",1980,"","esp"),
+ ("000021118","Hoy 08:40","Valeria Cedeño","B2 · Quito","$495.00","Error de envío",0,"el servicio del SRI no respondió; se reintenta solo (2 intentos)","err"),
+ ("000021117","Hoy 06:10","Paula Cárdenas","Valle","$250.00","Rechazada",0,"secuencial ya registrado: posible duplicado, no reintentar","dup"),
  ("000021111","Hoy 08:05","Dana Pérez","Valle","$250.00","Enviada",0,"salió a Dora a las 10:05; esperando la autorización del SRI","ok"),
  ("000021110","Ayer 15:20","Juan Pérez","refactura por cambio de modalidad · Valle","$255.00","Autorizada",0,"autorizada por el SRI y subida a contabilidad","ok"),
- ("000021095","11 oct","Mateo Salazar (menor)","Ambato","$420.00","Rechazada",0,"el SRI la rechazó: cédula del cliente inválida","rech"),
+ ("000021095","11 oct","Mateo Salazar (menor)","Ambato","$420.00","Rechazada",0,"el SRI la rechazó: identificación del comprador inválida","rech"),
  ("000021092","12 oct","Luis Torres","libros · Quito","$68.00","Error de envío",0,"Dora no respondió; no se ha reintentado","err")]
 _BE={"En espera":badge("En espera","navy"),"Enviada":badge("Enviada","navy"),"Autorizada":badge("Autorizada","ok"),"Rechazada":badge("Rechazada","bad"),"Error de envío":badge("Error de envío","bad")}
 def _acc_env(a):
     if a=="esp": return '<a class="btn btn-ghost" data-envio-corregir href="DetalleFactura.html">Corregir</a><button type="button" class="btn btn-ghost" data-envio-ahora>Enviar ahora</button>'
     if a=="rech": return btn("Corregir y reenviar",kind="ghost")
+    if a=="dup": return btn("Consultar estado en el SRI",kind="ghost")
     if a=="err": return btn("Reintentar envío",kind="ghost")
     return '<a href="DetalleFactura.html">Ver factura</a>'
-def _est_cell(es,seg,nota):
-    if es=="En espera":
-        h=seg//3600; m=(seg%3600)//60; sc=seg%60
-        return f'<span class="badge badge-navy" data-cd-estado>En espera</span>'
-    return _BE[es]
+def _est_cell(es):
+    return '<span class="badge badge-navy" data-cd-estado>En espera</span>' if es=="En espera" else _BE[es]
 def _env_row(f,em,cl,d,t,es,seg,nota,ac):
-    if es=="En espera": det='<span class="mono" data-cd="'+str(seg)+'">Sube en '+f"{seg//3600:02d}:{(seg%3600)//60:02d}:{seg%60:02d}"+'</span>'
-    else: det=nota
-    return [c2('<span class="mono">'+f+'</span>',em),c2(cl,d),t,_est_cell(es,seg,nota),det,_acc_env(ac)]
+    det='<span class="mono" data-cd="'+str(seg)+'">Sube en '+f"{seg//3600:02d}:{(seg%3600)//60:02d}:{seg%60:02d}"+'</span>' if es=="En espera" else nota
+    return [c2('<span class="mono">'+f+'</span>',em),c2(cl,d),t,_est_cell(es),det,_acc_env(ac)]
 _env_tbl=table(["Factura","Cliente","Total","Estado","Envío a Dora y al SRI","Acción"],[_env_row(*r) for r in _ENV],wide=1,tid="envios")
+# Facturas retenidas: motivo, tiempo, intentos y lo que hay que revisar para no dejar inconsistencias
+_RET=[("000021095","Mateo Salazar (menor)","Identificación del comprador inválida","12 días","1","Matrícula habilitada · sin pago","Corregir y reenviar","corr"),
+      ("000021092","Luis Torres","Dora no respondió","11 días","3","Pagada $68 · libro entregado sin comprobante autorizado","Consultar estado y reintentar","cons"),
+      ("000021117","Paula Cárdenas","Secuencial ya registrado","5 h","1","Posible duplicado: revisar antes de reintentar","Consultar estado en el SRI","cons"),
+      ("000021118","Valeria Cedeño","Servicio del SRI no disponible","3 h","2","Sin pago aún","Se reintenta sola","auto")]
+def _acc_ret(a,t):
+    return {"corr":btn("Corregir y reenviar",kind="ghost"),"cons":btn("Consultar estado en el SRI",kind="ghost"),"auto":"<small>reintento automático</small>"}[a]
+_ret_tbl=table(["Factura","Cliente","Motivo","Retenida hace","Intentos","Qué revisar","Acción"],[[ '<span class="mono">'+f+'</span>',c,m,h,i,badge(r,"bad" if ("sin comprobante" in r or "duplicado" in r) else ("warn" if "habilitada" in r else "neutral")),_acc_ret(a,t)] for f,c,m,h,i,r,t,a in _RET],wide=1,tid="retenidas")
+_retenidas=(kpis([("Retenidas",agg("count","retenidas"),"sin autorización del SRI"),("Más de 24 h",agg("count:Retenida hace=días","retenidas"),"hay que revisarlas hoy",{"fset":"Retenida hace=días"}),("Inconsistencias",'2',"cobradas o entregadas sin autorizar"),("Posible duplicado",'1',"consultar antes de reintentar")])
+  +card("Facturas retenidas",_ret_tbl+kv(("Por qué hay que mirarlas bien","una factura sin autorizar puede estar cobrada, con el libro entregado o con la comisión generada: si no se resuelve, queda una inconsistencia contable")),extra=badge("Revisión manual","warn"))
+  +card("Antes de reintentar",flow([("¿Ya existe en el SRI?","consultar por la clave de acceso: si el SRI ya la tiene, se trae su autorización y no se reenvía (evita duplicados)"),("¿El dato es corregible?","identificación, RUC o correo del comprador: se corrige y se reenvía"),("¿Hay un pago cobrado?","el cliente debe recibir el comprobante en cuanto se autorice"),("¿Hay comisión o entrega de libro?","quedan marcadas como 'pendientes de autorización' hasta que se resuelva"),("¿Hay un salto en la numeración?","Contabilidad lo documenta")],horizontal=False))
+  +card("Inconsistencias detectadas",table(["Tipo","Detalle","Facturas","Acción"],[
+      ["Pagada y entregada sin autorizar","el cliente pagó y retiró su libro, pero la factura no tiene autorización","1",btn("Marcar como revisada",kind="ghost")],
+      ["Comisión generada con factura sin autorizar","la comisión del asesor quedó calculada sobre una factura retenida","1",btn("Marcar como revisada",kind="ghost")],
+      ["Posible duplicado","el SRI informa que el secuencial ya está registrado","1",btn("Consultar estado en el SRI",kind="ghost")],
+      ["Saltos de numeración","secuenciales que faltan entre facturas emitidas","0","—"]],wide=0))
+  +card("Si el SRI no responde: plan B",flow(["Se reintenta sola, 3 veces cada 30 minutos","Si sigue, se avisa a Secretaría y a Contabilidad","Si pasan 24 horas, se puede emitir en contingencia: a mano en el portal del SRI","Aquí se registra la clave de acceso y la fecha de autorización","La factura queda marcada 'Emitida fuera de la plataforma' y Contabilidad la revisa"],horizontal=False)
+        +row(btn("Emitir en contingencia",kind="ghost")),extra=badge("Como hacían antes, pero registrado","navy")))
+_salud=(kpis([("Autorizadas a la primera",'94%',"últimos 30 días"),("De la emisión a la autorización",'2 h 06 min',"promedio · incluye la espera de 2 h"),("Caídas del SRI",'3',"esta semana · lun, mié y vie"),("Retenidas más de 24 h",'2',"ahora")])
+  +two(card("Por qué se retienen (30 días)",table(["Motivo","Facturas"],[["Datos del comprador inválidos","6"],["Servicio del SRI no disponible","4"],["Dora no respondió","2"],["Posible duplicado","1"]],wide=0)),
+       card("Qué significa",kv(("Datos del comprador","los corrige Secretaría; se previenen validando la cédula o el RUC al facturar"),("SRI no disponible","intermitente: el sistema reintenta solo y no hace falta avisar"),("Dora no respondió","revisar la conexión; consultar el estado antes de reintentar"),("Posible duplicado","nunca se reenvía sin consultar primero"))))
+  +kv(("Integración total",badge("Propuesta · sujeto a lo que Dora exponga")+'<small> · mientras no haya API completa, la plataforma solo puede seguir y avisar</small>')))
 page("EnviosSRI.html","Envíos al SRI",shell("Envíos a Dora y al SRI","Facturación",
  kpis([("En espera de envío",agg("count:Estado=En espera","envios"),"ventana de corrección de 2 h",{"fset":"Estado=En espera"}),("Sin subir",'<span data-cd-total>2</span>',"normalmente en 0: facturas que aún no salen"),
        ("Autorizadas",agg("count:Estado=Autorizada","envios"),"subidas a contabilidad"),("Rechazadas · con error",agg("count:Estado=Rechazada","envios")+" · "+agg("count:Estado=Error de envío","envios"),"revisar y reenviar",{"fset":"Estado=Rechazada"})]),
- card("Cómo sale una factura",flow([("Se emite la factura","queda guardada y firmada en la plataforma"),("Ventana de corrección de 2 horas","puedes corregir los datos o anularla sin dejar rastro en el SRI"),("Sale sola a Dora","pasadas las 2 horas, sin que nadie la envíe"),("Dora la autoriza en el SRI y la sube a contabilidad","el contador de 'sin subir' vuelve a 0"),("Si algo falla","se avisa a Secretaría con el motivo y se puede reintentar")],horizontal=False),extra=badge("Automático","ok")),
- card("Estado de las facturas",filters(search("Buscar","Factura o cliente",w="240px"),sel("Estado",["Todos","En espera","Enviada","Autorizada","Rechazada","Error de envío"],w="190px"),actions=btn("Exportar Excel"))+_env_tbl
-   +kv(("Ya salió","para cambiar algo se emite una nota de crédito y se refactura"),("Si el SRI la rechaza","se corrige el dato y se reenvía; el motivo aparece en la fila"),
-       ("Dora",badge("Propuesta · sujeto a lo que Dora exponga")+'<small> · hoy el envío automático lo hace otra herramienta</small>'))),
- card("Parámetros del envío",form([("Ventana de corrección antes de enviar","2 horas","select",["Sin espera","1 hora","2 horas","4 horas"],True,"Tiempo para corregir o anular antes de que la factura salga"),("Reintentos automáticos","3 veces · cada 30 min","select",["No reintentar","1 vez","3 veces · cada 30 min","5 veces · cada hora"],True),("Alerta si no se autoriza en","24 horas","select",["12 horas","24 horas","48 horas"],True),("Avisar a","Secretaría y Contabilidad","text",None,False)],cols=2)+row(btn("Guardar ventana de envío",None,True)),extra=badge("Se aplica a facturas nuevas","navy"))
- +'<script src="assets/envios.js"></script>',
- subtitle="Las facturas salen solas a Dora 2 horas después de emitirlas; aquí se ve cuáles esperan, cuáles salieron y cuáles fallaron"),"Envíos al SRI")
+ tabs(["Estado de las facturas","Retenidas y revisión","Salud del envío","Parámetros"],"Estado de las facturas",panels={
+  "Estado de las facturas": card("Cómo sale una factura",flow([("Se emite la factura","queda guardada y firmada en la plataforma"),("Ventana de corrección de 2 horas","puedes corregir los datos o anularla sin dejar rastro en el SRI"),("Sale sola a Dora","pasadas las 2 horas, sin que nadie la envíe"),("Dora la autoriza en el SRI y la sube a contabilidad","el contador de 'sin subir' vuelve a 0"),("Si algo falla","se avisa a Secretaría con el motivo y se puede reintentar")],horizontal=False),extra=badge("Automático","ok"))
+     +card("Estado de las facturas",filters(search("Buscar","Factura o cliente",w="240px"),sel("Estado",["Todos","En espera","Enviada","Autorizada","Rechazada","Error de envío"],w="190px"),actions=btn("Exportar Excel"))+_env_tbl
+       +kv(("Ya salió","para cambiar algo se emite una nota de crédito y se refactura"),("Si el SRI la rechaza o no responde","queda retenida: ver la pestaña Retenidas y revisión"),
+           ("Dora",badge("Propuesta · sujeto a lo que Dora exponga")+'<small> · hoy el envío automático lo hace otra herramienta</small>'))),
+  "Retenidas y revisión": _retenidas,
+  "Salud del envío": _salud,
+  "Parámetros": card("Parámetros del envío",form([("Ventana de corrección antes de enviar","2 horas","select",["Sin espera","1 hora","2 horas","4 horas"],True,"Tiempo para corregir o anular antes de que la factura salga"),("Reintentos automáticos","3 veces · cada 30 min","select",["No reintentar","1 vez","3 veces · cada 30 min","5 veces · cada hora"],True),("Alerta si no se autoriza en","24 horas","select",["12 horas","24 horas","48 horas"],True),("Avisar a","Secretaría y Contabilidad","text",None,False)],cols=2)+row(btn("Guardar ventana de envío",None,True)),extra=badge("Se aplica a facturas nuevas","navy"))}),
+ '<script src="assets/envios.js"></script>',
+ subtitle="Las facturas salen solas a Dora 2 horas después de emitirlas; aquí se ve cuáles esperan, cuáles salieron y cuáles quedaron retenidas"),"Envíos al SRI")
 
 page("RegistrarMovimiento.html","Registrar movimiento",shell("Registrar movimiento de inventario","Movimientos y pedidos",
  form(title="Datos", fields=["Tipo (ingreso / salida / traslado / devolución)","Libro","Cantidad","Sede origen","Sede destino (solo traslado)","Vinculado a (factura / curso / pedido / nota de crédito)","Observación"]),
