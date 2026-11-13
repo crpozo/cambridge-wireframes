@@ -342,7 +342,7 @@
   });
   // La barra de filtros de la página solo mueve la tabla de ventas: en el Plan estratégico se oculta para no duplicar filtros
   function barraPagina() {
-    var tab = q('[role=tab].on'), plan = tab && tab.getAttribute('data-tab') === 'Plan estratégico';
+    var tab = q('[role=tab].on'), plan = tab && tab.getAttribute('data-tab') === 'Indicadores y gráficos';
     var f = q('.wf-filters[data-target="ventas"]'); if (f) { f.hidden = plan; var k = f.nextElementSibling; if (k && k.classList.contains('summary')) k.hidden = plan; }
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[role=tab]')) setTimeout(barraPagina, 30); });

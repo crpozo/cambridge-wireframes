@@ -1,6 +1,6 @@
-# Guía de prueba · Tablero comercial (Plan estratégico)
+# Guía de prueba · Tablero comercial (Indicadores y gráficos)
 
-Abrir `TableroComercial.html` (menú Comercial → Tablero comercial) y entrar a la pestaña **Plan estratégico**. Los datos son de ejemplo.
+Abrir `TableroComercial.html` (menú Comercial → Tablero comercial) y entrar a la pestaña **Indicadores y gráficos** (antes "Plan estratégico"). Los datos son de ejemplo.
 
 1. **Indicadores.** Debes ver 11 cifras (ingreso, matrículas, niveles, ticket, one to one, cumplimiento de la meta, certificados, traducciones, servicios, ticket de servicios, variación vs año anterior). Con el filtro por defecto (Este mes) el ingreso es $21,940 y 42 matrículas.
 2. **Filtro por período.** Cambia Período a "Este año": las cifras suben. Elige un "Día específico": se muestra solo ese día. "Limpiar filtros" vuelve al inicio.

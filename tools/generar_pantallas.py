@@ -209,6 +209,28 @@ NAV=[
  ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR"),("Automatizaciones","Automatizaciones.html","ADM,GER,DIR,SUC,COO,SEC")]),
  ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM"),("Reclutamiento","ReclutamientoAdministrativo.html","ADM,GER,SUC")]),
 ]
+# Índice del buscador de la barra superior: (nombre, destino, palabras clave, roles, dónde está)
+def _gs_index():
+    import json as _j
+    T="ADM,GER,DIR,SUC,ASE"; out=[]
+    for area,items in NAV:
+        for n,h,r in items: out.append([n,h,"",r,(area+" → "+n) if area else "Menú → "+n])
+    tc="Comercial → Tablero comercial"
+    out+=[["Seguimiento diario de ventas","TableroComercial.html#tab-seguimiento-diario","hoy dia diario acumulado ventas matriculas facturacion",T+",CON",tc],
+     ["Indicadores y gráficos comerciales","TableroComercial.html#tab-indicadores-y-graficos","kpi kpis tarjetas graficos plan estrategico ingreso ticket promedio one to one certificados traducciones servicios upsell desercion conversion tendencia linea de negocio",T,tc],
+     ["Embudo de Kommo","TableroComercial.html#tab-indicadores-y-graficos/embudo","embudo funnel leads etapas ganados perdidos prospeccion conversion lead matricula",T,tc+" → Indicadores y gráficos"],
+     ["Matriz KPI mensual","TableroComercial.html#tab-matriz-kpi-mensual","kpi kpis indicadores mensual meta 15 variacion cumplimiento proyeccion referidos niveles espanol reporte mensual",T,tc],
+     ["Resultados por origen del lead","TableroComercial.html#tab-por-origen-del-lead","origen fuente canal walk-in walkin facebook instagram tiktok whatsapp referido feria convenio alianza exalumno pauta",T+",CON",tc],
+     ["Matriz exportable a Excel","TableroComercial.html#tab-indicadores-y-graficos/matriz","matriz detalle excel exportar sede asesor producto programa canal",T,tc+" → Indicadores y gráficos"],
+     ["Consolidado por sede","TableroComercial.html#tab-consolidado-por-sede","consolidado quito valle ambato sedes reporte general","ADM,GER,DIR,SUC",tc],
+     ["Metas por asesor","TableroComercial.html#tab-metas-por-asesor","metas meta asesor avance",T+",CON",tc],
+     ["Informe de comisiones del asesor","InformeComisiones.html","informe individual asesor reporte comisiones matriculas anteriores cobradas",T,"Comercial → Comisiones"],
+     ["Comisión por pago completo","Comisiones.html","comision fecha de venta fecha de pago completo pagada",T,"Comercial → Comisiones"],
+     ["Reglas de comisión","ReglasComision.html","reglas comision rangos porcentaje bono configurar","ADM,GER,DIR","Comercial → Comisiones"],
+     ["Contrato y Reglamento del estudiante","DetalleMatricula.html","contrato reglamento firma aceptacion electronica representante menor de edad expediente",COMERCIAL,"Estudiantes → Matrícula → Contrato"],
+     ["Registrar walk-in","RegistrarWalkIn.html","walk-in walkin fachada como nos conocio visita",COMERCIAL,"Comercial → Leads"]]
+    return _j.dumps(out,ensure_ascii=False,separators=(",",":"))
+GS_JSON=_gs_index()
 # alias: nombre antiguo de sección activa → ítem del menú
 NAV_ALIAS={"Inventario":"Stock por sede","Facturación":"Facturación"}
 def nav(active):
@@ -466,9 +488,38 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
       var mb=bar.querySelector('.tab-more>.btn'); if(mb){{var inMore=!!b.closest('.menu-pop');mb.classList.toggle('on',inMore);mb.firstChild.textContent=inMore?b.textContent+' ':'Más ';var mp=bar.querySelector('.tab-more .menu-pop');if(mp&&getComputedStyle(mp).display!=='contents')mp.hidden=true;}}
       var el=bar.nextElementSibling;
       while(el&&el.hasAttribute('data-panel')){{el.style.display=(el.getAttribute('data-panel')===b.dataset.tab&&!el.dataset.wfHidden)?'flex':'none';el=el.nextElementSibling;}}
+      if(b.id&&!window.__wfGo&&(!location.hash||location.hash.indexOf('#tab-')===0)){{try{{history.replaceState(null,'','#'+b.id);}}catch(e){{}}}}
     }});
   }});
 }});
+(function(){{
+  /* enlace directo a una pestaña: #tab-nombre o #tab-nombre/id-de-la-seccion */
+  function go(){{var h='';try{{h=decodeURIComponent(location.hash.slice(1));}}catch(e){{}}
+    if(h.indexOf('tab-')!==0)return;var p=h.split('/'),t=document.getElementById(p[0]);if(!t||!t.dataset.tab||t.style.display==='none')return;
+    window.__wfGo=1;if(!t.classList.contains('on'))t.click();window.__wfGo=0;
+    setTimeout(function(){{var e=p[1]?document.getElementById(p[1]):t;if(e)e.scrollIntoView({{block:'start'}});}},260);}}
+  window.addEventListener('hashchange',go);
+  document.addEventListener('click',function(e){{var a=e.target.closest&&e.target.closest('a[href*="#tab-"]');if(a&&a.hash===location.hash&&a.pathname===location.pathname)setTimeout(go,0);}});
+  if(document.readyState==='complete')go();else window.addEventListener('load',go);
+}})();
+(function(){{
+  /* buscador de la barra superior: lleva a pantallas, reportes y vistas por palabra clave */
+  var inp=document.getElementById('gsearch'),pop=document.getElementById('gsearch-pop');if(!inp||!pop)return;
+  var IDX={GS_JSON};
+  function norm(t){{return t.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}}
+  function rol(){{var rs=document.getElementById('rol');return rs?rs.value:'ADM';}}
+  function buscar(){{var q=norm(inp.value.trim());if(q.length<2){{pop.hidden=true;inp.setAttribute('aria-expanded','false');return [];}}
+    var ws=q.split(/\s+/),r=rol();
+    var m=IDX.filter(function(x){{if(x[3].split(',').indexOf(r)<0)return false;var t=norm(x[0]+' '+x[2]);return ws.every(function(w){{return t.indexOf(w)>=0;}});}}).slice(0,7);
+    pop.innerHTML=m.map(function(x){{return '<a href="'+x[1]+'"><b>'+x[0]+'</b><small>'+x[4]+'</small></a>';}}).join('')+'<a href="Estudiantes.html?q='+encodeURIComponent(inp.value.trim())+'"><b>Buscar “'+inp.value.trim().replace(/</g,'&lt;')+'” en estudiantes</b><small>Académico → Estudiantes</small></a>';
+    pop.hidden=false;inp.setAttribute('aria-expanded','true');return m;}}
+  inp.addEventListener('input',buscar);inp.addEventListener('focus',buscar);
+  inp.form.addEventListener('submit',function(e){{var m=buscar();if(m.length){{e.preventDefault();pop.hidden=true;location.href=m[0][1];}}}});
+  inp.addEventListener('keydown',function(e){{if(e.key==='ArrowDown'&&!pop.hidden){{e.preventDefault();var a=pop.querySelector('a');if(a)a.focus();}}if(e.key==='Escape'){{pop.hidden=true;inp.setAttribute('aria-expanded','false');}}}});
+  pop.addEventListener('keydown',function(e){{var a=document.activeElement;if(e.key==='ArrowDown'&&a.nextElementSibling){{e.preventDefault();a.nextElementSibling.focus();}}if(e.key==='ArrowUp'){{e.preventDefault();(a.previousElementSibling||inp).focus();}}if(e.key==='Escape'){{pop.hidden=true;inp.focus();}}}});
+  pop.addEventListener('click',function(){{pop.hidden=true;inp.value='';}});
+  document.addEventListener('click',function(e){{if(!e.target.closest('.search'))pop.hidden=true;}});
+}})();
 (function(){{
   var fab=document.getElementById('ai-fab'),panel=document.getElementById('ai-panel'),log=document.getElementById('ai-log'),form=document.getElementById('ai-form'),inp=document.getElementById('ai-input');
   if(!fab) return;
@@ -899,7 +950,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
   <nav class="crumbs" aria-label="Ruta">{'' if active=="Inicio" else f'<a href="{back}" class="back" aria-label="Volver"><span class="chev chev-l"></span></a>'}{crumb}</nav>
   <div class="topbar-right">
   <label class="ctx-sede" title="Sede">{ico("pin","nav-ico")}<span class="sr">Sede</span><select id="sede"><option>Todas</option><option>Quito</option><option>Valle</option><option>Ambato</option><option>Cuenca</option></select></label>
-  <form class="search" action="Estudiantes.html" role="search">{ico("search","nav-ico")}<label for="gsearch" class="sr">Buscar</label><input id="gsearch" name="q" placeholder="Buscar…"></form>
+  <form class="search" action="Estudiantes.html" role="search">{ico("search","nav-ico")}<label for="gsearch" class="sr">Buscar pantalla, reporte o estudiante</label><input id="gsearch" name="q" placeholder="Buscar pantalla o reporte…" autocomplete="off" aria-controls="gsearch-pop" aria-expanded="false"><div class="search-pop" id="gsearch-pop" hidden></div></form>
   <div class="notif"><button type="button" class="icon-btn" id="notif-btn" aria-label="Notificaciones" aria-expanded="false">{ico("bell","nav-ico")}{notif_dots()}</button>
     <div class="notif-pop" id="notif-pop" hidden><div class="notif-head"><b>Notificaciones</b><a href="Notificaciones.html">Ver todas</a></div>
 {notif_pop()}
@@ -1864,7 +1915,20 @@ P_CONC=(
  +kv(("Banco Pichincha","el número del comprobante coincide con el del banco"),("Otros bancos","el número del comprobante del cliente suele ser distinto al del banco; se concilia por monto, fecha y nombre"),
      ("Conexión directa con el banco",badge("Propuesta · depende de que el banco ofrezca API")+'<small> · la importación del extracto sí es viable hoy</small>'),("Pagos en línea","los links de pago se concilian contra el historial de la pasarela (Datafast / Nuvei), no contra el banco")))
 
-# ===== Tablero comercial · pestaña "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
+def tablero_indice():
+    """Índice del tablero con las palabras que usa Dirección Comercial: cada entrada abre su pestaña o sección."""
+    T="ADM,GER,DIR,SUC,ASE,CON"
+    it=[("Seguimiento diario","Ventas, matrículas y facturación de hoy y del mes","#tab-seguimiento-diario",T),
+        ("Indicadores y gráficos","Tarjetas, líneas, barras y circulares del plan comercial","#tab-indicadores-y-graficos","ADM,GER,DIR,SUC,ASE"),
+        ("Embudo de Kommo","Leads por etapa y conversión de lead a matrícula","#tab-indicadores-y-graficos/embudo","ADM,GER,DIR,SUC,ASE"),
+        ("Matriz KPI mensual","2025 frente a 2026, variación, meta +15 % y cumplimiento","#tab-matriz-kpi-mensual","ADM,GER,DIR,SUC,ASE"),
+        ("Resultados por origen del lead","Leads, matrículas y facturación por fuente y walk-in","#tab-por-origen-del-lead",T),
+        ("Matriz exportable","Detalle por sede, asesor, producto, programa y canal","#tab-indicadores-y-graficos/matriz","ADM,GER,DIR,SUC,ASE"),
+        ("Consolidado por sede","Quito, Valle y Ambato juntas o por separado","#tab-consolidado-por-sede","ADM,GER,DIR,SUC"),
+        ("Comisiones","Se generan en el mes en que la matrícula termina de pagarse","Comisiones.html","ADM,GER,DIR,SUC,ASE")]
+    return card("¿Qué quieres ver?",'<nav class="goto" aria-label="Ir directo a">'+"".join(f'<a href="{h}" data-roles="{r}"><b>{n}</b><small>{d}</small></a>' for n,d,h,r in it)+'</nav>')
+
+# ===== Tablero comercial · pestaña "Indicadores y gráficos" (antes "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
 # Tarjetas, líneas para evolución, barras para comparar, circulares para %, embudo de Kommo y matriz exportable. Cifras ficticias de ejemplo.
 def tablero_plan():
     """Plan estratégico: todo se recalcula en el navegador (assets/plan.js) con los filtros; los datos de ejemplo son ficticios (tools/plan_datos.py)."""
@@ -1899,6 +1963,8 @@ def tablero_plan():
         '<p class="plan-nota" data-plan-minfo></p>'
         +kv(("Filtros","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in"),("Exportar","descarga en Excel lo que ves, con el gráfico y la tabla")),
         extra=badge("Se recalcula con los filtros","navy"))
+    embudo=embudo.replace('<section class="card">','<section class="card" id="embudo">',1)
+    matriz=matriz.replace('<section class="card">','<section class="card" id="matriz">',1)
     return ('<div data-plan>'+barra+ctx+'<div data-plan-out="todo"></div><div class="plan-sec">'+embudo+matriz+'</div>'
             +'<script id="plan-data" type="application/json">'+blob+'</script><script src="assets/plan.js"></script></div>')
 
@@ -2174,7 +2240,7 @@ home=shell("Inicio","Inicio",
      +only("SEC", card("Pendientes de secretaría", li(['<a href="Facturas.html">2 rematrículas por confirmar · Sofía Herrera reportó transferencia</a>','<a href="Facturas.html">Factura 000021095 rechazada por el SRI · cédula inválida</a>','<a href="Facturas.html">Cartera vencida: 2 cuotas · $725</a>','<a href="Inventario.html">3 libros con stock negativo · correo de las 07:00 enviado</a>'])+row(btn("Ir a facturación","Facturas.html"))))
      +only("ASE", card("Mis pendientes", li(['<a href="SolicitudDescuento.html">Solicitud de descuento 42% · Gabriela Núñez · esperando a Dir. Comercial</a>',"4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
      +only("PRO", card("Mis clases de hoy", li(["Adults A2 · 14:00–16:00 · Valle C-5 · 9 estudiantes","B1 Virtual · 19:00–21:00 · Zoom 2 · 12 estudiantes"])+row(btn("Registrar sesión",None,True),btn("Ver mis cursos","Cursos.html")))),
-     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True)))),
+     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,SUC,ASE",btn("Tablero comercial","TableroComercial.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True)))),
  only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
  only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
  only("ASE", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para Gabriela Núñez sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?")),
@@ -2549,11 +2615,12 @@ def ventas_rows():
     return out
 ventas_tbl=table(["Fecha de venta","Venta · estudiante","Origen","Producto o servicio","Programa","Modalidad","Clasificación","Servicios educativos","Total facturado","Pagada por completo","Asesor · sede","Sede","Acción"],ventas_rows(),sede=11,hide=(4,5,6,11),wide=1,tid="ventas")
 page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tablero comercial",
+ tablero_indice(),
  '<div class="kv"><span><span class="k">Sedes</span> </span>'+pills(["Quito","Valle","Ambato","Cuenca","Consolidado"],on=(4,),multi=True,sede=True)+'<span class="field-hint">Elige una, combina dos o tres, o mira el consolidado. Cuenca lleva un reporte distinto y no entra en el consolidado de Quito, Valle y Ambato.</span></div>'
  +filters(sel("Período",PERIODOS,w="170px",col="@Fecha de venta"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L.","Ana P."],w="140px",col="Asesor · sede"),sel("Programa",["Todos","Preescolar","Kids","Teens","Adults","Business","Exam Preparation","Tailored","Spanish"],w="150px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Origen",["Todos"]+ORIGENES,w="200px"),sel("Producto o servicio",["Todos","módulo","horas","Mock Test","TOEFL","Traducción","español"],w="170px"),sel("Clasificación",["Todas","Nueva","Reingreso","Continuidad"],w="140px"),actions=btn("Exportar Excel"),show=3,target="ventas"),
  kpis([("Ventas",agg("count","ventas"),"en el período y sedes elegidos"),("Nuevas matrículas válidas",agg("count:Clasificación=Nueva","ventas"),"meta del mes 22 · reingresos y continuidad aparte"),("Servicios educativos",agg("sum:Servicios educativos","ventas","money0"),"base de metas y comisiones"),("Total facturado",agg("sum:Total facturado","ventas","money0"),"todos los conceptos"),("Pagadas por completo",agg("pct:Pagada por completo=Sí","ventas"),"solo estas generan comisión")]),
- tabs(["Hoy y acumulado","Plan estratégico","Matriz KPI mensual","Metas por asesor","Por origen","Ventas","Cobros del período","Clasificación","Consolidado por sede","Origen y oferta"],"Hoy y acumulado",roles={"Consolidado por sede":"ADM,GER,DIR,SUC","Matriz KPI mensual":"ADM,GER,DIR,SUC,ASE","Plan estratégico":"ADM,GER,DIR,SUC,ASE"},panels={
-  "Plan estratégico": tablero_plan(),
+ tabs(["Seguimiento diario","Indicadores y gráficos","Matriz KPI mensual","Por origen del lead","Metas por asesor","Consolidado por sede","Ventas","Cobros del período","Clasificación","Origen y oferta"],"Seguimiento diario",maxvis=6,roles={"Consolidado por sede":"ADM,GER,DIR,SUC","Matriz KPI mensual":"ADM,GER,DIR,SUC,ASE","Indicadores y gráficos":"ADM,GER,DIR,SUC,ASE"},panels={
+  "Indicadores y gráficos": tablero_plan(),
   "Metas por asesor": table(["Asesor","Sede","Meta del mes","Lleva","Le falta","Avance","Días restantes"],[
      ["Carla M.","Quito","$6,000 · 12 niveles","$5,420 · 14 niveles","$580 · meta de niveles cumplida",progress(90),"8"],
      ["Diego R.","Valle","$5,000 · 12 niveles","$3,100 · 9 niveles","$1,900 · 3 niveles",progress(62),"8"],
@@ -2577,15 +2644,15 @@ page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tabl
     +card("Comparativo por origen del lead · matrículas", table(["Origen","2025","2026","Variación %","Meta (2025 + 15 %)","Cumplimiento"],[
      ["Estrategias pagadas","—","43","sin base","—",badge("Sí","ok")],["Referidos","31","16","-48.4%","35.7",badge("No","bad")],["Walk-in","36","28","-22.2%","41.4",badge("No","bad")],["Exalumno","11","6","-45.5%","12.7",badge("No","bad")],
      ["Convenios y alianzas","6","20","+233%","6.9",badge("Sí","ok")],["Ferias","0","0","—","0",badge("Sí","ok")],["Leads anteriores","2","0","-100%","2.3",badge("No","bad")],[c2("Total","matrículas con origen registrado"),"86","113","+31.4%","98.9",badge("Sí","ok")]],wide=0)
-     +kv(("Walk-in","se puede abrir por '¿cómo nos conoció?' en la pestaña Por origen"),("Trimestre","julio, agosto y septiembre en la misma vista al elegir 'Este trimestre' en el período"))),
-  "Por origen": filters(sel("Fuente",ORIGENES+["Walk in · "+w for w in WALKIN_COMO],w="260px",col=False),sel("Período",["Este mes","Este trimestre","Este año"],w="150px",col=False),actions=btn("Exportar Excel"))
+     +kv(("Walk-in","se puede abrir por '¿cómo nos conoció?' en la pestaña Por origen del lead"),("Trimestre","julio, agosto y septiembre en la misma vista al elegir 'Este trimestre' en el período"))),
+  "Por origen del lead": filters(sel("Fuente",ORIGENES+["Walk in · "+w for w in WALKIN_COMO],w="260px",col=False),sel("Período",["Este mes","Este trimestre","Este año"],w="150px",col=False),actions=btn("Exportar Excel"))
     +kpis([("Leads de esta fuente",sv(86,50,22,14,0),"28% de los leads del mes"),("Matrículas",sv(14,8,4,2,0),"16% de conversión"),("Servicios vendidos",sv(17,10,5,2,0),"niveles 11 · exámenes 5 · traducción 1"),("Facturación",sv("$7,840","$4,600","$2,100","$1,140","$0"),"29% del total del mes")])
     +table(["Fuente","Sede","Leads","Matrículas","Servicio educativo","Total facturado","Asesor con más cierres"],[
      ["Instagram · Meta Ads","Quito","50","8","$3,980","$4,600","Carla M."],["Instagram · Meta Ads","Valle","22","4","$1,800","$2,100","Diego R."],["Instagram · Meta Ads","Ambato","14","2","$990","$1,140","Sofía L."],
      [c2("Referencia / Referido","3 por María Andrade · 2 por Pedro Mora · 2 otros"),"Quito","31","7","$3,350","$3,900","Carla M."],[c2("Referencia / Referido","2 por Camila Sánchez"),"Ambato","9","2","$900","$1,050","Sofía L."],
      ["Walk in · Fachada o sector","Quito","12","3","$1,200","$1,380","Carla M."],["Test Online","Valle","18","2","$820","$940","Diego R."],["Convenios empresariales","Ambato","6","4","$2,400","$2,800","Sofía L."]],sede=1,wide=0)
     +kv(("Para qué","informe individual del asesor y reporte consolidado: cuánto generó cada fuente en leads, matrículas, servicios y facturación"),("Walk-in","se puede abrir por '¿cómo nos conoció?' porque la etiqueta se conserva al pasar a Ganado")),
-  "Hoy y acumulado": two(card("Por concepto (no se mezclan)", conc_tbl),
+  "Seguimiento diario": two(card("Por concepto (no se mezclan)", conc_tbl),
      card("Indicadores del período (se recalculan con los filtros)", kv(("Ventas nuevas",agg("count:Clasificación=Nueva","ventas")),("Reingresos",agg("count:Clasificación=Reingreso","ventas")),("Continuidad",agg("count:Clasificación=Continuidad","ventas")),("Índice de retención","71% · 14 de las 20 que terminaron el mes pasado se rematricularon"),("Ticket de servicios por venta",agg("avg:Servicios educativos","ventas","money")),("Ticket total por venta",agg("avg:Total facturado","ventas","money")),("Virtuales",agg("pct:Modalidad=Virtual","ventas")),("Asesores con ventas",agg("distinct:Asesor · sede","ventas"))))
        +linechart(["1","5","10","15","19"],{"Servicios 2026":[1.2,5.4,9.8,14.6,18.5],"Mismo día 2025":[1.0,4.8,9.1,13.0,16.2]})),
   "Ventas": ventas_tbl+pager(26)
@@ -4041,7 +4108,7 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .crumbs a{color:var(--ink-2);text-decoration:none}.crumbs a:hover{color:var(--navy);text-decoration:underline}
 .crumbs .sep{color:var(--line-strong)}.crumbs .here{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .back{width:36px;height:36px;border-radius:var(--r);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;color:var(--ink);text-decoration:none;flex:none}.back:hover{background:var(--surface-2)}
-.search{display:flex;align-items:center;gap:8px;width:220px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);padding:0 12px;height:40px;color:var(--mute)}
+.search{display:flex;align-items:center;gap:8px;width:250px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);padding:0 12px;height:40px;color:var(--mute)}
 .search input{border:0;background:none;font:inherit;flex:1;outline:none;color:var(--ink);min-width:0}.search:focus-within{box-shadow:var(--focus)}.search svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
 .ctx-sede{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 4px 0 10px;border:1px solid var(--line-strong);border-radius:var(--r);color:var(--mute);background:var(--surface)}
 .ctx-sede select{border:0;background:transparent;font:inherit;font-size:var(--t-14);color:var(--ink);height:38px}.ctx-sede select:focus{outline:none}.ctx-sede:focus-within{box-shadow:var(--focus)}
@@ -4195,6 +4262,15 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .seg button{min-height:40px;padding:0 14px;border:0;border-left:1px solid var(--line);background:none;font:inherit;font-size:var(--t-14);color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .seg button:first-child{border-left:0}.seg button[aria-checked=true]{background:var(--navy-50);color:var(--navy);font-weight:600}
 .seg-panel[hidden]{display:none}
+.goto{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.goto a{display:flex;flex-direction:column;gap:2px;padding:10px 12px;min-height:44px;border:1px solid var(--line-strong);border-radius:var(--r-sm);text-decoration:none;color:var(--ink)}
+.goto a b{font-size:var(--t-14);font-weight:600;color:var(--navy)}.goto a small{font-size:var(--t-13);color:var(--mute)}
+.goto a:hover{background:var(--navy-50);border-color:var(--navy)}
+@media(max-width:1100px){.goto{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.goto{grid-template-columns:1fr}}
+.card[id]{scroll-margin-top:84px}.tab[id]{scroll-margin-top:84px}
+.search{position:relative}.search-pop{position:absolute;left:0;top:calc(100% + 8px);width:340px;max-width:calc(100vw - 32px);padding:6px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-pop);z-index:40}
+.search-pop[hidden]{display:none}.search-pop a{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:var(--r-sm);text-decoration:none;color:var(--ink)}
+.search-pop a b{font-size:var(--t-14);font-weight:600}.search-pop a small{font-size:var(--t-12);color:var(--mute)}.search-pop a:hover,.search-pop a:focus{background:var(--navy-50);outline:0}
 .quick{display:flex;align-self:flex-start;flex-wrap:wrap;gap:8px;align-items:center}
 .quick .q{min-height:40px;padding:0 12px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface);font:inherit;font-size:var(--t-13);color:var(--ink-2);cursor:pointer}
 .quick .q[aria-pressed=true]{background:var(--navy-50);border-color:var(--navy);color:var(--navy);font-weight:600}

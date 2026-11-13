@@ -95,3 +95,11 @@ Reglas confirmadas por los datos actuales: programas English for Adults / Teens 
 - **Conciliación de pagos por extracto** (Excel/CSV), no por API del banco. Las interbancarias se concilian por monto, fecha y nombre porque el número del comprobante no coincide.
 - **Entrega de libros sin papel**: la matrícula crea la entrega pendiente; la firma (dedo o QR) genera un recibo PDF en la ficha y por correo, y descuenta el stock al confirmar. Solo el libro del primer nivel. WhatsApp queda como propuesta.
 - El **upsell, la deserción, los planes de nivel y los leads atendidos** del plan estratégico tienen definiciones propuestas, pendientes de confirmar con Dirección Comercial.
+
+## Encontrar las cosas (13 nov 2026)
+Dirección Comercial no encontró en el prototipo lo que había pedido por correo, aunque ya estaba. Cambios para que se encuentre sin guía:
+- **Tablero comercial** abre con el índice "¿Qué quieres ver?": ocho accesos con las palabras del cliente (seguimiento diario, indicadores y gráficos, embudo de Kommo, matriz KPI mensual, resultados por origen del lead, matriz exportable, consolidado por sede, comisiones). Cada uno abre su pestaña o baja a su sección; respeta el rol.
+- **Pestañas renombradas**: "Hoy y acumulado" → Seguimiento diario; "Plan estratégico" → Indicadores y gráficos; "Por origen" → Por origen del lead. Seis pestañas visibles en lugar de cinco (Consolidado por sede sale de "Más").
+- **Enlace directo a una pestaña** en cualquier pantalla: `Pantalla.html#tab-nombre` o `#tab-nombre/seccion` (p. ej. `TableroComercial.html#tab-indicadores-y-graficos/embudo`). Sirve para enviar al cliente el enlace exacto.
+- **Buscador de la barra superior**: ya no busca solo estudiantes; sugiere pantallas, reportes y vistas por palabra clave ("embudo", "kpi", "walk-in", "contrato", "comisión") y filtra por rol. Índice en `_gs_index()` del generador: al crear una vista que el cliente pueda buscar, agregarla ahí.
+- **Inicio**: acceso rápido "Tablero comercial" para Dirección, sucursal y asesores.

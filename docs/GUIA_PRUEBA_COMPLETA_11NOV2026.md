@@ -2,8 +2,8 @@
 
 Todo está publicado en https://crpozo.github.io/cambridge-wireframes/ y se puede probar igual en local (`http://localhost:8765/`). Los datos son de ejemplo. Estado: **Hecho** = se prueba en el prototipo; **Ya existía** = estaba antes de hoy; **Dependencia** = requiere una integración real; **Propuesta** = fuera del alcance del contrato.
 
-## A. Tablero comercial (Plan estratégico)
-Ruta: Comercial → **Tablero comercial** → pestaña **Plan estratégico**.
+## A. Tablero comercial (Indicadores y gráficos)
+Ruta: Comercial → **Tablero comercial** → pestaña **Indicadores y gráficos** (antes "Plan estratégico").
 1. Con el filtro por defecto (Este mes) se ven 11 cifras; el ingreso es $21,940 y hay 42 matrículas.
 2. **Período**: cambia a Hoy, Esta semana, Este trimestre, Este año. Todas las cifras y gráficos se recalculan. Prueba también "Día específico".
 3. **Sede**: arriba, pastillas Quito, Valle, Ambato, combinaciones y Consolidado (Quito + Valle + Ambato; Cuenca va aparte). La línea gris bajo los filtros indica lo que estás viendo.

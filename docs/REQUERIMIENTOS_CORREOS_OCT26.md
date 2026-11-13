@@ -10,7 +10,7 @@ Matrículas y facturación total · ticket promedio · cantidad y valor de servi
 
 ### Seguimiento diario
 Número de ventas y matrículas, facturación, servicios y productos vendidos, origen de cada venta y resultado por asesor y sede.
-→ Pestañas **Hoy y acumulado** y **Ventas** (columnas Origen, Producto o servicio, Pagada por completo, Asesor · sede).
+→ Pestañas **Seguimiento diario** (antes "Hoy y acumulado") y **Ventas** (columnas Origen, Producto o servicio, Pagada por completo, Asesor · sede).
 
 ### Filtros
 Día, mes, trimestre o año; asesor; producto o servicio; origen del lead; sede. Elegir una sede, combinar dos o tres, o ver el consolidado.
@@ -24,7 +24,7 @@ Facebook, Instagram, TikTok, Facebook Forms, WhatsApp, Contacto web, Test online
 
 ### Reporte por fuente
 Seleccionar una fuente y ver cuántos leads, matrículas, servicios y facturación generó en el período (base del informe individual del asesor y del consolidado).
-→ Pestaña **Por origen** del tablero (fuente + período → KPIs y tabla por sede y asesor).
+→ Pestaña **Por origen del lead** del tablero (fuente + período → KPIs y tabla por sede y asesor).
 
 ### Comisiones: fecha de venta vs fecha de pago completo
 La comisión se genera solo cuando la matrícula está totalmente pagada: una venta de agosto pagada por completo en octubre es venta de agosto y comisión de octubre.
