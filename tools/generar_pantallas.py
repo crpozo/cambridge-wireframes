@@ -218,9 +218,12 @@ def _gs_index():
     tc="Comercial → Tablero comercial"
     out+=[["Seguimiento diario de ventas","TableroComercial.html#tab-seguimiento-diario","hoy dia diario acumulado ventas matriculas facturacion",T+",CON",tc],
      ["Indicadores y gráficos comerciales","TableroComercial.html#tab-indicadores-y-graficos","kpi kpis tarjetas graficos plan estrategico ingreso ticket promedio one to one certificados traducciones servicios upsell desercion conversion tendencia linea de negocio",T,tc],
+     ["Tendencias comerciales","TableroComercial.html#tab-indicadores-y-graficos/tendencias","tendencia evolucion meta proyectada ticket promedio conversion desercion lineas",T,tc+" → Indicadores y gráficos"],
+     ["Resultado por asesor","TableroComercial.html#tab-indicadores-y-graficos/asesores","asesor asesores upsell referidos conversion facturacion ranking",T,tc+" → Indicadores y gráficos"],
+     ["Ingresos por producto, programa y sede","TableroComercial.html#tab-indicadores-y-graficos/productos","producto programa linea de negocio sede one to one planes de nivel certificaciones traducciones",T,tc+" → Indicadores y gráficos"],
      ["Embudo de Kommo","TableroComercial.html#tab-indicadores-y-graficos/embudo","embudo funnel leads etapas ganados perdidos prospeccion conversion lead matricula",T,tc+" → Indicadores y gráficos"],
      ["Matriz KPI mensual","TableroComercial.html#tab-matriz-kpi-mensual","kpi kpis indicadores mensual meta 15 variacion cumplimiento proyeccion referidos niveles espanol reporte mensual",T,tc],
-     ["Resultados por origen del lead","TableroComercial.html#tab-por-origen-del-lead","origen fuente canal walk-in walkin facebook instagram tiktok whatsapp referido feria convenio alianza exalumno pauta",T+",CON",tc],
+     ["Resultados por origen del lead","TableroComercial.html#tab-indicadores-y-graficos/origen","origen fuente canal walk-in walkin facebook instagram tiktok whatsapp referido feria convenio alianza exalumno pauta",T+",CON",tc],
      ["Matriz exportable a Excel","TableroComercial.html#tab-indicadores-y-graficos/matriz","matriz detalle excel exportar sede asesor producto programa canal",T,tc+" → Indicadores y gráficos"],
      ["Consolidado por sede","TableroComercial.html#tab-consolidado-por-sede","consolidado quito valle ambato sedes reporte general","ADM,GER,DIR,SUC",tc],
      ["Metas por asesor","TableroComercial.html#tab-metas-por-asesor","metas meta asesor avance",T+",CON",tc],
@@ -497,7 +500,7 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
   function go(){{var h='';try{{h=decodeURIComponent(location.hash.slice(1));}}catch(e){{}}
     if(h.indexOf('tab-')!==0)return;var p=h.split('/'),t=document.getElementById(p[0]);if(!t||!t.dataset.tab||t.style.display==='none')return;
     window.__wfGo=1;if(!t.classList.contains('on'))t.click();window.__wfGo=0;
-    setTimeout(function(){{var e=p[1]?document.getElementById(p[1]):t;if(e)e.scrollIntoView({{block:'start'}});}},260);}}
+    setTimeout(function(){{var e=(p[1]&&document.getElementById(p[1]))||t;var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;e.scrollIntoView({{block:'start',behavior:rm?'auto':'smooth'}});}},60);}}
   window.addEventListener('hashchange',go);
   document.addEventListener('click',function(e){{var a=e.target.closest&&e.target.closest('a[href*="#tab-"]');if(a&&a.hash===location.hash&&a.pathname===location.pathname)setTimeout(go,0);}});
   if(document.readyState==='complete')go();else window.addEventListener('load',go);
@@ -1918,14 +1921,15 @@ P_CONC=(
 def tablero_indice():
     """Índice del tablero con las palabras que usa Dirección Comercial: cada entrada abre su pestaña o sección."""
     T="ADM,GER,DIR,SUC,ASE,CON"
+    P="#tab-indicadores-y-graficos"; D="ADM,GER,DIR,SUC,ASE"
     it=[("Seguimiento diario","Ventas, matrículas y facturación de hoy y del mes","#tab-seguimiento-diario",T),
-        ("Indicadores y gráficos","Tarjetas, líneas, barras y circulares del plan comercial","#tab-indicadores-y-graficos","ADM,GER,DIR,SUC,ASE"),
-        ("Embudo de Kommo","Leads por etapa y conversión de lead a matrícula","#tab-indicadores-y-graficos/embudo","ADM,GER,DIR,SUC,ASE"),
-        ("Matriz KPI mensual","2025 frente a 2026, variación, meta +15 % y cumplimiento","#tab-matriz-kpi-mensual","ADM,GER,DIR,SUC,ASE"),
-        ("Resultados por origen del lead","Leads, matrículas y facturación por fuente y walk-in","#tab-por-origen-del-lead",T),
-        ("Matriz exportable","Detalle por sede, asesor, producto, programa y canal","#tab-indicadores-y-graficos/matriz","ADM,GER,DIR,SUC,ASE"),
-        ("Consolidado por sede","Quito, Valle y Ambato juntas o por separado","#tab-consolidado-por-sede","ADM,GER,DIR,SUC"),
-        ("Comisiones","Se generan en el mes en que la matrícula termina de pagarse","Comisiones.html","ADM,GER,DIR,SUC,ASE")]
+        ("Indicadores principales","Ingreso, matrículas, ticket, servicios y cumplimiento de la meta",P+"/resumen",D),
+        ("Tendencias","Real frente a la meta, ticket, conversión y deserción por mes",P+"/tendencias",D),
+        ("Embudo de Kommo","Leads por etapa y conversión de lead a matrícula",P+"/embudo",D),
+        ("Matriz KPI mensual","2025 frente a 2026, variación, meta +15 % y cumplimiento","#tab-matriz-kpi-mensual",D),
+        ("Origen del lead","Matrículas, ingresos y conversión por canal y walk-in",P+"/origen",D),
+        ("Resultado por asesor","Matrículas, facturación, conversión, referidos y upsell",P+"/asesores",D),
+        ("Matriz exportable","Detalle por sede, asesor, producto, programa y canal",P+"/matriz",D)]
     return card("¿Qué quieres ver?",'<nav class="goto" aria-label="Ir directo a">'+"".join(f'<a href="{h}" data-roles="{r}"><b>{n}</b><small>{d}</small></a>' for n,d,h,r in it)+'</nav>')
 
 # ===== Tablero comercial · pestaña "Indicadores y gráficos" (antes "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
@@ -1963,9 +1967,11 @@ def tablero_plan():
         '<p class="plan-nota" data-plan-minfo></p>'
         +kv(("Filtros","día, mes, trimestre y año; sede o combinación de sedes; asesor; programa; producto o servicio; origen del lead y clasificación de walk-in"),("Exportar","descarga en Excel lo que ves, con el gráfico y la tabla")),
         extra=badge("Se recalcula con los filtros","navy"))
-    embudo=embudo.replace('<section class="card">','<section class="card" id="embudo">',1)
-    matriz=matriz.replace('<section class="card">','<section class="card" id="matriz">',1)
-    return ('<div data-plan>'+barra+ctx+'<div data-plan-out="todo"></div><div class="plan-sec">'+embudo+matriz+'</div>'
+    embudo='<div class="plan-sec" data-pv-sec="embudo" hidden>'+embudo+'</div>'
+    matriz='<div class="plan-sec" data-pv-sec="matriz" hidden>'+matriz+'</div>'
+    vistas=('<div class="quick plan-vistas" id="vistas" role="group" aria-label="Qué ver">'
+      +"".join(f'<button type="button" class="q" data-pv="{k}" aria-pressed="{"true" if i==0 else "false"}">{n}</button>' for i,(k,n) in enumerate([("resumen","Resumen"),("tendencias","Tendencias"),("productos","Productos y sedes"),("origen","Origen del lead"),("asesores","Asesores"),("embudo","Embudo de Kommo"),("matriz","Matriz exportable")]))+'</div>')
+    return ('<div data-plan>'+barra+ctx+vistas+'<div data-plan-out="todo"></div>'+embudo+matriz
             +'<script id="plan-data" type="application/json">'+blob+'</script><script src="assets/plan.js"></script></div>')
 
 
@@ -4268,6 +4274,9 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .goto a:hover{background:var(--navy-50);border-color:var(--navy)}
 @media(max-width:1100px){.goto{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.goto{grid-template-columns:1fr}}
 .card[id]{scroll-margin-top:84px}.tab[id]{scroll-margin-top:84px}
+.plan-sec[hidden]{display:none}.plan-vistas{margin:4px 0 16px}
+@media (prefers-reduced-motion:no-preference){.panel,.plan-sec{animation:wf-in .22s ease-out}}
+@keyframes wf-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .search{position:relative}.search-pop{position:absolute;left:0;top:calc(100% + 8px);width:340px;max-width:calc(100vw - 32px);padding:6px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-pop);z-index:40}
 .search-pop[hidden]{display:none}.search-pop a{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:var(--r-sm);text-decoration:none;color:var(--ink)}
 .search-pop a b{font-size:var(--t-14);font-weight:600}.search-pop a small{font-size:var(--t-12);color:var(--mute)}.search-pop a:hover,.search-pop a:focus{background:var(--navy-50);outline:0}
@@ -4283,8 +4292,8 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .hero-tag{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hero-code{font-family:var(--font-mono);font-weight:500;font-size:var(--t-16);color:var(--ink)}
 .hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;align-items:center}
-.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px 24px;margin:0}
-.fact{min-width:0;margin:0}.fact dt{font-size:var(--t-13);color:var(--mute);margin-bottom:2px}.fact dd{margin:0;font-weight:500;font-size:var(--t-14);overflow-wrap:anywhere}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px 24px;margin:0}
+.fact{min-width:0;margin:0}.fact dt{font-size:var(--t-13);color:var(--mute);margin-bottom:2px}.fact dd{margin:0;font-weight:500;font-size:var(--t-14);overflow-wrap:break-word;max-width:60ch}
 .prog{display:flex;flex-direction:column;gap:6px;font-size:var(--t-13);color:var(--ink-2)}.prog-head{display:flex;justify-content:space-between;gap:12px}.prog-head b{font-weight:500;font-variant-numeric:tabular-nums}
 .prog-track{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}.prog-fill{height:100%;border-radius:3px;transition:width var(--dur-2) var(--ease)}
 .td .prog{min-width:90px;width:100%}
@@ -4300,10 +4309,10 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .proc .p-t{font-weight:600;font-size:var(--t-14);padding-top:3px}.proc .p-d{grid-column:2;font-size:var(--t-13);color:var(--mute)}.proc .p-s{grid-row:1;grid-column:3;font-size:var(--t-13);padding-top:3px}
 .proc li.is-done::before{background:var(--navy);border-color:var(--navy);color:#fff}
 .proc li.is-now::before{border:2px solid var(--navy);color:var(--navy)}
-.proc-h{flex-direction:row;gap:0}.proc-h li{flex:1;grid-template-columns:28px 1fr;padding:0 16px 0 0}
-.proc-h li:not(:last-child)::after{left:36px;right:16px;top:14px;bottom:auto;width:auto;height:1px}
-.proc-h .p-t{background:var(--bg);padding-right:8px;position:relative;z-index:1;justify-self:start}
-.card .proc-h .p-t{background:var(--surface)}
+.proc-h{flex-direction:row;gap:0}.proc-h li{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 24px 0 0}
+.proc-h li::before{flex:none;margin-bottom:8px}
+.proc-h li:not(:last-child)::after{left:36px;right:8px;top:14px;bottom:auto;width:auto;height:1px}
+.proc-h .p-t{padding-top:0}.proc-h .p-s{font-size:var(--t-12);color:var(--mute);padding-top:0}
 
 /* asistente de pasos (wizard) */
 .wizard{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
@@ -4754,7 +4763,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
   .portal-top{padding:10px 16px}.portal-main{padding:16px 16px 80px}.portal-user span{display:none}
   .portal-title small{white-space:normal}
   .hbar{grid-template-columns:100px 1fr 48px}
-  .proc-h{flex-direction:column}.proc-h li{grid-template-columns:28px 1fr;padding:0 0 16px}.proc-h li:not(:last-child)::after{left:13.5px;top:28px;bottom:0;width:1px;height:auto;right:auto}
+  .proc-h{flex-direction:column}.proc-h li{grid-template-columns:28px 1fr;padding:0 0 16px}.proc-h li:not(:last-child)::after{display:none}
   .perf{flex-direction:column;align-items:flex-start}
   .ai-fab{right:16px;bottom:88px}
   .notif-pop{position:fixed;left:8px;right:8px;top:60px;width:auto}

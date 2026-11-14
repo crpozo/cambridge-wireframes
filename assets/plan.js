@@ -153,9 +153,9 @@
   function variacion(a, b) { if (!b) return 'sin base'; var v = (a - b) / b * 100; return (v >= 0 ? '+' : '') + (Math.round(v * 10) / 10) + '%'; }
 
   /* ---------- Series mensuales (respetan todos los filtros menos el período) ---------- */
-  function serie(yr, fn) { return MES_N.map(function (m) { var rows = selS(ymd(yr, m, 1), ymd(yr, m, 31)); return fn(agg(rows), m, rows); }); }
-  function convMes(yr, m) { var ls = selL(ymd(yr, m, 1), ymd(yr, m, 31)); var f = funnel(ls); return f.rec ? f.gan / f.rec * 100 : 0; }
-  function deserMes(yr, m) { var ds = selD(ymd(yr, m, 1), ymd(yr, m, 31)), t = 0, n = 0; ds.forEach(function (x) { t += x.r[3] * x.w; n += x.r[4] * x.w; }); return t ? n / t * 100 : 0; }
+  function serie(yr, fn) { return MES_N.map(function (m) { var rows = selS(ymd(2025 + yr, m, 1), ymd(2025 + yr, m, 31)); return fn(agg(rows), m, rows); }); }
+  function convMes(yr, m) { var ls = selL(ymd(2025 + yr, m, 1), ymd(2025 + yr, m, 31)); var f = funnel(ls); return f.rec ? f.gan / f.rec * 100 : 0; }
+  function deserMes(yr, m) { var ds = selD(ymd(2025 + yr, m, 1), ymd(2025 + yr, m, 31)), t = 0, n = 0; ds.forEach(function (x) { t += x.r[3] * x.w; n += x.r[4] * x.w; }); return t ? n / t * 100 : 0; }
 
   /* ---------- Dibujo de secciones ---------- */
   function render() {
@@ -182,7 +182,8 @@
       ['Total de servicios', cur.serv, 'certificados + traducciones'],
       ['Ticket de servicios', cur.serv ? money(cur.ingServ / cur.serv) : '—', 'servicios / servicios vendidos'],
       ['Variación vs año anterior', variacion(cur.ing, prv.ing), 'ingreso del mismo período · matrículas ' + variacion(cur.mat, prv.mat), prv.ing && cur.ing < prv.ing ? 'is-bad' : '']]);
-    var h = '<div class="plan-sec">' + card('Indicadores principales', kp1 + kp2, '<span class="badge badge-navy">Se recalculan con los filtros</span>');
+    var sec = function (v) { return '<div class="plan-sec" data-pv-sec="' + v + '">'; };
+    var h = sec('resumen') + card('Indicadores principales', kp1 + kp2, '<span class="badge badge-navy">Se recalculan con los filtros</span>');
 
     // Líneas
     var ing26 = serie(1, function (a) { return a.ing; }), ing25 = serie(0, function (a) { return a.ing; });
@@ -191,12 +192,15 @@
     var metaS = ing25.map(function (v) { return v * 1.15; });
     h += dos(card('Ingresos mensuales · 2026 frente a 2025', linea(MESES, { '2026': ing26, '2025 (mismo período)': ing25 }, miles)),
              card('Matrículas mensuales · 2026 frente a 2025', linea(MESES, { '2026': mat26, '2025 (mismo período)': mat25 }, function (v) { return Math.round(v); })));
+    h += '</div>' + sec('tendencias');
     h += dos(card('Resultado real frente a la meta proyectada', linea(MESES, { 'Real 2026': ing26, 'Meta (2025 + 15 %)': metaS }, miles)),
              card('Ticket promedio mensual', linea(MESES, { '2026': tk26, '2025 (mismo período)': tk25 }, function (v) { return money(v); })));
     var cv26 = MES_N.map(function (m) { return convMes(1, m); }), dz26 = MES_N.map(function (m) { return deserMes(1, m); });
     var cv25 = MES_N.map(function (m) { return convMes(0, m); }), dz25 = MES_N.map(function (m) { return deserMes(0, m); });
-    h += card('Evolución de la conversión y la deserción (%)', linea(MESES, { 'Conversión lead → matrícula 2026': cv26, 'Deserción mensual 2026': dz26, 'Conversión 2025': cv25, 'Deserción 2025': dz25 }, function (v) { return (Math.round(v * 10) / 10) + '%'; })
-      + '<p class="plan-nota">Deserción: estudiantes que terminan un módulo y no se rematriculan en 30 días (definición propuesta, por confirmar). Se filtra por sede.</p>');
+    var pf1 = function (v) { return (Math.round(v * 10) / 10) + '%'; };
+    h += dos(card('Conversión lead → matrícula (%)', linea(MESES, { '2026': cv26, '2025 (mismo período)': cv25 }, pf1)),
+             card('Deserción mensual (%)', linea(MESES, { '2026': dz26, '2025 (mismo período)': dz25 }, pf1)
+      + '<p class="plan-nota">Estudiantes que terminan un módulo y no se rematriculan en 30 días (definición propuesta, por confirmar).</p>'));
 
     // Barras
     var rows = selS(R.a, R.b);
@@ -210,11 +214,20 @@
     var porCanal = dim.origs.map(function (n, k) { var f = funnel(ls.filter(function (x) { return x.r[4] === k; })); return { l: n, v: f.rec ? f.gan / f.rec * 100 : 0 }; }).sort(function (a, b) { return b.v - a.v; });
     var sorted = function (a) { return a.slice().sort(function (x, y) { return y.v - x.v; }); };
     var $f = function (v) { return money(v); }, nf = function (v) { return String(Math.round(v)); }, pf = function (v) { return (Math.round(v * 10) / 10) + '%'; };
+    var regulares = cur.mat - cur.one;
+    var porProgM = dim.progs.map(function (n, k) { return { l: n, v: agg(rows.filter(function (r) { return r[5] === k; })).mat }; }).filter(function (x) { return x.v > 0; });
+    h += '</div>' + sec('productos');
     h += dos(card('Ingresos por sede', hb(sorted(porSede), $f)), card('Ingresos por línea de negocio', hb(sorted(lineas), $f)));
     h += dos(card('Ingresos por producto', hb(sorted(porProd), $f)), card('Ingresos por tipo de programa', hb(sorted(porProg), $f)));
     h += dos(card('Certificaciones, traducciones y servicios vendidos', hb([{ l: 'Certificaciones (exámenes)', v: cur.cert, cero: true }, { l: 'Traducciones', v: cur.trad, cero: true }, { l: 'Total de servicios', v: cur.serv, cero: true }], nf)),
-             card('Matrículas por origen del lead', hb(sorted(porOrigM), nf)));
-    h += dos(card('Ingresos por origen del lead', hb(sorted(porOrigI), $f)), card('Conversión por canal (lead → ganado)', hb(porCanal, pf)));
+             card('Distribución de matrículas por programa', pie(porProgM, nf)));
+    h += dos(card('Estudiantes en planes de nivel', pie([{ l: 'Plan de nivel completo', v: cur.planes }, { l: 'Módulos sueltos y horas', v: cur.mat - cur.planes }])),
+             card('Ventas one to one frente a programas regulares', pie([{ l: 'One to one', v: cur.one }, { l: 'Programas regulares', v: regulares }])));
+    h += '</div>' + sec('origen');
+    h += dos(card('Matrículas por origen del lead', hb(sorted(porOrigM), nf)), card('Ingresos por origen del lead', hb(sorted(porOrigI), $f)));
+    h += dos(card('Conversión por canal (lead → ganado)', hb(porCanal, pf)),
+             card('Matrículas provenientes de referidos', pie([{ l: 'Referidos', v: cur.ref }, { l: 'Otros orígenes', v: cur.mat - cur.ref }])));
+    h += '</div>' + sec('asesores');
 
     // Asesores
     var ases = dim.ases.map(function (n, i) { var rr = rows.filter(function (r) { return r[4] === i; }); var a = agg(rr); var f = funnel(ls.filter(function (x) { return x.r[3] === i; })); return { n: n, a: a, conv: f.rec ? f.gan / f.rec * 100 : 0 }; }).filter(function (x) { return x.a.n || x.conv; });
@@ -225,16 +238,9 @@
       + card('Upsell (% de matrículas con un servicio adicional)', asB(function (x) { return x.a.mat ? x.a.ups / x.a.mat * 100 : 0; }, pf)),
       '<span class="badge badge-neutral">Cada asesor ve el suyo</span>');
 
-    // Porcentuales
-    var regulares = cur.mat - cur.one;
-    var porProgM = dim.progs.map(function (n, k) { return { l: n, v: agg(rows.filter(function (r) { return r[5] === k; })).mat }; }).filter(function (x) { return x.v > 0; });
-    h += dos(card('Estudiantes en planes de nivel', pie([{ l: 'Plan de nivel completo', v: cur.planes }, { l: 'Módulos sueltos y horas', v: cur.mat - cur.planes }])),
-             card('Ventas one to one frente a programas regulares', pie([{ l: 'One to one', v: cur.one }, { l: 'Programas regulares', v: regulares }])));
-    h += dos(card('Matrículas provenientes de referidos', pie([{ l: 'Referidos', v: cur.ref }, { l: 'Otros orígenes', v: cur.mat - cur.ref }])),
-             card('Distribución de matrículas por programa', pie(porProgM, nf)));
-    h += card('Upsell por asesor (%)', asB(function (x) { return x.a.mat ? x.a.ups / x.a.mat * 100 : 0; }, pf));
     h += '</div>';
     q('[data-plan-out="todo"]').innerHTML = h;
+    vista();
 
     embudo(R, ls, fu);
     matriz(R, rows, ls);
@@ -318,6 +324,23 @@
     el.innerHTML = h;
   }
 
+  /* ---------- Vistas: una sección a la vez ---------- */
+  var V = 'resumen', VISTAS = ['resumen', 'tendencias', 'productos', 'origen', 'asesores', 'embudo', 'matriz'];
+  function vista() {
+    qa('[data-pv-sec]', root).forEach(function (e) { e.hidden = e.getAttribute('data-pv-sec') !== V; });
+    qa('[data-pv]', root).forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-pv') === V ? 'true' : 'false'); });
+  }
+  function vistaHash() {
+    var h = ''; try { h = decodeURIComponent(location.hash); } catch (e) {}
+    var v = h.split('/')[1]; if (v && VISTAS.indexOf(v) >= 0 && h.indexOf('#tab-indicadores') === 0) { V = v; vista(); }
+  }
+  window.addEventListener('hashchange', vistaHash);
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-pv]') : null;
+    if (b) { V = b.getAttribute('data-pv'); vista(); try { history.replaceState(null, '', '#tab-indicadores-y-graficos/' + V); } catch (x) {} return; }
+    if (e.target.closest && e.target.closest('a[href*="#tab-indicadores"]')) setTimeout(vistaHash, 0);
+  });
+
   /* ---------- Eventos ---------- */
   function leer() {
     qa('[data-pf]').forEach(function (e) { var k = e.getAttribute('data-pf'); if (k in F) F[k] = e.value; });
@@ -346,7 +369,7 @@
     var f = q('.wf-filters[data-target="ventas"]'); if (f) { f.hidden = plan; var k = f.nextElementSibling; if (k && k.classList.contains('summary')) k.hidden = plan; }
   }
   document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[role=tab]')) setTimeout(barraPagina, 30); });
-  function init() { todo(); barraPagina(); }
+  function init() { vistaHash(); todo(); barraPagina(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   setTimeout(init, 700);
 })();
