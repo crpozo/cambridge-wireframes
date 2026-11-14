@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Cook: capturas y comparaciones (estado local, no se publica)
+cook/stills/
+cook/compare/
+cook/refs/

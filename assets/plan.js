@@ -7,7 +7,7 @@
   var node = document.getElementById('plan-data');
   if (!node) return;
   var D = JSON.parse(node.textContent), S = D.S, L = D.L, DS = D.D, dim = D.dim;
-  var CH = ['#2F55B5', '#D62839', '#2E8BC9', '#C9900A', '#7A5BC0', '#2E9E6B', '#8A93A6', '#B45309', '#16A34A'];
+  var CH = ['#1D3F8F', '#4A68B8', '#7F97D3', '#B3C2E8', '#2E4F9E', '#5F7CC4', '#93A8DC', '#C7D2EE', '#3A4560'];
   var HOY = 20261023, MESES = ['Jun', 'Jul', 'Ago', 'Sep', 'Oct'], MES_N = [6, 7, 8, 9, 10];
   var DIAS = { 6: 30, 7: 31, 8: 31, 9: 30, 10: 23 };
   var ORIG_REF = dim.origs.indexOf('Referencia / Referido');

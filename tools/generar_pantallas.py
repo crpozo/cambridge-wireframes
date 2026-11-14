@@ -835,7 +835,7 @@ def li(items):
 
 # ================= TEMA MOCKUP · identidad Cambridge (sobrescribe los helpers lo-fi) =================
 NAVY="#1D3F8F"; NAVY2="#152F6B"; RED="#D62839"; YELLOW="#F6C21C"; SKY="#4FA3DC"; OK="#1B9E77"; WARN="#C9900A"
-CH=["#2F55B5","#D62839","#2E8BC9","#C9900A"]  # paleta de gráficos validada (dataviz)
+CH=["#1D3F8F","#4A68B8","#7F97D3","#B3C2E8"]  # paleta de gráficos: azules, pizarra y verde azulado; el rojo y el ámbar quedan para estados
 SVG={
  "home":"<path d='M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'/>",
  "users":"<circle cx='9' cy='8' r='3.5'/><path d='M2.5 20a6.5 6.5 0 0 1 13 0'/><path d='M16 4a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3'/>",
@@ -916,11 +916,14 @@ def rowmenu(items_html, label="Acciones"):
 def split_actions(actions, keep=2):
     """Un primario + otra acción visibles; el resto va a 'Más acciones'."""
     els=_top_elems(actions)
-    if len(els)<=keep: return actions
-    prim=[e for e in els if 'btn-primary' in e][:1]
-    rest=[e for e in els if e not in prim]
+    # solo los botones se agrupan; el texto (estado, totales) queda siempre a la vista
+    btns=[e for e in els if 'class="btn' in e or "class='btn" in e or 'btn-' in e]
+    if len(btns)<=keep: return actions
+    prim=[e for e in btns if 'btn-primary' in e][:1]
+    rest=[e for e in btns if e not in prim]
     vis=prim+rest[:keep-len(prim)]
-    return "".join(vis)+more_menu("".join(e for e in els if e not in vis))
+    info=[e for e in els if e not in btns]
+    return "".join(info)+"".join(vis)+more_menu("".join(e for e in btns if e not in vis))
 
 def nav(active):
     active=NAV_ALIAS.get(active,active); out=""
@@ -1041,6 +1044,11 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0, tid=None):
         if money and len(cifras)+len(guiones)==len(vals): numcols.add(i)
         elif money and len(money)+len(guiones)>=0.6*len(vals): numcols.add(i)
         elif enteros and len(enteros)+len(guiones)==len(vals) and _re.search(r"d[ií]as|cant|intentos|[ií]tems|horas|sesiones",str(cols[i]),_re.I): numcols.add(i)
+        else:
+            # cantidades, porcentajes y fracciones (cupo 12/15, virtual / presencial 6 / 8) también van a la derecha,
+            # salvo columnas que son identificadores (módulo, nivel, código, año)
+            fr=[v for v in vals if _re.fullmatch(r"\d+(?:[.,]\d+)?%?|\d+\s*/\s*\d+",v)]
+            if fr and len(fr)+len(guiones)==len(vals) and not _re.search(r"m[óo]dulo|nivel|c[óo]d|año|#|sesi[óo]n\b",_txt(cols[i]),_re.I): numcols.add(i)
     hd="".join(f'<div class="th{cls(i)}{" th-num" if i in numcols else ""}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
         cells=""
@@ -1236,7 +1244,7 @@ def filters(*ctrls, actions="", show=3, target=None):
     i=_nid()
     extra=(f'<button type="button" class="btn btn-more" data-menu aria-expanded="false" aria-controls="{i}">Filtros ({len(more)})<span class="cnt"></span></button>' if more else "")
     hidden=(f'<div id="{i}" class="filters-more menu-pop" hidden>{"".join(more)}</div>' if more else "")
-    acts=f'<div class="filters-actions">{split_actions(actions,2)}</div>' if actions else ''
+    acts=f'<div class="filters-actions">{split_actions(actions,1)}</div>' if actions else ''
     return f'<div class="wf-filters filters"{f" data-target={chr(34)}{target}{chr(34)}" if target else ""}>{main}{extra}{hidden}{acts}<div class="chips-active" aria-live="polite"></div></div>'
 
 def note(text, kind="info"):
@@ -1246,7 +1254,15 @@ def kv(*pairs):
 def badge(text, kind="neutral"):
     """Estado = punto + texto en color semántico. Las etiquetas de alcance llevan fondo (tag)."""
     if str(text).startswith(("Propuesta","Requerimiento")): return f'<span class="tag tag-warn">{text}</span>'
+    t=str(text)
+    # "Estado · detalle" largo: el estado queda en la línea del punto y el detalle debajo, en gris
+    if " · " in t and "<" not in t and len(t)>18:
+        a,b=t.split(" · ",1)
+        return f'<span class="badge badge-{kind}"><span class="b-t">{a}<small class="b-d">{b}</small></span></span>'
     return f'<span class="badge badge-{kind}">{text}</span>'
+def totals(rows):
+    """Bloque de totales alineado a la derecha; la última fila es el total con filete doble."""
+    return '<dl class="totals">'+"".join(f'<div class="{"t-total" if i==len(rows)-1 else ""}"><dt>{k}</dt><dd>{v}</dd></div>' for i,(k,v) in enumerate(rows))+'</dl>'
 def count(n):
     return f'<span class="count">{n}</span>'
 def progress(pct, label="", color=None):
@@ -1353,12 +1369,12 @@ def li(items):
     return '<ul class="list">'+"".join(f"<li>{i}</li>" for i in items)+'</ul>'
 def course_item(name, meta, pct, status, grade, cert, href="DetalleMatricula.html", tone=0, sessions="", hours=""):
     """Fila de curso matriculado: ícono tintado, nombre, meta, sesiones/horas, anillo, estado, nota, certificado."""
-    tints=["var(--tint-navy)","var(--tint-red)","var(--tint-sky)","var(--tint-yellow)"]; inks=[NAVY,RED,"#1B6FA8","#B45309"]
+    tints=["var(--surface-2)"]*4; inks=["var(--ink-2)"]*4
     g=grade.split("/") if "/" in grade else [grade,""]
     return (f'<div class="course"><span class="course-ico" style="background:{tints[tone%4]};color:{inks[tone%4]}"><svg viewBox="0 0 24 24">{SVG["book"]}</svg></span>'
             f'<div class="course-name"><a href="{href}">{name}</a><small>{meta}</small></div>'
             f'<div class="course-meta"><span><svg viewBox="0 0 24 24">{SVG["play"]}</svg>{sessions}</span><span><svg viewBox="0 0 24 24">{SVG["clock"]}</svg>{hours}</span></div>'
-            f'{ring(pct,inks[tone%4])}<span class="course-state">{status}<small>Certificado</small>{cert}</span><span class="course-grade">{g[0].strip()}{f"<small>/{g[1].strip()}</small>" if g[1] else ""}</span></div>')
+            f'{ring(pct,"var(--ok)" if pct>=100 else NAVY)}<span class="course-state">{status}<small>Certificado</small>{cert}</span><span class="course-grade">{g[0].strip()}{f"<small>/{g[1].strip()}</small>" if g[1] else ""}</span></div>')
 def journey(levels):
     """Ruta del programa por niveles: (nivel, módulos, % avance, detalle). El ancho de cada tramo es proporcional a sus módulos."""
     segs="".join(f'<div class="journey-seg{" done" if p==100 else " now" if p>0 else ""}" style="flex:{m}"><div class="journey-bar"><i style="width:{p}%"></i></div><b>{n}</b><small>{d}</small></div>' for n,m,p,d in levels)
@@ -2029,13 +2045,13 @@ portal=f'''<div class="portal">
      +row(btn("Rematricularme",disabled_reason="Se activa al aprobar el módulo 10 · tu bolsa cubre hasta el 10"))
      +'<p class="plain">Si tuvieras un saldo pendiente verías aquí un aviso con el contacto de Secretaría de tu sede en lugar del botón, hasta regularizarlo.</p>')
    +card("Próximos cursos", table(["Curso","Inicia","Profesor","Horario","Estado"],[[c2("English for Adults (ESL) · Virtual · Grupal · B1 módulo 8","0001-2026-0767"),"3 nov 2026","P. Gómez","Lu-Ma-Mi-Ju 19:00–21:00",badge("Confirma tu cupo","warn")],[c2("English for Adults (ESL) · Presencial · Grupal · B1+ módulos 9–10","sábados · Quito"),"9 ene 2027","L. Vega","Sa 09:00–13:00",badge("Pagado · cupo reservado","navy")],[c2("English for Adults (ESL) · Virtual · Grupal · B2 módulos 11–14","por abrir"),"mar 2027","por asignar","—",badge("Rematrícula al terminar B1+","neutral")]],wide=0))
-   +card("Cursos", course_item("English for Adults (ESL) · Virtual · Grupal · B1","módulo 7 · P. Gómez",60,badge("En curso","warn"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
+   +card("Cursos", course_item("English for Adults (ESL) · Virtual · Grupal · B1","módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
      +course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),href="PortalEstudiante.html",tone=2,sessions="36",hours="72 h")
      +course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),href="PortalEstudiante.html",tone=3,sessions="18",hours="36 h")
      +course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),href="PortalEstudiante.html",tone=1,sessions="0",hours="0 h")),
   "Asistencia": two(card("Esta semana", stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"Clase":[2,2,2,2,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)),
      card("Últimas sesiones", row(btn("Justificar ausencia"),btn("Pedir reposición"))+table(["Sesión","Fecha","Asistí"],[["Sesión 11 · módulo 7","Mié 7 oct · 19:00",badge("Sí","ok")],["Sesión 10 · módulo 7","Mar 6 oct · 19:00",badge("Sí","ok")],["Sesión 9 · módulo 7","Lun 5 oct · 19:00",badge("No · aviso previo","warn")],["Sesión 8 · módulo 7","Jue 1 oct · 19:00",badge("Sí","ok")],["Sesión 7 · módulo 7","Mié 30 sep · 19:00",badge("Sí","ok")]])+kv(("Asistencia del curso","90%"),("Mínimo para certificado","75%")))),
-  "Notas y certificados": two(card("Puntaje actual · B1", '<div class="perf">'+gauge(84,"Puntaje total",segments=True)+'<div class="perf-legend"><div><i style="background:#16A34A"></i>Participación<b>55%</b></div><div><i style="background:#F6C21C"></i>Quiz en clase<b>15%</b></div><div><i style="background:#F59E0B"></i>Examen<b>10%</b></div><div><i style="background:#D62839"></i>Ausencias<b>10%</b></div></div></div>'),
+  "Notas y certificados": two(card("Puntaje actual · B1", '<div class="perf">'+gauge(84,"Puntaje total")+'<div class="perf-legend"><div><i style="background:var(--ch1)"></i>Participación<b>55%</b></div><div><i style="background:var(--ch2)"></i>Quiz en clase<b>15%</b></div><div><i style="background:var(--ch3)"></i>Examen<b>10%</b></div><div><i style="background:var(--ch4)"></i>Ausencias<b>10%</b></div></div></div>'),
      card("Certificados por nivel y módulo", table(["Nivel","Módulos (programa · modalidad)","Nota","Acción"],[["A2",c2("Módulos 3–6","3 y 4 presencial · 5 y 6 virtual · ESL grupal"),"85 · Pass",btn("Descargar certificado")],["A1",c2("Módulos 1–2","presencial · ESL grupal"),"80 · Pass",btn("Descargar certificado")],["B1",c2("Módulos 7–8","7 virtual (en curso) · 8 virtual"),"en curso","—"]],wide=1))),
   "Pagos y facturas": two(card("Mi compra", kv(("Saldo pendiente","$0 · todo al día"),("Módulos comprados","7 a 10 · B1 y B1+"),("En curso","módulo 7 · quedan 3 por cursar"),("Plan de pago","2 cuotas · pagadas"))+progress(25,"Compra del 28 ago · 1 de 4 módulos en curso")
      +table(["Por pagar","Vence","Monto"],[["Rematrícula B2 · módulo 11 (al confirmarla)","al rematricularte","$250.00"]])+row(btn("Pagar en línea",None,True),btn("Subir comprobante"))),
@@ -2106,7 +2122,7 @@ VL='<a href="MatriculaLead.html">Matricular</a>'
 def stages(head, items):
     """Franja de etapas de un embudo: (nombre, conteo, tasa, color, valor de filtro). Clic = filtra la tabla por Etapa."""
     st="".join(f'<button type="button" class="stage" data-fset="Etapa={fv}" aria-pressed="false" style="--sc:{c}"><span class="st-name"><i aria-hidden="true"></i>{n}</span><span class="st-count">{k}</span><span class="st-rate">{r}</span></button>' for n,k,r,c,fv in items)
-    return f'<section class="stages" data-fgroup aria-label="Etapas del embudo"><div class="stages-head">{head}</div>{st}</section>'
+    return f'<section class="stages" style="--n:{len(items)}" data-fgroup aria-label="Etapas del embudo"><div class="stages-head">{head}</div>{st}</section>'
 page("Leads.html","Leads",shell("Leads y conversión","Leads",
  stages(f'<b>{sv(310,180,80,50,0)} leads del mes · {agg("count","leads")} ganados en la lista</b><span class="sync-ok">Resumen de consulta del embudo de Kommo · el trabajo diario sigue en Kommo · sincronizado hace 3 min</span><span style="margin-left:auto">'+btn("Sincronizar con Kommo",None,False,"Se traen los leads nuevos y cambios de etapa desde Kommo (API).",kind="ghost")+'</span>',[
    ("Contactado",sv(138,78,37,23,0),"89% de los leads","var(--info)","Contactado"),
@@ -2167,10 +2183,10 @@ page("DetalleEmpresa.html","Detalle de empresa",shell("Grupo Nova","Empresas",
  kpis([("Estudiantes","17","14 activos · 3 terminaron"),("Asistencia promedio","91%","meta 85%"),("Aprobación","12 de 12","módulos cerrados"),("Saldo de la empresa","$1,200","factura 000021102 · vence 11 nov")]),
  card("Estudiantes del grupo", filters(search("Buscar","Nombre o curso",w="220px"),sel("Estado",["Todos","En curso","Terminó"],w="140px"))
   +table(["Estudiante","Curso","Profesor","Asistencia","Estado","Acción"],[
-   [c2('<a href="Ficha360.html">Ricardo Almeida</a>',"Gerente comercial"),c2("Business · one to one","0001-2026-0810 · Teams · 40 h"),"L. Vega","96%",badge("En curso","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
-   [c2('<a href="Ficha360.html">Carolina Benítez</a>',"Jefa de finanzas"),c2("Business grupal","0001-2026-0608 · Ma-Ju 07:00–08:30"),"M. Castro","90%",badge("En curso","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
-   [c2('<a href="Ficha360.html">Jorge Paredes</a>',"Analista"),c2("Business grupal","0001-2026-0608 · Ma-Ju 07:00–08:30"),"M. Castro","88%",badge("En curso","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
-   [c2('<a href="Ficha360.html">Natalia Cruz</a>',"Coordinadora de logística"),c2("Adults B2 Virtual · módulo 11","0001-2026-0790 · one to one reducido · lunes 15:00"),"L. Vega","92%",badge("En curso","ok"),'<a href="Ficha360.html">Ver ficha</a>'],
+   [c2('<a href="Ficha360.html">Ricardo Almeida</a>',"Gerente comercial"),c2("Business · one to one","0001-2026-0810 · Teams · 40 h"),"L. Vega","96%",badge("En curso","navy"),'<a href="Ficha360.html">Ver ficha</a>'],
+   [c2('<a href="Ficha360.html">Carolina Benítez</a>',"Jefa de finanzas"),c2("Business grupal","0001-2026-0608 · Ma-Ju 07:00–08:30"),"M. Castro","90%",badge("En curso","navy"),'<a href="Ficha360.html">Ver ficha</a>'],
+   [c2('<a href="Ficha360.html">Jorge Paredes</a>',"Analista"),c2("Business grupal","0001-2026-0608 · Ma-Ju 07:00–08:30"),"M. Castro","88%",badge("En curso","navy"),'<a href="Ficha360.html">Ver ficha</a>'],
+   [c2('<a href="Ficha360.html">Natalia Cruz</a>',"Coordinadora de logística"),c2("Adults B2 Virtual · módulo 11","0001-2026-0790 · one to one reducido · lunes 15:00"),"L. Vega","92%",badge("En curso","navy"),'<a href="Ficha360.html">Ver ficha</a>'],
    [c2('<a href="Ficha360.html">Esteban Vaca</a>',"Supervisor de planta"),c2("Business grupal","0001-2026-0608 · Ma-Ju 07:00–08:30"),"M. Castro","72%",badge("Riesgo asistencia","bad"),'<a href="Ficha360.html">Ver ficha</a>'],
    [c2('<a href="Ficha360.html">Paola Ruiz</a>',"Asistente de gerencia"),c2("Adults B1+ · módulo 10","terminó en sep · nota 8.6"),"P. Gómez","94%",badge("Terminó","neutral"),'<a href="Ficha360.html">Ver ficha</a>']],wide=0)),
  two(card("Facturación a la empresa", table(["Factura","Concepto","Total","Estado","Acción"],[[c2("000021102","12 oct · crédito 30 días"),"Octubre · 14 estudiantes","$1,200.00",badge("Por vencer · 11 nov","warn"),'<a href="DetalleFactura.html">Ver</a>'],[c2("000021088","sin estudiantes asignados"),"Business one to one · paquete 40 h","$1,200.00",badge("Sin vincular","bad"),'<a href="Facturas.html">Vincular</a>'],[c2("000021041","12 sep"),"Septiembre · 15 estudiantes","$1,600.00",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']],wide=0)),
@@ -2240,7 +2256,7 @@ home=shell("Inicio","Inicio",
  only("ADM,GER,DIR,SUC", kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")]))+
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
  only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$443","$443","$0","$0"),"meta cumplida · ver cálculo")])),
- only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="gauges">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos",CH[2])+gauge(109,"Meta de niveles",CH[3])+'</div>'))) ,
+ only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="gauges">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos")+gauge(109,"Meta de niveles","var(--ok)")+'</div>'))) ,
  two(only("ADM,GER,DIR,SUC", card("Pendientes de aprobación", li(["Descuento 42% · Gabriela Núñez · Carla M.","Tarifa de profesor fuera de tabla · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
      +only("COO", card("Pendientes de aprobación", li(["Tarifa de profesor fuera de tabla · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
      +only("SEC", card("Pendientes de secretaría", li(['<a href="Facturas.html">2 rematrículas por confirmar · Sofía Herrera reportó transferencia</a>','<a href="Facturas.html">Factura 000021095 rechazada por el SRI · cédula inválida</a>','<a href="Facturas.html">Cartera vencida: 2 cuotas · $725</a>','<a href="Inventario.html">3 libros con stock negativo · correo de las 07:00 enviado</a>'])+row(btn("Ir a facturación","Facturas.html"))))
@@ -2282,25 +2298,25 @@ page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
 # 4 Ficha 360
 ficha=shell("María Andrade","Estudiantes",
  f'''<div class="grid" style="grid-template-columns:320px 1fr">
-  <aside class="profile"><div class="profile-cover"></div><div class="profile-body">{avatar("MA")}<div class="chips" style="justify-content:center;gap:8px"><span class="badge badge-navy">EST-00412</span>{badge("Activa","bad").replace("badge-bad","badge-bad")}</div><h2>María Andrade</h2><span class="kpi-sub">Matriculada el 10 jul 2025 · Quito</span>
+  <aside class="profile"><div class="profile-cover"></div><div class="profile-body">{avatar("MA")}<div class="chips" style="justify-content:center;gap:8px"><span class="badge badge-navy">EST-00412</span>{badge("Activa","ok")}</div><h2>María Andrade</h2><span class="kpi-sub">Matriculada el 10 jul 2025 · Quito</span>
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Sector</b>Quito Norte · La Carolina (ubicada en el mapa)</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
     <div class="section"><h3>Logros y certificados</h3><div class="awards"><div><i></i>Certificado A1 · dic 2025</div><div><i></i>Certificado A2 · jun 2026 · nota 85</div><div><i></i>Asistencia perfecta · módulo 5</div><div><i></i>Mejor progreso del grupo · módulo 6</div><div><i></i>Referido: trajo a 1 estudiante</div></div></div>
-    <div class="actions">{btn("Nueva matrícula",None,True)}<a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
+    <div class="actions">{btn("Nueva matrícula")}<a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div class="grid" style="grid-template-columns:1.25fr 1fr">
-      {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip" style="background:var(--tint-navy)"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip" style="background:var(--tint-red)"><b>1 h</b>Club de conversación</span><span class="chip" style="background:var(--tint-sky)"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
-      {card("Rendimiento", '<div class="perf">'+gauge(84,"Puntaje total",segments=True)+'<div class="perf-legend"><div><i style="background:#16A34A"></i>Participación<b>55%</b></div><div><i style="background:#F6C21C"></i>Quiz en clase<b>15%</b></div><div><i style="background:#F59E0B"></i>Examen<b>10%</b></div><div><i style="background:#D62839"></i>Ausencias<b>10%</b></div></div></div><div class="trend"><div class="big"><b>84% <span class="up">+3.4%</span></b>últimos 6 meses</div>'+areachart(["May","Jun","Jul","Ago","Sep","Oct"],[72,78,75,81,83,84],h=140)+'</div><div class="quote">Va al día con el módulo 7 y mejoró 12 puntos desde mayo. Si mantiene la asistencia, cierra B1 en noviembre con certificado.</div>', sel("Período",["Últimos 6 meses","Módulo actual","Todo"],w="160px",col=False))}
+      {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip"><b>1 h</b>Club de conversación</span><span class="chip"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
+      {card("Rendimiento", '<div class="perf">'+gauge(84,"Puntaje total")+'<div class="perf-legend"><div><i style="background:var(--ch1)"></i>Participación<b>55%</b></div><div><i style="background:var(--ch2)"></i>Quiz en clase<b>15%</b></div><div><i style="background:var(--ch3)"></i>Examen<b>10%</b></div><div><i style="background:var(--ch4)"></i>Ausencias<b>10%</b></div></div></div><div class="trend"><div class="big"><b>84% <span class="up">+3.4%</span></b>últimos 6 meses</div>'+areachart(["May","Jun","Jul","Ago","Sep","Oct"],[72,78,75,81,83,84],h=140)+'</div><div class="quote">Va al día con el módulo 7 y mejoró 12 puntos desde mayo. Si mantiene la asistencia, cierra B1 en noviembre con certificado.</div>', sel("Período",["Últimos 6 meses","Módulo actual","Todo"],w="160px",col=False))}
     </div>
-    {card("Rematrícula (conectada con el Muro)", '<div class="grid" style="grid-template-columns:1fr 1fr 1fr">'+kpi("Avance en el Muro","100%","módulo 7 · B1 Virtual")+kpi("Nota de aprobación","8.4 / 10","mínimo 7 · aprobado")+kpi("Siguiente","Módulo 8","ya pagado · mismo grupo · inicia 3 nov")+kpi("Bolsa de módulos","2","9 y 10 · pagados sin curso")+'</div>'+kv(("Estado",badge("Pagado, pendiente de matricular (9 y 10)","navy")),("Por qué","los módulos 7 a 10 están en la venta del 28 ago (factura 000021090)"),("Rematrícula con pago","se activa al aprobar el módulo 10, el último comprado"))+only(COMERCIAL,row(btn("Nueva matrícula",None,True),btn("Enviar recordatorio"))),extra=badge("Condiciones cumplidas","ok"))}
-    {card("Cursos matriculados", course_item("English for Adults B1 Virtual","Adults · B1 · módulo 7 · P. Gómez",60,badge("En curso","warn"),"84 / 100",badge("Pendiente"),tone=0,sessions="18",hours="36 h")+course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","bad"),"85 / 100",badge("A2.pdf","navy"),tone=2,sessions="36",hours="72 h")+course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","bad"),"80 / 100",badge("A1.pdf","navy"),tone=3,sessions="18",hours="36 h")+course_item("Club de conversación B1","Extracurricular · sábados · S. Jiménez",35,badge("En curso","warn"),"—",badge("Ninguno"),tone=1,sessions="4",hours="4 h")+course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),tone=0,sessions="0",hours="0 h"), filters(search("Buscar","Curso, categoría…",w="240px"),sel("Estado",["Todos","En curso","Completado","Pendiente"],w="130px",col=False),actions='<a href="Cursos.html" class="btn btn-primary">Ver todos</a>'))}
+    {card("Rematrícula (conectada con el Muro)", '<div class="grid kpi-2x2">'+kpi("Avance en el Muro","100%","módulo 7 · B1 Virtual")+kpi("Nota de aprobación","8.4 / 10","mínimo 7 · aprobado")+kpi("Siguiente","Módulo 8","ya pagado · mismo grupo · inicia 3 nov")+kpi("Bolsa de módulos","2","9 y 10 · pagados sin curso")+'</div>'+kv(("Estado",badge("Pagado, pendiente de matricular (9 y 10)","navy")),("Por qué","los módulos 7 a 10 están en la venta del 28 ago (factura 000021090)"),("Rematrícula con pago","se activa al aprobar el módulo 10, el último comprado"))+only(COMERCIAL,row(btn("Nueva matrícula",None,True),btn("Enviar recordatorio"))),extra=badge("Condiciones cumplidas","ok"))}
+    {card("Cursos matriculados", course_item("English for Adults B1 Virtual","Adults · B1 · módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),tone=0,sessions="18",hours="36 h")+course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),tone=2,sessions="36",hours="72 h")+course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),tone=3,sessions="18",hours="36 h")+course_item("Club de conversación B1","Extracurricular · sábados · S. Jiménez",35,badge("En curso","navy"),"—",badge("Ninguno"),tone=1,sessions="4",hours="4 h")+course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),tone=0,sessions="0",hours="0 h"), filters(search("Buscar","Curso, categoría…",w="240px"),sel("Estado",["Todos","En curso","Completado","Pendiente"],w="130px",col=False),actions='<a href="Cursos.html" class="btn btn-ghost">Ver todos</a>'))}
   </div>
 </div>''',
  tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
   "Datos": two(card("Datos personales", form([("Nombres","María"),("Apellidos","Andrade"),("Cédula / ID","1712345678"),"Fecha de nacimiento",("Email","maria.andrade@ejemplo.com",'email'),("Teléfono","099 000 0001",'tel'),"@@DIR@@","Sede"])),
                card("Comercial y origen", form(["Asesor asignado",("Canal de contacto (editable)","Walk in","select",ORIGENES,True,"Si entró como Walk in pero era un referido, se corrige aquí"),"Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+'<p class="plan-nota" data-canal-log hidden></p><script src="assets/matricula.js"></script>'+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
   "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],hide=(0,2,4,5),wide=1,rows=[
-     ["001-202602794",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Virtual · Grupal · B1</a>',"001-202602794 · 0001-2026-0767 · módulo 7 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$305","$305","$0","90%","—",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202602794",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Virtual · Grupal · B1</a>',"001-202602794 · 0001-2026-0767 · módulo 7 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$305","$305","$0","90%","—",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202601245",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Presencial · Grupal · A2</a>',"001-202601245 · 0001-2026-0620 · módulo 4 · Lu-Mi 14:00–16:00"),"Lu-Mi 14:00–16:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202601102",c2('<a href="DetalleMatricula.html">English for Adults A2</a>',"001-202601102 · 0001-2026-0512 · Lu-Mi 18:00–20:00"),"Lu-Mi 18:00–20:00","3","$240","$240","$0","92%","88 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202500811",c2('<a href="DetalleMatricula.html">English for Adults A1</a>',"001-202500811 · 0001-2025-0430 · Sa 09:00–13:00"),"Sa 09:00–13:00","2","$495","$455","$0","88%","80 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>']])
@@ -2442,13 +2458,13 @@ ACTIONS.update({
 page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-202602794","Estudiantes",
  hero([("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Curso",'<a href="DetalleCurso.html">0001-2026-0767</a>'),("Programa","English for Adults (ESL) · Virtual · Grupal"),("Nivel","Módulo 7 · B1"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Asesor (vendor)","Carla M."),("Plan de pago","2 cuotas · cada 30 días"),("Contrato",badge("Aceptado · 28 ago 10:40 · María Andrade","ok")+'<small> · código por correo · IP registrada</small>'),("Indexado","No"),("Tipo de estudiante","Antiguo · 3.ª matrícula"),("Documento de matrícula",'<a href="#">matricula-001-202602794.pdf</a>'),("Comisión del asesor","Pendiente · se paga al cobrar")],
   only(COMERCIAL,btn("Generar factura",None,False,disabled_reason="Ya está facturada: 000021090"),True)+only(COMERCIAL+",COO",btn("Cambio de curso, horario o modalidad","CambioMatricula.html"),True)+only(ACADEMICO+",SEC",btn("Enviar enlace de clase"),True)+only(ACADEMICO+",SEC",btn("Hoja de asistencia"),True)+btn("Ver venta completa","DetalleVenta.html")+btn("Reenviar contrato para aceptación")+btn("Imprimir matrícula")+btn("Agregar comentario")+only("ASE,DIR,ADM",btn("Eliminar matrícula"),True)+only("ADM,GER,DIR,SUC",btn("Reversar y anular"),True),
-  tag='<span class="hero-code">001-202602794</span>'+badge("En curso","ok")+badge("Quito","navy")+badge("Antiguo","neutral")),
+  tag='<span class="hero-code">001-202602794</span>'+badge("En curso","navy")+badge("Quito","navy")+badge("Antiguo","neutral")),
  only(COMERCIAL,
  two(card("Resumen", kv(("Subtotal","$330.00"),("Descuento","-$25.00 · referido"),("Total","$305.00"),("Pagado","$305.00"),("Saldo","$0 · venta pagada en 2 cuotas"))+progress(100,"Pagado de esta matrícula")
        +kv(("Venta","multi-módulo · 4 matrículas en la factura 000021090"),("Canal de contacto","Kommo · WhatsApp"),("Paga la empresa","No"),("Matrícula firmada",'<a href="#">matricula-001-202602794.pdf</a>'))),
      card("Valores y descuentos", table(["Concepto","Valor","Dcto.","Subtotal"],[[c2("Derecho de matrícula (tuition fee)","estudiante antiguo · exonerado"),"$0","—","$0"],[c2("Valor del curso (course fee)","módulo 7 · B1"),"$250","10%","$225"],[c2("Libros y materiales","Empower B1 Combo A + B1+ Combo B"),"$80","—","$80"]])
        +kv(("Motivo del descuento","Referido · dentro del límite del asesor"),("Aprobado por","No requerido · 10% está dentro del límite del asesor"),("Observaciones","Continúa en el mismo grupo para el módulo 8"))))),
- only("COO,PRO", card("Resumen académico", kv(("Módulo","7 · B1"),("Asistencia","10/11 · 90%"),("Nota parcial","8.4"),("Estado",badge("En curso","ok")))+progress(60,"Avance del módulo 7"))),
+ only("COO,PRO", card("Resumen académico", kv(("Módulo","7 · B1"),("Asistencia","10/11 · 90%"),("Nota parcial","8.4"),("Estado",badge("En curso","navy")))+progress(60,"Avance del módulo 7"))),
  tabs(["Matrículas de la venta","Estado de la matrícula","Facturas y pagos","Cartera","Códigos de libros","Asistencia","Portafolio","Certificados","Comisión","Historial"],"Matrículas de la venta",roles={"Estado de la matrícula":COMERCIAL+",COO","Facturas y pagos":COMERCIAL,"Cartera":COMERCIAL,"Comisión":"ADM,GER,DIR,ASE"},panels={
   "Estado de la matrícula": flow(["Reservada","En curso","Congelada (máx. 3 meses)","Reactivada","Terminada · aprobada o reprobada","Retirada"])
      +table(["Cambio","Qué pasa","Quién aprueba","Acción"],[
@@ -2457,7 +2473,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
        [c2("Cambio de curso","otro horario o modalidad"),"Conserva la matrícula y ajusta la diferencia de precio; si ya inició o no es nuevo, lo autoriza Académico","Comercial (nuevo y sin iniciar) · Académico",btn("Cambio de curso, horario o modalidad","CambioMatricula.html")],
        [c2("Retiro","deja el instituto"),"Nota de crédito, devolución o saldo a favor según la política","Administración de sucursal",btn("Retirar estudiante")],
        [c2("Transferir saldo","a otro estudiante"),"Nota de crédito aquí y saldo a favor en el otro","Administración de sucursal",btn("Transferir saldo")]],wide=0),
-  "Matrículas de la venta": table(["Matrícula","Módulo","Curso","Total","Estado","Acción"],[["001-202602794","7 · B1",c2("0001-2026-0767","Virtual · Lu-Ma-Mi-Ju 19:00–21:00"),"$305",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602795","8 · B1",c2("Mismo grupo","se asigna al cerrar el módulo 7"),"$225",badge("Reservada","navy"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602796","9 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602797","10 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>']],wide=2),
+  "Matrículas de la venta": table(["Matrícula","Módulo","Curso","Total","Estado","Acción"],[["001-202602794","7 · B1",c2("0001-2026-0767","Virtual · Lu-Ma-Mi-Ju 19:00–21:00"),"$305",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602795","8 · B1",c2("Mismo grupo","se asigna al cerrar el módulo 7"),"$225",badge("Reservada","navy"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602796","9 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>'],["001-202602797","10 · B1+",c2("Por abrir · Quito","Presencial · sábados"),"$225",badge("Por iniciar","neutral"),'<a href="DetalleMatricula.html">Ver</a>']],wide=2),
   "Facturas y pagos": table(["Factura","Fecha","Monto","Pagado","Saldo","Estado","Acción"],[["000021090","28 ago 2026","$980","$980","$0",badge("Pagada","ok"),'<a href="DetalleFactura.html">Ver</a>']])+kv(("Vinculación","la factura 000021090 está ligada a esta matrícula: servicios educativos $900 y productos $80"),("Si no tuviera factura","aquí se genera con un clic, con los ítems de la matrícula"))+row(btn("Registrar pago"),btn("Emitir nota de crédito")),
   "Cartera": table(["Cuota","Vence","Monto","Pagado","Días vencidos","Estado"],[["1 de 2","28 ago 2026","$490","$490","—",badge("Pagada","ok")],["2 de 2","27 sep 2026","$490","$490","—",badge("Pagada","ok")]])+row(btn("Enviar estado de cuenta"),btn("Registrar pago")),
   "Códigos de libros": table(["Material","ISBN","Código de activación","Entregado","Acción"],[["Empower B1 Combo A (digital pack)","9781108961516","EMP-B1-7K2Q-••••",'<a href="ReciboEntrega.html">28 ago 2026 · recibo firmado</a>',badge("Activado","ok")],["Empower B1+ Combo B (digital pack)","9781108961523","EMP-B1P-3M9X-•••• · reservado",'<a href="EntregasLibros.html">entrega pendiente · módulo 9</a>',btn("Asignar código",None,False)]]),
@@ -2524,7 +2540,7 @@ page("DetalleVenta.html","Detalle de venta",shell("Venta V-2026-0412","Tablero c
  two(card("Conceptos de la venta", table(["Concepto","Valor","Cuenta para metas"],[["Servicios educativos (3 módulos × $200)","$600",badge("Sí","ok")],["Inscripción","$0 · exonerada",badge("No","neutral")],["Materiales","se venden aparte",badge("No","neutral")]])),
      card("Fechas de la venta", table(["Evento","Fecha","Monto"],[["Venta","28 ago 2026","$600"],["Factura módulo 7","28 ago 2026","$200"],["Pago único","28 ago 2026","$600"],["Aplicación de saldo · módulo 8","3 nov 2026 (programada)","$200"],["Aplicación de saldo · módulo 9","ene 2027 (programada)","$200"]]))),
  card("Módulos, matrículas, facturas y aplicaciones del saldo", table(["Módulo","Matrícula","Factura","Pagado con","Estado","Acción"],[
-   [c2("Módulo 7 · B1","0001-2026-0767 · Virtual"),"001-202602794","000021090","pago PG-0942 · $200",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+   [c2("Módulo 7 · B1","0001-2026-0767 · Virtual"),"001-202602794","000021090","pago PG-0942 · $200",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],
    [c2("Módulo 8 · B1","mismo grupo · inicia 3 nov"),"por crear (Secretaría)","por emitir","saldo a favor · $200",badge("Pendiente de continuidad","warn"),'<a href="MatriculaContinuidad.html">Matricular</a>'],
    [c2("Módulo 9 · B1+","por abrir · sábados"),"por crear (Secretaría)","por emitir","saldo a favor · $200",badge("Pagado · sin curso aún","neutral"),'<a href="MatriculaContinuidad.html">Matricular</a>']],wide=0)
    +kv(("Pago único","PG-0942 · transferencia · $600 · validado por Contabilidad y confirmado por Secretaría"),("Regla","cada aplicación consume el saldo sin generar otra venta ni otro cobro"))),
@@ -2692,15 +2708,15 @@ cursos=shell("Cursos","Cursos",
  only(COMERCIAL, kpis([("Cursos en la lista",agg("count","cursos"),"según filtros y sede"),("En curso",agg("count:Estado=En curso","cursos"),"dictándose"),("Por abrir",agg("count:Estado=Por abrir","cursos"),"con cupo para vender"),("Terminados sin calificar",agg("count:Estado=Sin calificar","cursos"),"bloquean certificados")])),
  only("COO,PRO", kpis([("Cursos en la lista",agg("count","cursos"),"según filtros y sede"),("En curso",agg("count:Estado=En curso","cursos"),"dictándose"),("Por abrir",agg("count:Estado=Por abrir","cursos"),"sin profesor en algunos"),("Terminados sin calificar",agg("count:Estado=Sin calificar","cursos"),"bloquean certificados")])),
  ltable("cursos",["Curso","Sede","Programa","Modalidad","Nivel","Profesor","Cupo","Avance","Estado","Acción"],[
-  [c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Zoom 2 · Lu-Ma-Mi-Ju 19:00–21:00 · Virtual"),"Quito","Adults","Virtual","B1","P. Gómez","12/15",progress(60),badge("En curso","ok"),V],
-  [c2("English for Kids 2 Tarde","0001-2026-0328 · Valle · C-3 · Sa 09:00–13:00 · Presencial"),"Valle","Kids","Presencial","Kids 2","L. Vega","8/10",progress(55),badge("En curso","ok"),V],
+  [c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Zoom 2 · Lu-Ma-Mi-Ju 19:00–21:00 · Virtual"),"Quito","Adults","Virtual","B1","P. Gómez","12/15",progress(60),badge("En curso","navy"),V],
+  [c2("English for Kids 2 Tarde","0001-2026-0328 · Valle · C-3 · Sa 09:00–13:00 · Presencial"),"Valle","Kids","Presencial","Kids 2","L. Vega","8/10",progress(55),badge("En curso","navy"),V],
   [c2("English for Teens A2","0001-2026-0192 · Ambato · A-1 · Vi 15:00–19:00 · Presencial"),"Ambato","Teens","Presencial","A2","(sin asignar)","5/10",progress(0),badge("Por abrir","warn"),V],
-  [c2("English for Adults A2","0001-2026-0620 · Valle · C-5 · Lu-Mi 14:00–16:00 · Presencial"),"Valle","Adults","Presencial","A2","P. Gómez","9/12",progress(59),badge("En curso","ok"),V],
-  [c2("English for Kids 1 Mañana","0001-2026-0518 · Ambato · A-2 · Lu-Mi 16:00–18:00 · Presencial"),"Ambato","Kids","Presencial","Kids 1","M. Castro","7/10",progress(28),badge("En curso","ok"),V],
-  [c2("English for Adults B2 Intensivo","0001-2026-0538 · Quito · Q-4 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","B2","L. Vega","11/12",progress(46),badge("En curso","ok"),V],
+  [c2("English for Adults A2","0001-2026-0620 · Valle · C-5 · Lu-Mi 14:00–16:00 · Presencial"),"Valle","Adults","Presencial","A2","P. Gómez","9/12",progress(59),badge("En curso","navy"),V],
+  [c2("English for Kids 1 Mañana","0001-2026-0518 · Ambato · A-2 · Lu-Mi 16:00–18:00 · Presencial"),"Ambato","Kids","Presencial","Kids 1","M. Castro","7/10",progress(28),badge("En curso","navy"),V],
+  [c2("English for Adults B2 Intensivo","0001-2026-0538 · Quito · Q-4 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","B2","L. Vega","11/12",progress(46),badge("En curso","navy"),V],
   [c2("English for Adults A1 Sábados","0001-2026-0430 · Quito · Q-1 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","A1","L. Vega","14/15",progress(100),badge("Sin calificar","bad"),V],
   [c2("English for Teens B1 Virtual","0001-2026-0772 · Valle · Teams 1 · Lu-Ma-Mi-Ju 17:00–19:00 · Virtual"),"Valle","Teens","Virtual","B1","P. Gómez (propuesto)","6/12",progress(0),badge("Por abrir","warn"),V],
-  [c2("English for Kids 2 Mañana","0001-2026-0599 · Quito · Q-2 · Sa 09:00–13:00 · Presencial"),"Quito","Kids","Presencial","Kids 2","M. Castro","10/10",progress(53),badge("En curso","ok"),V],
+  [c2("English for Kids 2 Mañana","0001-2026-0599 · Quito · Q-2 · Sa 09:00–13:00 · Presencial"),"Quito","Kids","Presencial","Kids 2","M. Castro","10/10",progress(53),badge("En curso","navy"),V],
   [c2("Tailored · Inglés corporativo","0001-2026-0608 · Ambato · Zoom 1 · Ma-Ju 07:00–08:30 · Virtual"),"Ambato","Tailored","Virtual","B1","(sin asignar)","3/12",progress(0),badge("Por abrir","warn"),V],
   [c2("English for Teens A2","0001-2025-0330 · Valle · C-2 · Vi 15:00–19:00 · Presencial"),"Valle","Teens","Presencial","A2","L. Vega","9/10",progress(100),badge("Cerrado"),V]],sede=1,hide=(1,2,3),wide=0,tid="cursos"),
  pager(sv(58,29,18,11)),
@@ -2722,18 +2738,18 @@ det=shell("English for Adults B1 Virtual","Cursos",
  hero([("Programa","English for Adults"),("Nivel","B1 · módulos 7–8"),("Modalidad","Virtual · Zoom 2"),("Plataforma LMS","Cambridge One · CSL-B1-0767"),("Horario","Lu-Ma-Mi-Ju 19:00–21:00"),("Inicio","1 sep 2026"),("Fin","20 nov 2026"),("Cupo","12 / 15"),("Libro","Empower B1+ Combo B")],
   btn("Registrar sesión",None,True)+btn("Enviar enlace de clase")+btn("Hoja de asistencia")+only("ADM,GER,SUC,SEC",btn("Rematricular estudiantes","Rematricula.html"),True)+only("ADM,GER,SUC,COO",btn("Calificar profesor")+btn("Editar curso"),True),
   progress(60,"Avance del curso · 22 de 36 horas dictadas · termina en 7 semanas"),
-  tag='<span class="hero-code">0001-2026-0767</span>'+badge("En curso","ok")+badge("Quito","navy")),
+  tag='<span class="hero-code">0001-2026-0767</span>'+badge("En curso","navy")+badge("Quito","navy")),
  two(card("Profesor asignado", kv(("Profesor",'<a href="FichaProfesor.html">P. Gómez</a>'),("Contrato",badge("Activo hasta dic 2026","ok")),("Horas en este curso","22 h dictadas"))+only("ADM,GER,SUC",kv(("Tarifa","$7.00/h · $154 en este curso")))+only("ADM,GER,SUC,COO",filters(sel("Cambiar profesor",["P. Gómez","L. Vega","M. Castro","R. Salas (contrato vencido)"],w="260px"),actions=btn("Cambiar",None,False,"Si el nuevo profesor no tiene contrato activo, el cambio queda pendiente de aprobación de Coordinación.")))),
      card("Sesiones", table(["Fecha","Horas","Registro"],[["Lu 12 oct","2","Automático"],["Ma 13 oct","2","Automático"],["Mi 14 oct","2","Manual"],["Ju 15 oct","2","Automático"],["Lu 19 oct","2","Pendiente"]]))),
  card("Estudiantes matriculados", only(COMERCIAL, filters(sel("Mostrar",["Todos","Sin factura","Con saldo pendiente","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=only("ADM,GER,DIR,SUC",btn("Exportar"),True))+table(["Matrícula","Estudiante","Asistencia","Total","Pagado","Saldo","Estado","Acción"],[
-  ["001-202602794",c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794 · 099 000 0001"),"90%","$305","$305","$0",badge("En curso","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+  ["001-202602794",c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794 · 099 000 0001"),"90%","$305","$305","$0",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602846",c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846 · 099 000 0002"),"85%","$250","$0","$250",badge("Factura vencida","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602871",c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871 · 099 000 0005"),"70%","$230","$230","$0",badge("Riesgo asistencia","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202602875",c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875 · 099 000 0006"),"45%","$195","$0","$195",badge("Sin pago · riesgo","bad"),'<a href="DetalleMatricula.html">Ver</a>'],
   ["001-202603270",c2('<a href="Ficha360.html">Renata Salazar</a>',"001-202603270 · 099 000 0012"),"—","$250","$0","$250",badge("Matriculada · sin factura","bad"),'<a href="RematriculaFactura.html">Facturar</a>']],hide=(0,),wide=1)+kv(("Matriculados","12/15"),("Saldo pendiente del curso","$695"),("Asistencia promedio","84%")))
   +only("COO,PRO", filters(sel("Mostrar",["Todos","En riesgo (asistencia < 75%)"],w="220px",col=False),actions=btn("Calificar curso",None,True)+only("COO",btn("Exportar"),True))+table(["Estudiante","Asistencia","Nota parcial","Muro","Estado","Acción"],[
-  [c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794"),"90%","8.4","100% módulo 7",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
-  [c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"85%","7.6","90%",badge("En curso","ok"),'<a href="CalificarCurso.html">Calificar</a>'],
+  [c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794"),"90%","8.4","100% módulo 7",badge("En curso","navy"),'<a href="CalificarCurso.html">Calificar</a>'],
+  [c2('<a href="Ficha360.html">Pedro Mora</a>',"001-202602846"),"85%","7.6","90%",badge("En curso","navy"),'<a href="CalificarCurso.html">Calificar</a>'],
   [c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202602871"),"70%","6.9","75%",badge("Riesgo asistencia","bad"),'<a href="CalificarCurso.html">Calificar</a>'],
   [c2('<a href="Ficha360.html">Andrés Pazmiño</a>',"001-202602875"),"45%","—","30%",badge("Riesgo asistencia","bad"),'<a href="CalificarCurso.html">Calificar</a>']],wide=0)+kv(("Matriculados","12/15"),("Asistencia promedio","84%"),("Mínimo para aprobar","75% de asistencia y nota ≥ 7")))
   +only("ADM,GER,SUC",row(btn("Calificar curso",None,True)))),
@@ -2815,13 +2831,13 @@ com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
  tabs(["Comisiones","Descuentos otorgados"],"Comisiones",roles={"Descuentos otorgados":"ADM,GER,DIR,SUC"},panels={
   "Comisiones": only("ASE", card("Tu comisión de octubre, en corto", kpis([("Vendiste","14 niveles","meta 12 · 117%"),("Rango","11+ niveles","$18 virtual · $22 presencial por nivel · tabla Quito"),("Comisión estimada","$443.30","incluye bono $50"),("Retenido","$22.50","1 venta sin cobrar")])+progress(100,"Meta: 14 de 12 niveles",CH[0])+row(btn("Preparar mi informe del mes","InformeComisiones.html",True),btn("Ver el cálculo paso a paso","DetalleComision.html"),btn("Exportar Excel"))))
    +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))+btn("Reglas de comisión")+btn("Informes de asesores","InformeComisiones.html")+btn("Exportar")+btn("Aprobar período",None,True)))
-   +only("ADM,GER,DIR,SUC", flow(["Borrador (cálculo automático)","En revisión (Dir. Comercial)","Aprobado (se paga)"])
+   +only("ADM,GER,DIR,SUC", flow([("Borrador (cálculo automático)","","","done"),("En revisión (Dir. Comercial)","","","now"),("Aprobado (se paga)","","","")])
    +table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
-    ["Carla M.","14","6 / 8","12","14","$443",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Diego R.","9","4 / 5","12","9","$180",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Sofía L.","11","7 / 4","10","11","$330",'<a href="DetalleComision.html">Ver cálculo</a>']])
+    ["Carla M.","14","6 / 8","12","14","$443.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
+    ["Diego R.","9","4 / 5","12","9","$180.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
+    ["Sofía L.","11","7 / 4","10","11","$330.00",'<a href="DetalleComision.html">Ver cálculo</a>']])
    +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
-        card("Tabla de rangos vigente · Quito · niveles grupales", table(["Niveles vendidos en el mes","Virtual","Presencial"],[["1 – 5","$8 por nivel","$10 por nivel"],["6 – 10","$12 por nivel","$15 por nivel"],["11 o más","$18 por nivel","$22 por nivel"]],wide=0)
+        card("Tabla de rangos vigente · Quito · niveles grupales", table(["Niveles vendidos en el mes","Virtual · por nivel","Presencial · por nivel"],[["1 – 5","$8","$10"],["6 – 10","$12","$15"],["11 o más","$18","$22"]],wide=0)
           +kv(("Base por sede","Ambato y Valle tienen su propia tabla; one to one y los demás productos tienen rangos aparte"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Pago completo","la comisión se genera cuando la matrícula está totalmente pagada"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
    +card("Reporte mensual por grupo · octubre 2026 · bloques del registro de matrículas", table(["Grupo","Asesor","Matrículas","Módulos / horas","Servicios educativos","Comisión"],[
      [c2("2 módulos o más","nivel completo o varios"),"Carla M.","9","26 módulos","$6,500","$312.00"],[c2("2 módulos o más","nivel completo o varios"),"Diego R.","5","12 módulos","$3,000","$120.00"],
@@ -2833,7 +2849,7 @@ com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
      [c2("V-2026-0338","multi-módulo · 2 niveles"),"Tomás Villacrés","12 ago 2026",badge("15 oct 2026","ok"),"Diego R.","$980","$39.20"],
      [c2("V-2026-0371","1 nivel"),"Gabriela Núñez","18 sep 2026",badge("19 oct 2026","ok"),"Carla M.","$450","$18.00"],
      [c2("V-2026-0411","1 nivel"),"Gabriel Mora","18 oct 2026",badge("18 oct 2026","ok"),"Carla M.","$500","$20.00"],
-     [c2("V-2026-0405","2 niveles"),"Martín Ortega","17 oct 2026",badge("Pendiente · cuota 2 el 16 nov","warn"),"Ana P.","$880",c2("$0 este mes","entra en noviembre si se completa el pago")]],wide=0)
+     [c2("V-2026-0405","2 niveles"),"Martín Ortega","17 oct 2026",badge("Pendiente · cuota 2 el 16 nov, pasa a noviembre","warn"),"Ana P.","$880","$0.00"]],wide=0)
      +kv(("Regla","venta de agosto pagada por completo en octubre = venta de agosto en el tablero y comisión de octubre"),("Ventas vendidas en octubre sin pagar","no generan comisión hasta completar el pago")))),
   "Descuentos otorgados": kpis([("Ventas en la lista",agg("count","dctos"),"según filtros"),("Con descuento",agg("count:% dcto.=%","dctos"),"el resto sin descuento"),("Total descontado",agg("sum:Descuento","dctos","money0"),"sobre el precio de lista"),("Descuento promedio",agg("avg:% dcto.","dctos","pct"),"límite del asesor: 10%"),("Fuera del límite",agg("count:Aprobación=aprobación","dctos"),"aprobados, pendientes o rechazados")])
    +filters(search("Buscar","Estudiante o venta",w="220px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="140px"),sel("Aprobación",["Todos","Dentro del límite","Aprobado","Pendiente","Rechazado","Sin descuento"],w="170px"),sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="160px",col=False),actions=btn("Exportar"))
@@ -3104,7 +3120,7 @@ page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
      card("Educación y certificaciones", table(["Título / certificación","Institución","Año","Documento"],[["Lic. en Lingüística Aplicada","PUCE","2019",btn("Ver PDF")],["CELTA","Cambridge Assessment","2021",btn("Ver PDF")],["C2 Proficiency","Cambridge Assessment","2020",btn("Ver PDF")],["Teaching Young Learners","Cambridge Assessment","2023",btn("Ver PDF")]])+only("ADM,GER,SUC,COO",row(btn("Agregar título o certificación",None,False,"Se agrega el título o certificación con su documento adjunto."))))),
   "Contrato, tarifa y pago": two(card("Contrato y tarifa", kv(("Tipo","Por horas · máx. 20 h/semana"),("Tarifa","$7.00/h · dentro de la tabla"),("Vigencia","1 ene – 31 dic 2026"),("Modalidades","Virtual y presencial"),("Creado por","Coord. Académica · 8 ene 2026"))+table(["Documento","Subido por","Fecha"],[["contrato_pgomez_2026.pdf","Coord. Académica","8 ene 2026"],["cedula_pgomez.pdf","Coord. Académica","8 ene 2026"]])+table(["Vigencia","Tipo","Tarifa","Observación"],[["2026","Por horas","$7.00/h","Dentro de tabla"],["2025","Por horas","$6.50/h","Dentro de tabla"],["2024","Por horas","$6.00/h","Dentro de tabla"]])),
      card("Datos de pago", kv(("Forma de pago","Transferencia"),("Banco","Banco Pichincha"),("Cuenta","Ahorros ····4821"),("Titular","Pablo Gómez"),("Frecuencia","Quincenal, contra payment sheet aprobada"),("Emite factura","Sí · RUC 1709876543001"))+row(btn("Editar datos de pago",None,False,"Se editan los datos bancarios del profesor; el cambio queda en el audit log y se notifica a Administración.")))),
-  "Cursos": table(["Código","Curso","Sede","Nivel","Modalidad","Horario","Estudiantes","Asistencia","Pass","Estado"],[["0001-2026-0767",c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Lu-Ma-Mi-Ju 19:00–21:00"),"Quito","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","12","90%","—",badge("En curso","ok")],["0001-2026-0620",c2("English for Adults A2","0001-2026-0620 · Valle · Lu-Mi 14:00–16:00"),"Valle","A2","Presencial","Lu-Mi 14:00–16:00","9","85%","—",badge("En curso","ok")],["0001-2026-0512",c2("English for Adults A2","0001-2026-0512 · Quito · Lu-Mi 18:00–20:00"),"Quito","A2","Presencial","Lu-Mi 18:00–20:00","11","92%","100%",badge("Cerrado")],["0001-2025-0430",c2("English for Adults A1","0001-2025-0430 · Quito · Sa 09:00–13:00"),"Quito","A1","Presencial","Sa 09:00–13:00","14","88%","93%",badge("Cerrado")],["0001-2025-0210",c2("English for Adults B1","0001-2025-0210 · Quito · Lu-Mi 18:00–20:00"),"Quito","B1","Presencial","Lu-Mi 18:00–20:00","13","86%","92%",badge("Cerrado")]],sede=2,hide=(0,2,5),wide=1),
+  "Cursos": table(["Código","Curso","Sede","Nivel","Modalidad","Horario","Estudiantes","Asistencia","Pass","Estado"],[["0001-2026-0767",c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Lu-Ma-Mi-Ju 19:00–21:00"),"Quito","B1","Virtual","Lu-Ma-Mi-Ju 19:00–21:00","12","90%","—",badge("En curso","navy")],["0001-2026-0620",c2("English for Adults A2","0001-2026-0620 · Valle · Lu-Mi 14:00–16:00"),"Valle","A2","Presencial","Lu-Mi 14:00–16:00","9","85%","—",badge("En curso","navy")],["0001-2026-0512",c2("English for Adults A2","0001-2026-0512 · Quito · Lu-Mi 18:00–20:00"),"Quito","A2","Presencial","Lu-Mi 18:00–20:00","11","92%","100%",badge("Cerrado")],["0001-2025-0430",c2("English for Adults A1","0001-2025-0430 · Quito · Sa 09:00–13:00"),"Quito","A1","Presencial","Sa 09:00–13:00","14","88%","93%",badge("Cerrado")],["0001-2025-0210",c2("English for Adults B1","0001-2025-0210 · Quito · Lu-Mi 18:00–20:00"),"Quito","B1","Presencial","Lu-Mi 18:00–20:00","13","86%","92%",badge("Cerrado")]],sede=2,hide=(0,2,5),wide=1),
   "Sesiones": table(["Fecha","Curso","Duración","Origen","Estado"],[["05 oct","Adults B1 Virtual","2 h","Automática (Moodle)",badge("Confirmada","ok")],["05 oct","Adults A2","2 h","Manual",badge("Confirmada","ok")],["01 oct","Adults B1 Virtual","2 h","Automática (Moodle)",badge("Pendiente","warn")]])+row(btn("Registrar sesión","Sesiones.html",True)),
   "Historial de pagos": table(["Mes","Horas","Tarifa","Monto","Estado","Acción"],[["Oct 2026","48","$7.00","$336",badge("Borrador"),btn("Ver","PaymentSheet.html")],["Sep 2026","44","$7.00","$308",badge("Pagado","ok"),btn("Ver","PaymentSheet.html")],["Ago 2026","40","$7.00","$280",badge("Pagado","ok"),btn("Ver","PaymentSheet.html")]]),
  })+'</div></div>',
@@ -3368,10 +3384,10 @@ page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturac
    ["Servicio","00139",c2("Servicios educativos · Nivel B1+","Módulos 9–10 · English for Adults"),"1","$500.00","10%","-$50.00","$450.00","$0.00"],
    ["Producto","1141",c2("Empower B1 Combo A","ISBN 9781108961516 · descontado del stock Quito"),"1","$40.00","0%","$0.00","$40.00","$0.00"],
    ["Producto","1292",c2("Empower B1+ Combo B","ISBN 9781108961523 · reservado en Quito para el módulo 9"),"1","$40.00","0%","$0.00","$40.00","$0.00"]],wide=2,hide=(1,))
-   +kv(("Subtotal","$1,080.00"),("Descuento","-$100.00 (10% referido · dentro del límite del asesor)"),("IVA","$0.00 (servicios educativos 0%)"),("Total","$980.00"))),
- two(card("Pagos", table(["Pago","Monto"],[[c2("Cuota 1 · transferencia · 28 ago 2026","Banco Pichincha · ref. 884512"),"$490.00"],[c2("Cuota 2 · tarjeta de crédito · 27 sep 2026","Caja Quito · recibo 0421 · voucher 55120"),"$490.00"]])+kv(("Total pagado","$980.00"),("Saldo","$0.00"))+only(COMERCIAL,row(btn("Registrar pago",None,True)))),
+   +totals([("Subtotal","$1,080.00"),("Descuento · 10% referido, dentro del límite del asesor","-$100.00"),("IVA · servicios educativos 0%","$0.00"),("Total","$980.00")])),
+ two(card("Pagos", table(["Pago","Monto"],[[c2("Cuota 1 · transferencia · 28 ago 2026","Banco Pichincha · ref. 884512"),"$490.00"],[c2("Cuota 2 · tarjeta de crédito · 27 sep 2026","Caja Quito · recibo 0421 · voucher 55120"),"$490.00"]])+kv(("Total pagado","$980.00"),("Saldo","$0.00"))+only(COMERCIAL,row(btn("Registrar pago",None,False,kind="ghost")))),
      card("Efecto en la matrícula", kv(("Saldo antes de la factura","$980.00"),("Saldo después","$0.00"),("Módulos habilitados","7 a 10 · 4 matrículas"),("Comisión","Carla M. · 4% virtual · $39.20 · cierre de septiembre"))+table(["Movimiento","Monto"],[[c2("Factura emitida y autorizada","28 ago 2026"),"$980.00"],[c2("Pagos · cuota 1 y cuota 2","28 ago y 27 sep 2026"),"$980.00"],[c2("Nota de crédito","Ninguna emitida"),"—"]]))),
- card("Historial", table(["Fecha","Usuario","Evento"],[["27 sep 17:20","Secretaría","Pago de la cuota 2 · $490 · tarjeta de crédito"],["28 ago 12:14","Sistema","Comprobante PDF + XML enviado a maria.andrade@ejemplo.com"],["28 ago 12:12","Sistema","Autorizada por el SRI y subida al sistema contable"],["28 ago 12:11","Sistema","Enviada a Dora, 2 horas después de emitirla"],["28 ago 10:11","Carla M.","Factura emitida desde Nueva matrícula (venta multi-módulo, 4 matrículas)"]])),
+ card("Historial", table(["Fecha","Usuario","Evento"],[["27 sep 17:20","Secretaría","Pago de la cuota 2 · $490 · tarjeta de crédito"],["28 ago 12:14","Sistema","Comprobante PDF + XML enviado a maria.andrade@ejemplo.com"],["28 ago 12:12","Sistema","Autorizada por el SRI y subida al sistema contable"],["28 ago 12:11","Sistema","Enviada a Dora, 2 horas después de emitirla"],["28 ago 10:11","Carla M.","Factura emitida desde Nueva matrícula (venta multi-módulo, 4 matrículas)"]],wide=2)),
  subtitle="Equivale al registro Invoice de TeamDesk: términos, cliente, montos, pagos, ítems y transacción de la matrícula"),"Detalle de factura")
 
 # 24 Solicitud de descuento
@@ -3957,7 +3973,7 @@ _cb_antes=card("Antes y después",table(["","Antes","Después"],[["Matrícula","
   +kv(("Reporte de nuevos estudiantes · octubre",'<b>68</b> en la plataforma · <small>en TeamDesk bajaba a 67 porque la matrícula se borraba y se volvía a crear (por eso 64 frente a 68)</small>'),("Por qué","el cambio queda como un movimiento dentro de la misma matrícula, así los reportes y las comisiones no se descuadran y el asesor ya no lleva un Excel aparte")),extra=badge("La matrícula no se borra","ok"))
 _cb_hist=card("Movimientos de la matrícula",'<ul class="timeline" data-cb-hist><li class="is-done"><span class="p-t">Matrícula creada</span><span class="p-d">28 ago 2026 · Carla M. · curso 0001-2026-0767</span></li></ul>')
 page("CambioMatricula.html","Cambio de matrícula",shell("Cambio de curso, horario o modalidad","Estudiantes",
- hero([("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrícula",'<a href="DetalleMatricula.html">001-202602794</a>'),("Curso actual","0001-2026-0767 · Virtual"),("Horario actual","Lu-Ma-Mi-Ju 19:00–21:00"),("Módulo","7 · B1"),("Asesor","Carla M.")],tag=badge("En curso","ok")),
+ hero([("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrícula",'<a href="DetalleMatricula.html">001-202602794</a>'),("Curso actual","0001-2026-0767 · Virtual"),("Horario actual","Lu-Ma-Mi-Ju 19:00–21:00"),("Módulo","7 · B1"),("Asesor","Carla M.")],tag=badge("En curso","navy")),
  two(card("Qué quieres cambiar",_cb_form),card("Quién lo autoriza y qué pasa",_cb_res)),
  _cb_antes,_cb_hist,
  '<script src="assets/cambio.js"></script>',
@@ -4069,7 +4085,7 @@ css='''*{box-sizing:border-box}
   --bg:#F7F7F5;--surface:#FFFFFF;--surface-2:#F1F1EE;
   --ink:#16181D;--ink-2:#3D4350;--mute:#5E6573;
   --line:#E3E5E9;--line-strong:#8A909C;
-  --navy:#1D3F8F;--navy-700:#152F6B;--navy-50:#EAF0FB;
+  --navy:#1D3F8F;--navy-700:#152F6B;--navy-50:#EAF0FB;--ch1:#1D3F8F;--ch2:#4A68B8;--ch3:#7F97D3;--ch4:#B3C2E8;
   --red:#C4202F;--yellow:#F6C21C;--yellow-50:#FEF6D8;
   --ok:#1E7A4F;--ok-50:#EAF4EE;--warn:#9A5B00;--warn-50:#FDF3E1;--bad:#B42318;--bad-50:#FCEBEA;--info:#1D3F8F;--info-50:#EAF0FB;
   --font-ui:'IBM Plex Sans',system-ui,sans-serif;--font-mono:'IBM Plex Mono',ui-monospace,monospace;--font-display:'Source Serif 4',Georgia,serif;
@@ -4162,8 +4178,9 @@ a.btn:hover,.btn:hover{background:var(--surface-2);color:var(--ink)}.btn:active{
 .chev-l{transform:rotate(180deg)}.chev-d{transform:rotate(90deg)}
 
 /* estado: punto + texto */
-.badge{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-13);font-weight:500;line-height:1.3;color:var(--ink-2);white-space:normal;text-align:left}
-.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.badge{display:inline-flex;align-items:flex-start;gap:6px;font-size:var(--t-13);font-weight:500;line-height:1.3;color:var(--ink-2);white-space:normal;text-align:left}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none;margin-top:.33em}
+.b-t{display:flex;flex-direction:column}.b-d{color:var(--mute);font-weight:400;font-size:var(--t-12)}
 .badge-ok{color:var(--ok)}.badge-warn{color:var(--warn)}.badge-bad{color:var(--bad)}.badge-navy,.badge-info{color:var(--info)}.badge-neutral{color:var(--mute)}
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);font-size:var(--t-12);font-weight:600;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);white-space:normal;max-width:100%;overflow-wrap:anywhere}
 .tag-warn{background:var(--warn-50);color:var(--warn);border-color:transparent}.tag-info{background:var(--info-50);color:var(--info);border-color:transparent}
@@ -4241,7 +4258,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .wf-row{display:contents}.wf-row[hidden]{display:none}
 .td-hide{display:none!important}
 .th-num{justify-content:flex-end;text-align:right;white-space:nowrap}
-.th{padding:0 16px;min-height:40px;display:flex;align-items:center;font-weight:600;font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--surface)}
+.th{padding:0 16px;min-height:40px;display:flex;align-items:center;text-wrap:balance;font-weight:600;font-size:var(--t-12);color:var(--mute);text-transform:uppercase;letter-spacing:.02em;line-height:1.25;border-bottom:1px solid var(--line);background:var(--surface)}
 .td{padding:12px 16px;min-height:48px;font-size:var(--t-14);border-bottom:1px solid var(--line);display:flex;align-items:center;min-width:0;overflow-wrap:normal;word-break:normal;transition:background var(--dur-1) var(--ease)}
 .td.td-wide{overflow-wrap:anywhere}
 .wf-row:hover .td{background:var(--surface-2)}
@@ -4252,6 +4269,8 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .c2{display:flex;flex-direction:column;gap:2px;min-width:0}.c2>span{font-weight:500}.c2 small{color:var(--mute);font-size:var(--t-13);line-height:1.4}
 .row-go{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--r);color:var(--mute);text-decoration:none}
 .row-go:hover{background:var(--navy-50);color:var(--navy)}
+.td[data-label="Acción"]>.btn:not(.btn-primary):not(.kebab):not([data-menu]){border:0;background:none;padding:0;min-height:0;height:auto;color:var(--navy);font-weight:500;white-space:nowrap}
+.td[data-label="Acción"]>.btn:not(.btn-primary):not(.kebab):not([data-menu]):hover{text-decoration:underline;background:none}
 .row-link{display:inline-flex;align-items:center;gap:6px;font-weight:500;text-decoration:none;white-space:nowrap}.row-link:hover{text-decoration:underline}
 .wf-empty{padding:24px;text-align:center;color:var(--mute)}
 .pager{display:flex;align-items:center;gap:12px;font-size:var(--t-13);color:var(--mute);flex-wrap:wrap}.pages{margin-left:auto;display:flex;gap:4px}
@@ -4370,7 +4389,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .ledger small{display:block;color:var(--mute);font-size:var(--t-13)}
 
 /* franja de etapas (embudo) */
-.stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.stages{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .stages-head{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line);font-size:var(--t-14)}
 .stages-head b{font-weight:600}
 .stage{display:flex;flex-direction:column;gap:4px;padding:16px 20px;border:0;border-left:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:var(--hit)}
@@ -4380,6 +4399,12 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .stage .st-name i{width:8px;height:8px;border-radius:50%;background:var(--sc,var(--mute))}
 .stage .st-count{font-size:var(--t-24);font-weight:500;font-variant-numeric:tabular-nums}
 .stage .st-rate{font-size:var(--t-13);color:var(--mute)}
+.stages-head .sync-ok{flex:1 1 280px;color:var(--mute)}.stages-head .sync-ok::before{background:var(--ok)}.stages-head>span:last-child{flex:none}
+.kpi-2x2{grid-template-columns:1fr 1fr}
+.totals{margin:0 0 0 auto;display:flex;flex-direction:column;gap:6px;min-width:min(100%,380px);font-size:var(--t-14)}
+.totals>div{display:flex;justify-content:space-between;gap:24px;align-items:baseline}
+.totals dt{color:var(--mute)}.totals dd{margin:0;font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.totals .t-total{border-top:3px double var(--ink-2);padding-top:8px;margin-top:2px}.totals .t-total dt{color:var(--ink);font-weight:600}.totals .t-total dd{font-weight:600;font-size:var(--t-16)}
 .sync-ok{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-size:var(--t-13)}.sync-ok::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 
 /* gráficos */
@@ -4447,7 +4472,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .chips{display:flex;flex-wrap:wrap;gap:12px}.chip{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);font-size:var(--t-13);color:var(--mute);flex:1;min-width:120px;background:var(--surface)!important}.chip b{display:block;font-size:var(--t-14);color:var(--ink)}
 .perf{display:flex;gap:20px;align-items:center;flex-wrap:wrap}.perf-legend{display:flex;flex-direction:column;gap:8px;font-size:var(--t-14);flex:1;min-width:180px}.perf-legend div{display:flex;align-items:center;gap:8px}.perf-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}.perf-legend b{margin-left:auto;font-weight:500;color:var(--ink-2)}
 .trend{position:relative;border-top:1px solid var(--line);padding:48px 0 0}.trend .big{position:absolute;left:0;top:12px;font-size:var(--t-13);color:var(--mute)}.trend .big b{font-size:var(--t-20);color:var(--ink);font-weight:500}.trend .big .up{color:var(--ok);font-size:var(--t-13);margin-left:6px;font-weight:500}
-.quote{border-left:2px solid var(--yellow);padding:4px 0 4px 14px;font-size:var(--t-14);line-height:1.5;color:var(--ink-2)}
+.quote{border-left:2px solid var(--line-strong);padding:4px 0 4px 14px;font-size:var(--t-14);line-height:1.5;color:var(--ink-2)}
 .course{display:grid;grid-template-columns:40px minmax(170px,2fr) 90px 52px max-content 64px;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:var(--t-14)}.course:last-child{border-bottom:0}
 .course-ico{width:40px;height:40px;border-radius:var(--r);display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2)!important;color:var(--ink-2)!important}.course-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .course-name a{font-weight:600;text-decoration:none}.course-name small{display:block;color:var(--mute);margin-top:2px;font-size:var(--t-13)}
