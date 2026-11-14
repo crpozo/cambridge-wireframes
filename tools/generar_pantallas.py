@@ -940,7 +940,15 @@ def nav(active):
     return out
 
 def shell(title, active, *parts, subtitle="", actions=""):
-    body="".join(parts)
+    parts=list(parts)
+    if not actions:
+        # la acción principal de un listado vive junto al h1, igual en todas las pantallas
+        for k,pt in enumerate(parts):
+            if isinstance(pt,str) and pt.startswith('<div class="wf-filters filters"') and '<!--P-->' in pt:
+                a=pt.index('<!--P-->'); b=pt.index('<!--/P-->')
+                actions=pt[a+8:b]; parts[k]=pt[:a]+pt[b+9:]
+                break
+    body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','')
     act=NAV_ALIAS.get(active,active)
     parent=next(((n,h) for _,items in NAV for n,h,_ in items if n==act),None)
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
@@ -1047,7 +1055,7 @@ def table(cols, rows, h=46, sede=None, hide=(), wide=0, tid=None):
         else:
             # cantidades, porcentajes y fracciones (cupo 12/15, virtual / presencial 6 / 8) también van a la derecha,
             # salvo columnas que son identificadores (módulo, nivel, código, año)
-            fr=[v for v in vals if _re.fullmatch(r"\d+(?:[.,]\d+)?%?|\d+\s*/\s*\d+",v)]
+            fr=[v for v in vals if _re.fullmatch(r"\d+(?:[.,]\d+)?%?|\d+/\d+",v)]
             if fr and len(fr)+len(guiones)==len(vals) and not _re.search(r"m[óo]dulo|nivel|c[óo]d|año|#|sesi[óo]n\b",_txt(cols[i]),_re.I): numcols.add(i)
     hd="".join(f'<div class="th{cls(i)}{" th-num" if i in numcols else ""}" role="columnheader">{c}</div>' for i,c in enumerate(cols)); body=""
     for r in rows:
@@ -1244,7 +1252,14 @@ def filters(*ctrls, actions="", show=3, target=None):
     i=_nid()
     extra=(f'<button type="button" class="btn btn-more" data-menu aria-expanded="false" aria-controls="{i}">Filtros ({len(more)})<span class="cnt"></span></button>' if more else "")
     hidden=(f'<div id="{i}" class="filters-more menu-pop" hidden>{"".join(more)}</div>' if more else "")
-    acts=f'<div class="filters-actions">{split_actions(actions,1)}</div>' if actions else ''
+    acts=''
+    if actions:
+        els=_top_elems(actions); prim=next((e for e in els if 'btn-primary' in e),None)
+        if prim:
+            rest="".join(e for e in els if e is not prim)
+            acts=f'<div class="filters-actions"><!--P-->{prim}<!--/P-->{split_actions(rest,1) if rest else ""}</div>'
+        else:
+            acts=f'<div class="filters-actions">{split_actions(actions,1)}</div>'
     return f'<div class="wf-filters filters"{f" data-target={chr(34)}{target}{chr(34)}" if target else ""}>{main}{extra}{hidden}{acts}<div class="chips-active" aria-live="polite"></div></div>'
 
 def note(text, kind="info"):
@@ -2837,14 +2852,14 @@ com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
     ["Diego R.","9","4 / 5","12","9","$180.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
     ["Sofía L.","11","7 / 4","10","11","$330.00",'<a href="DetalleComision.html">Ver cálculo</a>']])
    +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
-        card("Tabla de rangos vigente · Quito · niveles grupales", table(["Niveles vendidos en el mes","Virtual · por nivel","Presencial · por nivel"],[["1 – 5","$8","$10"],["6 – 10","$12","$15"],["11 o más","$18","$22"]],wide=0)
+        card("Tabla de rangos vigente · Quito · por nivel grupal", table(["Niveles vendidos en el mes","Virtual","Presencial"],[["1 – 5","$8","$10"],["6 – 10","$12","$15"],["11 o más","$18","$22"]],wide=0)
           +kv(("Base por sede","Ambato y Valle tienen su propia tabla; one to one y los demás productos tienen rangos aparte"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Pago completo","la comisión se genera cuando la matrícula está totalmente pagada"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
    +card("Reporte mensual por grupo · octubre 2026 · bloques del registro de matrículas", table(["Grupo","Asesor","Matrículas","Módulos / horas","Servicios educativos","Comisión"],[
      [c2("2 módulos o más","nivel completo o varios"),"Carla M.","9","26 módulos","$6,500","$312.00"],[c2("2 módulos o más","nivel completo o varios"),"Diego R.","5","12 módulos","$3,000","$120.00"],
      [c2("1 módulo","módulo suelto"),"Carla M.","3","3 módulos","$750","$24.00"],[c2("1 módulo","módulo suelto"),"Sofía L.","4","4 módulos","$1,000","$32.00"],
      [c2("Horas","one to one, tailored y preparatorias"),"Carla M.","2","30 h","$900","$45.00"],[c2("Horas","one to one, tailored y preparatorias"),"Sofía L.","1","10 h","$300","$15.00"],
      [c2("Summer y cursos cortos","summer camp, clubes"),"Carla M.","3","3","$510","$15.00"],[c2("Estudiante existente","ya era estudiante · no cuenta como nueva"),"Diego R.","2","2 módulos","$320","$8.00"],[c2("Venta en otra sede","se registra con la sede donde estudia"),"Carla M.","1","4 módulos","$920","$36.80"]],wide=0)
-     +kv(("Bloques","los mismos del 'Reporte para comisiones' mensual: 2 módulos o más, 1 módulo, horas, summer y cursos cortos, estudiante existente y venta en otra sede"),("Pendiente","la tabla de cómo se paga cada bloque (rangos por sede y modalidad) no vino en el Excel; las comisiones de ejemplo usan la tabla de muestra"))+row(btn("Exportar Excel")))
+     +kv(("Bloques","los mismos del 'Reporte para comisiones' mensual: 2 módulos o más, 1 módulo, horas, summer y cursos cortos, estudiante existente y venta en otra sede"))+row(btn("Exportar Excel")))
    +card("Ventas que entran a la comisión de octubre · pagadas por completo en octubre", table(["Venta","Estudiante","Fecha de venta","Pagada por completo","Asesor","Monto","Comisión"],[
      [c2("V-2026-0338","multi-módulo · 2 niveles"),"Tomás Villacrés","12 ago 2026",badge("15 oct 2026","ok"),"Diego R.","$980","$39.20"],
      [c2("V-2026-0371","1 nivel"),"Gabriela Núñez","18 sep 2026",badge("19 oct 2026","ok"),"Carla M.","$450","$18.00"],

@@ -124,3 +124,42 @@ Scores: not measured. Esta ronda no pasó por revisores, para contener el consum
 
 Stop check: bar no (mediana 7.25 a 9 por dimensión en la ronda 02) | cap no | stills approved no -> stop por consumo y gate: se envían las comparaciones al usuario; no se publica en `main` sin su aprobación.
 Next focus si se aprueba seguir: mover el primario de cada listado junto al h1 (global en `shell()`), celdas de una línea + detalle en Leads, Exámenes, Facturas y Cursos, ayudas de una línea en Nueva matrícula, sacar notas de reunión de Comisiones a docs.
+
+## Round 04
+
+Time: 23:45 a 23:52 UTC (reloj del contenedor)
+Focus: acción principal junto al h1, celdas de una línea, ayudas de formulario, notas de reunión en pantalla (huecos de la ronda 02). El usuario aprobó publicar las rondas 01-03 en `main` y pidió esta ronda con publicación automática.
+
+Changes:
+- `shell()`: el primario de los filtros de la página sube junto al h1 (Estudiantes, Cursos, Exámenes, Leads, Facturas y demás listados); conserva los roles (COO y PRO no ven "Nuevo estudiante", medido).
+- Comisiones: sin la nota de reunión "Pendiente…"; tabla de rangos con encabezados cortos ("por nivel" en el título).
+- Las razones con espacios ("6 / 8") ya no se alinean como cifra; el cupo "12/15" sí.
+
+Probado y revertido en esta ronda (los revisores lo marcaron como retroceso):
+- Ayudas de formulario cortadas en una línea con "…": escondían información.
+- Ocultar Interés en Leads y Sede en Exámenes: quitaba datos útiles.
+
+Scores, eyeballed: mediana de 2 revisores nuevos sin contexto (antes de revertir los retrocesos)
+
+| Shot | Jerarquía | Alineación | Color | Tipografía | Densidad | Consistencia | vs r00 |
+|---|---|---|---|---|---|---|---|
+| S01 Inicio | 7.25 | 7.75 | 8.75 | 8.5 | 7.5 | 8 | mejor |
+| S02 Estudiantes | 8.5 | 8 | 9 | 8.5 | 8 | 8.5 | mejor |
+| S03 Ficha 360 | 6.75 | 7.25 | 8.5 | 7.75 | 7 | 7.25 | mejor |
+| S04 Cursos | 8.5 | 7.75 | 8 | 8.25 | 7.25 | 8.25 | mejor |
+| S05 Facturas | 7.5 | 7.5 | 8.75 | 8.25 | 7 | 8 | mejor / igual |
+| S06 Factura | 7.5 | 8 | 9 | 8.5 | 8 | 7.75 | mejor |
+| S07 Leads | 8.25 | 7.75 | 8.25 | 8.5 | 8 | 7.5 | mejor |
+| S08 Nueva matrícula | 7.75 | 8 | 9 | 8 | 7.25 | 8 | igual |
+| S09 Exámenes | 7.75 | 7.75 | 8.75 | 8.25 | 7.5 | 7.75 | mejor |
+| S10 Comisiones | 7 | 7.25 | 9 | 8 | 7.25 | 7.25 | mejor |
+
+Measured: 0 errores de JS en 85 páginas a 1280, 768 y 390; mismos 3 desbordes previos en 390; 33 tablas con scroll a 1280 (base 38); 0 enlaces rotos.
+
+Top gaps from critics (para la próxima ronda):
+1. Pantallas de detalle sin primario junto al h1 y con acciones repetidas: Ficha 360 ("Nueva matrícula" dos veces), Factura ("Registrar pago" como primario de una factura ya pagada), Comisiones ("Aprobar período" en la fila del período), Inicio.
+2. Subtítulos de celdas que parten en 3-4 líneas: Cursos (código · sede · aula · horario · modalidad), Facturas, Exámenes, Comisiones.
+3. Bloque de capacidad en Cursos: barra rayada, porcentaje con fondo y tres cajitas repiten el mismo estado.
+4. Tarjetas en pares con alturas distintas (Inicio, Factura) y datos de cliente/SRI en texto corrido en vez de lista de definición.
+
+Stop check: bar no (S02 llega a 8.5 en 4 de 6 dimensiones; el resto entre 6.75 y 9) | cap: se corta aquí por consumo | publicación: automática, autorizada por el usuario -> publicado en `main`.
