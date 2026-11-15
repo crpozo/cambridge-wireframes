@@ -1687,7 +1687,7 @@ CAPACIDAD=[  # (curso, detalle, sede, aula, capacidad, inscritos, terminan)
 def ocupacion(cap, ins, term):
     esp=round(term*RETENCION); tot=ins+esp; pct=round(tot/cap*100)
     if tot<MIN_ABRIR: est=badge(f"Riesgo: menos de {MIN_ABRIR} · no abre","bad")
-    elif pct>100: est=badge("Sobrecupo · abrir 2.º grupo","bad")
+    elif pct>100: est=badge("Sobrecupo · abrir 2.º grupo","warn")
     elif pct>=80: est=badge("Buena ocupación","ok")
     else: est=badge("Por llenar · reforzar contacto","warn")
     return esp,tot,pct,est
@@ -1698,12 +1698,12 @@ def occ_cell(cap, ins, esp, pct, tone):
     return (f'<div class="occ occ-{tone}{over}">'
             f'<div class="occ-top"><span class="occ-n"><b>{tot}</b><span>de {cap} cupos</span></span><span class="occ-pct">{pct}%</span></div>'
             f'<div class="occ-bar" role="img" aria-label="{ins} inscritos y {esp} esperados de {cap} cupos"><i class="occ-in" style="width:{wi:.0f}%"></i><i class="occ-ex" style="width:{we:.0f}%"></i><b class="occ-min" style="left:{mn:.0f}%" title="Mínimo para abrir: {MIN_ABRIR}"></b></div>'
-            f'<dl class="occ-key"><div class="k-in"><dt>Inscritos</dt><dd>{ins}</dd></div><div class="k-ex"><dt>Esperados</dt><dd>{esp}</dd></div><div class="k-free"><dt>Libres</dt><dd>{max(cap-tot,0)}</dd></div></dl></div>')
+            f'<span class="occ-line">{ins} inscritos · {esp} esperados · {max(cap-tot,0)} libres</span></div>')
 def capacidad_tbl(tid="capacidad"):
     rows=[]
     for c,d,sd,aula,cap,ins,term in CAPACIDAD:
         esp,tot,pct,est=ocupacion(cap,ins,term)
-        tone="bad" if (tot<MIN_ABRIR or pct>100) else ("ok" if pct>=80 else "warn")
+        tone="bad" if tot<MIN_ABRIR else ("warn" if pct>100 or pct<80 else "ok")
         rows.append([c2(c,d),sd,c2(aula,f"capacidad {cap}"),occ_cell(cap,ins,esp,pct,tone),est])
     return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra oscura = inscritos hoy · clara = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
 
@@ -2088,8 +2088,8 @@ portal=f'''<div class="portal">
      +kv(("Tu bolsa de módulos","2 módulos pagados sin curso (9 y 10) · se usan solos al abrir el siguiente curso"),("Después del módulo 10","compras los módulos que quieras desde el 11"))
      +row(btn("Rematricularme",disabled_reason="Se activa al aprobar el módulo 10 · tu bolsa cubre hasta el 10"))
      +'<p class="plain">Si tuvieras un saldo pendiente verías aquí un aviso con el contacto de Secretaría de tu sede en lugar del botón, hasta regularizarlo.</p>')
-   +card("Próximos cursos", table(["Curso","Inicia","Profesor","Horario","Estado"],[[c2("English for Adults (ESL) · Virtual · Grupal · B1 módulo 8","0001-2026-0767"),"3 nov 2026","P. Gómez","Lu-Ma-Mi-Ju 19:00–21:00",badge("Confirma tu cupo","warn")],[c2("English for Adults (ESL) · Presencial · Grupal · B1+ módulos 9–10","sábados · Quito"),"9 ene 2027","L. Vega","Sa 09:00–13:00",badge("Pagado · cupo reservado","navy")],[c2("English for Adults (ESL) · Virtual · Grupal · B2 módulos 11–14","por abrir"),"mar 2027","por asignar","—",badge("Rematrícula al terminar B1+","neutral")]],wide=0))
-   +card("Cursos", course_item("English for Adults (ESL) · Virtual · Grupal · B1","módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
+   +card("Próximos cursos", table(["Curso","Inicia","Profesor","Horario","Estado"],[[c2("Adults · virtual · B1 módulo 8","0001-2026-0767"),"3 nov 2026","P. Gómez","Lu-Ma-Mi-Ju 19:00–21:00",badge("Confirma tu cupo","warn")],[c2("Adults · presencial · B1+ módulos 9–10","sábados · Quito"),"9 ene 2027","L. Vega","Sa 09:00–13:00",badge("Pagado · cupo reservado","navy")],[c2("Adults · virtual · B2 módulos 11–14","por abrir"),"mar 2027","por asignar","—",badge("Rematrícula al terminar B1+","neutral")]],wide=0))
+   +card("Cursos", course_item("Adults · virtual · B1","módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
      +course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),href="PortalEstudiante.html",tone=2,sessions="36",hours="72 h")
      +course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),href="PortalEstudiante.html",tone=3,sessions="18",hours="36 h")
      +course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),href="PortalEstudiante.html",tone=1,sessions="0",hours="0 h")),
@@ -2360,8 +2360,8 @@ ficha=shell("María Andrade","Estudiantes",
   "Datos": two(card("Datos personales", form([("Nombres","María"),("Apellidos","Andrade"),("Cédula / ID","1712345678"),"Fecha de nacimiento",("Email","maria.andrade@ejemplo.com",'email'),("Teléfono","099 000 0001",'tel'),"@@DIR@@","Sede"])),
                card("Comercial y origen", form(["Asesor asignado",("Canal de contacto (editable)","Walk in","select",ORIGENES,True,"Si entró como Walk in pero era un referido, se corrige aquí"),"Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+'<p class="plan-nota" data-canal-log hidden></p><script src="assets/matricula.js"></script>'+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
   "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],hide=(0,2,4,5),wide=1,rows=[
-     ["001-202602794",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Virtual · Grupal · B1</a>',"001-202602794 · 0001-2026-0767 · módulo 7 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$305","$305","$0","90%","—",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],
-     ["001-202601245",c2('<a href="DetalleMatricula.html">English for Adults (ESL) · Presencial · Grupal · A2</a>',"001-202601245 · 0001-2026-0620 · módulo 4 · Lu-Mi 14:00–16:00"),"Lu-Mi 14:00–16:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202602794",c2('<a href="DetalleMatricula.html">Adults · virtual · B1</a>',"001-202602794 · 0001-2026-0767 · módulo 7 · Lu-Ma-Mi-Ju 19:00–21:00"),"Lu-Ma-Mi-Ju 19:00–21:00","7","$305","$305","$0","90%","—",badge("En curso","navy"),'<a href="DetalleMatricula.html">Ver</a>'],
+     ["001-202601245",c2('<a href="DetalleMatricula.html">Adults · presencial · A2</a>',"001-202601245 · 0001-2026-0620 · módulo 4 · Lu-Mi 14:00–16:00"),"Lu-Mi 14:00–16:00","4","$240","$240","$0","95%","85 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202601102",c2('<a href="DetalleMatricula.html">English for Adults A2</a>',"001-202601102 · 0001-2026-0512 · Lu-Mi 18:00–20:00"),"Lu-Mi 18:00–20:00","3","$240","$240","$0","92%","88 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>'],
      ["001-202500811",c2('<a href="DetalleMatricula.html">English for Adults A1</a>',"001-202500811 · 0001-2025-0430 · Sa 09:00–13:00"),"Sa 09:00–13:00","2","$495","$455","$0","88%","80 · Pass",badge("Aprobado","ok"),'<a href="DetalleMatricula.html">Ver</a>']])
      +kv(("Matrículas","4"),("Módulos aprobados","6"),("Asistencia promedio","91%"),("Saldo total","$0"))
@@ -2523,7 +2523,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
   "Códigos de libros": table(["Material","ISBN","Código de activación","Entregado","Acción"],[["Empower B1 Combo A (digital pack)","9781108961516","EMP-B1-7K2Q-••••",'<a href="ReciboEntrega.html">28 ago 2026 · recibo firmado</a>',badge("Activado","ok")],["Empower B1+ Combo B (digital pack)","9781108961523","EMP-B1P-3M9X-•••• · reservado",'<a href="EntregasLibros.html">entrega pendiente · módulo 9</a>',btn("Asignar código",None,False)]]),
   "Asistencia": table(["Sesión","Fecha","Presente","Observación"],[["8","13 oct · 19:00","✓","—"],["9","14 oct · 19:00","✓","—"],["10","15 oct · 19:00","✗","Aviso previo"],["11","19 oct · 19:00","✓","—"]])+kv(("Asistencia","10 de 11 sesiones · 90%"),("Mínimo para aprobar","75%")),
   "Portafolio": table(["Módulo","Documento","Generado","Acción"],[["7",c2("Student Report · módulo 7","notas, asistencia y comentarios del profesor"),"al cerrar el módulo",badge("Se genera al calificar","neutral")],["6",c2("Student Report · módulo 6","A2 · nota 8.1 · asistencia 92%"),"28 ago 2026",btn("Ver PDF")],["5",c2("Student Report · módulo 5","A2 · nota 7.9 · asistencia 88%"),"3 jul 2026",btn("Ver PDF")]],wide=1)+kv(("Portafolio","un Student Report en PDF por módulo cerrado, como la pestaña Portfolio de TeamDesk; se adjunta al expediente y lo ve el estudiante en el portal")),
-  "Certificados": table(["Módulo","Programa · modalidad · curso","Nota","Certificado","Acción"],[["7",c2("English for Adults (ESL) · Virtual · Grupal","0001-2026-0767 · P. Gómez · Quito"),"8.4 · en curso",badge("Al cerrar el módulo","neutral"),"—"],["8",c2("English for Adults (ESL) · Virtual · Grupal","0001-2026-0767 · P. Gómez · Quito"),"—",badge("Pendiente","neutral"),"—"]],wide=1)+kv(("Certificado de nivel B1","se emite al aprobar los módulos 7 y 8 con nota ≥ 7, con código único de verificación"))+row(btn("Emitir certificado")),
+  "Certificados": table(["Módulo","Programa · modalidad · curso","Nota","Certificado","Acción"],[["7",c2("Adults · virtual","0001-2026-0767 · P. Gómez · Quito"),"8.4 · en curso",badge("Al cerrar el módulo","neutral"),"—"],["8",c2("Adults · virtual","0001-2026-0767 · P. Gómez · Quito"),"—",badge("Pendiente","neutral"),"—"]],wide=1)+kv(("Certificado de nivel B1","se emite al aprobar los módulos 7 y 8 con nota ≥ 7, con código único de verificación"))+row(btn("Emitir certificado")),
   "Comisión": kv(("Asesor","Carla M."),("Regla","Rango 11+ · 4% virtual"),("Monto","$39.20 por la venta de 4 módulos"),("Estado",badge("Pagada en el cierre de septiembre","ok")))+row('<a href="DetalleComision.html">Ver detalle de comisiones del asesor</a>'),
   "Historial": table(["Fecha","Usuario","Acción"],[["28 ago 10:11","Carla M.","Creó la venta multi-módulo (4 matrículas) y la factura 000021090"],["28 ago 10:15","Carla M.","Adjuntó la matrícula firmada"],["28 ago 12:14","Sistema","Factura enviada a Dora a las 12:11 (2 h después de emitirla), autorizada por el SRI y enviada al cliente"],["31 ago 09:00","Sistema","Envió el enlace de clase y agregó a la estudiante al equipo de Teams"],["27 sep 17:20","Secretaría","Registró el pago de la cuota 2"]]),
  }),
@@ -2532,7 +2532,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
 
 # 8b Calificar curso (cierra el módulo: notas, pass/fail y certificados)
 page("CalificarCurso.html","Calificar curso",shell("Calificar módulo 7 · 0001-2026-0767","Cursos",
- hero([("Curso","English for Adults (ESL) · Virtual · Grupal · B1"),("Módulo","7 · primero del nivel B1"),("Profesor","P. Gómez"),("Horas dictadas","18 de 18 del módulo"),("Escala","0 a 10 · aprueba con 7"),("Asistencia mínima","75%")],
+ hero([("Curso","Adults · virtual · B1"),("Módulo","7 · primero del nivel B1"),("Profesor","P. Gómez"),("Horas dictadas","18 de 18 del módulo"),("Escala","0 a 10 · aprueba con 7"),("Asistencia mínima","75%")],
   btn("Importar notas del Muro"), tag='<span class="hero-code">0001-2026-0767</span>'+badge("Módulo por cerrar","warn")),
  card("Notas por estudiante", table(["Estudiante","Asistencia","Participación 40%","Quiz 30%","Examen 30%","Nota final","Resultado"],[
    [c2('<a href="Ficha360.html">María Andrade</a>',"001-202602794"),"90%","8.8","8.2","8.0","8.4",badge("Aprobado","ok")],
@@ -2565,7 +2565,7 @@ page("ExamenesInternacionales.html","Exámenes internacionales",shell("Exámenes
   [c2("Daniel Paz","CED 1803456789"),"Ambato",c2("Oxford Test of English","19 sep 2026"),c2("000020998","pagada"),"128 · B2",badge("Entregado","neutral"),'<a href="ActaCertificado.html">Ver acta</a>'],
   [c2("Emilia Torres","CED 1724567890 · 12 años"),"Valle",c2("A2 Key for Schools","Cambridge · 5 dic 2026"),c2("000021105","crédito"),"—",badge("Inscrito","navy"),btn("Registrar resultado")],
   [c2("Gabriel Mora","CED 1712349876"),"Quito",c2("Intermediate","Anglia · 28 nov 2026"),c2("000021110","pagada"),"—",badge("Inscrito","navy"),btn("Registrar resultado")],
-  [c2("Sebastián Ríos","Cliente externo · sin cédula adjunta"),"Quito",c2("B1 Preliminary","Cambridge · 5 dic 2026 · cierra 15 nov"),c2("000021112","pagada"),"—",badge("Falta cédula","bad"),btn("Pedir cédula")]],sede=1,wide=2,tid="examenes"),
+  [c2("Sebastián Ríos","Cliente externo · sin cédula adjunta"),"Quito",c2("B1 Preliminary","Cambridge · 5 dic 2026 · cierra 15 nov"),c2("000021112","pagada"),"—",badge("Falta cédula","bad"),btn("Pedir cédula")]],sede=1,wide=0,tid="examenes"),
  card("Reporte por examen", table(["Examen","Internos","Externos","Importe","Asesor con más ventas"],[["B2 First (FCE)","12","5","$3,995","Carla M."],["C1 Advanced","4","3","$1,925","Diego R."],["TOEFL iBT","2","6","$1,600","Ana P."]])),
  card("Flujo", flow(["Factura emitida antes de inscribir","Datos y cédula en PDF (obligatoria)","Fecha con 20 días de anticipación","Inscripción en el centro autorizado","Esperando resultados","Puntaje y nivel","Listo para retirar","Entregado con firma"])),
  subtitle="Propuesta para validar con Cambridge: hoy se gestiona en la tabla International Exams de TeamDesk"),"Exámenes internacionales")
@@ -3323,7 +3323,7 @@ credito=table(["Vence","Factura","Estudiante","Plazo","Saldo","Estado","Acción"
   ["26 oct",c2("000021095","11 oct · Ambato · Sofía L."),'<a href="Ficha360.html">Mateo Salazar (menor)</a>',"15 días","$420.00",badge("Al día","ok"),V2],
   ["11 nov",c2("000021094","12 oct · Ambato · Sofía L."),'<a href="Ficha360.html">Camila Sánchez</a>',"30 días","$475.00",badge("Al día","ok"),V2]],wide=1)
 def fsel(n): return f'<input type="checkbox" class="chk" aria-label="Seleccionar factura {n}">'
-def fcode(n,f,sd,ase): return c2(f'<a href="DetalleFactura.html" data-row class="mono">{n}</a>',f"{f} · {sd} · {ase}")
+def fcode(n,f,sd,ase): return c2(f'<a href="DetalleFactura.html" data-row class="mono">{n}</a>',f"{f} · {ase}")
 def fmenu(): return rowmenu('<a href="DetalleFactura.html" class="btn" role="menuitem">Ver detalle</a>'+only(COMERCIAL,btn("Registrar pago"),True)+btn("Enviar comprobante")+btn("Ver RIDE (PDF)","RIDE.html")+btn("Descargar XML")+only("ADM,GER,DIR,SUC,SEC",btn("Emitir nota de crédito"),True),"Acciones de la factura")
 P_POR_ESTUDIANTE=(
 filters(sel("Estudiante",["Pedro Mora","Camila Sánchez","Gabriela Núñez","Mateo Salazar (menor)","María Andrade"],w="260px"),actions=btn("Descargar facturas pendientes",None,True)+btn("Enviar facturas pendientes al estudiante"))
@@ -3390,7 +3390,7 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
  kpis([("Facturas en la lista",agg("count","facturas"),"según filtros, período y sede"),("Facturado",agg("sum:Total","facturas","money0"),"total de las facturas visibles"),("Pagadas",agg("pct:Cobro=Pagada","facturas"),agg("count:Cobro=Pagada","facturas")+" facturas"),("Pendientes · vencidas",agg("count:Cobro=Pendiente","facturas")+" · "+agg("count:Cobro=Vencida","facturas"),"por cobrar",{"href":"#go-seg-cartera"}),("Sin autorizar SRI",agg("count:SRI=Sin autorizar","facturas"),"revisar y reenviar",{"fset":"Vista=Sin autorizar SRI"})]),
  tabs(["Facturas","Cobros","Ajustes"],"Facturas",roles={},counts={"Cobros":2,"Ajustes":3},panels={
   "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular","Matrículas sin factura"],[
-   filters(sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],w="170px",col="Vista"),search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Ajustada","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","En espera","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
+   filters(search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Ajustada","Anulada"],w="150px",col="Cobro"),sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],w="170px",col="Vista"),sel("SRI",["Todos","En espera","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
 
    +table(["","Factura","Sede","Estudiante","Total","Crédito","SRI","Cobro","Vista",""],[
   [fsel(n),fcode(n,f,sd,ase),sd,est,tot,cr,sri,cob,vis,fmenu()] for n,f,sd,ase,est,tot,cr,sri,cob,vis in [
@@ -4147,6 +4147,7 @@ html{-webkit-text-size-adjust:100%}
 [hidden]{display:none!important}
 body{margin:0;font-family:var(--font-ui);color:var(--ink);background:var(--bg);font-size:var(--t-14);line-height:var(--lh)}
 a{color:var(--navy);text-underline-offset:2px}a:hover{color:var(--navy-700)}
+.wf-table .td a:not(.btn){text-decoration:none}.wf-table .td a:not(.btn):hover{text-decoration:underline}
 :focus-visible{outline:none;box-shadow:var(--focus);border-radius:var(--r-sm)}
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
@@ -4166,6 +4167,7 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .nav-ico{width:18px;height:18px;flex:none;display:inline-flex}.nav-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-more{position:absolute;left:0;right:0;bottom:0;height:56px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity var(--dur-2);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:var(--t-12);color:var(--mute)}.sidebar-more::after{content:"Más opciones"}.sidebar.has-more .sidebar-more{opacity:1}
 .sidebar-sede{display:none}
+.sidebar.has-more nav{padding-bottom:48px}
 .nav-find{display:flex;align-items:center;gap:8px;margin:0 2px 8px;padding:0 10px;height:36px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);color:var(--mute);flex:none}
 .nav-find .nav-ico,.nav-find .nav-ico svg{width:16px;height:16px}
 .nav-find input{border:0;background:none;font:inherit;font-size:var(--t-13);flex:1;min-width:0;outline:none;color:var(--ink)}
@@ -4512,7 +4514,8 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .hero-number{display:flex;flex-direction:column;gap:4px}.hero-number .hn-label{font-size:var(--t-14);color:var(--mute)}.hero-number .hn-value{font-size:40px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1}.hero-number .hn-sub{font-size:var(--t-14);color:var(--ok)}
 
 /* ficha / perfil */
-.profile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.profile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;position:sticky;top:16px;align-self:start}
+@media (max-width:1024px){.profile{position:static}}
 .profile-cover{display:none}
 .profile-body{padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left}
 .profile h2{margin:6px 0 0;font-size:var(--t-20);font-family:var(--font-display)}.profile .actions{display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap}.profile .actions .btn{flex:1}
@@ -4650,9 +4653,10 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .occ-bar{position:relative;display:flex;height:8px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .occ-bar i{display:block;height:100%}.occ-bar i:first-child{border-radius:99px 0 0 99px}
 .occ-in{background:var(--navy)}
-.occ-ex{background:var(--ch4);border-radius:0 99px 99px 0}.occ-over .occ-in,.occ-over .occ-ex{background:var(--bad)}
+.occ-ex{background:var(--ch4);border-radius:0 99px 99px 0}
 .occ-min{position:absolute;top:-6px;bottom:-6px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
 .occ-ok{--occ:var(--ok)}.occ-warn{--occ:var(--warn)}.occ-bad{--occ:var(--bad)}
+.occ-line{font-size:var(--t-13);color:var(--mute);font-variant-numeric:tabular-nums}
 .occ-key{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0}
 .occ-key>div{display:flex;flex-direction:row-reverse;align-items:baseline;gap:4px}
 .occ-key dd{margin:0;font-family:var(--font-mono);font-size:var(--t-13);font-weight:600;color:var(--ink)}

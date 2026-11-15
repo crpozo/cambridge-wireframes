@@ -278,3 +278,43 @@ Top gaps from critics (próxima ronda):
 4. Facturas: "Vista" más pestañas más control segmentado siguen siendo tres niveles; dos enlaces subrayados por fila.
 
 Stop check: bar no (S02 8.25-9.25; el resto entre 6.5 y 9.25) | publicación automática autorizada -> publicado en `main`.
+
+## Round 08
+
+Focus: los 4 huecos de la ronda 07.
+
+Changes:
+- Celdas: factura sin la sede repetida en el detalle; cursos de la Ficha 360 con nombre corto ("Adults · virtual · B1"); enlaces dentro de tablas sin subrayado (subrayado al pasar el cursor).
+- Ficha 360: el perfil acompaña el scroll en escritorio (en tablet y celular queda normal, medido).
+- Capacidad: cifras en una línea ("4 inscritos · 9 esperados · 2 libres") en vez de una leyenda por fila; sobrecupo en ámbar (requiere acción), rojo solo para "no abre"; barras siempre azules, el color lo lleva el estado.
+- Facturas: el selector "Vista" pasa al panel de filtros (filtra igual, medido).
+- Menú: el difuminado "Más opciones" ya no tapa el último título.
+
+Revertido en esta ronda (los dos revisores lo marcaron como retroceso de la ronda 07):
+- Exámenes con "Examen" como columna ancha: angostaba "Candidato" a 4-5 líneas. Vuelve a ser ancha la columna del candidato.
+
+Measured: celdas con 4+ líneas a 1366 px: 156 (ronda 07: 169; inicio de la ronda 07: 198); tablas con scroll a 1280: 32 (base 38); 0 errores de JS; desbordes a 390: 2 (RIDE, Reportes); 0 enlaces rotos.
+
+Scores, eyeballed: mediana de 2 revisores nuevos sin contexto (antes de revertir Exámenes y de los ajustes de capacidad y menú)
+
+| Shot | Jerarquía | Alineación | Color | Tipografía | Densidad | Consistencia | vs r00 |
+|---|---|---|---|---|---|---|---|
+| S01 Inicio | 8 | 7.75 | 8.75 | 8.5 | 8 | 8.25 | mejor |
+| S02 Estudiantes | 8.5 | 8.25 | 9 | 8.5 | 8.25 | 8.5 | mejor |
+| S03 Ficha 360 | 7.5 | 7.25 | 8.5 | 8 | 7.25 | 7.5 | mejor |
+| S04 Cursos | 8.5 | 8.5 | 8.5 | 8.5 | 8.25 | 8.25 | mejor |
+| S05 Facturas | 7.75 | 8.25 | 8.5 | 8.5 | 8.25 | 8 | mejor |
+| S06 Factura | 8.25 | 8.25 | 9 | 8.5 | 8.5 | 7.75 | mejor |
+| S07 Leads | 8.25 | 7.5 | 8.5 | 8 | 7.25 | 7.5 | mejor |
+| S08 Nueva matrícula | 8.25 | 8 | 8.75 | 8.5 | 7.75 | 8.5 | mejor |
+| S09 Exámenes | 8.25 | 6.75 | 8.5 | 7.75 | 6.5 | 8 | igual / mejor (retroceso por la columna ancha, revertido) |
+| S10 Comisiones | 8 | 7.75 | 9 | 8.5 | 8 | 8 | mejor |
+| Menú lateral | 8 (8 y 8) | | | | | | mejor |
+
+Top gaps from critics (próxima ronda):
+1. Leads: 7 columnas; origen, interés y quién estudia todavía parten en 2-3 líneas.
+2. Ficha 360: pestañas debajo de las tarjetas; nombres de curso distintos entre la lista y la tabla.
+3. Factura y Comisiones: tarjetas con datos en texto corrido (SRI, Efecto en la matrícula) y alturas desparejas; resumen del período de Comisiones como texto suelto.
+4. Inicio: "Accesos rápidos" con 8 botones repite el menú.
+
+Stop check: bar no (S04 y S06 llegan a 8.25-9 salvo una dimensión; el resto entre 6.5 y 9) | publicación automática autorizada -> publicado en `main`.
