@@ -240,3 +240,41 @@ Top gaps from critics (próxima ronda):
 4. Tarjetas en pares con alturas distintas (Inicio, Factura, Comisiones); Facturas con dos enlaces subrayados por fila.
 
 Stop check: bar no (S02 y S10 cerca: 8-9.25; el resto entre 7 y 9.25) | publicación automática autorizada -> publicado en `main`.
+
+## Round 07
+
+Focus: contenido de las tablas (celdas que parten en 3-4 líneas), porque era el hueco que ambos revisores repetían; más los pendientes de Nueva matrícula.
+
+Changes:
+- Cursos · Reaperturas: el curso que termina y su continuidad en una sola columna; 6 columnas en vez de 7; motivo de pérdida corto; sin el primario duplicado en la tarjeta.
+- Rematrícula: "Curso que terminó → siguiente" en una sola columna ancha. Automatizaciones: la descripción de la regla es la columna ancha.
+- Exámenes: el examen en la primera línea y el centro con la fecha debajo; factura con su estado en la segunda línea; encabezado "Puntaje"; Examen es la columna ancha.
+- Facturas, Leads, Comisiones: detalles cortos ("$475 pendiente", "Hijo · Tomás · 9 años", "Pendiente · cuota 2, 16 nov").
+- Nueva matrícula: "Buscar estudiante / Nuevo estudiante" al comienzo del paso 1; paso actual relleno en azul; sin referencias a TeamDesk en las ayudas.
+- Cabecera de página: las acciones quedan a la altura del h1 aunque el subtítulo sea largo (en tablet y celular bajan debajo).
+
+Measured: celdas con 4+ líneas de texto en tablas visibles a 1366 px: 169 (inicio de la ronda 198); tablas con scroll a 1280: 32 (base 38); 0 errores de JS; desbordes a 390: 2 (RIDE, Reportes; base 3); un desborde nuevo de 6 px en Detalle de matrícula a 768 px apareció y se corrigió en la misma ronda; 0 enlaces rotos; roles intactos.
+
+Scores, eyeballed: mediana de 2 revisores nuevos sin contexto (antes de los dos últimos ajustes: Examen ancho y acciones junto al h1 con subtítulo largo)
+
+| Shot | Jerarquía | Alineación | Color | Tipografía | Densidad | Consistencia | vs r00 |
+|---|---|---|---|---|---|---|---|
+| S01 Inicio | 8.25 | 7.5 | 8.5 | 8.75 | 7.75 | 8.25 | mejor |
+| S02 Estudiantes | 8.5 | 8.25 | 9.25 | 8.75 | 8.25 | 8.25 | mejor |
+| S03 Ficha 360 | 7.5 | 7.25 | 9 | 8 | 7 | 7.5 | mejor |
+| S04 Cursos | 8.25 | 8 | 8.75 | 8.25 | 7.75 | 8.25 | mejor |
+| S05 Facturas | 7.75 | 7.25 | 9 | 8 | 6.75 | 7.25 | mejor |
+| S06 Factura | 7.25 | 8 | 9.25 | 8.25 | 8 | 7.5 | mejor |
+| S07 Leads | 8.25 | 7.25 | 8.5 | 8 | 6.5 | 7.25 | mejor |
+| S08 Nueva matrícula | 8.25 | 8 | 9.25 | 8.75 | 7.25 | 8.25 | mejor |
+| S09 Exámenes | 8.25 | 7.25 | 8.5 | 8 | 6.5 | 8.25 | mejor |
+| S10 Comisiones | 8.5 | 7.25 | 9 | 8.25 | 7.5 | 8 | mejor |
+| Menú lateral | 7.75 (7 y 8.5) | | | | | | mejor |
+
+Top gaps from critics (próxima ronda):
+1. Celdas que todavía parten: Facturas (factura, cobro), Leads (origen, interés), Ficha 360 (curso en la pestaña de matrículas).
+2. Ficha 360: la columna del perfil termina corta y "Cursos matriculados" repite la tabla de la pestaña.
+3. Capacidad en Cursos: leyenda repetida en cada fila; rojo usado para sobrecupo y para "no abre".
+4. Facturas: "Vista" más pestañas más control segmentado siguen siendo tres niveles; dos enlaces subrayados por fila.
+
+Stop check: bar no (S02 8.25-9.25; el resto entre 6.5 y 9.25) | publicación automática autorizada -> publicado en `main`.
