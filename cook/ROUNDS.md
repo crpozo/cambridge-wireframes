@@ -201,3 +201,42 @@ Top gaps from critics (próxima ronda):
 4. Inicio: tarjetas en pares con alturas distintas, "Pendientes de aprobación" repite la lista de pendientes, medidores grandes para tres cifras.
 
 Stop check: bar no (S02 en 8.25-9; el resto entre 7.25 y 9) | publicación automática autorizada -> publicado en `main`.
+
+## Round 06
+
+Focus: los 4 huecos de la ronda 05.
+
+Changes:
+- Facturas: una capa menos de controles (los cuatro botones de vista rápida pasan a un selector "Vista" en la fila de filtros; filtra igual, medido: 8 todas, 4 por cobrar, 2 sin autorizar SRI) y sin la línea suelta de envío masivo; "Nueva factura" con el mismo ícono de menú que el resto.
+- Acciones junto al h1: Comisiones ("Aprobar período" + "Reglas de comisión" + "Más acciones"; el estado y los totales quedan en la fila del período), Ficha 360 ("Nueva matrícula"), Exámenes (las acciones de la tarjeta de contexto se suman a "Más acciones" junto a "Nuevo candidato").
+- Inicio: sin la tarjeta que repetía los pendientes de aprobación; los bloques de abajo se apilan a todo el ancho (`stack()`), sin hueco.
+
+Probado y descartado (medido):
+- Columnas secundarias a su largo natural (`max-content`): tablas con scroll a 1280 suben de 33 a 51.
+- Columna principal más angosta (1.3 partes): celdas de 4+ líneas suben de 198 a 249.
+
+Measured: 0 errores de JS en 85 páginas a 1280, 768 y 390; desbordes a 390: 2 (RIDE, Reportes; base 3); 33 tablas con scroll a 1280 (base 38); 0 enlaces rotos; roles intactos.
+
+Scores, eyeballed: mediana de 2 revisores nuevos sin contexto (antes de corregir el hueco de Inicio)
+
+| Shot | Jerarquía | Alineación | Color | Tipografía | Densidad | Consistencia | vs r00 |
+|---|---|---|---|---|---|---|---|
+| S01 Inicio | 8 | 7 | 9 | 8.5 | 7.75 | 8.5 | mejor |
+| S02 Estudiantes | 8.5 | 8.5 | 9.25 | 8.5 | 8.25 | 8.5 | mejor |
+| S03 Ficha 360 | 7.5 | 7.25 | 9 | 8 | 7.5 | 8 | mejor |
+| S04 Cursos | 8.25 | 7.5 | 8.75 | 8.25 | 7.75 | 8 | mejor |
+| S05 Facturas | 7.75 | 8 | 8.75 | 8 | 8 | 7.75 | mejor |
+| S06 Factura | 7.75 | 8.25 | 9.25 | 8.5 | 8.25 | 7.75 | mejor |
+| S07 Leads | 8.5 | 8 | 8 | 8.5 | 7.75 | 7.5 | mejor |
+| S08 Nueva matrícula | 8 | 8 | 9.25 | 8.25 | 7.5 | 8.5 | igual |
+| S09 Exámenes | 8.25 | 8 | 8.75 | 8.25 | 7.5 | 8.25 | mejor |
+| S10 Comisiones | 8.5 | 7.5 | 9.25 | 8.5 | 8.25 | 8 | mejor |
+| Menú lateral | 8 (7.5 y 8.5) | | | | | | mejor |
+
+Top gaps from critics (próxima ronda):
+1. Tablas angostas que parten en 3-4 líneas: Reaperturas en Cursos (la peor), Exámenes (examen), Facturas (SRI, cobro), Leads, Comisiones (estado pendiente).
+2. Ficha 360: pestañas lejos del título; Rematrícula en 2 x 2 con huecos; columna del perfil corta.
+3. Nueva matrícula: ayudas de 2-3 líneas, búsqueda del estudiante al final del paso, paso actual poco marcado.
+4. Tarjetas en pares con alturas distintas (Inicio, Factura, Comisiones); Facturas con dos enlaces subrayados por fila.
+
+Stop check: bar no (S02 y S10 cerca: 8-9.25; el resto entre 7 y 9.25) | publicación automática autorizada -> publicado en `main`.

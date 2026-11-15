@@ -962,13 +962,18 @@ def shell(title, active, *parts, subtitle="", actions=""):
                 a=pt.index('<!--P-->'); b=pt.index('<!--/P-->')
                 actions=pt[a+8:b]; parts[k]=pt[:a]+pt[b+9:]
                 break
-    if not actions:
-        # en una página de detalle, las acciones de la cabecera suben junto al h1 (la tarjeta queda con los datos)
-        for k,pt in enumerate(parts):
-            if isinstance(pt,str) and pt.startswith('<section class="card hero">') and '<!--HA-->' in pt:
-                a=pt.index('<!--HA-->'); b=pt.index('<!--/HA-->')
-                if 'btn' in pt[a:b]: actions=pt[a+9:b]; parts[k]=pt[:a]+pt[b+10:]
-                break
+    # en una página de detalle, las acciones de la cabecera suben junto al h1 (la tarjeta queda con los datos);
+    # si ya hay un primario arriba, se suman como secundarias en "Más acciones"
+    for k,pt in enumerate(parts):
+        if isinstance(pt,str) and pt.startswith('<section class="card hero">') and '<!--HA-->' in pt:
+            a=pt.index('<!--HA-->'); b=pt.index('<!--/HA-->')
+            if 'btn' in pt[a:b]:
+                ha=pt[a+9:b]; parts[k]=pt[:a]+pt[b+10:]
+                if not actions: actions=ha
+                else:
+                    sec="".join(e for e in _top_elems(ha) if 'class="more"' not in e)+"".join(re.findall(r'<div class="menu-pop"[^>]*>(.*?)</div></div>',ha,re.S))
+                    actions=actions+more_menu(sec)
+            break
     body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','').replace('<!--HA-->','').replace('<!--/HA-->','')
     act=NAV_ALIAS.get(active,active)
     parent=next(((n,h) for _,items in NAV for n,h,_ in items if n==act),None)
@@ -1389,6 +1394,9 @@ def row(*cells, gap=16):
 def foot(*buttons):
     """Pie de formulario fijo abajo: acción principal primero, luego secundarias."""
     return '<div class="form-foot">'+"".join(buttons)+'</div>'
+def stack(*parts):
+    """Bloques a todo el ancho, uno debajo del otro (cuando una columna puede quedar vacía según el rol)."""
+    return "".join(p for p in parts if isinstance(p,str))
 def two(a,b, ratio="1fr 1fr"):
     a=f'<div class="g-cell">{a}</div>'; b=f'<div class="g-cell">{b}</div>'
     if ratio=="1fr 1fr": return f'<div class="grid grid-2">{a}{b}</div>'
@@ -2293,7 +2301,7 @@ home=shell("Inicio","Inicio",
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
  only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$443","$443","$0","$0"),"meta cumplida · ver cálculo")])),
  only("ADM,GER,DIR,SUC", two(card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")), card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])+'<div class="gauges">'+gauge(71,"Cobrado del mes")+gauge(82,"Ocupación de cursos")+gauge(109,"Meta de niveles","var(--ok)")+'</div>'))) ,
- two(only("ADM,GER,DIR,SUC", card("Pendientes de aprobación", li(["Descuento 42% · Gabriela Núñez · Carla M.","Tarifa de profesor fuera de tabla · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
+ stack(""
      +only("COO", card("Pendientes de aprobación", li(["Tarifa de profesor fuera de tabla · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
      +only("SEC", card("Pendientes de secretaría", li(['<a href="Facturas.html">2 rematrículas por confirmar · Sofía Herrera reportó transferencia</a>','<a href="Facturas.html">Factura 000021095 rechazada por el SRI · cédula inválida</a>','<a href="Facturas.html">Cartera vencida: 2 cuotas · $725</a>','<a href="Inventario.html">3 libros con stock negativo · correo de las 07:00 enviado</a>'])+row(btn("Ir a facturación","Facturas.html"))))
      +only("ASE", card("Mis pendientes", li(['<a href="SolicitudDescuento.html">Solicitud de descuento 42% · Gabriela Núñez · esperando a Dir. Comercial</a>',"4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
@@ -2344,7 +2352,7 @@ ficha=shell("María Andrade","Estudiantes",
       {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip"><b>1 h</b>Club de conversación</span><span class="chip"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
       {card("Rendimiento", '<div class="perf">'+gauge(84,"Puntaje total")+'<div class="perf-legend"><div><i style="background:var(--ch1)"></i>Participación<b>55%</b></div><div><i style="background:var(--ch2)"></i>Quiz en clase<b>15%</b></div><div><i style="background:var(--ch3)"></i>Examen<b>10%</b></div><div><i style="background:var(--ch4)"></i>Ausencias<b>10%</b></div></div></div><div class="trend"><div class="big"><b>84% <span class="up">+3.4%</span></b>últimos 6 meses</div>'+areachart(["May","Jun","Jul","Ago","Sep","Oct"],[72,78,75,81,83,84],h=140)+'</div><div class="quote">Va al día con el módulo 7 y mejoró 12 puntos desde mayo. Si mantiene la asistencia, cierra B1 en noviembre con certificado.</div>', sel("Período",["Últimos 6 meses","Módulo actual","Todo"],w="160px",col=False))}
     </div>
-    {card("Rematrícula (conectada con el Muro)", '<div class="grid kpi-2x2">'+kpi("Avance en el Muro","100%","módulo 7 · B1 Virtual")+kpi("Nota de aprobación","8.4 / 10","mínimo 7 · aprobado")+kpi("Siguiente","Módulo 8","ya pagado · mismo grupo · inicia 3 nov")+kpi("Bolsa de módulos","2","9 y 10 · pagados sin curso")+'</div>'+kv(("Estado",badge("Pagado, pendiente de matricular (9 y 10)","navy")),("Por qué","los módulos 7 a 10 están en la venta del 28 ago (factura 000021090)"),("Rematrícula con pago","se activa al aprobar el módulo 10, el último comprado"))+only(COMERCIAL,row(btn("Nueva matrícula",None,True),btn("Enviar recordatorio"))),extra=badge("Condiciones cumplidas","ok"))}
+    {card("Rematrícula (conectada con el Muro)", '<div class="grid kpi-2x2">'+kpi("Avance en el Muro","100%","módulo 7 · B1 Virtual")+kpi("Nota de aprobación","8.4 / 10","mínimo 7 · aprobado")+kpi("Siguiente","Módulo 8","ya pagado · mismo grupo · inicia 3 nov")+kpi("Bolsa de módulos","2","9 y 10 · pagados sin curso")+'</div>'+kv(("Estado",badge("Pagado, pendiente de matricular (9 y 10)","navy")),("Por qué","los módulos 7 a 10 están en la venta del 28 ago (factura 000021090)"),("Rematrícula con pago","se activa al aprobar el módulo 10, el último comprado"))+only(COMERCIAL,row(btn("Enviar recordatorio"))),extra=badge("Condiciones cumplidas","ok"))}
     {card("Cursos matriculados", course_item("English for Adults B1 Virtual","Adults · B1 · módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),tone=0,sessions="18",hours="36 h")+course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),tone=2,sessions="36",hours="72 h")+course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),tone=3,sessions="18",hours="36 h")+course_item("Club de conversación B1","Extracurricular · sábados · S. Jiménez",35,badge("En curso","navy"),"—",badge("Ninguno"),tone=1,sessions="4",hours="4 h")+course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),tone=0,sessions="0",hours="0 h"), filters(search("Buscar","Curso, categoría…",w="240px"),sel("Estado",["Todos","En curso","Completado","Pendiente"],w="130px",col=False),actions='<a href="Cursos.html" class="btn btn-ghost">Ver todos</a>'))}
   </div>
 </div>''',
@@ -2368,7 +2376,7 @@ ficha=shell("María Andrade","Estudiantes",
   "Historial": table(["Fecha/hora","Usuario","Acción","Detalle"],[["27 sep 17:20","Secretaría","Registró pago","Cuota 2 de 2 · $490 · tarjeta"],["28 ago 10:11","Carla M.","Creó venta","Módulos 7 a 10 · 4 matrículas · factura 000021090 · 10% referido"],["30 jun 16:00","Sistema","Cerró nivel","A2 · Pass · nota 85"],["10 jul 2025","Secretaría","Creó estudiante","Alta desde lead Kommo"]])+note("Vista filtrada del audit log para este estudiante. El registro completo está en Configuración → Audit log."),
  }),
  only("ADM,GER,DIR,SUC,COO,ASE,SEC", ai([("Lleva 6 módulos aprobados (A1 y A2) con 91% de asistencia; con lo comprado llega al módulo 10 (B1+) en febrero de 2027. Buen candidato para ofrecerle B2 (módulos 11 a 14) antes de que termine B1+.","Nueva matrícula","NuevaVenta.html"),("Faltó 2 veces seguidas la semana pasada en B1 Virtual (antes nunca). Vale la pena un mensaje antes de que afecte el módulo.","Ver asistencia","DetalleMatricula.html"),("Su descuento del 10% fue por referido: trajo a Pedro Mora, que ya está matriculado.","Ver detalle de comisión","DetalleComision.html")],"Pregunta: ¿qué nivel le toca y cuándo abre el próximo curso?")),
- subtitle="Ficha 360°: todo lo del estudiante en una sola vista")
+ subtitle="Ficha 360°: todo lo del estudiante en una sola vista", actions=only(COMERCIAL,btn("Nueva matrícula",None,True),True))
 page("Ficha360.html","Ficha estudiante",ficha,"Ficha 360 del estudiante")
 
 # 5 Nueva venta
@@ -2866,7 +2874,7 @@ descuentos=table(["Fecha","Estudiante","Asesor","Venta","Precio lista","% dcto."
 com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
  tabs(["Comisiones","Descuentos otorgados"],"Comisiones",roles={"Descuentos otorgados":"ADM,GER,DIR,SUC"},panels={
   "Comisiones": only("ASE", card("Tu comisión de octubre, en corto", kpis([("Vendiste","14 niveles","meta 12 · 117%"),("Rango","11+ niveles","$18 virtual · $22 presencial por nivel · tabla Quito"),("Comisión estimada","$443.30","incluye bono $50"),("Retenido","$22.50","1 venta sin cobrar")])+progress(100,"Meta: 14 de 12 niveles",CH[0])+row(btn("Preparar mi informe del mes","InformeComisiones.html",True),btn("Ver el cálculo paso a paso","DetalleComision.html"),btn("Exportar Excel"))))
-   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))+btn("Reglas de comisión")+btn("Informes de asesores","InformeComisiones.html")+btn("Exportar")+btn("Aprobar período",None,True)))
+   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))))
    +only("ADM,GER,DIR,SUC", flow([("Borrador (cálculo automático)","","","done"),("En revisión (Dir. Comercial)","","","now"),("Aprobado (se paga)","","","")])
    +table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
     ["Carla M.","14","6 / 8","12","14","$443.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
@@ -2893,7 +2901,8 @@ com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
    +two(card("Descuento promedio por asesor", hbars([("Carla M. · 12 ventas",9),("Sofía L. · 9 ventas",8),("Diego R. · 8 ventas",6)],unit="")+kv(("Límite sin aprobación","10% (Configuración → Reglas de aprobación)"),("Más de 10%","requiere aprobación del Director Comercial"))),
         card("Motivos del mes", hbars([("Referido",11),("Promoción octubre",6),("Convenio empresa",3),("Hermano matriculado",2),("Otro",1)],unit="")+row(btn("Editar motivos permitidos","Configuracion.html")))),
  }),
- subtitle="Comisiones calculadas al cierre de mes; descuentos de cada asesor visibles para Dirección")
+ subtitle="Comisiones calculadas al cierre de mes; descuentos de cada asesor visibles para Dirección",
+ actions=only("ADM,GER,DIR,SUC",split_actions(btn("Aprobar período",None,True)+btn("Reglas de comisión")+btn("Informes de asesores","InformeComisiones.html")+btn("Exportar"),2),True))
 page("Comisiones.html","Comisiones",com,"Motor de comisiones")
 
 # 11b Insights de IA (M9 + M8): todas las observaciones del asistente, por área, con prioridad y acción
@@ -3381,9 +3390,8 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
  kpis([("Facturas en la lista",agg("count","facturas"),"según filtros, período y sede"),("Facturado",agg("sum:Total","facturas","money0"),"total de las facturas visibles"),("Pagadas",agg("pct:Cobro=Pagada","facturas"),agg("count:Cobro=Pagada","facturas")+" facturas"),("Pendientes · vencidas",agg("count:Cobro=Pendiente","facturas")+" · "+agg("count:Cobro=Vencida","facturas"),"por cobrar",{"href":"#go-seg-cartera"}),("Sin autorizar SRI",agg("count:SRI=Sin autorizar","facturas"),"revisar y reenviar",{"fset":"Vista=Sin autorizar SRI"})]),
  tabs(["Facturas","Cobros","Ajustes"],"Facturas",roles={},counts={"Cobros":2,"Ajustes":3},panels={
   "Facturas": seg(["Lista de facturas","Por estudiante","Sin vincular","Matrículas sin factura"],[
-   '<div class="quick" data-fgroup role="group" aria-label="Vistas rápidas">'+"".join(f'<button type="button" class="q" data-fset="Vista={v}" aria-pressed="false">{v}</button>' for v in ["Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"])+'</div>'
-   +filters('<div hidden>'+sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],col="Vista")+'</div>',search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Ajustada","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","En espera","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
-   +'<div class="bulk"><span>Marca facturas para enviarlas juntas</span>'+btn("Enviar comprobantes seleccionados",kind="ghost")+'</div>'
+   filters(sel("Vista",["Todas","Por cobrar","Vencidas","Sin autorizar SRI","Anuladas"],w="170px",col="Vista"),search("Buscar","Nº de factura, estudiante o matrícula",w="280px"),sel("Estado",["Todos","Pagada","Parcial","Pendiente","Vencida","Ajustada","Anulada"],w="150px",col="Cobro"),sel("SRI",["Todos","En espera","Autorizada","Sin autorizar","Rechazada"],w="150px"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L."],w="150px",col="Factura"),sel("Crédito",["Todos","Sí","No"],w="120px"),sel("Período",PERIODOS,w="150px",col="@Factura"),actions='<span class="result-count" aria-live="polite"></span>',show=4)
+
    +table(["","Factura","Sede","Estudiante","Total","Crédito","SRI","Cobro","Vista",""],[
   [fsel(n),fcode(n,f,sd,ase),sd,est,tot,cr,sri,cob,vis,fmenu()] for n,f,sd,ase,est,tot,cr,sri,cob,vis in [
    ("000021113","Hoy","Quito","Carla M.",c2('<a href="Ficha360.html">Renata Salazar</a>',"001-202603270 · B1"),"$250.00","No",badge("En espera · sale en 1 h 18 min","navy"),badge("Pendiente","warn"),"Por cobrar"),
@@ -3406,7 +3414,7 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
  }),
  ai([("2 facturas de hoy aún no están autorizadas por el SRI: la 000021095 fue rechazada (cédula del cliente inválida) y la 000021092 no se ha enviado.","Ver sin autorizar","Facturas.html"),("La factura 000021080 de Pedro Mora venció hace 2 días con $500 de saldo; su asesor es Diego R.","Ver calendario de crédito","Facturas.html"),("Hoy el 100% de las facturas fueron por transferencia; ninguna en efectivo.","Ver reportes","Reportes.html")],"¿Qué facturas de crédito vencen esta semana?"),
  subtitle="Una factura por venta, con pago, autorización SRI y envío del comprobante",
- actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura ▾</button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="RematriculaFactura.html">Desde una matrícula existente</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Links de pago","LinksPago.html")+btn("Envíos al SRI y a Dora","EnviosSRI.html")+btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
+ actions=only(COMERCIAL,'<div class="menu-wrap"><button type="button" class="btn btn-primary" data-menu aria-expanded="false" aria-controls="nf-menu">Nueva factura <span class="chev chev-d" aria-hidden="true"></span></button><div id="nf-menu" class="menu-pop" hidden role="menu"><a class="btn" role="menuitem" href="NuevaVenta.html">Matrícula (módulos u horas)</a><a class="btn" role="menuitem" href="RematriculaFactura.html">Desde una matrícula existente</a><a class="btn" role="menuitem" href="NuevaInscripcionExamen.html">Examen internacional</a><a class="btn" role="menuitem" href="VentaMercaderia.html">Mercadería</a><a class="btn" role="menuitem" href="NuevaVenta.html#solo-facturacion">Solo facturación (simulador, traducción, otro servicio)</a></div></div>',True)+more_menu(btn("Links de pago","LinksPago.html")+btn("Envíos al SRI y a Dora","EnviosSRI.html")+btn("Enviar comprobantes pendientes")+btn("Descargar XML del día")+btn("Exportar"))),"Facturas")
 
 # 23 Detalle factura
 page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturación",
