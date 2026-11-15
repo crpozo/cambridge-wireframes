@@ -461,9 +461,23 @@ def page(fname, title, inner, lang_title):
     }});
     (function(){{var nav=document.getElementById('sidenav'),sb=nav&&nav.parentElement;if(!nav)return;
       nav.querySelectorAll('details.nav-group').forEach(function(d){{var k='wf-nav-'+d.getAttribute('data-area');
-        d.addEventListener('toggle',function(){{try{{localStorage.setItem(k,d.open?'1':'0');}}catch(e){{}}more();}});}});
+        d.addEventListener('toggle',function(){{var nf=document.getElementById('navfind');if(!(nf&&nf.value)){{try{{localStorage.setItem(k,d.open?'1':'0');}}catch(e){{}}}}more();}});}});
       function more(){{var m=nav.scrollHeight-nav.clientHeight-nav.scrollTop>8;sb.classList.toggle('has-more',m);}}
       nav.addEventListener('scroll',more);window.addEventListener('resize',more);more();setTimeout(more,300);
+      var nf=document.getElementById('navfind');
+      if(nf){{
+        var norm=function(t){{return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}};
+        nf.addEventListener('input',function(){{var q=norm(nf.value.trim());
+          nav.querySelectorAll('.nav-link').forEach(function(a){{a.classList.toggle('nf-hide',!!q&&norm(a.textContent).indexOf(q)<0);}});
+          nav.querySelectorAll('details.nav-group').forEach(function(d){{
+            if(q){{if(d.dataset.nfOpen===undefined)d.dataset.nfOpen=d.open?'1':'0';var any=[].some.call(d.querySelectorAll('.nav-link'),function(a){{return !a.classList.contains('nf-hide')&&a.style.display!=='none';}});d.classList.toggle('nf-hide',!any);d.open=any;}}
+            else{{d.classList.remove('nf-hide');if(d.dataset.nfOpen!==undefined){{d.open=d.dataset.nfOpen==='1';delete d.dataset.nfOpen;}}}}
+          }});more();}});
+        nf.addEventListener('keydown',function(e){{
+          if(e.key==='Enter'){{var a=[].find.call(nav.querySelectorAll('.nav-link'),function(x){{return !x.classList.contains('nf-hide')&&x.offsetParent;}});if(a){{e.preventDefault();location.href=a.getAttribute('href');}}}}
+          if(e.key==='Escape'){{nf.value='';nf.dispatchEvent(new Event('input'));}}
+        }});
+      }}
       var a=nav.querySelector('.nav-link.active');if(a){{var r=a.getBoundingClientRect(),n=nav.getBoundingClientRect();if(r.bottom>n.bottom||r.top<n.top)nav.scrollTop=a.offsetTop-nav.clientHeight/2;}}
     }})();
     (function(){{var ub=document.getElementById('user-btn'),up=document.getElementById('user-pop');if(!ub)return;ub.addEventListener('click',function(e){{e.stopPropagation();var o=up.hidden;up.hidden=!o;ub.setAttribute('aria-expanded',o);}});up.addEventListener('click',function(e){{e.stopPropagation();}});document.addEventListener('click',function(e){{if(!up.hidden&&!up.contains(e.target))up.hidden=true;}});document.addEventListener('keydown',function(e){{if(e.key==='Escape')up.hidden=true;}});}})();
@@ -935,7 +949,7 @@ def nav(active):
         if not area:
             out+=f'<div data-roles="{roles}" class="nav-group-root">{links}</div>'; continue
         has_active=any(n==active for n,_,_ in items)
-        out+=(f'<details class="nav-group" data-roles="{roles}" data-area="{area}"{" open" if True else ""}{" data-active" if has_active else ""}>'
+        out+=(f'<details class="nav-group" data-roles="{roles}" data-area="{area}"{" open" if has_active or (active=="Inicio" and area in ("Académico","Comercial")) else ""}{" data-active" if has_active else ""}>'
               f'<summary class="nav-area"><span>{area}</span><span class="nav-caret chev"></span></summary>{links}</details>')
     return out
 
@@ -948,7 +962,14 @@ def shell(title, active, *parts, subtitle="", actions=""):
                 a=pt.index('<!--P-->'); b=pt.index('<!--/P-->')
                 actions=pt[a+8:b]; parts[k]=pt[:a]+pt[b+9:]
                 break
-    body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','')
+    if not actions:
+        # en una página de detalle, las acciones de la cabecera suben junto al h1 (la tarjeta queda con los datos)
+        for k,pt in enumerate(parts):
+            if isinstance(pt,str) and pt.startswith('<section class="card hero">') and '<!--HA-->' in pt:
+                a=pt.index('<!--HA-->'); b=pt.index('<!--/HA-->')
+                if 'btn' in pt[a:b]: actions=pt[a+9:b]; parts[k]=pt[:a]+pt[b+10:]
+                break
+    body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','').replace('<!--HA-->','').replace('<!--/HA-->','')
     act=NAV_ALIAS.get(active,active)
     parent=next(((n,h) for _,items in NAV for n,h,_ in items if n==act),None)
     path=(f'<a href="{parent[1]}">{parent[0]}</a> / {title}' if parent and not title.startswith(parent[0]) else (subtitle or ""))
@@ -956,7 +977,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
     crumb=(f'<a href="{parent[1]}" class="crumb-parent">{parent[0]}</a><span class="sep" aria-hidden="true">/</span><span class="here">{title}</span>' if parent and parent[0]!=title else f'<span class="here">{title}</span>')
     head_actions=f'<div class="page-head-actions">{actions}</div>' if actions else ""
     return f'''<div class="app">
-<aside class="sidebar" id="sidebar" aria-label="Menú principal"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="sidebar-sede"></div><nav id="sidenav">{nav(active)}</nav><script>(function(){{try{{document.querySelectorAll('#sidenav details.nav-group').forEach(function(d){{if(localStorage.getItem('wf-nav-'+d.getAttribute('data-area'))==='0'&&!d.hasAttribute('data-active'))d.removeAttribute('open');}});}}catch(e){{}}}})();</script><div class="sidebar-more" aria-hidden="true"></div></aside>
+<aside class="sidebar" id="sidebar" aria-label="Menú principal"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="sidebar-sede"></div><label class="nav-find">{ico("search","nav-ico")}<span class="sr">Ir a una pantalla del menú</span><input id="navfind" type="search" placeholder="Ir a…" autocomplete="off" aria-controls="sidenav"></label><nav id="sidenav">{nav(active)}</nav><script>(function(){{try{{document.querySelectorAll('#sidenav details.nav-group').forEach(function(d){{var v=localStorage.getItem('wf-nav-'+d.getAttribute('data-area'));if(v==='1')d.setAttribute('open','');else if(v==='0'&&!d.hasAttribute('data-active'))d.removeAttribute('open');}});}}catch(e){{}}}})();</script><div class="sidebar-more" aria-hidden="true"></div></aside>
 <div class="scrim" aria-hidden="true"></div>
 <div class="shell-main">
 <header class="topbar">
@@ -1378,7 +1399,7 @@ def card(title, inner, extra=""):
 def hero(pairs, actions="", extra="", tag=""):
     """Cabecera de página de detalle: tarjeta con datos clave en cuadrícula, acciones a la derecha y contenido extra (p. ej. progreso)."""
     facts="".join(f'<div class="fact"><dt>{k}</dt><dd>{v}</dd></div>' for k,v in pairs)
-    top=f'<div class="hero-top"><div class="hero-tag">{tag}</div><div class="hero-actions">{split_actions(actions,2)}</div></div>' if (tag or actions) else ""
+    top=f'<div class="hero-top"><div class="hero-tag">{tag}</div><div class="hero-actions"><!--HA-->{split_actions(actions,2)}<!--/HA--></div></div>' if (tag or actions) else ""
     return f'<section class="card hero">{top}<dl class="facts">{facts}</dl>{extra}</section>'
 def li(items):
     return '<ul class="list">'+"".join(f"<li>{i}</li>" for i in items)+'</ul>'
@@ -1676,7 +1697,7 @@ def capacidad_tbl(tid="capacidad"):
         esp,tot,pct,est=ocupacion(cap,ins,term)
         tone="bad" if (tot<MIN_ABRIR or pct>100) else ("ok" if pct>=80 else "warn")
         rows.append([c2(c,d),sd,c2(aula,f"capacidad {cap}"),occ_cell(cap,ins,esp,pct,tone),est])
-    return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra sólida = inscritos hoy · rayada = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
+    return table(["Curso proyectado","Sede","Aula","Ocupación proyectada","Estado"],rows,sede=1,hide=(1,),wide=0,tid=tid)+kv(("Cómo leerlo","barra oscura = inscritos hoy · clara = rematrícula esperada ("+str(round(RETENCION*100))+"% de quienes terminan) · la marca es el mínimo para abrir ("+str(MIN_ABRIR)+")"))
 
 # ===== Entregas de libros 100% digitales (módulo Inventario) =====
 # Matrícula confirmada → entrega pendiente automática → el encargado la abre en la tablet buscando al estudiante → el estudiante firma
@@ -2277,11 +2298,11 @@ home=shell("Inicio","Inicio",
      +only("SEC", card("Pendientes de secretaría", li(['<a href="Facturas.html">2 rematrículas por confirmar · Sofía Herrera reportó transferencia</a>','<a href="Facturas.html">Factura 000021095 rechazada por el SRI · cédula inválida</a>','<a href="Facturas.html">Cartera vencida: 2 cuotas · $725</a>','<a href="Inventario.html">3 libros con stock negativo · correo de las 07:00 enviado</a>'])+row(btn("Ir a facturación","Facturas.html"))))
      +only("ASE", card("Mis pendientes", li(['<a href="SolicitudDescuento.html">Solicitud de descuento 42% · Gabriela Núñez · esperando a Dir. Comercial</a>',"4 matrículas con saldo vencido · llamar esta semana","Lead Kommo sin contactar: 5"])+row(btn("Ver estudiantes","Estudiantes.html"))))
      +only("PRO", card("Mis clases de hoy", li(["Adults A2 · 14:00–16:00 · Valle C-5 · 9 estudiantes","B1 Virtual · 19:00–21:00 · Zoom 2 · 12 estudiantes"])+row(btn("Registrar sesión",None,True),btn("Ver mis cursos","Cursos.html")))),
-     card("Accesos rápidos", row(only(COMERCIAL,btn("Nueva matrícula",None,True),True),only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,SUC,ASE",btn("Tablero comercial","TableroComercial.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True)))),
+     card("Accesos rápidos", row(only("ADM,GER,DIR,SUC,ASE,SEC",btn("Nuevo estudiante","NuevoEstudiante.html"),True),only("ADM,GER,SUC,COO",btn("Nuevo curso","NuevoCurso.html"),True),only("ADM,GER,SUC,COO,PRO",btn("Registrar sesión",None,False),True),only("ADM,GER,SUC,COO",btn("Payment sheet","PaymentSheet.html"),True),only("ADM,GER,DIR,SUC,ASE",btn("Tablero comercial","TableroComercial.html"),True),only("ADM,GER,DIR,ASE",btn("Comisiones","Comisiones.html"),True),only("ADM,GER,SUC,COO,SEC",btn("Inventario","Inventario.html"),True),only("ADM,GER,DIR,SUC,COO",btn("Reportes","Reportes.html"),True)))),
  only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
  only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
  only("ASE", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para Gabriela Núñez sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?")),
- subtitle="Resumen del día según tu rol")
+ subtitle="Resumen del día según tu rol", actions=only(COMERCIAL,btn("Nueva matrícula",None,True),True))
 page("Home.html","Inicio",home,"Inicio por rol")
 
 # 3 Estudiantes
@@ -2317,7 +2338,7 @@ ficha=shell("María Andrade","Estudiantes",
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Sector</b>Quito Norte · La Carolina (ubicada en el mapa)</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
     <div class="section"><h3>Logros y certificados</h3><div class="awards"><div><i></i>Certificado A1 · dic 2025</div><div><i></i>Certificado A2 · jun 2026 · nota 85</div><div><i></i>Asistencia perfecta · módulo 5</div><div><i></i>Mejor progreso del grupo · módulo 6</div><div><i></i>Referido: trajo a 1 estudiante</div></div></div>
-    <div class="actions">{btn("Nueva matrícula")}<a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
+    <div class="actions"><a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div class="grid" style="grid-template-columns:1.25fr 1fr">
       {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip"><b>1 h</b>Club de conversación</span><span class="chip"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
@@ -2723,17 +2744,17 @@ cursos=shell("Cursos","Cursos",
  only(COMERCIAL, kpis([("Cursos en la lista",agg("count","cursos"),"según filtros y sede"),("En curso",agg("count:Estado=En curso","cursos"),"dictándose"),("Por abrir",agg("count:Estado=Por abrir","cursos"),"con cupo para vender"),("Terminados sin calificar",agg("count:Estado=Sin calificar","cursos"),"bloquean certificados")])),
  only("COO,PRO", kpis([("Cursos en la lista",agg("count","cursos"),"según filtros y sede"),("En curso",agg("count:Estado=En curso","cursos"),"dictándose"),("Por abrir",agg("count:Estado=Por abrir","cursos"),"sin profesor en algunos"),("Terminados sin calificar",agg("count:Estado=Sin calificar","cursos"),"bloquean certificados")])),
  ltable("cursos",["Curso","Sede","Programa","Modalidad","Nivel","Profesor","Cupo","Avance","Estado","Acción"],[
-  [c2("English for Adults B1 Virtual","0001-2026-0767 · Quito · Zoom 2 · Lu-Ma-Mi-Ju 19:00–21:00 · Virtual"),"Quito","Adults","Virtual","B1","P. Gómez","12/15",progress(60),badge("En curso","navy"),V],
-  [c2("English for Kids 2 Tarde","0001-2026-0328 · Valle · C-3 · Sa 09:00–13:00 · Presencial"),"Valle","Kids","Presencial","Kids 2","L. Vega","8/10",progress(55),badge("En curso","navy"),V],
-  [c2("English for Teens A2","0001-2026-0192 · Ambato · A-1 · Vi 15:00–19:00 · Presencial"),"Ambato","Teens","Presencial","A2","(sin asignar)","5/10",progress(0),badge("Por abrir","warn"),V],
-  [c2("English for Adults A2","0001-2026-0620 · Valle · C-5 · Lu-Mi 14:00–16:00 · Presencial"),"Valle","Adults","Presencial","A2","P. Gómez","9/12",progress(59),badge("En curso","navy"),V],
-  [c2("English for Kids 1 Mañana","0001-2026-0518 · Ambato · A-2 · Lu-Mi 16:00–18:00 · Presencial"),"Ambato","Kids","Presencial","Kids 1","M. Castro","7/10",progress(28),badge("En curso","navy"),V],
-  [c2("English for Adults B2 Intensivo","0001-2026-0538 · Quito · Q-4 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","B2","L. Vega","11/12",progress(46),badge("En curso","navy"),V],
-  [c2("English for Adults A1 Sábados","0001-2026-0430 · Quito · Q-1 · Sa 09:00–13:00 · Presencial"),"Quito","Adults","Presencial","A1","L. Vega","14/15",progress(100),badge("Sin calificar","bad"),V],
-  [c2("English for Teens B1 Virtual","0001-2026-0772 · Valle · Teams 1 · Lu-Ma-Mi-Ju 17:00–19:00 · Virtual"),"Valle","Teens","Virtual","B1","P. Gómez (propuesto)","6/12",progress(0),badge("Por abrir","warn"),V],
-  [c2("English for Kids 2 Mañana","0001-2026-0599 · Quito · Q-2 · Sa 09:00–13:00 · Presencial"),"Quito","Kids","Presencial","Kids 2","M. Castro","10/10",progress(53),badge("En curso","navy"),V],
-  [c2("Tailored · Inglés corporativo","0001-2026-0608 · Ambato · Zoom 1 · Ma-Ju 07:00–08:30 · Virtual"),"Ambato","Tailored","Virtual","B1","(sin asignar)","3/12",progress(0),badge("Por abrir","warn"),V],
-  [c2("English for Teens A2","0001-2025-0330 · Valle · C-2 · Vi 15:00–19:00 · Presencial"),"Valle","Teens","Presencial","A2","L. Vega","9/10",progress(100),badge("Cerrado"),V]],sede=1,hide=(1,2,3),wide=0,tid="cursos"),
+  [c2("English for Adults B1 Virtual","0001-2026-0767 · Zoom 2 · Lu-Ma-Mi-Ju 19:00–21:00"),"Quito","Adults","Virtual","B1","P. Gómez","12/15",progress(60),badge("En curso","navy"),V],
+  [c2("English for Kids 2 Tarde","0001-2026-0328 · C-3 · Sa 09:00–13:00"),"Valle","Kids","Presencial","Kids 2","L. Vega","8/10",progress(55),badge("En curso","navy"),V],
+  [c2("English for Teens A2","0001-2026-0192 · A-1 · Vi 15:00–19:00"),"Ambato","Teens","Presencial","A2","(sin asignar)","5/10",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Adults A2","0001-2026-0620 · C-5 · Lu-Mi 14:00–16:00"),"Valle","Adults","Presencial","A2","P. Gómez","9/12",progress(59),badge("En curso","navy"),V],
+  [c2("English for Kids 1 Mañana","0001-2026-0518 · A-2 · Lu-Mi 16:00–18:00"),"Ambato","Kids","Presencial","Kids 1","M. Castro","7/10",progress(28),badge("En curso","navy"),V],
+  [c2("English for Adults B2 Intensivo","0001-2026-0538 · Q-4 · Sa 09:00–13:00"),"Quito","Adults","Presencial","B2","L. Vega","11/12",progress(46),badge("En curso","navy"),V],
+  [c2("English for Adults A1 Sábados","0001-2026-0430 · Q-1 · Sa 09:00–13:00"),"Quito","Adults","Presencial","A1","L. Vega","14/15",progress(100),badge("Sin calificar","bad"),V],
+  [c2("English for Teens B1 Virtual","0001-2026-0772 · Teams 1 · Lu-Ma-Mi-Ju 17:00–19:00"),"Valle","Teens","Virtual","B1","P. Gómez (propuesto)","6/12",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Kids 2 Mañana","0001-2026-0599 · Q-2 · Sa 09:00–13:00"),"Quito","Kids","Presencial","Kids 2","M. Castro","10/10",progress(53),badge("En curso","navy"),V],
+  [c2("Tailored · Inglés corporativo","0001-2026-0608 · Zoom 1 · Ma-Ju 07:00–08:30"),"Ambato","Tailored","Virtual","B1","(sin asignar)","3/12",progress(0),badge("Por abrir","warn"),V],
+  [c2("English for Teens A2","0001-2025-0330 · C-2 · Vi 15:00–19:00"),"Valle","Teens","Presencial","A2","L. Vega","9/10",progress(100),badge("Cerrado"),V]],sede=1,hide=(1,2,3),wide=0,tid="cursos"),
  pager(sv(58,29,18,11)),
  only("ADM,GER,SUC,COO,SEC", card("Capacidad y ocupación de los cursos por abrir", capacidad_tbl()+kv(("Cómo se proyecta","inscritos hoy + estudiantes que terminan × índice de retención ("+str(round(RETENCION*100))+"%) sobre la capacidad del aula"),("Mínimo para abrir","6 inscritos"))+row(btn("Ver rematrícula","Rematricula.html",kind="ghost")),extra=badge("Se actualiza solo","ok"))),
  only("ADM,GER,DIR,SUC,COO,ASE,SEC", card("Reaperturas · cursos al 75% que terminan en las próximas semanas", filters(sel("Semana",["Esta semana","Próxima semana"],w="150px",col=False),actions=btn("Registrar contacto de reapertura",None,True)+btn("Enviar reporte semanal de reaperturas"))
@@ -3127,7 +3148,7 @@ page("FichaProfesor.html","Ficha profesor",shell("P. Gómez","Profesores",
  f'<div class="grid" style="grid-template-columns:320px 1fr">{prof_aside}<div style="display:flex;flex-direction:column;gap:20px;min-width:0">'
  +'<div class="grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr">'+kpi("Dictando ahora","B1 Virtual · Zoom 2","19:00–21:00 · 12 estudiantes conectados")+'<div class="card" style="align-items:center">'+gauge(60,"Carga · 12 de 20 h")+'</div><div class="card" style="align-items:center">'+gauge(88,"Asistencia de sus cursos",CH[2])+'</div><div class="card" style="align-items:center">'+gauge(94,"Pass últimos 3 módulos",CH[3])+'</div></div>'
  +tabs(["Agenda y carga","Desempeño","Datos y educación","Contrato, tarifa y pago","Cursos","Sesiones","Historial de pagos"],"Agenda y carga",roles={"Contrato, tarifa y pago":"ADM,GER,DIR,SUC,COO","Historial de pagos":"ADM,GER,SUC,COO"},panels={
-  "Agenda y carga": two(card("Clases de hoy · lunes 19 oct", table(["Hora","Curso","Estado"],[[c2("14:00","16:00"),c2("Adults A2","0001-2026-0620 · Valle · C-5 · 9/12 estudiantes"),badge("Confirmada","ok")],[c2("19:00","21:00"),c2("Adults B1 Virtual","0001-2026-0767 · Quito · Zoom 2 · 12/15 estudiantes"),badge("En curso ahora","warn")]],wide=1)),
+  "Agenda y carga": two(card("Clases de hoy · lunes 19 oct", table(["Hora","Curso","Estado"],[[c2("14:00","16:00"),c2("Adults A2","0001-2026-0620 · C-5 · 9/12 estudiantes"),badge("Confirmada","ok")],[c2("19:00","21:00"),c2("Adults B1 Virtual","0001-2026-0767 · Zoom 2 · 12/15 estudiantes"),badge("En curso ahora","warn")]],wide=1)),
      card("Carga semanal (horas)", vbars([("Lu",[4]),("Ma",[2]),("Mi",[4]),("Ju",[2]),("Vi",[0]),("Sa",[0])],["Horas dictadas"],h=120)+kv(("Total","12 h"),("Máximo contrato","20 h"),("Disponible","Lu-Ma-Mi-Ju 17:00–19:00 · Vi · Sa"))))
      +card("Cursos que dicta ahora", table(["Código","Curso","Sede","Horario","Estudiantes","Asistencia","Avance","Termina","Acción"],[["0001-2026-0767",c2('<a href="DetalleCurso.html">English for Adults B1 Virtual</a>',"0001-2026-0767 · Quito · Zoom 2"),"Quito",c2("Lu-Ma-Mi-Ju","19:00–21:00"),"12/15","90%",progress(60),"20 nov",V],["0001-2026-0620",c2('<a href="DetalleCurso.html">English for Adults A2</a>',"0001-2026-0620 · Valle · C-5"),"Valle",c2("Lu-Mi","14:00–16:00"),"9/12","85%",progress(59),"5 dic",V],["0001-2026-0772",c2('<a href="DetalleCurso.html">English for Teens B1 Virtual</a>',"0001-2026-0772 · propuesto · Valle · Teams 1"),"Valle",c2("Lu-Ma-Mi-Ju","17:00–19:00"),"6/12","—",progress(0),"inicia 20 oct",V]],sede=2,hide=(0,2),wide=1)),
   "Desempeño": perf_panel,
@@ -3390,9 +3411,9 @@ page("Facturas.html","Facturas",shell("Facturación","Facturación",
 # 23 Detalle factura
 page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturación",
  hero([("Fecha","28 ago 2026"),("Estudiante",'<a href="Ficha360.html">María Andrade</a>'),("Matrículas",'<a href="DetalleMatricula.html">001-202602794 a 797</a>'),("Venta","Multi-módulo · B1 y B1+ (módulos 7 a 10)"),("Crédito","Sí · 2 cuotas cada 30 días"),("Sede · asesor","Quito · Carla M."),("Pagada el","27 sep 2026"),("Comprobante","Enviado 28 ago 12:14")],
-  only(COMERCIAL,btn("Registrar pago",None,True),True)+btn("Enviar comprobante")+btn("Ver RIDE (PDF)","RIDE.html")+btn("Descargar XML")+only("ADM,GER,DIR,SUC,SEC",btn("Emitir nota de crédito"),True)+only("ADM,GER,DIR",btn("Anular factura"),True),
-  tag='<span class="hero-code">000021090</span>'+badge("Pagada","ok")+badge("SRI · Autorizada","navy")),
- two(card("Datos de facturación (cliente)", kv(("Cliente","María Andrade"),("CED / RUC / PAS","CED · 1712345678"),("Dirección","Quito · La Carolina · Av. Amazonas y NN. UU."),("Teléfono","099 000 0001"),("E-mail","maria.andrade@ejemplo.com"),("RUC especial",badge("No","neutral")),("Empresa / convenio","—"))+row(btn("Editar datos del cliente",None,False,"Se editan en esta misma pantalla los datos de facturación (nombre, CED/RUC/PAS, dirección, teléfono y email). Como la factura ya está autorizada por el SRI, el cambio se guarda en la ficha y aplica a las próximas facturas; para corregir esta se emite una nota de crédito y se refactura. "+AUDIT))),
+  btn("Enviar comprobante",None,True)+btn("Ver RIDE (PDF)","RIDE.html")+only(COMERCIAL,btn("Registrar pago"),True)+btn("Descargar XML")+only("ADM,GER,DIR,SUC,SEC",btn("Emitir nota de crédito"),True)+only("ADM,GER,DIR",btn("Anular factura"),True),
+  tag='<span class="hero-code">000021090</span>'+badge("Pagada","ok")+badge("SRI · Autorizada","ok")),
+ two(card("Datos de facturación (cliente)", facts((("Cliente","María Andrade"),("CED / RUC / PAS","CED · 1712345678"),("Dirección","Quito · La Carolina · Av. Amazonas y NN. UU."),("Teléfono","099 000 0001"),("E-mail","maria.andrade@ejemplo.com"),("RUC especial",badge("No","neutral")),("Empresa / convenio","—")))+row(btn("Editar datos del cliente",None,False,"Se editan en esta misma pantalla los datos de facturación (nombre, CED/RUC/PAS, dirección, teléfono y email). Como la factura ya está autorizada por el SRI, el cambio se guarda en la ficha y aplica a las próximas facturas; para corregir esta se emite una nota de crédito y se refactura. "+AUDIT))),
      card("Autorización SRI", kv(("Estado",badge("Autorizada","ok")),("Fecha de envío a Dora","28 ago 2026 · 12:11 · 2 h después de emitirla"),("Fecha de autorización","28 ago 2026 · 12:12"),("Clave de acceso","2808202601179234567800110010010000210901234567813"),("Ambiente","Producción"),("Comprobante enviado","Sí · 28 ago 12:14 · maria.andrade@ejemplo.com"))+row(btn("Reintentar autorización"),btn("Enviar comprobante"),btn("Ver envíos al SRI","EnviosSRI.html",kind="ghost")))),
  card("Ítems", table(["Tipo","Código","Ítem","Cant.","Precio","% dcto.","Descuento","Subtotal","IVA"],[
    ["Servicio","00139",c2("Servicios educativos · Nivel B1","Módulos 7–8 · English for Adults"),"1","$500.00","10%","-$50.00","$450.00","$0.00"],
@@ -4130,13 +4151,21 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .brand{display:flex;align-items:center;padding:4px 8px 16px;text-decoration:none}.brand img{width:100%;max-width:180px;height:auto;display:block}
 .brand-dark{justify-content:center}
 .sidebar nav{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin;padding-bottom:12px}
-.nav-area{display:flex;align-items:center;justify-content:space-between;min-height:36px;padding:12px 10px 4px;font-size:var(--t-12);letter-spacing:.04em;text-transform:uppercase;color:var(--mute);font-weight:600;cursor:pointer;list-style:none;user-select:none}.nav-area::-webkit-details-marker{display:none}.nav-area:hover{color:var(--ink)}
+.nav-area{display:flex;align-items:center;justify-content:space-between;min-height:34px;padding:8px 10px 4px;font-size:var(--t-12);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);font-weight:600;cursor:pointer;list-style:none;user-select:none}.nav-area::-webkit-details-marker{display:none}.nav-area:hover{color:var(--ink)}
 .nav-caret{width:12px;height:12px;transform:rotate(90deg);transition:transform var(--dur-1) var(--ease);color:var(--mute)}details.nav-group:not([open]) .nav-caret{transform:rotate(0)}
 .nav-link{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 10px;border-radius:var(--r);color:var(--ink-2);text-decoration:none;font-size:var(--t-14);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid transparent;transition:background var(--dur-1) var(--ease)}
 .nav-link:hover{background:var(--surface-2);color:var(--ink)}.nav-link.active{background:var(--navy-50);color:var(--navy);font-weight:600;border-left-color:var(--navy);border-radius:0 var(--r) var(--r) 0}
 .nav-ico{width:18px;height:18px;flex:none;display:inline-flex}.nav-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-more{position:absolute;left:0;right:0;bottom:0;height:56px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity var(--dur-2);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:var(--t-12);color:var(--mute)}.sidebar-more::after{content:"Más opciones"}.sidebar.has-more .sidebar-more{opacity:1}
 .sidebar-sede{display:none}
+.nav-find{display:flex;align-items:center;gap:8px;margin:0 2px 8px;padding:0 10px;height:36px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);color:var(--mute);flex:none}
+.nav-find .nav-ico,.nav-find .nav-ico svg{width:16px;height:16px}
+.nav-find input{border:0;background:none;font:inherit;font-size:var(--t-13);flex:1;min-width:0;outline:none;color:var(--ink)}
+.nav-find input::-webkit-search-cancel-button{display:none}
+.nav-find:focus-within{box-shadow:var(--focus);background:var(--surface);border-color:var(--navy)}
+.nav-link.nf-hide,details.nav-group.nf-hide{display:none!important}
+details.nav-group+details.nav-group{border-top:1px solid var(--line);margin-top:4px}
+@media (pointer:fine){.nav-link{min-height:34px}}
 .shell-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 32px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
 .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
@@ -4341,7 +4370,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .proc li:not(:last-child)::after{content:"";position:absolute;left:13.5px;top:28px;bottom:0;width:1px;background:var(--line)}
 .proc li:last-child{padding-bottom:0}
 .proc .p-t{font-weight:600;font-size:var(--t-14);padding-top:3px}.proc .p-d{grid-column:2;font-size:var(--t-13);color:var(--mute)}.proc .p-s{grid-row:1;grid-column:3;font-size:var(--t-13);padding-top:3px}
-.proc li.is-done::before{background:var(--navy);border-color:var(--navy);color:#fff}
+.proc li.is-done::before{content:"✓";background:var(--ok-50);border-color:var(--ok);color:var(--ok)}
 .proc li.is-now::before{border:2px solid var(--navy);color:var(--navy)}
 .proc-h{flex-direction:row;gap:0}.proc-h li{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:0 24px 0 0}
 .proc-h li::before{flex:none;margin-bottom:8px}
@@ -4604,26 +4633,24 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 @media print{.receipt{border:0;padding:0;max-width:none}}
 
 /* ocupación proyectada */
-.occ{display:flex;flex-direction:column;gap:14px;min-width:320px;padding:16px 0}
+.occ{display:flex;flex-direction:column;gap:8px;min-width:280px;padding:10px 0}
 .occ-top{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .occ-n{display:flex;align-items:baseline;gap:10px}
 .occ-n b{font-family:var(--font-mono);font-size:var(--t-20);line-height:1;font-weight:600;color:var(--ink)}
 .occ-n span{font-size:var(--t-13);color:var(--mute)}
-.occ-pct{font-family:var(--font-mono);font-size:var(--t-13);font-weight:600;line-height:1;padding:5px 10px;border-radius:99px;background:var(--surface-2);color:var(--mute);box-shadow:inset 0 0 0 1px var(--line)}
-.occ-ok .occ-pct{background:var(--ok-50);color:var(--ok);box-shadow:none}.occ-warn .occ-pct{background:var(--warn-50);color:var(--warn);box-shadow:none}.occ-bad .occ-pct{background:var(--bad-50);color:var(--bad);box-shadow:none}
-.occ-bar{position:relative;display:flex;height:12px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.occ-pct{font-family:var(--font-mono);font-size:var(--t-13);font-weight:600;line-height:1;color:var(--ink-2)}
+.occ-bar{position:relative;display:flex;height:8px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .occ-bar i{display:block;height:100%}.occ-bar i:first-child{border-radius:99px 0 0 99px}
-.occ-in{background:var(--occ,var(--navy))}
-.occ-ex{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 3px,transparent 3px 7px);opacity:.5;border-radius:0 99px 99px 0}
+.occ-in{background:var(--navy)}
+.occ-ex{background:var(--ch4);border-radius:0 99px 99px 0}.occ-over .occ-in,.occ-over .occ-ex{background:var(--bad)}
 .occ-min{position:absolute;top:-6px;bottom:-6px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
 .occ-ok{--occ:var(--ok)}.occ-warn{--occ:var(--warn)}.occ-bad{--occ:var(--bad)}
-.occ-key{display:grid;grid-template-columns:repeat(3,minmax(max-content,1fr));gap:10px;margin:0}
-.occ-key>div{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:6px;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
-.occ-key dd{margin:0;font-family:var(--font-mono);font-size:var(--t-16);line-height:1;font-weight:600;color:var(--ink)}
-.occ-key dt{display:flex;align-items:center;gap:8px;font-size:var(--t-13);color:var(--mute);line-height:1;max-width:100%;min-width:0;white-space:nowrap}
-.occ-key dt::before{content:"";flex:none;width:10px;height:10px;border-radius:3px;background:var(--occ,var(--navy))}
-.occ-key .k-ex dt::before{background:repeating-linear-gradient(135deg,var(--occ,var(--navy)) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--occ,var(--navy))}
-.occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.occ-key{display:flex;flex-wrap:wrap;gap:4px 16px;margin:0}
+.occ-key>div{display:flex;flex-direction:row-reverse;align-items:baseline;gap:4px}
+.occ-key dd{margin:0;font-family:var(--font-mono);font-size:var(--t-13);font-weight:600;color:var(--ink)}
+.occ-key dt{display:flex;align-items:center;gap:6px;font-size:var(--t-13);color:var(--mute);white-space:nowrap}
+.occ-key dt::before{content:"";flex:none;width:8px;height:8px;border-radius:2px;background:var(--navy)}
+.occ-key .k-ex dt::before{background:var(--ch4)}.occ-key .k-free dt::before{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-strong)}
 @media (max-width:600px){.occ{min-width:0}.occ-key>div{padding:10px}}
 [data-canal-wrap] .seg-panel{margin-top:16px}
 .tbl .mono{white-space:nowrap}

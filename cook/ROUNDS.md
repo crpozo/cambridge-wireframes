@@ -163,3 +163,41 @@ Top gaps from critics (para la próxima ronda):
 4. Tarjetas en pares con alturas distintas (Inicio, Factura) y datos de cliente/SRI en texto corrido en vez de lista de definición.
 
 Stop check: bar no (S02 llega a 8.5 en 4 de 6 dimensiones; el resto entre 6.75 y 9) | cap: se corta aquí por consumo | publicación: automática, autorizada por el usuario -> publicado en `main`.
+
+## Round 05
+
+Focus: los 4 huecos de la ronda 04 y el pedido del usuario "mejora el side menu".
+
+Changes:
+- Cabeceras de detalle: las acciones de `hero()` suben junto al h1 (Factura, Matrícula, Curso y demás detalles). Factura pagada: "Enviar comprobante" es el primario y "Registrar pago" queda como secundario; SRI autorizada en verde. Ficha 360: "Nueva matrícula" una sola vez. Inicio: "Nueva matrícula" junto al h1.
+- Cursos: el subtítulo de 13 cursos deja de repetir sede y modalidad (ya están en sus columnas). Efecto medido: Cursos ya no desborda a 390 px (quedan RIDE y Reportes, previos).
+- Capacidad: barra de un solo azul (oscuro inscritos, claro esperados, rojo solo en sobrecupo), sin rayas, sin porcentaje con fondo y sin cajitas.
+- Factura: datos del cliente como lista de definición.
+- Menú lateral: buscador "Ir a…" (filtra, Enter abre, Esc limpia, respeta roles); solo se abre el área de la pantalla actual (en Inicio, Académico y Comercial) y cada área recuerda si la abriste; filas compactas, títulos de área más legibles y separadores entre áreas.
+- Pasos: el hecho lleva check en verde y el actual queda como anillo.
+
+Measured: 0 errores de JS en 85 páginas a 1280, 768 y 390; desbordes a 390: 2 (base 3); 33 tablas con scroll a 1280 (base 38); 0 enlaces rotos; roles: COO y PRO no ven "Nuevo estudiante" ni encuentran "Facturación" en el buscador del menú.
+
+Scores, eyeballed: mediana de 2 revisores nuevos sin contexto (antes de los últimos ajustes de menú, factura y pasos)
+
+| Shot | Jerarquía | Alineación | Color | Tipografía | Densidad | Consistencia | vs r00 |
+|---|---|---|---|---|---|---|---|
+| S01 Inicio | 8 | 7.5 | 8.75 | 8.5 | 7.75 | 8.25 | mejor |
+| S02 Estudiantes | 8.75 | 8.25 | 9 | 8.5 | 8.25 | 8.5 | mejor |
+| S03 Ficha 360 | 7.5 | 7.5 | 8.75 | 8.25 | 7.5 | 8 | mejor |
+| S04 Cursos | 8.25 | 7.5 | 8.75 | 8.5 | 8 | 8 | mejor |
+| S05 Facturas | 7.5 | 7.75 | 9 | 8.5 | 7.5 | 8 | igual |
+| S06 Factura | 7.75 | 8.25 | 8.5 | 8.5 | 8 | 7.75 | mejor |
+| S07 Leads | 8.5 | 7.5 | 9 | 8.5 | 7.5 | 7.5 | mejor |
+| S08 Nueva matrícula | 8 | 7.75 | 9 | 8.5 | 7.25 | 8.5 | igual |
+| S09 Exámenes | 8 | 7.5 | 9 | 8.5 | 7.75 | 8 | mejor |
+| S10 Comisiones | 7.25 | 7.75 | 9 | 8.5 | 8 | 7.75 | mejor |
+| Menú lateral | 7.5 (mediana de 8 y 7) | | | | | | mejor |
+
+Top gaps from critics (próxima ronda):
+1. Columnas angostas que parten en 3-4 líneas: Facturas (factura, SRI, cobro), Leads (origen, quién estudia), Exámenes (examen), Reaperturas en Cursos.
+2. Acciones fuera del h1 cuando viven en una pestaña o tarjeta: Comisiones ("Aprobar período"), Exámenes (tarjeta de contexto con 3 botones), Ficha 360 (sin acción junto al h1; pestañas lejos del título).
+3. Facturas: cuatro capas de controles antes de la tabla (pestañas, vista, filtros rápidos, filtros).
+4. Inicio: tarjetas en pares con alturas distintas, "Pendientes de aprobación" repite la lista de pendientes, medidores grandes para tres cifras.
+
+Stop check: bar no (S02 en 8.25-9; el resto entre 7.25 y 9) | publicación automática autorizada -> publicado en `main`.
