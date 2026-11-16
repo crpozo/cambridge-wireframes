@@ -2173,7 +2173,7 @@ _portal_dash=(kpis([("Nivel actual",'<span class="level-big level-inline">B1</sp
  +'</div>')
 portal=f'''<div class="portal">
 <header class="portal-top"><a href="PortalEstudiante.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="portal-title"><b>Portal del estudiante</b><small>{badge("Propuesta · fuera del alcance del contrato actual")}</small></div>
- <div class="portal-user">{avatar("MA","sm")}<span>Hola, María<small>EST-00412 · Quito</small></span><a href="Main.html" class="btn btn-ghost">Cerrar sesión</a></div></header>
+ <div class="portal-user"><a href="#tab-mis-datos" class="portal-me" aria-label="Mis datos">{avatar("MA","sm")}</a><span>Hola, María<small>EST-00412 · Quito</small></span><a href="Main.html" class="btn btn-ghost portal-logout">Cerrar sesión</a></div></header>
 <main class="portal-main">
  {tabs(["Inicio","Mis cursos","Asistencia","Notas y certificados","Pagos y facturas","Mis datos"],"Inicio",panels={
   "Inicio": _portal_dash,
@@ -2201,9 +2201,20 @@ portal=f'''<div class="portal">
   "Pagos y facturas": two(card("Mi compra", kv(("Saldo pendiente","$0 · todo al día"),("Módulos comprados","7 a 10 · B1 y B1+"),("En curso","módulo 7 · quedan 3 por cursar"),("Plan de pago","2 cuotas · pagadas"))+progress(25,"Compra del 28 ago · 1 de 4 módulos en curso")
      +table(["Por pagar","Vence","Monto"],[["Rematrícula B2 · módulo 11 (al confirmarla)","al rematricularte","$250.00"]])+row(btn("Pagar en línea",None,True),btn("Subir comprobante"))),
      card("Facturas", table(["Factura","Total","Acción"],[[c2("000021090","28 ago 2026 · módulos 7 a 10 · pagada"),"$980.00",btn("Descargar factura")],[c2("000020411","15 jun 2026 · A2 · pagada"),"$450.00",btn("Descargar factura")],[c2("000019872","10 ene 2026 · A1 · pagada"),"$450.00",btn("Descargar factura")]]))),
-  "Mis datos": card("Datos personales", kv(("Nombres","María Andrade"),("Cédula","1712345678"),("Email","maria.andrade@ejemplo.com"),("Teléfono","099 000 0001"),("Dirección","Quito · La Carolina"),("Sede","Quito"),("Representante","— (mayor de edad)"))+row(btn("Actualizar mis datos"),btn("Cambiar contraseña"))),
+  "Mis datos": '<div class="mobile-only">'+row('<a href="Main.html" class="btn">Cerrar sesión</a>')+'</div>'+card("Datos personales", kv(("Nombres","María Andrade"),("Cédula","1712345678"),("Email","maria.andrade@ejemplo.com"),("Teléfono","099 000 0001"),("Dirección","Quito · La Carolina"),("Sede","Quito"),("Representante","— (mayor de edad)"))+row(btn("Actualizar mis datos"),btn("Cambiar contraseña"))),
  })}
-</main></div>'''
+</main>
+<nav class="bottom-nav" aria-label="Secciones del portal"><a href="#tab-inicio" data-bn="tab-inicio" aria-current="page">{ico("home","bn-ico")}<span>Inicio</span></a><a href="#tab-mis-cursos" data-bn="tab-mis-cursos">{ico("book","bn-ico")}<span>Cursos</span></a><a href="#tab-asistencia" data-bn="tab-asistencia">{ico("cal","bn-ico")}<span>Asistencia</span></a><a href="#tab-notas-y-certificados" data-bn="tab-notas-y-certificados">{ico("medal","bn-ico")}<span>Notas</span></a><a href="#tab-pagos-y-facturas" data-bn="tab-pagos-y-facturas">{ico("card","bn-ico")}<span>Pagos</span></a></nav>
+<script>(function(){{
+  var nav=document.querySelector('.bottom-nav');if(!nav)return;
+  function mark(){{var on=document.querySelector('.portal [role=tab].on');var id=on?on.id:'tab-inicio';
+    nav.querySelectorAll('a').forEach(function(a){{if(a.getAttribute('data-bn')===id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}});}}
+  function goTab(id){{var t=document.getElementById(id);if(t&&!t.classList.contains('on'))t.click();window.scrollTo(0,0);mark();}}
+  nav.addEventListener('click',function(e){{var a=e.target.closest('a');if(!a)return;e.preventDefault();goTab(a.getAttribute('data-bn'));try{{history.replaceState(null,'','#'+a.getAttribute('data-bn'));}}catch(x){{}}}});
+  document.addEventListener('click',function(e){{if(e.target.closest&&e.target.closest('[role=tab],a[href^="#tab-"]'))setTimeout(function(){{if(matchMedia('(max-width:700px)').matches)window.scrollTo(0,0);mark();}},80);}});
+  window.addEventListener('hashchange',function(){{setTimeout(mark,80);}});setTimeout(mark,300);
+}})();</script>
+</div>'''
 page("PortalEstudiante.html","Portal del estudiante",portal,"Portal del estudiante")
 
 # ===== Programas (estructura académica) =====
@@ -4718,7 +4729,24 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .dash-next{justify-content:center;gap:8px}.dash-big{margin:0;font-family:var(--font-display);font-size:var(--t-24);font-weight:600;color:var(--navy)}.dash-sub{margin:0;color:var(--mute);font-size:var(--t-14)}
 .level-inline{font-size:var(--t-24)!important;line-height:1}
 @media (max-width:1100px){.dash-cell.s3,.dash-cell.s4,.dash-cell.s5{grid-column:span 6}.dash-cell.s8{grid-column:span 12}}
-@media (max-width:700px){.dash-cell{grid-column:span 12!important}.portal-main{padding:16px 16px 80px}}
+.bottom-nav,.mobile-only{display:none}
+.portal-me{display:inline-flex;border-radius:50%;text-decoration:none}.portal-me:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+@media (max-width:700px){
+  .dash-cell{grid-column:span 12!important}
+  .portal-main{padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+  .portal-main>.tabs{display:none}
+  .portal-top{padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));flex-wrap:nowrap;gap:10px}
+  .portal-top img{height:28px;flex:none}.portal-top>a{flex:none}.portal-title{flex:1 1 auto;min-width:0}.portal-title b{display:none}
+  .portal-title .tag{display:block;font-size:11px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .portal-user{flex:none;flex-wrap:nowrap;margin-left:0}.portal-user>span,.portal-logout{display:none}
+  .mobile-only{display:block}
+  .bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));box-shadow:0 -4px 16px rgba(22,24,29,.06)}
+  .bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;border-radius:var(--r);text-decoration:none;color:var(--mute);font-size:11px;font-weight:500}
+  .bottom-nav a[aria-current=page]{color:var(--navy);font-weight:600}
+  .bottom-nav a[aria-current=page] .bn-ico{background:var(--navy-50)}
+  .bottom-nav .bn-ico{display:inline-flex;align-items:center;justify-content:center;width:44px;height:26px;border-radius:13px}
+  .bottom-nav .bn-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+}
 .section-title{margin:0;font-size:var(--t-16);font-weight:600}
 
 /* entrega digital de libros */
@@ -4951,7 +4979,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
   .stages{grid-template-columns:1fr}.stage{border-left:0;border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.stage .st-count{font-size:var(--t-20);margin-left:auto}.stage .st-rate{flex-basis:100%}
   .tasks li{grid-template-columns:1fr auto;padding:12px 16px}.tasks li>:nth-child(3){grid-column:1/-1}
   .insight{grid-template-columns:1fr}
-  .portal-top{padding:10px 16px}.portal-main{padding:16px 16px 80px}.portal-user span{display:none}
+  .portal-top{padding:10px 16px}.portal-main{padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px))}.portal-user>span{display:none}
   .portal-title small{white-space:normal}
   .hbar{grid-template-columns:100px 1fr 48px}
   .proc-h{flex-direction:column}.proc-h li{grid-template-columns:28px 1fr;padding:0 0 16px}.proc-h li:not(:last-child)::after{display:none}
