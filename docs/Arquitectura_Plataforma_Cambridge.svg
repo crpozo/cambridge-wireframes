@@ -7,10 +7,8 @@
 <text x="1238" y="52" font-size="12" font-weight="500" fill="#16181D" text-anchor="start">En contrato o necesario</text>
 <line x1="1420" y1="48" x2="1460" y2="48" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4"/>
 <text x="1468" y="52" font-size="12" font-weight="500" fill="#16181D" text-anchor="start">Por confirmar o adenda</text>
-<line x1="1190" y1="74" x2="1230" y2="74" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="2 4"/>
-<text x="1238" y="78" font-size="12" font-weight="500" fill="#16181D" text-anchor="start">Manual, sin integración</text>
-<line x1="1420" y1="74" x2="1460" y2="74" stroke="#1D3F8F" stroke-width="2"/>
-<text x="1468" y="78" font-size="12" font-weight="500" fill="#16181D" text-anchor="start">Bus de integraciones</text>
+<line x1="1190" y1="74" x2="1230" y2="74" stroke="#1D3F8F" stroke-width="2"/>
+<text x="1238" y="78" font-size="12" font-weight="500" fill="#16181D" text-anchor="start">Bus de integraciones</text>
 <text x="30" y="128" font-size="12" font-weight="600" fill="#5E6573" text-anchor="start" letter-spacing=".08em">USUARIOS</text>
 <rect x="30" y="146" width="230" height="84" rx="7" fill="#FFFFFF" stroke="#16181D" stroke-width="1.2"/>
 <text x="44" y="170" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Personal Cambridge</text>
@@ -129,7 +127,7 @@
 <text x="766" y="734" font-size="11.5" font-weight="500" fill="#16181D" text-anchor="start">guarda</text>
 <line x1="1170" y1="492" x2="1220" y2="492" stroke="#1D3F8F" stroke-width="2.4"/>
 <text x="1370" y="128" font-size="12" font-weight="600" fill="#5E6573" text-anchor="start" letter-spacing=".08em">SISTEMAS EXTERNOS</text>
-<line x1="1220" y1="245" x2="1220" y2="875" stroke="#1D3F8F" stroke-width="2.4"/>
+<line x1="1220" y1="245" x2="1220" y2="665" stroke="#1D3F8F" stroke-width="2.4"/>
 <rect x="1370" y="146" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#16181D" stroke-width="1.2"/>
 <text x="1384" y="170" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Proveedor de IA (M9)</text>
 <text x="1384" y="190" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">servicio necesario · elegir región (LOPDP)</text>
@@ -161,32 +159,14 @@
 <polyline points="1220,525 1367,525" fill="none" stroke="#16181D" stroke-width="1.6" marker-end="url(#a)"/>
 <text x="1228" y="518" font-size="11.5" font-weight="500" fill="#16181D" text-anchor="start">contrato · avisos</text>
 <rect x="1370" y="566" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="1384" y="590" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Datafast · pagos en línea</text>
-<text x="1384" y="610" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">por confirmar alcance</text>
+<text x="1384" y="590" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">WooCommerce + Nuvei · tienda</text>
+<text x="1384" y="610" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">adenda</text>
 <polyline points="1220,595 1367,595" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m)" marker-start="url(#m)"/>
-<text x="1228" y="588" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">link de pago</text>
+<text x="1228" y="588" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">pedidos · pagos</text>
 <rect x="1370" y="636" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="1384" y="660" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">WooCommerce + Nuvei · tienda</text>
-<text x="1384" y="680" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">adenda</text>
-<polyline points="1220,665 1367,665" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m)" marker-start="url(#m)"/>
-<text x="1228" y="658" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">pedidos · pagos</text>
-<rect x="1370" y="706" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="1384" y="730" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Google Maps Platform</text>
-<text x="1384" y="750" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">adenda · clave y costo propios</text>
-<polyline points="1220,735 1367,735" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m)"/>
-<text x="1228" y="728" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">dirección</text>
-<rect x="1370" y="776" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="1384" y="800" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Microsoft 365 / Teams</text>
-<text x="1384" y="820" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">adenda · se evalúa</text>
-<polyline points="1220,805 1367,805" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m)"/>
-<text x="1228" y="798" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">equipos · clases</text>
-<rect x="1370" y="846" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="2 4"/>
-<text x="1384" y="870" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Books and Bits</text>
-<text x="1384" y="890" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">pedidos de libros y exámenes</text>
-<polyline points="1220,875 1367,875" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="2 4" marker-end="url(#m)"/>
-<text x="1228" y="868" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">pedido por correo</text>
-<rect x="1370" y="916" width="400" height="58" rx="7" fill="#FFFFFF" stroke="#5E6573" stroke-width="1.2" stroke-dasharray="2 4"/>
-<text x="1384" y="940" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Cambridge One · GradeKeeper</text>
-<text x="1384" y="960" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">tareas manuales de Coordinación</text>
-<text x="30" y="1060" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">Integraciones sujetas a lo que expongan Kommo, Moodle, Dora y Datafast. Lo marcado como adenda está fuera de la cláusula tercera del contrato.</text>
+<text x="1384" y="660" font-size="15" font-weight="600" fill="#16181D" text-anchor="start">Google Maps Platform</text>
+<text x="1384" y="680" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">adenda · clave y costo propios</text>
+<polyline points="1220,665 1367,665" fill="none" stroke="#5E6573" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m)"/>
+<text x="1228" y="658" font-size="11.5" font-weight="500" fill="#5E6573" text-anchor="start">dirección</text>
+<text x="30" y="1060" font-size="12" font-weight="400" fill="#5E6573" text-anchor="start">Integraciones sujetas a lo que expongan Kommo, Moodle y Dora. Lo marcado como adenda está fuera de la cláusula tercera del contrato.</text>
 </svg>
