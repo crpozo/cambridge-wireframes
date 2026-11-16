@@ -2457,7 +2457,7 @@ _HM_SERIES={"6M":(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76]),
  "12M":(["Nov","Dic","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"],[49,38,44,60,66,63,58,61,55,64,70,76]),
  "24M":(["N24","E25","M25","M25","J25","S25","N25","E26","M26","M26","J26","S26"],[44,40,52,57,55,61,49,44,66,58,55,70])}
 def home_admin():
-    hero=('<section class="hm-hero">'+_HM_SKYLINE+'<div class="hm-hero-tx"><h2>¡Hola, <span data-hm-name>Estefanía</span>!</h2>'
+    hero=('<section class="hm-hero"><div class="hm-photo" aria-hidden="true"></div><div class="hm-hero-tx"><h2>¡Hola, <span data-hm-name>Estefanía</span>!</h2>'
       '<p>Esto es lo que pasa hoy en tus sedes.</p><span class="hm-date">'+ico("cal","hm-ico-i")+'Vie, 23 de oct. 2026</span></div>'
       +only(COMERCIAL,'<a href="NuevaVenta.html" class="btn hm-cta">Nueva matrícula</a>',True)+'</section>')
     kp=('<div class="hm-kpis">'
@@ -2480,7 +2480,7 @@ def home_admin():
     bars2="".join(f'<div class="hm-bar"><span>{n}</span><div class="hm-track"><i style="width:{v}%;background:{c}"></i></div><b>{v}%</b></div>' for n,v,c in (("Presencial",63,"#1D3F8F"),("Virtual",37,"#8FB0F5")))
     mix=('<section class="card hm-card"><div class="card-head"><h2>'+ico("grid","hm-ico-h")+'Mix del mes</h2></div><div class="hm-bars">'+bars+'</div><div class="hm-bars hm-sep">'+bars2+'</div></section>')
     grow=('<section class="card hm-card hm-grow">'+ico("trend","hm-ico-big")+'<b>+12 %</b><span>matrículas vs. mes anterior</span><small>mejor mes del año</small></section>')
-    promo=('<section class="hm-promo">'+_HM_CAP+'<div><h2>Octubre va 9 % sobre la meta</h2><p>Quito y Valle lideran. Ambato necesita apoyo para abrir sus 2 cursos.</p>'
+    promo=('<section class="hm-promo"><img class="hm-stud" src="assets/home-estudiante.jpg" alt=""><div class="hm-promo-tx"><h2>Octubre va 9 % sobre la meta</h2><p>Quito y Valle lideran. Ambato necesita apoyo para abrir sus 2 cursos.</p>'
       '<a href="TableroComercial.html" class="btn hm-cta">Ver tablero comercial</a></div></section>')
     return ('<div class="hm">'+hero+only("ADM,GER,DIR,SUC",kp+'<div class="hm-row hm-r1">'+tasks_html+chart+'</div><div class="hm-row hm-r2">'+mix+grow+promo+'</div>')+'</div>')
 home=shell("Inicio","Inicio",
@@ -4373,7 +4373,7 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .hm{display:flex;flex-direction:column;gap:20px}
 .hm-hero{position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(120deg,#10214A 0%,#1D3F8F 70%,#2E57C2 100%);color:#fff;padding:28px 32px;display:flex;align-items:center;gap:20px;min-height:150px}
 .hm-hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#C8202F 0 33%,#fff 33% 66%,#8FB0F5 66%)}
-.hm-sky{position:absolute;right:0;bottom:0;height:100%;width:auto;max-width:55%}
+.hm-photo{position:absolute;top:0;right:0;bottom:0;width:62%;background:url(assets/home-banner.jpg) right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 38%);mask-image:linear-gradient(90deg,transparent 0,#000 38%)}
 .hm-hero-tx{position:relative;display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
 .hm-hero h2{margin:0;font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.01em}
 .hm-hero p{margin:0;color:#D5DEF2;font-size:var(--t-16)}
@@ -4405,14 +4405,16 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .hm-grow{align-items:center;justify-content:center;text-align:center;gap:4px;background:var(--navy-50);border-color:transparent}
 .hm-ico-big,.hm-ico-big svg{width:34px;height:34px;display:inline-flex;color:var(--navy)}.hm-ico-big svg{stroke:currentColor;fill:none;stroke-width:1.8}
 .hm-grow b{font-size:34px;font-weight:600;color:var(--navy);line-height:1.1}.hm-grow span{font-size:var(--t-14);color:var(--ink-2)}.hm-grow small{color:var(--ok);font-weight:600;font-size:12px}
-.hm-promo{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,#1D3F8F,#10214A);color:#fff;padding:24px;display:flex;align-items:center;gap:20px}
+.hm-promo{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,#1D3F8F,#2E57C2);color:#fff;padding:24px;display:flex;align-items:center;min-height:200px}
+.hm-promo-tx{position:relative;max-width:56%}
+.hm-stud{position:absolute;right:0;bottom:0;height:100%;width:auto;max-width:55%;object-fit:cover;object-position:center top;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%)}
 .hm-promo h2{margin:0 0 6px;font-family:var(--font-display);font-size:22px;font-weight:600}.hm-promo p{margin:0 0 14px;color:#D5DEF2;font-size:var(--t-14)}
-.hm-cap{width:130px;flex:none}
+
 @media (max-width:1280px){.hm-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-r2{grid-template-columns:1fr 1fr}.hm-promo{grid-column:1/-1}}
-@media (max-width:900px){.hm-r1{grid-template-columns:1fr}.hm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hm-sky{opacity:.6}}
+@media (max-width:900px){.hm-r1{grid-template-columns:1fr}.hm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hm-photo{width:75%;opacity:.55}}
 @media (max-width:600px){
   .hm-kpis{grid-template-columns:1fr 1fr;gap:10px}.hm-kpi:last-child{grid-column:1/-1}.hm-kpi{padding:14px;grid-template-columns:1fr;gap:8px}.hm-kpi .hm-ico{width:36px;height:36px}.hm-kv b,.hm-kv b *{font-size:22px}.hm-spark{height:32px}
-  .hm-r2{grid-template-columns:1fr}.hm-hero{flex-direction:column;align-items:flex-start;padding:22px}.hm-hero h2{font-size:24px}.hm-cap{display:none}
+  .hm-r2{grid-template-columns:1fr}.hm-hero{flex-direction:column;align-items:flex-start;padding:22px}.hm-hero h2{font-size:24px}.hm-promo-tx{max-width:62%}.hm-stud{max-width:48%}
   .hm-tasks li{display:grid;grid-template-columns:38px minmax(0,1fr) 24px;gap:6px 12px;align-items:start}.hm-tasks .hm-pill{grid-column:2;grid-row:2;justify-self:start}.hm-tasks .row-go{grid-column:3;grid-row:1}}
 
 .tab .t-ico{display:inline-flex;width:16px;height:16px;flex:none;margin-right:8px;opacity:.75}.tab .t-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
