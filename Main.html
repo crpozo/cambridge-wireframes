@@ -208,6 +208,15 @@ document.querySelectorAll('.tabs').forEach(function(bar){
   document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="#tab-"]');if(a&&a.hash===location.hash&&a.pathname===location.pathname)setTimeout(go,0);});
   if(document.readyState==='complete')go();else window.addEventListener('load',go);
 })();
+
+(function(){
+  var nm=document.querySelector('[data-hm-name]');
+  function setName(){var rs=document.getElementById('rol');if(!nm||!rs)return;var o=rs.options[rs.selectedIndex];var u=(o&&o.getAttribute('data-user'))||'';nm.textContent=u.replace(/^(Dir\.|Admin\.|Coord\.)\s*/,'').split(' ')[0]||u;}
+  setName();document.addEventListener('change',function(e){if(e.target&&e.target.id==='rol')setTimeout(setName,0);});
+  document.querySelectorAll('[data-hm-range]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-hm-range');
+    document.querySelectorAll('[data-hm-range]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+    document.querySelectorAll('.hm-line').forEach(function(s){s.hidden=s.getAttribute('data-range')!==k;});});});
+})();
 (function(){
   /* buscador de la barra superior: lleva a pantallas, reportes y vistas por palabra clave */
   var inp=document.getElementById('gsearch'),pop=document.getElementById('gsearch-pop');if(!inp||!pop)return;

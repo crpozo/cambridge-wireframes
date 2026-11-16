@@ -520,6 +520,15 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
   document.addEventListener('click',function(e){{var a=e.target.closest&&e.target.closest('a[href*="#tab-"]');if(a&&a.hash===location.hash&&a.pathname===location.pathname)setTimeout(go,0);}});
   if(document.readyState==='complete')go();else window.addEventListener('load',go);
 }})();
+
+(function(){{
+  var nm=document.querySelector('[data-hm-name]');
+  function setName(){{var rs=document.getElementById('rol');if(!nm||!rs)return;var o=rs.options[rs.selectedIndex];var u=(o&&o.getAttribute('data-user'))||'';nm.textContent=u.replace(/^(Dir\.|Admin\.|Coord\.)\s*/,'').split(' ')[0]||u;}}
+  setName();document.addEventListener('change',function(e){{if(e.target&&e.target.id==='rol')setTimeout(setName,0);}});
+  document.querySelectorAll('[data-hm-range]').forEach(function(b){{b.addEventListener('click',function(){{var k=b.getAttribute('data-hm-range');
+    document.querySelectorAll('[data-hm-range]').forEach(function(x){{x.setAttribute('aria-pressed',x===b?'true':'false');}});
+    document.querySelectorAll('.hm-line').forEach(function(s){{s.hidden=s.getAttribute('data-range')!==k;}});}});}});
+}})();
 (function(){{
   /* buscador de la barra superior: lleva a pantallas, reportes y vistas por palabra clave */
   var inp=document.getElementById('gsearch'),pop=document.getElementById('gsearch-pop');if(!inp||!pop)return;
@@ -1089,7 +1098,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
     crumb=(f'<a href="{parent[1]}" class="crumb-parent">{parent[0]}</a><span class="sep" aria-hidden="true">/</span><span class="here">{title}</span>' if parent and parent[0]!=title else f'<span class="here">{title}</span>')
     head_actions=f'<div class="page-head-actions">{actions}</div>' if actions else ""
     return f'''<div class="app">
-<aside class="sidebar" id="sidebar" aria-label="Menú principal"><a class="brand" href="Home.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="sidebar-sede"></div><label class="nav-find">{ico("search","nav-ico")}<span class="sr">Ir a una pantalla del menú</span><input id="navfind" type="search" placeholder="Ir a…" autocomplete="off" aria-controls="sidenav"></label><nav id="sidenav">{nav(active)}</nav><script>(function(){{try{{document.querySelectorAll('#sidenav details.nav-group').forEach(function(d){{var v=localStorage.getItem('wf-nav-'+d.getAttribute('data-area'));if(v==='1')d.setAttribute('open','');else if(v==='0'&&!d.hasAttribute('data-active'))d.removeAttribute('open');}});}}catch(e){{}}}})();</script><div class="sidebar-more" aria-hidden="true"></div></aside>
+<aside class="sidebar" id="sidebar" aria-label="Menú principal"><a class="brand" href="Home.html"><img src="assets/logo-white.webp" alt="Cambridge School of Languages"></a><div class="sidebar-sede"></div><label class="nav-find">{ico("search","nav-ico")}<span class="sr">Ir a una pantalla del menú</span><input id="navfind" type="search" placeholder="Ir a…" autocomplete="off" aria-controls="sidenav"></label><nav id="sidenav">{nav(active)}</nav><script>(function(){{try{{document.querySelectorAll('#sidenav details.nav-group').forEach(function(d){{var v=localStorage.getItem('wf-nav-'+d.getAttribute('data-area'));if(v==='1')d.setAttribute('open','');else if(v==='0'&&!d.hasAttribute('data-active'))d.removeAttribute('open');}});}}catch(e){{}}}})();</script><div class="sidebar-more" aria-hidden="true"></div></aside>
 <div class="scrim" aria-hidden="true"></div>
 <div class="shell-main">
 <header class="topbar">
@@ -2404,12 +2413,81 @@ page("Pedidos.html","Tienda en línea",shell("Tienda en línea · pedidos WooCom
  subtitle="Procedimiento de pedidos de la tienda virtual: validación, registro, contacto en 24 h, servicio, incidencias y reporte semanal"),"Tienda en línea · pedidos WooCommerce")
 
 # 2 Home
+
+# ===== Inicio (dashboard de bienvenida, adaptado de la referencia del cliente, 16 nov) =====
+_HM_COL={"navy":"#1D3F8F","red":"#C8202F","ok":"#1F7A4D","sky":"#2E8BC9","warn":"#B7791F"}
+def _spark(vals,col,w=120,h=42):
+    mn,mx=min(vals),max(vals); rg=(mx-mn) or 1
+    pts=[(round(i*(w/(len(vals)-1)),1),round(h-4-(v-mn)/rg*(h-10),1)) for i,v in enumerate(vals)]
+    line=" ".join(f"{x},{y}" for x,y in pts)
+    area=f"0,{h} "+line+f" {w},{h}"
+    return (f'<svg class="hm-spark" viewBox="0 0 {w} {h}" aria-hidden="true"><polygon points="{area}" fill="{col}" fill-opacity=".12"/>'
+            f'<polyline points="{line}" fill="none" stroke="{col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>')
+def _hm_kpi(icon,col,value,label,trend,trend_kind,series):
+    c=_HM_COL[col]
+    return (f'<div class="hm-kpi"><span class="hm-ico" style="--c:{c}">{ico(icon,"hm-ico-i")}</span>'
+            f'<div class="hm-kv"><b>{value}</b><span>{label}</span><em class="hm-trend {trend_kind}">{trend}</em></div>{_spark(series,c)}</div>')
+def _hm_task(icon,col,title,detail,state,kind,href):
+    c=_HM_COL[col]
+    return (f'<li><span class="hm-ico sm" style="--c:{c}">{ico(icon,"hm-ico-i")}</span>'
+            f'<span class="hm-tt"><a href="{href}">{title}</a><small>{detail}</small></span>'
+            f'<span class="hm-pill {kind}">{state}</span><a href="{href}" class="row-go" aria-label="Abrir: {title}"><span class="chev" aria-hidden="true"></span></a></li>')
+def _hm_line(labels,vals,rid,hidden=False):
+    W,H,L,B=640,280,40,30; mx=-(-max(vals)*1.15//10)*10; n=len(vals)
+    xs=[L+i*((W-L-24)/(n-1)) for i in range(n)]; ys=[H-B-(v/mx)*(H-B-24) for v in vals]
+    pts=" ".join(f"{x:.0f},{y:.0f}" for x,y in zip(xs,ys)); area=f"{xs[0]:.0f},{H-B} {pts} {xs[-1]:.0f},{H-B}"
+    grid="".join(f'<line x1="{L}" x2="{W-12}" y1="{H-B-(H-B-24)*f:.0f}" y2="{H-B-(H-B-24)*f:.0f}" stroke="var(--line)"/><text x="{L-8}" y="{H-B-(H-B-24)*f+4:.0f}" text-anchor="end">{round(mx*f)}</text>' for f in (0,.5,1))
+    step=max(1,n//6)
+    ax="".join(f'<text x="{x:.0f}" y="{H-8}" text-anchor="middle">{l}</text>' for i,(x,l) in enumerate(zip(xs,labels)) if i%step==0 or i==n-1)
+    dots="".join(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="3.5" fill="#fff" stroke="#1D3F8F" stroke-width="2"><title>{l}: {v}</title></circle>' for x,y,l,v in zip(xs,ys,labels,vals))
+    ex,ey=xs[-1],ys[-1]
+    tip=f'<g><rect x="{ex-20:.0f}" y="{ey-34:.0f}" width="40" height="22" rx="11" fill="#1D3F8F"/><text x="{ex:.0f}" y="{ey-19:.0f}" text-anchor="middle" fill="#fff" font-weight="600" font-size="12">{vals[-1]}</text></g>'
+    return (f'<svg class="hm-line" data-range="{rid}"{" hidden" if hidden else ""} viewBox="0 0 {W} {H}" role="img" aria-label="Matrículas por mes, último valor {vals[-1]}">{grid}'
+            f'<polygon points="{area}" fill="#1D3F8F" fill-opacity=".08"/><polyline points="{pts}" fill="none" stroke="#1D3F8F" stroke-width="2.5" stroke-linejoin="round"/>{dots}{tip}{ax}</svg>')
+_HM_SKYLINE=('<svg class="hm-sky" viewBox="0 0 420 160" aria-hidden="true"><g fill="#fff" fill-opacity=".14">'
+  '<rect x="10" y="96" width="46" height="64"/><rect x="62" y="70" width="34" height="90"/><polygon points="62,70 79,48 96,70"/>'
+  '<rect x="104" y="84" width="58" height="76"/><path d="M104 84 Q133 50 162 84Z"/><rect x="170" y="104" width="40" height="56"/>'
+  '<rect x="222" y="26" width="30" height="134"/><polygon points="222,26 237,0 252,26"/><circle cx="237" cy="46" r="9" fill="#10214A" fill-opacity=".6"/>'
+  '<rect x="260" y="92" width="62" height="68"/><rect x="330" y="78" width="36" height="82"/><polygon points="330,78 348,58 366,78"/><rect x="372" y="108" width="44" height="52"/></g>'
+  '<g fill="#fff" fill-opacity=".22"><rect x="70" y="84" width="6" height="10"/><rect x="82" y="84" width="6" height="10"/><rect x="114" y="100" width="8" height="12"/><rect x="128" y="100" width="8" height="12"/><rect x="142" y="100" width="8" height="12"/><rect x="232" y="70" width="10" height="14"/><rect x="232" y="94" width="10" height="14"/><rect x="272" y="104" width="8" height="12"/><rect x="288" y="104" width="8" height="12"/><rect x="304" y="104" width="8" height="12"/></g></svg>')
+_HM_CAP=('<svg class="hm-cap" viewBox="0 0 160 120" aria-hidden="true"><polygon points="80,18 150,46 80,74 10,46" fill="#fff" fill-opacity=".9"/>'
+  '<path d="M38 58v26c0 10 19 18 42 18s42-8 42-18V58L80 74Z" fill="#fff" fill-opacity=".55"/><line x1="140" y1="50" x2="140" y2="86" stroke="#F6C21C" stroke-width="4"/><circle cx="140" cy="90" r="6" fill="#F6C21C"/>'
+  '<g transform="translate(14 92)"><rect width="34" height="5" fill="#C8202F"/><rect y="7" width="34" height="5" fill="#fff"/><rect y="14" width="34" height="5" fill="#8FB0F5"/></g></svg>')
+_HM_SERIES={"6M":(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76]),
+ "12M":(["Nov","Dic","Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"],[49,38,44,60,66,63,58,61,55,64,70,76]),
+ "24M":(["N24","E25","M25","M25","J25","S25","N25","E26","M26","M26","J26","S26"],[44,40,52,57,55,61,49,44,66,58,55,70])}
+def home_admin():
+    hero=('<section class="hm-hero">'+_HM_SKYLINE+'<div class="hm-hero-tx"><h2>¡Hola, <span data-hm-name>Estefanía</span>!</h2>'
+      '<p>Esto es lo que pasa hoy en tus sedes.</p><span class="hm-date">'+ico("cal","hm-ico-i")+'Vie, 23 de oct. 2026</span></div>'
+      +only(COMERCIAL,'<a href="NuevaVenta.html" class="btn hm-cta">Nueva matrícula</a>',True)+'</section>')
+    kp=('<div class="hm-kpis">'
+      +_hm_kpi("users","navy",sv(812,420,230,162),"Estudiantes activos","↑ 3,2 %","up",[760,772,781,790,801,812])
+      +_hm_kpi("trend","red",sv(76,40,22,14),"Ventas del mes · meta 70","↑ 5,1 %","up",[58,61,55,64,70,76])
+      +_hm_kpi("coin","ok",sv("$31,200","$16,900","$9,100","$5,200"),"Cobrado del mes","↑ 7,1 %","up",[24,26,25,28,29,31.2])
+      +_hm_kpi("grad","sky",sv("82%","85%","80%","76%"),"Ocupación de cursos","↑ 2,3 %","up",[74,76,79,78,80,82])
+      +_hm_kpi("alert","warn",sv("$12,450","$6,200","$4,100","$2,150"),"Matrículas con saldo","↑ 4,8 %","down",[10.1,10.8,11.2,11.6,11.9,12.45])
+      +'</div>')
+    tasks_html=('<section class="card hm-card"><div class="card-head"><h2>'+ico("spark","hm-ico-h")+'¿Qué tengo pendiente hoy?</h2><a href="Notificaciones.html" class="row-link">Ver todo <span class="chev" aria-hidden="true"></span></a></div><ul class="hm-tasks">'
+      +_hm_task("shield","warn","Aprobar descuento de 42% · Gabriela Núñez","pedido por Carla M. ayer · supera el límite de 10%","Espera tu decisión","warn","Aprobaciones.html")
+      +_hm_task("receipt","navy","Revisar la payment sheet de octubre","3 alertas: diferencia de $26 y una factura sin sesiones","Pendiente","warn","PaymentSheet.html")
+      +_hm_task("coin","ok","Cobrar $12,450 en matrículas con saldo","el 60% en 4 cursos que terminan en noviembre","Por vencer","warn","Facturas.html")
+      +_hm_task("alert","red","Ambato sin matrículas nuevas hace 2 semanas","2 cursos por abrir con menos de 5 inscritos","Requiere acción","bad","Cursos.html")
+      +'</ul></section>')
+    seg='<div class="hm-seg" role="group" aria-label="Rango">'+"".join(f'<button type="button" data-hm-range="{k}" aria-pressed="{"true" if k=="6M" else "false"}">{k}</button>' for k in _HM_SERIES)+'</div>'
+    chart=('<section class="card hm-card"><div class="card-head"><h2>'+ico("chart","hm-ico-h")+'Matrículas por mes · niveles</h2>'+seg+'</div>'
+      +"".join(_hm_line(l,v,k,hidden=k!="6M") for k,(l,v) in _HM_SERIES.items())+'</section>')
+    bars="".join(f'<div class="hm-bar"><span>{n}</span><div class="hm-track"><i style="width:{v}%;background:{c}"></i></div><b>{v}%</b></div>' for n,v,c in (("Adults",58,"#1D3F8F"),("Teens",24,"#2E8BC9"),("Kids",18,"#C8202F")))
+    bars2="".join(f'<div class="hm-bar"><span>{n}</span><div class="hm-track"><i style="width:{v}%;background:{c}"></i></div><b>{v}%</b></div>' for n,v,c in (("Presencial",63,"#1D3F8F"),("Virtual",37,"#8FB0F5")))
+    mix=('<section class="card hm-card"><div class="card-head"><h2>'+ico("grid","hm-ico-h")+'Mix del mes</h2></div><div class="hm-bars">'+bars+'</div><div class="hm-bars hm-sep">'+bars2+'</div></section>')
+    grow=('<section class="card hm-card hm-grow">'+ico("trend","hm-ico-big")+'<b>+12 %</b><span>matrículas vs. mes anterior</span><small>mejor mes del año</small></section>')
+    promo=('<section class="hm-promo">'+_HM_CAP+'<div><h2>Octubre va 9 % sobre la meta</h2><p>Quito y Valle lideran. Ambato necesita apoyo para abrir sus 2 cursos.</p>'
+      '<a href="TableroComercial.html" class="btn hm-cta">Ver tablero comercial</a></div></section>')
+    return ('<div class="hm">'+hero+only("ADM,GER,DIR,SUC",kp+'<div class="hm-row hm-r1">'+tasks_html+chart+'</div><div class="hm-row hm-r2">'+mix+grow+promo+'</div>')+'</div>')
 home=shell("Inicio","Inicio",
+ home_admin(),
  only("SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"en tu sede"),("Rematrículas por confirmar",sv(2,1,1,0),"pago reportado desde el portal"),("Cobrado hoy",sv("$3,160","$1,420","$980","$760"),"15 pagos · caja abierta"),("Facturas sin autorizar",sv(2,2,0,0),"1 rechazada por el SRI")]))+
- only("ADM,GER,DIR,SUC", kpis([("Estudiantes activos",sv(812,420,230,162),"+3% vs mes anterior"),("Ventas del mes (niveles)",sv(76,40,22,14),"meta 70 · 109%"),("Cobrado del mes",sv("$31,200","$16,900","$9,100","$5,200"),"71% de lo facturado"),("Ocupación de cursos",sv("82%","85%","80%","76%"),"41 cursos en curso"),("Matrículas con saldo",sv("$12,450","$6,200","$4,100","$2,150"),sv("31 matrículas","15 matrículas","10 matrículas","6 matrículas")),("Aprobaciones pendientes",sv(3,2,1,0),"la más antigua: ayer")]))+
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
  only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$443","$443","$0","$0"),"meta cumplida · ver cálculo")]))+
- only("ADM,GER,DIR,SUC", '<div class="dash home-dash">'+_dc("s7",tasks([("Aprobar descuento de 42% · Gabriela Núñez","pedido por Carla M. ayer · supera el límite de 10%",badge("Espera tu decisión","warn"),"Aprobaciones.html"),("Revisar la payment sheet de octubre","3 alertas: diferencia de $26 y una factura sin sesiones",badge("Pendiente","warn"),"PaymentSheet.html"),("Cobrar $12,450 en matrículas con saldo","el 60% en 4 cursos que terminan en noviembre",badge("Por vencer","warn"),"Facturas.html"),("Ambato sin matrículas nuevas hace 2 semanas","2 cursos por abrir con menos de 5 inscritos",badge("Requiere acción","bad"),"Cursos.html")]))+_dc("s5",card("Matrículas por mes (niveles vendidos)", areachart(["May","Jun","Jul","Ago","Sep","Oct"],[58,61,55,64,70,76],h=150,unit="")))+_dc("s12",card("Mix del mes", stacked([("Adults",58),("Teens",24),("Kids",18)])+stacked([("Presencial",63),("Virtual",37)])))+'</div>')+
  only("SEC", tasks([("Rematricular a 8 estudiantes","el profesor cerró las notas de A1 Sábados; el aviso ya salió solo",badge("Listos","ok"),"Rematricula.html"),("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Cerrar la caja de hoy","15 pagos · 1 con diferencia por revisar · las listas se arman solas",badge("Abierta","warn"),"CierreCaja.html"),("Recibir el pedido #P-041","Books & Bits · llega hoy · 12 libros para Valle",badge("En camino","navy"),"RecepcionPedido.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
  only("ASE", tasks([("Contactar 5 leads de Kommo","2 llevan más de 3 días sin respuesta",badge("Sin contactar","bad"),"Leads.html"),("Seguir tu solicitud de descuento de 42%","Gabriela Núñez · espera a Dirección Comercial",badge("En revisión","info"),"SolicitudDescuento.html"),("Llamar a 4 estudiantes con saldo vencido","$1,420 en total",badge("Vencida","bad"),"Facturas.html")]))+
  only("COO,PRO", tasks([("Confirmar 3 sesiones de esta semana","2 de P. Gómez · Teens A2 lleva 2 días",badge("Pendiente","warn"),"Sesiones.html"),("Calificar Adults A1 Sábados","terminó hace 5 días · 14 estudiantes esperan su certificado",badge("Requiere acción","bad"),"CalificarCurso.html"),("Asignar profesor a Teens B1 Virtual","abre en 2 semanas · P. Gómez tiene horario libre",badge("Sin profesor","warn"),"Cursos.html")])),
@@ -2422,7 +2500,7 @@ home=shell("Inicio","Inicio",
  only("ADM,GER,DIR,SUC", ai([("Octubre va 9% sobre la meta de niveles, pero Ambato lleva 2 semanas sin matrículas nuevas y tiene 2 cursos por abrir con menos de 5 inscritos.","Ver cursos de Ambato","Cursos.html"),("Hay $12,450 en matrículas con saldo; el 60% está en 4 cursos que terminan en noviembre. Conviene cobrar antes del cierre.","Ver matrículas con saldo","Cursos.html"),("La payment sheet de octubre tiene 3 alertas: una diferencia de $26 y una factura de profesor sin sesiones registradas.","Revisar payment sheet","PaymentSheet.html"),("Stock negativo en 3 libros de cursos que ya están en curso: 4 estudiantes sin material.","Ver inventario","Inventario.html")],"Pregunta: ¿qué cursos terminan este mes con saldo pendiente?"))+
  only("COO,PRO", ai([("Hoy hay 3 sesiones sin confirmar; dos son de P. Gómez y la tercera (Teens A2, Ambato) lleva 2 días pendiente.","Confirmar sesiones","Sesiones.html"),("Adults A1 Sábados terminó hace 5 días y sigue sin calificar: 14 estudiantes esperan su certificado y no pueden matricularse en A2.","Calificar curso","DetalleCurso.html"),("Teens B1 Virtual abre en 2 semanas sin profesor. P. Gómez tiene libre Lu-Ma-Mi-Ju 17:00–19:00 y ya dicta B1.","Ver perfil de P. Gómez","FichaProfesor.html"),("4 estudiantes con asistencia menor a 60% en B1 Virtual: riesgo de perder el módulo.","Ver estudiantes del curso","DetalleCurso.html")],"Pregunta: ¿qué profesores tienen horas libres el sábado?"))+
  only("ASE", ai([("Tienes 5 leads de Kommo sin contactar desde hace más de 3 días; dos preguntaron por B1 Virtual, que abre el 3 de noviembre con 3 cupos.","Ver leads","Estudiantes.html"),("4 estudiantes tuyos tienen saldo vencido ($1,420). Dos de ellos terminan curso en noviembre.","Ver matrículas con saldo","Cursos.html"),("Tu solicitud de descuento del 42% para Gabriela Núñez sigue pendiente desde ayer; con 10% la matrícula se puede cerrar hoy.","Ver solicitud","SolicitudDescuento.html")],"Pregunta: ¿cuántos niveles me faltan para el bono del mes?")),
- subtitle="Resumen del día según tu rol", actions=only(COMERCIAL,btn("Nueva matrícula",None,True),True))
+ subtitle="Resumen del día según tu rol")
 page("Home.html","Inicio",home,"Inicio por rol")
 
 # 3 Estudiantes
@@ -4281,6 +4359,62 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .nav-ico{width:18px;height:18px;flex:none;display:inline-flex}.nav-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-more{position:absolute;left:0;right:0;bottom:0;height:56px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity var(--dur-2);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:var(--t-12);color:var(--mute)}.sidebar-more::after{content:"Más opciones"}.sidebar.has-more .sidebar-more{opacity:1}
 .sidebar-sede{display:none}
+/* Menú lateral oscuro (16 nov, referencia del cliente) */
+.sidebar{background:#10214A;border-right:0;color:#D5DEF2}
+.sidebar .nav-area{color:#8FA3CF}.sidebar .nav-area:hover,.sidebar .nav-caret{color:#C9D4EE}
+.sidebar .nav-link{color:#D5DEF2;border-left-color:transparent}.sidebar .nav-link:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar .nav-link.active{background:#2E57C2;color:#fff;border-left-color:transparent;border-radius:var(--r)}
+.sidebar .nav-find{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:#9FB0D6}.sidebar .nav-find input{color:#fff}.sidebar .nav-find input::placeholder{color:#9FB0D6}
+.sidebar .nav-find:focus-within{border-color:#8FB0F5;background:rgba(255,255,255,.12)}
+.sidebar details.nav-group+details.nav-group{border-top-color:rgba(255,255,255,.1)}
+.sidebar .sidebar-more{background:linear-gradient(to bottom,rgba(16,33,74,0),#10214A 70%);color:#9FB0D6}
+/* Inicio */
+.main:has(.hm)>.page-head{display:none}
+.hm{display:flex;flex-direction:column;gap:20px}
+.hm-hero{position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(120deg,#10214A 0%,#1D3F8F 70%,#2E57C2 100%);color:#fff;padding:28px 32px;display:flex;align-items:center;gap:20px;min-height:150px}
+.hm-hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#C8202F 0 33%,#fff 33% 66%,#8FB0F5 66%)}
+.hm-sky{position:absolute;right:0;bottom:0;height:100%;width:auto;max-width:55%}
+.hm-hero-tx{position:relative;display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.hm-hero h2{margin:0;font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.01em}
+.hm-hero p{margin:0;color:#D5DEF2;font-size:var(--t-16)}
+.hm-date{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:6px 12px;border-radius:99px;background:rgba(255,255,255,.12);font-size:var(--t-13);font-weight:500}
+.hm-cta{position:relative;background:#fff!important;color:#1D3F8F!important;border-color:#fff!important;font-weight:600}
+.hm-ico-i,.hm-ico-i svg{width:18px;height:18px;display:inline-flex}.hm-ico-i svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hm-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.hm-kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:6px 14px;position:relative;overflow:hidden;min-width:0}
+.hm-ico{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);flex:none}
+.hm-ico.sm{width:38px;height:38px;border-radius:10px}
+.hm-kv{display:flex;flex-direction:column;gap:2px;min-width:0}.hm-kv b,.hm-kv b *{font-size:26px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink)}.hm-kv>span{font-size:var(--t-13);color:var(--mute)}
+.hm-trend{font-style:normal;font-size:12px;font-weight:600;align-self:flex-start;margin-top:4px;padding:2px 8px;border-radius:99px}
+.hm-trend.up{color:var(--ok);background:var(--ok-50)}.hm-trend.down{color:var(--warn);background:var(--warn-50)}
+.hm-spark{grid-column:1/-1;width:100%;height:42px;display:block}
+.hm-row{display:grid;gap:20px}.hm-r1{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.hm-r2{grid-template-columns:minmax(0,1.2fr) minmax(0,.55fr) minmax(0,1.1fr)}
+.hm-card{border-radius:12px}.hm-card .card-head h2{display:flex;align-items:center;gap:10px}
+.hm-ico-h,.hm-ico-h svg{width:18px;height:18px;display:inline-flex;color:var(--navy)}.hm-ico-h svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hm-tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.hm-tasks li{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}.hm-tasks li:first-child{border-top:0}
+.hm-tt{display:flex;flex-direction:column;flex:1;min-width:0}.hm-tt a{font-weight:600;color:var(--ink);text-decoration:none}.hm-tt a:hover{color:var(--navy);text-decoration:underline}.hm-tt small{color:var(--mute);font-size:var(--t-13)}
+.hm-pill{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;white-space:nowrap}.hm-pill.warn{color:var(--warn);background:var(--warn-50)}.hm-pill.bad{color:var(--bad);background:var(--bad-50)}
+.hm-seg{display:inline-flex;gap:4px;padding:3px;border-radius:99px;background:var(--surface-2)}
+.hm-seg button{font:inherit;font-size:var(--t-13);font-weight:600;border:0;background:none;color:var(--mute);padding:4px 12px;border-radius:99px;cursor:pointer;min-height:30px}
+.hm-seg button[aria-pressed=true]{background:#1D3F8F;color:#fff}
+.hm-line{width:100%;height:auto;display:block}.hm-line text{fill:var(--mute);font-size:11px;font-family:var(--font-ui)}.hm-line[hidden]{display:none}
+.hm-bars{display:flex;flex-direction:column;gap:10px}.hm-sep{border-top:1px solid var(--line);padding-top:12px}
+.hm-bar{display:grid;grid-template-columns:84px 1fr 44px;align-items:center;gap:12px;font-size:var(--t-14)}.hm-bar b{text-align:right;font-variant-numeric:tabular-nums}
+.hm-track{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden}.hm-track i{display:block;height:100%;border-radius:99px}
+.hm-grow{align-items:center;justify-content:center;text-align:center;gap:4px;background:var(--navy-50);border-color:transparent}
+.hm-ico-big,.hm-ico-big svg{width:34px;height:34px;display:inline-flex;color:var(--navy)}.hm-ico-big svg{stroke:currentColor;fill:none;stroke-width:1.8}
+.hm-grow b{font-size:34px;font-weight:600;color:var(--navy);line-height:1.1}.hm-grow span{font-size:var(--t-14);color:var(--ink-2)}.hm-grow small{color:var(--ok);font-weight:600;font-size:12px}
+.hm-promo{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,#1D3F8F,#10214A);color:#fff;padding:24px;display:flex;align-items:center;gap:20px}
+.hm-promo h2{margin:0 0 6px;font-family:var(--font-display);font-size:22px;font-weight:600}.hm-promo p{margin:0 0 14px;color:#D5DEF2;font-size:var(--t-14)}
+.hm-cap{width:130px;flex:none}
+@media (max-width:1280px){.hm-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-r2{grid-template-columns:1fr 1fr}.hm-promo{grid-column:1/-1}}
+@media (max-width:900px){.hm-r1{grid-template-columns:1fr}.hm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.hm-sky{opacity:.6}}
+@media (max-width:600px){
+  .hm-kpis{grid-template-columns:1fr 1fr;gap:10px}.hm-kpi:last-child{grid-column:1/-1}.hm-kpi{padding:14px;grid-template-columns:1fr;gap:8px}.hm-kpi .hm-ico{width:36px;height:36px}.hm-kv b,.hm-kv b *{font-size:22px}.hm-spark{height:32px}
+  .hm-r2{grid-template-columns:1fr}.hm-hero{flex-direction:column;align-items:flex-start;padding:22px}.hm-hero h2{font-size:24px}.hm-cap{display:none}
+  .hm-tasks li{display:grid;grid-template-columns:38px minmax(0,1fr) 24px;gap:6px 12px;align-items:start}.hm-tasks .hm-pill{grid-column:2;grid-row:2;justify-self:start}.hm-tasks .row-go{grid-column:3;grid-row:1}}
+
 .tab .t-ico{display:inline-flex;width:16px;height:16px;flex:none;margin-right:8px;opacity:.75}.tab .t-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tab.on .t-ico,.tab[aria-selected=true] .t-ico{opacity:1}
 .tab{display:inline-flex;align-items:center}
