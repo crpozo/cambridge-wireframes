@@ -953,6 +953,57 @@ def nav(active):
               f'<summary class="nav-area"><span>{area}</span><span class="nav-caret chev"></span></summary>{links}</details>')
     return out
 
+_PARTS_LOG=[]
+def _part_kind(pt):
+    """Clasifica una parte de la página: 'hero' (cabecera de detalle), 'block' (tarjeta o fila de tarjetas con título) u 'other'."""
+    if not isinstance(pt,str) or not pt.strip(): return "empty",""
+    x=pt.lstrip(); roles=""
+    m=re.match(r'<(?:div|span) data-roles="([^"]+)" style="display:contents">',x)
+    if m: roles=m.group(1); x=x[m.end():].lstrip()
+    if x.startswith('<section class="card hero">'): return "hero",roles
+    if x.startswith('<section class="card') or x.startswith('<div class="grid'):
+        if re.search(r'<h2>',x): return "block",roles
+    return "other",roles
+def _part_title(pt):
+    hs=[re.sub(r"<[^>]+>","",h).strip() for h in re.findall(r'<h2>(.*?)</h2>',pt,re.S)[:2]]
+    def corto(t):
+        t=re.split(r" · | \(|: ",t)[0].strip()
+        if len(t)>28:
+            w=t.split(); t=""
+            for x in w:
+                if len((t+" "+x).strip())>28: break
+                t=(t+" "+x).strip()
+            # no terminar en una palabra de enlace ni en coma
+            while t and t.split()[-1].lower().strip(",") in ("de","del","la","las","el","los","y","e","para","en","esta","este","a","con","por"): t=" ".join(t.split()[:-1])
+        return t.rstrip(",")
+    hs=[corto(h) for h in hs if h]
+    if len(hs)==2 and len(hs[0])+len(hs[1])<=30: return hs[0]+" y "+hs[1].lower()
+    return hs[0] if hs else "Más"
+def _por_partes(title, parts):
+    """Páginas largas: cada bloque con título pasa a ser una pestaña; la cabecera de detalle queda arriba, siempre visible.
+    No toca páginas que ya tienen pestañas, asistentes ni formularios con pie fijo."""
+    body="".join(p for p in parts if isinstance(p,str))
+    if title=="Inicio" or 'role="tablist"' in body or 'class="wizard' in body or 'class="form-foot"' in body or 'data-plan' in body or 'form-grid' in body: return parts
+    kinds=[_part_kind(p) for p in parts]
+    top=[];i=0
+    while i<len(parts) and kinds[i][0] in ("hero","empty"): top.append(parts[i]); i+=1
+    groups=[]  # [titulo, html, roles]
+    lead=""
+    while i<len(parts):
+        k,r=kinds[i]; pt=parts[i] if isinstance(parts[i],str) else ""
+        if k=="block": groups.append([_part_title(pt),pt,r])
+        elif groups: groups[-1][1]+=pt
+        else: lead+=pt
+        i+=1
+    if lead.strip(): groups.insert(0,["Resumen" if top else _part_title(f"<h2>{title}</h2>"),lead,""])
+    if len(groups)<3: return parts
+    seen={}
+    for g in groups:
+        n=seen.get(g[0],0); seen[g[0]]=n+1
+        if n: g[0]=f"{g[0]} {n+1}"
+    _PARTS_LOG.append((title,[g[0] for g in groups]))
+    roles={g[0]:g[2] for g in groups if g[2]}
+    return top+[tabs([g[0] for g in groups],groups[0][0],panels={g[0]:g[1] for g in groups},roles=roles)]
 def shell(title, active, *parts, subtitle="", actions=""):
     parts=list(parts)
     if not actions:
@@ -974,6 +1025,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
                     sec="".join(e for e in _top_elems(ha) if 'class="more"' not in e)+"".join(re.findall(r'<div class="menu-pop"[^>]*>(.*?)</div></div>',ha,re.S))
                     actions=actions+more_menu(sec)
             break
+    parts=_por_partes(title, parts)
     body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','').replace('<!--HA-->','').replace('<!--/HA-->','')
     act=NAV_ALIAS.get(active,active)
     parent=next(((n,h) for _,items in NAV for n,h,_ in items if n==act),None)
@@ -2340,8 +2392,8 @@ est=shell("Estudiantes","Estudiantes",
 page("Estudiantes.html","Estudiantes",est,"Listado de estudiantes")
 
 # 4 Ficha 360
-ficha=shell("María Andrade","Estudiantes",
- f'''<div class="grid" style="grid-template-columns:320px 1fr">
+_ficha_resumen=(f'''<div class="grid" style="grid-template-columns:320px 1fr">
+
   <aside class="profile"><div class="profile-cover"></div><div class="profile-body">{avatar("MA")}<div class="chips" style="justify-content:center;gap:8px"><span class="badge badge-navy">EST-00412</span>{badge("Activa","ok")}</div><h2>María Andrade</h2><span class="kpi-sub">Matriculada el 10 jul 2025 · Quito</span>
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Sector</b>Quito Norte · La Carolina (ubicada en el mapa)</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
@@ -2355,8 +2407,9 @@ ficha=shell("María Andrade","Estudiantes",
     {card("Rematrícula (conectada con el Muro)", '<div class="grid kpi-2x2">'+kpi("Avance en el Muro","100%","módulo 7 · B1 Virtual")+kpi("Nota de aprobación","8.4 / 10","mínimo 7 · aprobado")+kpi("Siguiente","Módulo 8","ya pagado · mismo grupo · inicia 3 nov")+kpi("Bolsa de módulos","2","9 y 10 · pagados sin curso")+'</div>'+kv(("Estado",badge("Pagado, pendiente de matricular (9 y 10)","navy")),("Por qué","los módulos 7 a 10 están en la venta del 28 ago (factura 000021090)"),("Rematrícula con pago","se activa al aprobar el módulo 10, el último comprado"))+only(COMERCIAL,row(btn("Enviar recordatorio"))),extra=badge("Condiciones cumplidas","ok"))}
     {card("Cursos matriculados", course_item("English for Adults B1 Virtual","Adults · B1 · módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),tone=0,sessions="18",hours="36 h")+course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),tone=2,sessions="36",hours="72 h")+course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),tone=3,sessions="18",hours="36 h")+course_item("Club de conversación B1","Extracurricular · sábados · S. Jiménez",35,badge("En curso","navy"),"—",badge("Ninguno"),tone=1,sessions="4",hours="4 h")+course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),tone=0,sessions="0",hours="0 h"), filters(search("Buscar","Curso, categoría…",w="240px"),sel("Estado",["Todos","En curso","Completado","Pendiente"],w="130px",col=False),actions='<a href="Cursos.html" class="btn btn-ghost">Ver todos</a>'))}
   </div>
-</div>''',
- tabs(["Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Matrículas y notas",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={
+</div>''')
+ficha=shell("María Andrade","Estudiantes",
+ tabs(["Resumen","Datos","Matrículas y notas","Niveles / crédito","Facturas y pagos","Archivos y certificados","Historial"],"Resumen",roles={"Niveles / crédito":COMERCIAL,"Facturas y pagos":COMERCIAL,"Historial":"ADM,GER,DIR,SUC,COO,SEC"},panels={"Resumen":_ficha_resumen,
   "Datos": two(card("Datos personales", form([("Nombres","María"),("Apellidos","Andrade"),("Cédula / ID","1712345678"),"Fecha de nacimiento",("Email","maria.andrade@ejemplo.com",'email'),("Teléfono","099 000 0001",'tel'),"@@DIR@@","Sede"])),
                card("Comercial y origen", form(["Asesor asignado",("Canal de contacto (editable)","Walk in","select",ORIGENES,True,"Si entró como Walk in pero era un referido, se corrige aquí"),"Lead Kommo (origen)","Ocupación / empresa","Cómo nos conoció"])+'<p class="plan-nota" data-canal-log hidden></p><script src="assets/matricula.js"></script>'+note("Mayor de edad: no requiere representante. Si fuera menor, aquí van nombre, cédula y teléfono del representante y la autorización firmada.")))+row(btn("Guardar cambios",None,True)),
   "Matrículas y notas": table(["Matrícula","Curso","Horario","Módulo","Total","Pagado","Saldo","Asistencia","Nota","Estado","Acción"],hide=(0,2,4,5),wide=1,rows=[
@@ -4856,3 +4909,6 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 open(os.path.join(ROOT,"style.css"),"w").write(css)
 open(os.path.join(ROOT,".nojekyll"),"w").write("")
 open(os.path.join(ROOT,"README.md"),"w").write("# Wireframes Plataforma Cambridge\n\nWireframes estáticos de alto nivel (HTML/CSS, sin build) publicados con GitHub Pages.\n\n- `index.html`: mapa de pantallas por flujo\n- Una página por pantalla (`Main.html` = login)\n\nPublicación: GitHub Pages desde `main` / root (Settings → Pages → Deploy from a branch) o con el workflow `.github/workflows/pages.yml` (Source: GitHub Actions). URL: https://crpozo.github.io/cambridge-wireframes/\n")
+
+if __name__=="__main__" and os.environ.get("PARTES_LOG"):
+    for t,g in _PARTS_LOG: print("PARTES",t,"→"," | ".join(g))

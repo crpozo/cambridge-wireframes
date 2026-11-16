@@ -318,3 +318,14 @@ Top gaps from critics (próxima ronda):
 4. Inicio: "Accesos rápidos" con 8 botones repite el menú.
 
 Stop check: bar no (S04 y S06 llegan a 8.25-9 salvo una dimensión; el resto entre 6.5 y 9) | publicación automática autorizada -> publicado en `main`.
+
+## Round 09
+
+Focus: pedido del usuario: "esta página es enorme… debe verse por partes y de fácil acceso en toda la plataforma" (captura de Detalle de curso).
+
+Changes:
+- `_por_partes()` en `shell()`: páginas con 3 o más bloques con título y sin pestañas se muestran por pestañas (una por bloque); la cabecera queda arriba. 14 páginas.
+- Ficha 360°: el panorama es la pestaña "Resumen" y las pestañas quedan bajo el título.
+
+Measured: páginas de más de 3 pantallas de alto (2700 px a 1366): 7 (antes 10); Detalle de curso ocupa una pantalla por parte; 0 errores de JS; desbordes a 390: 2; 32 tablas con scroll; 0 enlaces rotos; roles intactos; enlace directo a una parte probado (`DetalleCurso.html#tab-lista-de-espera`); filtros y franja de resumen siguen funcionando dentro de una pestaña (Cursos, probado).
+Scores: not measured (sin revisores en esta ronda).
