@@ -29,7 +29,7 @@
   </div>
 </header>
 <main class="main" id="main">
-  <div class="page-head"><div><h1>RIDE de la factura 000021090</h1><p>Vista previa de lo que recibe el cliente</p></div></div>
+  <div class="page-head"><div><nav class="page-crumb" aria-label="Ubicación"><a href="Facturas.html">Facturación</a><span aria-hidden="true">/</span><span>RIDE de la factura 000021090</span></nav><h1>RIDE de la factura 000021090</h1><p>Vista previa de lo que recibe el cliente</p></div></div>
   <div class="kv"><span><span class="k">Formato</span> <b>PDF con diseño (antes se enviaba en Word y se veía mal)</b></span><span><span class="k">Incluye</span> <b>clave de acceso, autorización del SRI, ítems con su código, totales y forma de pago</b></span><span><span class="k">Se envía</span> <b>por correo junto con el XML, al emitirse y cuando se reenvía</b></span></div><div class="row" style="gap:16px"><button type="button" class="btn btn-primary" data-export="pdf" title="Se descarga el RIDE de la factura en PDF.">Descargar RIDE en PDF</button><button type="button" class="btn" data-action="Se envía al correo del cliente el RIDE en PDF con su diseño y el XML autorizado; ya no se envía en Word. Queda anotado en el historial de la factura.">Enviar RIDE por correo</button><a href="DetalleFactura.html" class="btn btn-ghost">Volver a la factura</a></div><div class="ride" id="ride-doc">
 <div class="ride-head"><div><img src="assets/logo.webp" alt="Cambridge School of Languages" class="ride-logo"><p><b>CAMBRIDGE SCHOOL OF LANGUAGES</b><br>RUC 1790000000001 · Quito · Av. Amazonas y NN. UU.<br>Obligado a llevar contabilidad: SÍ</p></div>
  <div class="ride-box"><b>FACTURA</b><span class="mono">No. 001-001-000021090</span><small>Ambiente: Producción · Emisión: Normal</small></div></div>
@@ -368,22 +368,23 @@ document.querySelectorAll('.tabs').forEach(function(bar){
       document.querySelectorAll('[data-disc-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){e.textContent=p?p+'% · -'+money(dsc):'sin descuento';});
       var h=sel.parentElement.querySelector('[data-disc-hint]');if(h){h.textContent=p>lim?'Más de '+lim+'%: la matrícula queda en espera hasta que Dirección Comercial apruebe el descuento':'Los valores de la tabla y el total se recalculan al cambiar';h.classList.toggle('is-warn',p>lim);}}
     sel.addEventListener('change',calc);});
+  document.querySelectorAll('[data-focus]').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('data-focus'));if(t)t.focus();});});
   /* asistente de pasos */
   document.querySelectorAll('[data-wizard]').forEach(function(w){
     var steps=[].slice.call(w.querySelectorAll('.wiz-step')),n=steps.length,cur=0,max=0,ol=w.querySelector('.stepper'),bar=w.querySelector('.wiz-progress i'),mob=w.querySelector('.wiz-mobile b');
     var foot=w.parentElement.querySelector('.form-foot');w.classList.add('is-on');
     var finals=foot?[].slice.call(foot.querySelectorAll('.btn-primary')):[];
-    var prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent='Atrás';
+    var prev=document.createElement('button');prev.type='button';prev.className='btn wiz-prev';prev.textContent='Atrás';
     var next=document.createElement('button');next.type='button';next.className='btn btn-primary';
     if(foot){foot.insertBefore(prev,foot.firstChild);foot.appendChild(next);}
     var check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
     function render(focus){
       steps.forEach(function(s,i){s.classList.toggle('on',i===cur);});
       [].forEach.call(ol.children,function(li,i){li.classList.toggle('is-done',i<cur||(i<=max&&i!==cur&&i<max));if(i===cur)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');var b=li.querySelector('button');b.disabled=i>max;li.querySelector('.s-n').innerHTML=(i<cur||(i<max&&i!==cur))?check:(i+1);});
-      bar.style.width=Math.round(cur/(n-1)*100)+'%';
+      if(bar)bar.style.width=Math.round(cur/(n-1)*100)+'%';
       if(mob)mob.textContent='Paso '+(cur+1)+' de '+n+' · '+steps[cur].getAttribute('data-title');
       prev.hidden=cur===0;next.hidden=cur===n-1;finals.forEach(function(f){f.hidden=cur!==n-1;});
-      if(cur<n-1)next.textContent='Siguiente: '+steps[cur+1].getAttribute('data-title');
+      if(cur<n-1){var nt=steps[cur+1].getAttribute('data-title');next.innerHTML='Continuar a '+nt.charAt(0).toLowerCase()+nt.slice(1)+' <svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';}
       if(focus){var h=steps[cur].querySelector('h3');if(h){h.setAttribute('tabindex','-1');h.focus();}}
       if(location.hash!=='#paso-'+(cur+1))history.pushState(null,'','#paso-'+(cur+1));
     }

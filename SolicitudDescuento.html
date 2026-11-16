@@ -29,8 +29,8 @@
   </div>
 </header>
 <main class="main" id="main">
-  <div class="page-head"><div><h1>Solicitud de descuento</h1><p>Reemplaza el campo 'Reason' opcional de TeamDesk</p></div></div>
-  <div class="card" style="max-width:640px"><div class="kv"><span><span class="k">Venta</span> <b>Gabriela Núñez · A2 · módulos 5–6</b></span><span><span class="k">Precio lista</span> <b>$450</b></span><span><span class="k">Asesor</span> <b>Carla M.</b></span></div><div class="form-grid cols-2"><div class="field"><label for="f406">Descuento solicitado (%)<em>*</em></label><input id="f406" aria-required="true" type="number" class="ctl" value="42"></div><div class="field"><label for="f407">Monto resultante</label><input id="f407" aria-describedby="f407-h" type="text" class="ctl" placeholder="$261.00 · -$189.00"><small class=field-hint id=f407-h>Automático</small></div></div><div class="form-grid cols-1"><div class="field"><label for="f408">Motivo<em>*</em></label><select id="f408" aria-describedby="f408-h" aria-required="true" class="ctl"><option selected>Referido</option><option>Promoción vigente</option><option>Convenio empresa</option><option>Hermano matriculado</option><option>Beneficio cancela 2 módulos</option><option>Otro</option></select><small class=field-hint id=f408-h>Lista cerrada</small></div></div><div class="form-grid cols-1"><div class="field"><label for="f409">Justificación<em>*</em></label><textarea id="f409" aria-describedby="f409-h" aria-required="true" class="ctl" rows="3" placeholder=""></textarea><small class=field-hint id=f409-h>Por qué este caso necesita más de 10%</small></div></div><div class="row" style="gap:16px"><a href="NuevaVenta.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="La solicitud va a la bandeja de Dirección Comercial. La venta queda en espera; verás aprobado o rechazado en Notificaciones y en tus pendientes de Inicio, y al aprobarse retomas la venta. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Home.html">Enviar solicitud</button></div></div>
+  <div class="page-head"><div><nav class="page-crumb" aria-label="Ubicación"><a href="NuevaVenta.html">Nueva matrícula</a><span aria-hidden="true">/</span><span>Solicitud de descuento</span></nav><h1>Solicitud de descuento</h1><p>Reemplaza el campo 'Reason' opcional de TeamDesk</p></div></div>
+  <div class="card" style="max-width:640px"><div class="kv"><span><span class="k">Venta</span> <b>Gabriela Núñez · A2 · módulos 5–6</b></span><span><span class="k">Precio lista</span> <b>$450</b></span><span><span class="k">Asesor</span> <b>Carla M.</b></span></div><div class="form-grid cols-2"><div class="field"><label for="f405">Descuento solicitado (%)<em>*</em></label><input id="f405" aria-required="true" type="number" class="ctl" value="42"></div><div class="field"><label for="f406">Monto resultante</label><input id="f406" aria-describedby="f406-h" type="text" class="ctl" placeholder="$261.00 · -$189.00"><small class=field-hint id=f406-h>Automático</small></div></div><div class="form-grid cols-1"><div class="field"><label for="f407">Motivo<em>*</em></label><select id="f407" aria-describedby="f407-h" aria-required="true" class="ctl"><option selected>Referido</option><option>Promoción vigente</option><option>Convenio empresa</option><option>Hermano matriculado</option><option>Beneficio cancela 2 módulos</option><option>Otro</option></select><small class=field-hint id=f407-h>Lista cerrada</small></div></div><div class="form-grid cols-1"><div class="field"><label for="f408">Justificación<em>*</em></label><textarea id="f408" aria-describedby="f408-h" aria-required="true" class="ctl" rows="3" placeholder=""></textarea><small class=field-hint id=f408-h>Por qué este caso necesita más de 10%</small></div></div><div class="row" style="gap:16px"><a href="NuevaVenta.html" class="btn">Cancelar</a><button type="button" class="btn btn-primary" data-action="La solicitud va a la bandeja de Dirección Comercial. La venta queda en espera; verás aprobado o rechazado en Notificaciones y en tus pendientes de Inicio, y al aprobarse retomas la venta. Queda registrado en el audit log con tu usuario, fecha y sede." data-next="Home.html">Enviar solicitud</button></div></div>
 </main>
 </div>
 </div>
@@ -360,22 +360,23 @@ document.querySelectorAll('.tabs').forEach(function(bar){
       document.querySelectorAll('[data-disc-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){e.textContent=p?p+'% · -'+money(dsc):'sin descuento';});
       var h=sel.parentElement.querySelector('[data-disc-hint]');if(h){h.textContent=p>lim?'Más de '+lim+'%: la matrícula queda en espera hasta que Dirección Comercial apruebe el descuento':'Los valores de la tabla y el total se recalculan al cambiar';h.classList.toggle('is-warn',p>lim);}}
     sel.addEventListener('change',calc);});
+  document.querySelectorAll('[data-focus]').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('data-focus'));if(t)t.focus();});});
   /* asistente de pasos */
   document.querySelectorAll('[data-wizard]').forEach(function(w){
     var steps=[].slice.call(w.querySelectorAll('.wiz-step')),n=steps.length,cur=0,max=0,ol=w.querySelector('.stepper'),bar=w.querySelector('.wiz-progress i'),mob=w.querySelector('.wiz-mobile b');
     var foot=w.parentElement.querySelector('.form-foot');w.classList.add('is-on');
     var finals=foot?[].slice.call(foot.querySelectorAll('.btn-primary')):[];
-    var prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent='Atrás';
+    var prev=document.createElement('button');prev.type='button';prev.className='btn wiz-prev';prev.textContent='Atrás';
     var next=document.createElement('button');next.type='button';next.className='btn btn-primary';
     if(foot){foot.insertBefore(prev,foot.firstChild);foot.appendChild(next);}
     var check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
     function render(focus){
       steps.forEach(function(s,i){s.classList.toggle('on',i===cur);});
       [].forEach.call(ol.children,function(li,i){li.classList.toggle('is-done',i<cur||(i<=max&&i!==cur&&i<max));if(i===cur)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');var b=li.querySelector('button');b.disabled=i>max;li.querySelector('.s-n').innerHTML=(i<cur||(i<max&&i!==cur))?check:(i+1);});
-      bar.style.width=Math.round(cur/(n-1)*100)+'%';
+      if(bar)bar.style.width=Math.round(cur/(n-1)*100)+'%';
       if(mob)mob.textContent='Paso '+(cur+1)+' de '+n+' · '+steps[cur].getAttribute('data-title');
       prev.hidden=cur===0;next.hidden=cur===n-1;finals.forEach(function(f){f.hidden=cur!==n-1;});
-      if(cur<n-1)next.textContent='Siguiente: '+steps[cur+1].getAttribute('data-title');
+      if(cur<n-1){var nt=steps[cur+1].getAttribute('data-title');next.innerHTML='Continuar a '+nt.charAt(0).toLowerCase()+nt.slice(1)+' <svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';}
       if(focus){var h=steps[cur].querySelector('h3');if(h){h.setAttribute('tabindex','-1');h.focus();}}
       if(location.hash!=='#paso-'+(cur+1))history.pushState(null,'','#paso-'+(cur+1));
     }

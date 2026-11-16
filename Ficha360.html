@@ -29,7 +29,7 @@
   </div>
 </header>
 <main class="main" id="main">
-  <div class="page-head"><div><h1>María Andrade</h1><p>Ficha 360°: todo lo del estudiante en una sola vista</p></div><div class="page-head-actions"><span data-roles="ADM,GER,DIR,SUC,ASE,SEC" style="display:contents"><a href="NuevaVenta.html" class="btn btn-primary">Nueva matrícula</a></span></div></div>
+  <div class="page-head"><div><nav class="page-crumb" aria-label="Ubicación"><a href="Estudiantes.html">Estudiantes</a><span aria-hidden="true">/</span><span>María Andrade</span></nav><h1>María Andrade</h1><p>Ficha 360°: todo lo del estudiante en una sola vista</p></div><div class="page-head-actions"><span data-roles="ADM,GER,DIR,SUC,ASE,SEC" style="display:contents"><a href="NuevaVenta.html" class="btn btn-primary">Nueva matrícula</a></span></div></div>
   <div class="tabs" role="tablist"><button type="button" role="tab" id="tab-resumen" data-tab="Resumen" aria-selected="true" tabindex="0" class="tab on"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Resumen</button><button type="button" role="tab" id="tab-datos" data-tab="Datos" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x='3' y='5' width='18' height='14' rx='2'/><circle cx='9' cy='12' r='2.5'/><path d='M14 10h4M14 14h4'/></svg></span>Datos</button><button type="button" role="tab" id="tab-matriculas-y-notas" data-tab="Matrículas y notas" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d='M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z'/><path d='M14 2v6h6M8 13h8M8 17h5'/></svg></span>Matrículas y notas</button><button type="button" role="tab" id="tab-niveles-credito" data-tab="Niveles / crédito" data-roles="ADM,GER,DIR,SUC,ASE,SEC" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d='M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5z'/><path d='M4 20.5V4.5M8 6h8'/></svg></span>Niveles / crédito</button><button type="button" role="tab" id="tab-facturas-y-pagos" data-tab="Facturas y pagos" data-roles="ADM,GER,DIR,SUC,ASE,SEC" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>Facturas y pagos</button><div class="tab-more"><button type="button" class="tab btn" data-menu aria-haspopup="menu" aria-expanded="false" aria-controls="c80">Más <span class="chev chev-d" aria-hidden="true"></span></button><div class="menu-pop" id="c80" hidden><button type="button" role="tab" id="tab-archivos-y-certificados" data-tab="Archivos y certificados" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx='12' cy='9' r='5'/><path d='M8.5 13.5L7 22l5-3 5 3-1.5-8.5'/></svg></span>Archivos y certificados</button><button type="button" role="tab" id="tab-historial" data-tab="Historial" data-roles="ADM,GER,DIR,SUC,COO,SEC" aria-selected="false" tabindex="-1" class="tab"><span class="t-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5M12 7.5V12l3 2"/></svg></span>Historial</button></div></div></div><div role="tabpanel" data-panel="Resumen" class="panel" style="display:flex"><div class="grid" style="grid-template-columns:320px 1fr">
 
   <aside class="profile"><div class="profile-cover"></div><div class="profile-body"><span class="avatar lg">MA</span><div class="chips" style="justify-content:center;gap:8px"><span class="badge badge-navy">EST-00412</span><span class="badge badge-ok">Activa</span></div><h2>María Andrade</h2><span class="kpi-sub">Matriculada el 10 jul 2025 · Quito</span>
@@ -376,22 +376,23 @@ document.querySelectorAll('.tabs').forEach(function(bar){
       document.querySelectorAll('[data-disc-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){e.textContent=p?p+'% · -'+money(dsc):'sin descuento';});
       var h=sel.parentElement.querySelector('[data-disc-hint]');if(h){h.textContent=p>lim?'Más de '+lim+'%: la matrícula queda en espera hasta que Dirección Comercial apruebe el descuento':'Los valores de la tabla y el total se recalculan al cambiar';h.classList.toggle('is-warn',p>lim);}}
     sel.addEventListener('change',calc);});
+  document.querySelectorAll('[data-focus]').forEach(function(b){b.addEventListener('click',function(){var t=document.getElementById(b.getAttribute('data-focus'));if(t)t.focus();});});
   /* asistente de pasos */
   document.querySelectorAll('[data-wizard]').forEach(function(w){
     var steps=[].slice.call(w.querySelectorAll('.wiz-step')),n=steps.length,cur=0,max=0,ol=w.querySelector('.stepper'),bar=w.querySelector('.wiz-progress i'),mob=w.querySelector('.wiz-mobile b');
     var foot=w.parentElement.querySelector('.form-foot');w.classList.add('is-on');
     var finals=foot?[].slice.call(foot.querySelectorAll('.btn-primary')):[];
-    var prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent='Atrás';
+    var prev=document.createElement('button');prev.type='button';prev.className='btn wiz-prev';prev.textContent='Atrás';
     var next=document.createElement('button');next.type='button';next.className='btn btn-primary';
     if(foot){foot.insertBefore(prev,foot.firstChild);foot.appendChild(next);}
     var check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
     function render(focus){
       steps.forEach(function(s,i){s.classList.toggle('on',i===cur);});
       [].forEach.call(ol.children,function(li,i){li.classList.toggle('is-done',i<cur||(i<=max&&i!==cur&&i<max));if(i===cur)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');var b=li.querySelector('button');b.disabled=i>max;li.querySelector('.s-n').innerHTML=(i<cur||(i<max&&i!==cur))?check:(i+1);});
-      bar.style.width=Math.round(cur/(n-1)*100)+'%';
+      if(bar)bar.style.width=Math.round(cur/(n-1)*100)+'%';
       if(mob)mob.textContent='Paso '+(cur+1)+' de '+n+' · '+steps[cur].getAttribute('data-title');
       prev.hidden=cur===0;next.hidden=cur===n-1;finals.forEach(function(f){f.hidden=cur!==n-1;});
-      if(cur<n-1)next.textContent='Siguiente: '+steps[cur+1].getAttribute('data-title');
+      if(cur<n-1){var nt=steps[cur+1].getAttribute('data-title');next.innerHTML='Continuar a '+nt.charAt(0).toLowerCase()+nt.slice(1)+' <svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';}
       if(focus){var h=steps[cur].querySelector('h3');if(h){h.setAttribute('tabindex','-1');h.focus();}}
       if(location.hash!=='#paso-'+(cur+1))history.pushState(null,'','#paso-'+(cur+1));
     }

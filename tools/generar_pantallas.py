@@ -656,22 +656,23 @@ document.querySelectorAll('.tabs').forEach(function(bar){{
       document.querySelectorAll('[data-disc-for="'+sel.getAttribute('data-disc')+'"]').forEach(function(e){{e.textContent=p?p+'% · -'+money(dsc):'sin descuento';}});
       var h=sel.parentElement.querySelector('[data-disc-hint]');if(h){{h.textContent=p>lim?'Más de '+lim+'%: la matrícula queda en espera hasta que Dirección Comercial apruebe el descuento':'Los valores de la tabla y el total se recalculan al cambiar';h.classList.toggle('is-warn',p>lim);}}}}
     sel.addEventListener('change',calc);}});
+  document.querySelectorAll('[data-focus]').forEach(function(b){{b.addEventListener('click',function(){{var t=document.getElementById(b.getAttribute('data-focus'));if(t)t.focus();}});}});
   /* asistente de pasos */
   document.querySelectorAll('[data-wizard]').forEach(function(w){{
     var steps=[].slice.call(w.querySelectorAll('.wiz-step')),n=steps.length,cur=0,max=0,ol=w.querySelector('.stepper'),bar=w.querySelector('.wiz-progress i'),mob=w.querySelector('.wiz-mobile b');
     var foot=w.parentElement.querySelector('.form-foot');w.classList.add('is-on');
     var finals=foot?[].slice.call(foot.querySelectorAll('.btn-primary')):[];
-    var prev=document.createElement('button');prev.type='button';prev.className='btn';prev.textContent='Atrás';
+    var prev=document.createElement('button');prev.type='button';prev.className='btn wiz-prev';prev.textContent='Atrás';
     var next=document.createElement('button');next.type='button';next.className='btn btn-primary';
     if(foot){{foot.insertBefore(prev,foot.firstChild);foot.appendChild(next);}}
     var check='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
     function render(focus){{
       steps.forEach(function(s,i){{s.classList.toggle('on',i===cur);}});
       [].forEach.call(ol.children,function(li,i){{li.classList.toggle('is-done',i<cur||(i<=max&&i!==cur&&i<max));if(i===cur)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');var b=li.querySelector('button');b.disabled=i>max;li.querySelector('.s-n').innerHTML=(i<cur||(i<max&&i!==cur))?check:(i+1);}});
-      bar.style.width=Math.round(cur/(n-1)*100)+'%';
+      if(bar)bar.style.width=Math.round(cur/(n-1)*100)+'%';
       if(mob)mob.textContent='Paso '+(cur+1)+' de '+n+' · '+steps[cur].getAttribute('data-title');
       prev.hidden=cur===0;next.hidden=cur===n-1;finals.forEach(function(f){{f.hidden=cur!==n-1;}});
-      if(cur<n-1)next.textContent='Siguiente: '+steps[cur+1].getAttribute('data-title');
+      if(cur<n-1){{var nt=steps[cur+1].getAttribute('data-title');next.innerHTML='Continuar a '+nt.charAt(0).toLowerCase()+nt.slice(1)+' <svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';}}
       if(focus){{var h=steps[cur].querySelector('h3');if(h){{h.setAttribute('tabindex','-1');h.focus();}}}}
       if(location.hash!=='#paso-'+(cur+1))history.pushState(null,'','#paso-'+(cur+1));
     }}
@@ -1089,6 +1090,10 @@ def shell(title, active, *parts, subtitle="", actions=""):
                     sec="".join(e for e in _top_elems(ha) if 'class="more"' not in e)+"".join(re.findall(r'<div class="menu-pop"[^>]*>(.*?)</div></div>',ha,re.S))
                     actions=actions+more_menu(sec)
             break
+    for k,pt in enumerate(parts):
+        if isinstance(pt,str) and '<!--SAVED-->' in pt:
+            a=pt.index('<!--SAVED-->'); b=pt.index('<!--/SAVED-->')
+            actions=pt[a+12:b]+actions; parts[k]=pt[:a]+pt[b+13:]
     parts=_por_partes(title, parts)
     body="".join(parts).replace('<!--P-->','').replace('<!--/P-->','').replace('<!--HA-->','').replace('<!--/HA-->','')
     act=NAV_ALIAS.get(active,active)
@@ -1117,7 +1122,7 @@ def shell(title, active, *parts, subtitle="", actions=""):
   </div>
 </header>
 <main class="main" id="main">
-  <div class="page-head"><div><h1>{title}</h1>{f'<p>{subtitle}</p>' if subtitle else ''}</div>{head_actions}</div>
+  <div class="page-head"><div>{f'<nav class="page-crumb" aria-label="Ubicación"><a href="{parent[1]}">{parent[0]}</a><span aria-hidden="true">/</span><span>{title}</span></nav>' if parent and parent[0]!=title else ''}<h1>{title}</h1>{f'<p>{subtitle}</p>' if subtitle else ''}</div>{head_actions}</div>
   {body}
 </main>
 </div>
@@ -1554,18 +1559,27 @@ def route(levels):
 def wizard(steps, summary="", saved="Borrador guardado 10:14"):
     """Asistente de pasos: steps=[(título, html, subtítulo)]. Un paso visible a la vez (JS en page()), stepper con barra de progreso y resumen lateral."""
     lis="".join(f'<li><button type="button"><span class="s-n">{i+1}</span><span class="s-t">{t}</span></button></li>' for i,(t,_,_) in enumerate(steps))
-    secs="".join(f'<section class="wiz-step" data-title="{t}" aria-labelledby="wz{i}"><h3 id="wz{i}">Paso {i+1} · {t}{f"<small>{sub}</small>" if sub else ""}</h3>{h}</section>' for i,(t,h,sub) in enumerate(steps))
-    return (f'<div class="wizard" data-wizard><div class="wiz-main"><div class="wiz-head"><ol class="stepper" aria-label="Pasos">{lis}</ol>'
+    secs="".join(f'<section class="wiz-step" data-title="{t}" aria-labelledby="wz{i}"><h3 id="wz{i}"><span class="sr">Paso {i+1} · </span>{t}{f"<small>{sub}</small>" if sub else ""}</h3>{h}</section>' for i,(t,h,sub) in enumerate(steps))
+    sv=f'<!--SAVED--><p class="wiz-saved">{ico("check","nav-ico")}{saved.replace("guardado ","guardado · ")}</p><!--/SAVED-->' if saved else ""
+    return (f'<div class="wizard{" has-sum" if summary else ""}" data-wizard>{sv}<div class="wiz-head"><ol class="stepper" aria-label="Pasos">{lis}</ol>'
             f'<div class="wiz-mobile"><b></b><button type="button" class="btn btn-ghost wiz-toggle" aria-expanded="false">Ver pasos</button></div>'
-            f'<div class="wiz-progress" aria-hidden="true"><i></i></div>{f"<p class=wiz-saved>{saved}</p>" if saved else ""}</div>{secs}</div>{summary}</div>')
-def wiz_summary(title_total, rows, extra=""):
-    """Resumen lateral del asistente: rows=[(etiqueta, valor)] con '---' para separador y '*' al inicio para el total."""
+            f'<div class="wiz-progress" aria-hidden="true"><i></i></div></div><div class="wiz-main">{secs}</div>{summary}</div>')
+def wiz_summary(title_total, rows, extra="", title="Resumen", who=None, tag="", chips=None):
+    """Resumen lateral del asistente: rows=[(etiqueta, valor)] con '---' para separador y '*' al inicio para el total.
+    who=(nombre, detalle) pone avatar con iniciales; tag = etiqueta a la derecha del título; chips=[(título, [chip…], pie)] (chip con '*' = destacado)."""
     body=""
+    if who:
+        ini="".join(w[0] for w in who[0].split()[:2]).upper()
+        body+=f'<div class="sum-who"><span class="avatar lg" aria-hidden="true">{ini}</span><div><b>{who[0]}</b><small>{who[1]}</small></div></div>'
+    if chips:
+        def _chip(c): return f'<span class="chip{" is-on" if c.startswith("*") else ""}">{c.lstrip("*")}</span>'
+        body+='<div class="sum-chips">'+"".join(f'<div><h4>{t}</h4><p>{"".join(_chip(c) for c in cs)}</p>{f"<small>{pie}</small>" if pie else ""}</div>' for t,cs,pie in chips)+'</div>'
     for r in rows:
         if r=="---": body+="<hr>"; continue
         k,v=r; tot=k.startswith("*")
-        body+=f'<dl{" class=tot" if tot else ""}><dt>{k.lstrip("*")}</dt><dd>{v}</dd></dl>'
-    return f'<details class="wiz-summary" open><summary>Resumen<span>{title_total}</span></summary><div class="wiz-sum-body">{body}{extra}</div></details>'
+        neg=isinstance(v,str) and v.startswith(("-$","−$"))
+        body+=f'<dl class="{"tot" if tot else ""}{" neg" if neg else ""}"><dt>{k.lstrip("*")}</dt><dd>{v}</dd></dl>'
+    return f'<details class="wiz-summary" open><summary><span class="sum-t">{title}</span>{f"<span class=sum-tag>{tag}</span>" if tag else f"<span>{title_total}</span>"}</summary><div class="wiz-sum-body">{body}{extra}</div></details>'
 def wizcard(steps_html, summary=""):
     """Convierte step()+step()… en un asistente de pasos (un paso a la vez)."""
     parts=steps_html.split('<div class="step"><span class="step-n">')[1:]
@@ -1581,6 +1595,19 @@ def wizcard(steps_html, summary=""):
 def facts(pairs):
     """Resumen en cuadrícula (etiqueta arriba, valor abajo), igual que la cabecera de detalle. Para confirmaciones y resúmenes."""
     return '<dl class="facts">'+"".join(f'<div class="fact"><dt>{k}</dt><dd>{v}</dd></div>' for k,v in pairs)+'</dl>'
+def info_line(text):
+    """Aviso breve en línea (fondo azul claro con ícono): solo para un dato que el usuario necesita en ese momento."""
+    return f'<p class="info-line"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>{text}</p>'
+def student_picker(name, doc, new_href="NuevoEstudiante.html", status="Estudiante seleccionado"):
+    """Selector de estudiante: control Buscar / Nuevo, buscador y tarjeta del estudiante elegido con 'Cambiar'."""
+    ini="".join(w[0] for w in name.split()[:2]).upper()
+    return ('<div class="pick-seg" role="group" aria-label="Estudiante"><button type="button" class="is-on" aria-pressed="true">Buscar estudiante</button>'
+            f'<a href="{new_href}">Nuevo estudiante</a></div>'
+            '<label class="pick-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>'
+            '<span class="sr">Buscar por nombre, cédula o pasaporte</span><input type="search" id="pick-q" placeholder="Buscar por nombre, cédula o pasaporte" autocomplete="off"></label>'
+            f'<div class="pick-card"><span class="avatar lg" aria-hidden="true">{ini}</span><div class="pick-who"><b>{name}</b><small>{doc}</small></div>'
+            f'<span class="pick-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{status}</span>'
+            '<button type="button" class="pick-change" data-focus="pick-q">Cambiar</button></div>')
 _LID=[0]
 def ledger_calc(items, disc=10, lid=None):
     """Tabla de valores con descuento recalculable (JS en page()). items=(concepto, detalle, valor, aplica_descuento).
@@ -2583,7 +2610,9 @@ ACTIONS.update({
  "Imprimir etiquetas de libros":("Se imprimen las etiquetas de los libros que están en stock en la sede para entregarlos de inmediato al estudiante.",None),
  "Confirmar matrícula y emitir factura":("Se crea la venta V-2026-0412 con su valor completo y 4 matrículas (001-202602794 a 001-202602797, una por módulo), una factura multi-módulo firmada y enviada al SRI, las cuotas del plan de pago en la cartera, la comisión del asesor en estado Pendiente y se crea la entrega digital pendiente del libro (EN-2026-0431). El estudiante entra al grupo de Teams y recibe el enlace de clase. "+AUDIT,"DetalleMatricula.html"),
 })
-venta_sum=wiz_summary('<span data-total-for="lgv">$980</span>',[("Estudiante","María Andrade"),("Cédula","1712345678"),("Clasificación","Continuidad"),("Asesor","Carla M."),"---",("Compra","4 módulos desde el 7"),("Se matricula","7 y 8 · 0001-2026-0767"),("En la bolsa","9 y 10 · pagados"),"---",("Subtotal","$1,080"),("Descuento","-$100"),("*Total",'<span data-total-for="lgv">$980</span>'),"---",("Pagado hoy","$490"),("Saldo en cartera","$490")])
+venta_sum=wiz_summary('<span data-total-for="lgv">$980</span>',[("Programa","4 módulos · desde el módulo 7"),"---",("Subtotal","$1,080"),("Descuento","-$100"),("*Total",'<span data-total-for="lgv">$980</span>'),"---",("Pagado hoy","$490"),("Saldo pendiente","$490")],
+  title="Resumen de matrícula",who=("María Andrade","Cédula 1712345678"),tag="Continuidad",
+  chips=[("Se matricula ahora",["*Módulo 7","*Módulo 8"],"0001-2026-0767"),("En la bolsa",["Módulo 9","Módulo 10"],"Pagados, sin curso todavía")])
 mods=('<div class="mod-group"><header>B1 · Virtual · Lu-Ma-Mi-Ju 19:00 a 21:00 · P. Gómez</header>'
   +'<div class="mod"><div class="m-n"><b>Módulo 7</b><small>Nivel B1</small></div><div>English for Adults (ESL) · Virtual · Grupal<small>Plantilla regular noche · 2 h por sesión</small></div><div><span class="mono">0001-2026-0767</span><small>Zoom 2</small></div><div>1 sep 2026<small>inicia</small></div><div>'+badge("12 de 15 cupos","ok")+'<small>Quito 7 · Valle 3 · Ambato 2 (virtual compartido)</small></div></div>'
   +'<div class="mod"><div class="m-n"><b>Módulo 8</b><small>Nivel B1</small></div><div>Continúa en el mismo grupo<small>cupo reservado al matricular</small></div><div><span class="mono">0001-2026-0767</span><small>Lu-Ma-Mi-Ju 19:00–21:00 · Zoom 2 · P. Gómez</small></div><div>3 nov 2026<small>inicia</small></div><div>'+badge("Reservado","info")+'</div></div></div>'
@@ -2599,19 +2628,21 @@ review=('<dl class="review">'
 venta=shell("Nueva matrícula","Nueva matrícula",
  wizard([
   ("Estudiante y origen",
-   row(btn("Buscar estudiante"),btn("Nuevo estudiante","NuevoEstudiante.html",kind="ghost"))+'<div class="form-grid cols-3">'+dep_select("Tipo de transacción",["Matrícula regular","Examen internacional","Solo facturación (simuladores, traducciones, otros servicios)"],"Matrícula regular",{
+   student_picker("María Andrade","Cédula 1712345678")+'<h4 class="section-title">Datos de la matrícula</h4><div class="form-grid cols-2">'+dep_select("Tipo de transacción",["Matrícula regular","Examen internacional","Solo facturación (simuladores, traducciones, otros servicios)"],"Matrícula regular",{
       "Examen internacional": field("Cédula escaneada","",'file',None,True,"Para el registro con el centro examinador")+field("Fecha de nacimiento","2001-05-14",'date',None,True)+field("Correo del candidato","nombre@ejemplo.com",'email',None,True,"Recibe la confirmación y los horarios del examen"),
-      "Solo facturación (simuladores, traducciones, otros servicios)": field("Servicio","Simulador (Mock Test) · B2",'select',["Simulador (Mock Test) · B2","Traducción · por página","Mercadería","Otro servicio"],True,"No crea ficha de estudiante: solo factura")},hint="Define qué datos se piden en los pasos siguientes")
-   +field("Estudiante","María Andrade · CED 1712345678","text",None,True,"Busca por cédula, pasaporte o nombre")+field("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True,"Obligatorio: recibe el contrato, el enlace de clase y los recordatorios")
-   +field("Clasificación","Continuidad","select",["Nueva","Reingreso (exestudiante)","Continuidad"],True,"Se sugiere sola; puede corregirse")+field("Tiempo sin matrícula","1 mes","select",["Sin historial (primera vez)","1 mes","2 meses","3 meses","4 a 5 meses","6 meses o más"],False,"Activo hasta 2 meses; inactivo de 3 a 5; nuevo desde 6")+field("Oportunidad Kommo","KM-48213 · contacto: madre","text",None,False,"El contacto puede no ser el estudiante")
-   +field("Asesor (vendor)","Carla M.","select",["Carla M.","Diego R.","Andrea S.","Luis P."],True)+origen_fields()
+      "Solo facturación (simuladores, traducciones, otros servicios)": field("Servicio","Simulador (Mock Test) · B2",'select',["Simulador (Mock Test) · B2","Traducción · por página","Mercadería","Otro servicio"],True,"No crea ficha de estudiante: solo factura")})
+   +field("Clasificación","Continuidad","select",["Nueva","Reingreso (exestudiante)","Continuidad"],True)+field("Correo del estudiante","maria.andrade@ejemplo.com","email",None,True)
+   +field("Tiempo sin matrícula","1 mes","select",["Sin historial (primera vez)","1 mes","2 meses","3 meses","4 a 5 meses","6 meses o más"],False)+field("Oportunidad Kommo","KM-48213","text",None,False)
+   +field("Asesor","Carla M.","select",["Carla M.","Diego R.","Andrea S.","Luis P."],False)+'</div>'
+   +info_line("El estudiante recibirá el contrato y los recordatorios en este correo.")
+   +'<details class="more-fields"><summary>Origen, representante y forma de pago</summary><div class="form-grid cols-2">'+origen_fields()
    +dep_select("¿Menor de 18 años?",["No","Sí"],"No",{"Sí": field("Representante · nombre","",'text',None,True)+field("Representante · teléfono","099 000 0000",'tel',None,True)+field("Representante · correo","nombre@ejemplo.com",'email',None,True,"Recibe el contrato para aceptarlo y los recordatorios de cuotas")},req=False,hint="Se calcula desde la fecha de nacimiento; si es menor, firma el representante")
    +field("¿Indexado?","No","select",["No","Sí · entra al curso de indexados con 100% de descuento (regular ≥ 48 h · urgente < 24 h con autorización)"],False,"")
    +dep_select("¿Paga la empresa?",["No","Alianza · paga el estudiante con el descuento de la alianza","Convenio · paga la empresa"],"No",{
       "Alianza · paga el estudiante con el descuento de la alianza": field("Alianza","Banco del Valle · 10%",'select',["Banco del Valle · 10%","Colegio Los Andes · 20% (Kids y Teens)"],True,"Factura normal al estudiante con el descuento"),
       "Convenio · paga la empresa": field("Convenio","Grupo Nova · 15% · crédito 30 días",'select',["Grupo Nova · 15% · crédito 30 días","Clínica Santa Fe · 10% · crédito 30 días"],True,"Factura al estudiante en $0 (validar con el contador) y factura global a la empresa a crédito; Secretaría concilia el cobro")},req=False,hint="Alianza y convenio no se mezclan")
-   +field("Sede","Quito","text",None,False,"Automático")+'</div>'
-   +'<p class="plan-nota" data-estado-out aria-live="polite"></p>',"Viene del lead de Kommo o de la búsqueda; si ya existe se reutiliza su ficha"),
+   +field("Sede","Quito","text",None,False,"Automático")+'</div></details>'
+   +'<p class="plan-nota" data-estado-out aria-live="polite"></p>',"Selecciona un estudiante y revisa sus datos."),
   ("Programa y cursos", '<div class="form-grid cols-3">'+field("Programa","English for Adults","select",PROGRAMAS,True)
    +dep_select("Qué compra",["Módulos (grupal)","Horas (one to one o personalizado)"],"Módulos (grupal)",{
       "Módulos (grupal)": field("Desde el módulo","7 · B1","select",[f"{n} · {lv}" for n,lv in [(1,"A1"),(2,"A1"),(3,"A2"),(4,"A2"),(5,"A2+"),(6,"A2+"),(7,"B1"),(8,"B1"),(9,"B1+"),(10,"B1+"),(11,"B2"),(12,"B2"),(13,"C1"),(14,"C1")]],True,"Puede empezar en un módulo par, por ejemplo el 8")+field("Cantidad de módulos","4","number",None,True,"7 niveles = 14 módulos; no se obliga a vender en pares"),
@@ -2646,8 +2677,8 @@ venta=shell("Nueva matrícula","Nueva matrícula",
    +flow([("Se crean 2 matrículas y 2 módulos quedan en la bolsa","001-202602794 y 001-202602795 (módulos 7 y 8); los módulos 9 y 10 quedan pagados sin curso, visibles para Secretaría"),("Se emite 1 factura con todos los ítems","módulos, material y lo demás, cada uno con su código; firmada y enviada al SRI"),("Las cuotas pasan a la cartera","cuota 2 de $490 vence el 27 sep · recordatorios automáticos con copia al asesor"),("Se crea la entrega digital del libro","Empower B1 Combo A (primer nivel) · queda pendiente de firma en la tablet; no se imprime nada"),("Se envía el contrato para aceptación","al estudiante o a su representante"),("Entra al grupo de Teams","y recibe el enlace de clase"),("La comisión del asesor queda pendiente","se paga al cobrar todo")]),
    "Revisa antes de emitir: la factura no se puede deshacer sin nota de crédito")], venta_sum),
  '<script src="assets/matricula.js"></script>',
- foot(btn("Confirmar matrícula y emitir factura",None,True),btn("Guardar borrador",kind="ghost"),btn("Salir sin guardar")),
- subtitle="Una venta = N módulos desde el módulo X (o N horas), una factura con todos los ítems y una matrícula por módulo que inicia")
+ foot(btn("Confirmar matrícula y emitir factura",None,True),btn("Salir sin guardar",kind="ghost"),btn("Guardar borrador")),
+ subtitle="Configura la inscripción y el pago del estudiante.")
 page("NuevaVenta.html","Nueva matrícula",venta,"Nueva matrícula (una por módulo, factura multi-módulo)")
 
 # Matrícula desde un lead de Kommo: el estudiante se crea con los datos del lead (precargados) y sigue el mismo flujo de 5 pasos
@@ -5132,6 +5163,93 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
   .chat{height:calc(100vh - 200px)}
   .msg{max-width:90%}
 }
+/* ===== Rediseño 16 nov · referencia "Nueva matrícula" del cliente: tarjetas suaves, h1 sans, asistente en línea ===== */
+:root{--r:8px;--r-lg:14px;--ink-head:#0F1E45;--shadow-card:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.05);--field-line:#C9CFD8}
+.page-crumb{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:var(--t-14);color:var(--ink-2);margin-bottom:6px}
+.page-crumb a{color:var(--navy);font-weight:600;text-decoration:none}.page-crumb a:hover{text-decoration:underline}.page-crumb>span[aria-hidden]{color:var(--mute)}
+.topbar .crumbs .crumb-parent,.topbar .crumbs .sep,.topbar .crumbs .here{display:none}
+.page-head{align-items:center}
+.page-head h1{font-family:var(--font-ui);font-weight:700;font-size:30px;letter-spacing:-.015em;color:var(--ink-head)}
+.page-head p{font-size:var(--t-16);color:var(--ink-2);margin-top:6px}
+.card{border-radius:var(--r-lg);box-shadow:var(--shadow-card);border-color:#E6E8EC;padding:28px}
+.card-head h2{font-size:var(--t-20);font-weight:700;color:var(--ink-head)}
+.section-title{font-size:var(--t-20);font-weight:700;color:var(--ink-head)}
+.btn{font-weight:600}.btn:not(.btn-primary):not(.btn-ghost):not(.btn-danger){border-color:#AEB5C1}
+.field label{font-weight:600;font-size:var(--t-14)}
+.field input:not([type=checkbox]):not([type=radio]),.field select,.field textarea{border-radius:var(--r);border-color:var(--field-line)}
+.seg button[aria-checked=true]{background:var(--navy);color:#fff}
+.btn .arr{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* asistente */
+.wizard{grid-template-columns:minmax(0,1fr) 400px;gap:28px}
+@media (max-width:1360px){.wizard{grid-template-columns:minmax(0,1fr) 340px;gap:24px}}
+.wiz-head{grid-column:1/-1}
+.stepper{display:flex;align-items:center}
+.stepper li{flex:0 0 auto;display:flex;align-items:center}
+.stepper li:not(:last-child){flex:1 1 auto}
+.stepper li:not(:last-child)::after{position:static;flex:1 1 auto;height:1px;min-width:12px;margin:0 8px;background:#C9CFD8}
+.stepper li.is-done:not(:last-child)::after{background:var(--navy)}
+.stepper button{flex-direction:row;gap:10px;width:auto;padding:4px 14px 4px 4px;border-radius:999px;color:var(--ink-2)}
+.stepper .s-n{width:40px;height:40px;border:1.5px solid #AEB5C1;color:var(--ink-2);font-size:var(--t-16)}
+.stepper .s-t{font-size:var(--t-16);font-weight:500;white-space:nowrap;text-align:left}
+.stepper li[aria-current=step] button{background:var(--navy-50)}
+.stepper li[aria-current=step] .s-t{color:var(--navy);font-weight:600}
+.wiz-progress{display:none}
+.wiz-step{border-radius:var(--r-lg);box-shadow:var(--shadow-card);border-color:#E6E8EC;padding:28px 32px;gap:22px}
+.wiz-step>h3{font-size:26px;font-weight:700;color:var(--ink-head);letter-spacing:-.01em}
+.wiz-step>h3 small{font-size:var(--t-16);color:var(--ink-2);margin-top:6px}
+.wiz-step .section-title{margin-top:6px}
+.wiz-saved{display:inline-flex;align-items:center;gap:8px;margin:0;padding:8px 14px;border-radius:10px;background:var(--ok-50);color:var(--ok);font-weight:500;font-size:var(--t-14);white-space:nowrap}
+.wiz-saved .nav-ico{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--ok);align-items:center;justify-content:center}
+.wiz-saved svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3.5}
+.wiz-summary{border-radius:var(--r-lg);box-shadow:var(--shadow-card);border-color:#E6E8EC}
+.wiz-summary>summary{padding:24px 28px 10px;font-size:var(--t-20);white-space:nowrap;font-weight:700;color:var(--ink-head);align-items:center}
+.sum-tag{font-size:var(--t-13);font-weight:600;color:var(--navy);background:var(--navy-50);padding:5px 12px;border-radius:8px}
+.wiz-sum-body{padding:8px 28px 28px;gap:14px;font-size:var(--t-16)}
+.wiz-sum-body dt{color:var(--ink-2)}.wiz-sum-body dd{font-weight:600;color:var(--ink)}
+.wiz-sum-body dl.neg dd{color:var(--ok)}
+.wiz-sum-body dl.tot{background:var(--navy-50);margin:2px -10px;padding:14px 18px;border-radius:10px;align-items:center}
+.wiz-sum-body dl.tot dt{color:var(--ink-head);font-weight:700;font-size:var(--t-20)}
+.wiz-sum-body dl.tot dd{font-size:30px;font-weight:700;color:var(--navy)}
+.sum-who{display:flex;gap:16px;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.sum-who .avatar.lg{width:60px;height:60px;font-size:20px}
+.sum-who b{display:block;font-size:var(--t-20);color:var(--ink-head)}.sum-who small{font-size:var(--t-16);color:var(--mute)}
+.sum-chips{display:grid;grid-template-columns:1fr 1fr;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.sum-chips>div+div{border-left:1px solid var(--line);padding-left:16px}.sum-chips>div:first-child{padding-right:12px}
+.sum-chips h4{margin:0 0 10px;font-size:var(--t-14);font-weight:600}
+.sum-chips p{margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.sum-chips .chip{flex:none;min-width:0;padding:5px 10px;border:0;border-radius:999px;background:var(--surface-2)!important;color:var(--ink-2);font-size:var(--t-13);font-weight:600}
+.sum-chips .chip.is-on{background:var(--navy-50)!important;color:var(--navy)}
+.sum-chips small{display:block;margin-top:10px;color:var(--mute);font-size:var(--t-13)}
+/* selector de estudiante y avisos */
+.pick-seg{display:inline-flex;align-self:flex-start;max-width:100%;border:1px solid var(--field-line);border-radius:var(--r);overflow:hidden}
+.pick-seg>*{min-height:46px;padding:0 40px;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:600;font-size:var(--t-16);border:0;background:var(--surface);color:var(--ink);text-decoration:none;cursor:pointer}
+.pick-seg .is-on{background:var(--navy);color:#fff}.pick-seg a:hover{background:var(--surface-2);color:var(--ink)}
+.pick-search{display:flex;align-items:center;gap:12px;border:1px solid var(--field-line);border-radius:var(--r);padding:0 16px;background:var(--surface)}
+.pick-search svg{width:20px;height:20px;stroke:var(--ink-2);fill:none;stroke-width:2;flex:none}
+.pick-search input{border:0;outline:0;flex:1;min-width:0;font:inherit;font-size:var(--t-16);min-height:48px;background:transparent}
+.pick-search:focus-within{box-shadow:var(--focus)}
+.pick-card{display:flex;align-items:center;gap:14px 16px;padding:14px 22px;background:var(--navy-50);border-radius:10px;flex-wrap:wrap}
+.pick-card .avatar.lg{width:52px;height:52px;font-size:18px;background:#D5E1F7}
+.pick-who{padding-right:24px;border-right:1px solid #C9D3E6}.pick-who b{display:block;font-size:var(--t-16)}.pick-who small{color:var(--mute);font-size:var(--t-14)}
+.pick-ok{display:inline-flex;align-items:center;gap:10px;color:var(--ok);font-weight:500}
+.pick-ok svg{width:28px;height:28px;padding:6px;border-radius:50%;background:#D7EEDF;stroke:var(--ok);fill:none;stroke-width:3}
+.pick-change{margin-left:auto;background:none;border:0;color:var(--navy);font:inherit;font-weight:600;cursor:pointer;min-height:44px;padding:0 4px}
+.info-line{display:flex;align-items:center;gap:12px;margin:0;padding:12px 18px;border-radius:10px;background:var(--navy-50);color:var(--ink-2)}
+.info-line svg{width:22px;height:22px;flex:none;stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round}
+.more-fields{border-top:1px solid var(--line);padding-top:6px}.more-fields>summary{cursor:pointer;color:var(--navy);font-weight:600;min-height:44px;display:flex;align-items:center}
+.more-fields[open]>summary{margin-bottom:12px}
+/* pie de formulario */
+.form-foot{padding:14px 32px;gap:12px}
+.form-foot .btn{min-height:48px;font-size:var(--t-16)}
+.form-foot .btn-ghost{order:-1}
+.form-foot .wiz-prev{order:9;margin-left:auto}.form-foot .wiz-prev:not([hidden])~.btn-primary{margin-left:0}
+.form-foot .btn-primary{padding:0 26px}
+@media (max-width:1360px){.stepper li:not([aria-current]) .s-t{display:none}.stepper button{padding-right:4px}.stepper li[aria-current=step] button{padding-right:18px}}
+@media (max-width:1180px){.wizard{grid-template-columns:minmax(0,1fr)}.wiz-summary>summary{padding:16px 20px}.wiz-sum-body{padding:4px 20px 20px}}
+@media (max-width:600px){.stepper{display:none}.stepper.is-open{display:flex;flex-direction:column;align-items:stretch;gap:6px}.stepper.is-open li::after{display:none}.stepper.is-open .s-t{display:inline!important}.page-head h1{font-size:24px}.wiz-step{padding:18px}.wiz-step>h3{font-size:var(--t-20)}.card{padding:18px}
+  .pick-seg{display:flex}.pick-seg>*{flex:1;padding:0 8px;font-size:var(--t-14);white-space:nowrap}.pick-who{border-right:0;padding-right:0}.pick-card{padding:14px}
+  .sum-chips{grid-template-columns:1fr;gap:14px}.sum-chips>div+div{border-left:0;padding-left:0}
+  .form-foot .btn-ghost{order:20}.form-foot .btn{white-space:normal;text-align:center;line-height:1.25;padding-top:8px;padding-bottom:8px}.wiz-saved{font-size:var(--t-13)}}
 '''
 open(os.path.join(ROOT,"style.css"),"w").write(css)
 open(os.path.join(ROOT,".nojekyll"),"w").write("")
