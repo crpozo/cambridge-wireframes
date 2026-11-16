@@ -78,7 +78,7 @@ details.nav-group+details.nav-group{border-top:1px solid var(--line);margin-top:
 .user-pop a{color:var(--ink);text-decoration:none;padding:10px 8px;border-radius:var(--r)}.user-pop a:hover{background:var(--surface-2)}.user-pop-foot{font-size:var(--t-12);color:var(--mute);padding:6px 8px 0;border-top:1px solid var(--line)}
 .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--navy-50);color:var(--navy);font-weight:600;flex:none}
 .avatar.sm{width:32px;height:32px;font-size:var(--t-13)}.avatar.lg{width:72px;height:72px;font-size:24px}
-.main{padding:24px 32px 120px;display:flex;flex-direction:column;gap:32px;min-width:0;width:100%;max-width:1344px}
+.main{padding:24px 32px 120px;display:flex;flex-direction:column;gap:32px;min-width:0;width:100%}
 .page-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}.page-head>div:first-child{flex:1 1 360px;min-width:0}
 .page-head h1{margin:0;font-family:var(--font-display);font-size:var(--t-24);font-weight:600;letter-spacing:-.01em;color:var(--ink)}
 .page-head p{margin:4px 0 0;color:var(--mute);font-size:var(--t-14);max-width:760px}
@@ -483,7 +483,14 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .portal-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 32px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 .portal-top img{height:36px;display:block}.portal-title{display:flex;flex-direction:column;min-width:0}.portal-title b{font-size:var(--t-16);font-family:var(--font-display)}.portal-title small{font-size:var(--t-13);color:var(--mute)}
 .portal-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:var(--t-14);flex-wrap:wrap;min-width:0}.portal-user span{display:flex;flex-direction:column;line-height:1.25}.portal-user small{color:var(--mute);font-size:var(--t-13)}
-.portal-main{max-width:1180px;margin:0 auto;padding:24px 32px 80px;display:flex;flex-direction:column;gap:32px}
+.portal-main{padding:24px 32px 80px;display:flex;flex-direction:column;gap:24px}
+.dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
+.dash-cell{min-width:0;display:flex;flex-direction:column}.dash-cell>.card{flex:1}
+.dash-cell.s3{grid-column:span 3}.dash-cell.s4{grid-column:span 4}.dash-cell.s5{grid-column:span 5}.dash-cell.s6{grid-column:span 6}.dash-cell.s8{grid-column:span 8}
+.dash-next{justify-content:center;gap:8px}.dash-big{margin:0;font-family:var(--font-display);font-size:var(--t-24);font-weight:600;color:var(--navy)}.dash-sub{margin:0;color:var(--mute);font-size:var(--t-14)}
+.level-inline{font-size:var(--t-24)!important;line-height:1}
+@media (max-width:1100px){.dash-cell.s3,.dash-cell.s4,.dash-cell.s5{grid-column:span 6}.dash-cell.s8{grid-column:span 12}}
+@media (max-width:700px){.dash-cell{grid-column:span 12!important}.portal-main{padding:16px 16px 80px}}
 .section-title{margin:0;font-size:var(--t-16);font-weight:600}
 
 /* entrega digital de libros */

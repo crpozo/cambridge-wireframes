@@ -900,6 +900,8 @@ SVG.update({
 })
 import unicodedata as _ud
 _TAB_ICO=[
+ (r"^inicio$","home"),
+ (r"^asistencia","cal"),
  (r"resumen|panorama|indicadores|hoy y|vista general","grid"),
  (r"lista de espera|espera","hourglass"),
  (r"indexad","userplus"),
@@ -2158,28 +2160,23 @@ login=f'''<div class="auth">
 page("Main.html","Login",login,"Login")
 # 1b Portal del estudiante (propuesta fuera del alcance contractual)
 portal_route=route([("A1",2,"done","módulos 1–2 · nota 80 · certificado"),("A2",4,"done","módulos 3–6 · nota 85 · certificado"),("B1",2,"now","módulos 7–8 · 60% del nivel",60),("B1+",2,"paid","módulos 9–10"),("B2",4,"todo","módulos 11–14"),("C1",2,"todo","módulos 15–16")])
+def _dc(span, html): return f'<div class="dash-cell {span}">{html}</div>'
+_portal_dash=(kpis([("Nivel actual",'<span class="level-big level-inline">B1</span>',"módulo 7 de 16 · 41% del programa"),("Asistencia","92%","mínimo 75% para certificar"),("Promedio","83 / 100","2 certificados emitidos"),("Saldo","$0","todo al día")])
+ +'<div class="dash">'
+ +_dc("s4",'<section class="card next-class dash-next" aria-label="Próxima clase"><span class="sum-label">Próxima clase</span><span class="nc-when">Hoy 19:00</span><span>Zoom 2 · P. Gómez · B1 módulo 7</span>'+btn("Unirse a la clase",None,True)+'</section>')
+ +_dc("s5",card("Mi curso actual",'<dl class="facts"><div class="fact"><dt>Curso</dt><dd>English for Adults B1 Virtual</dd></div><div class="fact"><dt>Horario</dt><dd>Lu-Ma-Mi-Ju 19:00–21:00</dd></div><div class="fact"><dt>Profesor</dt><dd>P. Gómez</dd></div><div class="fact"><dt>Asesor</dt><dd>Carla M. · 099 000 0010</dd></div></dl>'+progress(60,"Avance del nivel B1 · termina el 20 nov")))
+ +_dc("s3",card("Tu siguiente paso",'<p class="dash-big">Módulo 8</p><p class="dash-sub">inicia 3 nov · mismo grupo · ya pagado</p>'+btn("Confirmar mi cupo")+'<a href="#tab-mis-cursos" class="row-link">Ver rematrícula <span class="chev" aria-hidden="true"></span></a>'))
+ +_dc("s8",card("Mi ruta de niveles",portal_route+'<div class="stat-line"><div><span>Horas cursadas</span><b>130 h</b></div><div><span>Módulos aprobados</span><b>6 de 16</b></div><div><span>Pagados hasta</span><b>módulo 10</b></div><div><span>Certificados</span><b>A1 · A2</b></div></div>',extra='<a href="#tab-notas-y-certificados" class="row-link">Notas y certificados <span class="chev" aria-hidden="true"></span></a>'))
+ +_dc("s4",card("Esta semana",'<div class="hours"><b>6</b><span>horas</span><b>30</b><span>min</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"Clase":[2,2,2,2,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=110),extra='<a href="#tab-asistencia" class="row-link">Asistencia <span class="chev" aria-hidden="true"></span></a>'))
+ +_dc("s6",card("Últimas notas",table(["Evaluación","Fecha","Nota"],[["Quiz 4 · módulo 7","20 oct","8.8"],["Participación · semana 7","17 oct","9.0"],["Quiz 3 · módulo 7","13 oct","7.9"]],wide=0)))
+ +_dc("s6",card("Pagos",kv(("Saldo pendiente","$0 · todo al día"),("Módulos comprados","7 a 10 · B1 y B1+"),("Próximo pago","al rematricularte en B2 · $250"))+row(btn("Pagar en línea")),extra='<a href="#tab-pagos-y-facturas" class="row-link">Facturas <span class="chev" aria-hidden="true"></span></a>'))
+ +'</div>')
 portal=f'''<div class="portal">
 <header class="portal-top"><a href="PortalEstudiante.html"><img src="assets/logo.webp" alt="Cambridge School of Languages"></a><div class="portal-title"><b>Portal del estudiante</b><small>{badge("Propuesta · fuera del alcance del contrato actual")}</small></div>
  <div class="portal-user">{avatar("MA","sm")}<span>Hola, María<small>EST-00412 · Quito</small></span><a href="Main.html" class="btn btn-ghost">Cerrar sesión</a></div></header>
 <main class="portal-main">
- <section class="card" aria-labelledby="mi-progreso">
-  <div class="prog-top">
-   <div>
-    <h2 id="mi-progreso" class="section-title">Mi progreso general</h2>
-    <div class="prog-who"><span class="level-big">B1</span><span><b>English for Adults (ESL)</b><br><span class="p-prog">módulo 7 de 16 · 41% del programa</span></span></div>
-    {portal_route}
-    <div class="stat-line"><div><span>Horas cursadas</span><b>130 h</b></div><div><span>Asistencia general</span><b>92%</b></div><div><span>Promedio</span><b>83 / 100</b></div><div><span>Certificados</span><b>2</b></div></div>
-   </div>
-   <aside class="next-class" aria-label="Próxima clase"><span class="sum-label">Próxima clase</span><span class="nc-when">Hoy 19:00</span><span>Zoom 2 · P. Gómez · B1 módulo 7</span>{btn("Unirse a la clase",None,True)}</aside>
-  </div>
- </section>
- <section class="card" aria-labelledby="mi-curso">
-  <div class="card-head"><h2 id="mi-curso">Mi curso actual</h2>{btn("Escribir a mi asesor")}</div>
-  <dl class="facts"><div class="fact"><dt>Curso</dt><dd>English for Adults B1 Virtual</dd></div><div class="fact"><dt>Horario</dt><dd>Lu-Ma-Mi-Ju 19:00–21:00</dd></div><div class="fact"><dt>Profesor</dt><dd>P. Gómez</dd></div><div class="fact"><dt>Módulo</dt><dd>7 de 16 · nivel B1</dd></div><div class="fact"><dt>Asesor</dt><dd>Carla M. · 099 000 0010</dd></div></dl>
-  {progress(60,"Avance del nivel B1 · 22 de 36 h · termina el 20 nov")}
-  {kpis([("Asistencia del curso","90%","mínimo 75% para el certificado"),("Puntaje","84 / 100","participación, quiz y examen")])}
- </section>
- {tabs(["Mis cursos","Asistencia","Notas y certificados","Pagos y facturas","Mis datos"],"Mis cursos",panels={
+ {tabs(["Inicio","Mis cursos","Asistencia","Notas y certificados","Pagos y facturas","Mis datos"],"Inicio",panels={
+  "Inicio": _portal_dash,
   "Mis cursos": card("Mi siguiente módulo",
      '<p style="margin:0"><b>Módulo 8</b> · inicia 3 nov · mismo grupo <span class="mono">0001-2026-0767</span> · P. Gómez</p>'
      +'<ul class="checklist"><li>'+CHECK+'Avance en el Muro: 100% del módulo 7</li><li>'+CHECK+'Nota 8.4 / 10 (mínimo 7)</li><li>'+CHECK+'Pago incluido en tu compra de los módulos 7 a 10</li></ul>'
@@ -4309,7 +4306,7 @@ details.nav-group+details.nav-group{border-top:1px solid var(--line);margin-top:
 .user-pop a{color:var(--ink);text-decoration:none;padding:10px 8px;border-radius:var(--r)}.user-pop a:hover{background:var(--surface-2)}.user-pop-foot{font-size:var(--t-12);color:var(--mute);padding:6px 8px 0;border-top:1px solid var(--line)}
 .avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--navy-50);color:var(--navy);font-weight:600;flex:none}
 .avatar.sm{width:32px;height:32px;font-size:var(--t-13)}.avatar.lg{width:72px;height:72px;font-size:24px}
-.main{padding:24px 32px 120px;display:flex;flex-direction:column;gap:32px;min-width:0;width:100%;max-width:1344px}
+.main{padding:24px 32px 120px;display:flex;flex-direction:column;gap:32px;min-width:0;width:100%}
 .page-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}.page-head>div:first-child{flex:1 1 360px;min-width:0}
 .page-head h1{margin:0;font-family:var(--font-display);font-size:var(--t-24);font-weight:600;letter-spacing:-.01em;color:var(--ink)}
 .page-head p{margin:4px 0 0;color:var(--mute);font-size:var(--t-14);max-width:760px}
@@ -4714,7 +4711,14 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .portal-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 32px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 .portal-top img{height:36px;display:block}.portal-title{display:flex;flex-direction:column;min-width:0}.portal-title b{font-size:var(--t-16);font-family:var(--font-display)}.portal-title small{font-size:var(--t-13);color:var(--mute)}
 .portal-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:var(--t-14);flex-wrap:wrap;min-width:0}.portal-user span{display:flex;flex-direction:column;line-height:1.25}.portal-user small{color:var(--mute);font-size:var(--t-13)}
-.portal-main{max-width:1180px;margin:0 auto;padding:24px 32px 80px;display:flex;flex-direction:column;gap:32px}
+.portal-main{padding:24px 32px 80px;display:flex;flex-direction:column;gap:24px}
+.dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
+.dash-cell{min-width:0;display:flex;flex-direction:column}.dash-cell>.card{flex:1}
+.dash-cell.s3{grid-column:span 3}.dash-cell.s4{grid-column:span 4}.dash-cell.s5{grid-column:span 5}.dash-cell.s6{grid-column:span 6}.dash-cell.s8{grid-column:span 8}
+.dash-next{justify-content:center;gap:8px}.dash-big{margin:0;font-family:var(--font-display);font-size:var(--t-24);font-weight:600;color:var(--navy)}.dash-sub{margin:0;color:var(--mute);font-size:var(--t-14)}
+.level-inline{font-size:var(--t-24)!important;line-height:1}
+@media (max-width:1100px){.dash-cell.s3,.dash-cell.s4,.dash-cell.s5{grid-column:span 6}.dash-cell.s8{grid-column:span 12}}
+@media (max-width:700px){.dash-cell{grid-column:span 12!important}.portal-main{padding:16px 16px 80px}}
 .section-title{margin:0;font-size:var(--t-16);font-weight:600}
 
 /* entrega digital de libros */
