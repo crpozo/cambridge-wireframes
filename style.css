@@ -56,7 +56,7 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .hm-hero{position:relative;overflow:hidden;border-radius:14px;background:linear-gradient(120deg,#10214A 0%,#1D3F8F 70%,#2E57C2 100%);color:#fff;padding:28px 32px;display:flex;align-items:center;gap:20px;min-height:150px}
 .hm-hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#C8202F 0 33%,#fff 33% 66%,#8FB0F5 66%)}
 .hm-photo{position:absolute;top:0;right:0;bottom:0;width:54%;background:url(assets/home-banner.jpg) right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 38%);mask-image:linear-gradient(90deg,transparent 0,#000 38%)}
-.hm-photo::after,.hm-promo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(16,33,74,.22),rgba(16,33,74,.22)),radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px) 0 0/3px 3px}
+.hm-photo::after,.hm-promo::after{content:"";position:absolute;inset:0;pointer-events:none;background:rgba(16,33,74,.12)}
 .hm-promo-tx{z-index:1}.hm-promo::after{left:40%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 40%);mask-image:linear-gradient(90deg,transparent 0,#000 40%)}
 .hm-hero-tx{position:relative;display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
 .hm-hero h2{margin:0;font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.01em}
