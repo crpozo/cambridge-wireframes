@@ -881,6 +881,58 @@ SVG={
  "edit":"<path d='M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4z'/>",
  "chat":"<path d='M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-4.6A8 8 0 1 1 21 12z'/>",
 }
+# íconos de las pestañas (mismo trazo que el menú lateral)
+SVG.update({
+ "grid":'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+ "steps":'<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17"/>',
+ "hourglass":'<path d="M7 3h10M7 21h10M8 3v3.5L12 12l-4 5.5V21M16 3v3.5L12 12l4 5.5V21"/>',
+ "receipt":'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+ "card":'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
+ "percent":'<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+ "target":'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+ "funnel":'<path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/>',
+ "history":'<path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5M12 7.5V12l3 2"/>',
+ "alert":'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.5h.01"/>',
+ "trash":'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+ "shield":'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ "userplus":'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5M19 8v6M16 11h6"/>',
+ "list":'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+})
+import unicodedata as _ud
+_TAB_ICO=[
+ (r"resumen|panorama|indicadores|hoy y|vista general","grid"),
+ (r"lista de espera|espera","hourglass"),
+ (r"indexad","userplus"),
+ (r"profesor|docente|teacher","grad"),
+ (r"seguimiento diario|calendario|horario|semana|sesion|agenda","cal"),
+ (r"seguimiento|etapa|flujo|proceso|paso|ciclo|hoja de ruta","steps"),
+ (r"historial|movimiento|log|bitacora|auditoria","history"),
+ (r"alerta|riesgo|rechaz|vencid|por validar|retenid","alert"),
+ (r"papelera|anulad|eliminad","trash"),
+ (r"factura|nota de credito|ride|sri|envio","receipt"),
+ (r"pago|cobro|caja|transferencia|link|cartera|conciliacion|tarjeta|datafono","card"),
+ (r"comision|descuento|tarifa|pay scale|precio","percent"),
+ (r"meta","target"),
+ (r"origen|embudo|lead|conversion|kommo","funnel"),
+ (r"kpi|matriz|consolidado|reporte|grafico|tablero|capacidad|ocupacion|desempeno|rendimiento|metric","chart"),
+ (r"aprobac|rol|usuario|permiso|acceso|seguridad","shield"),
+ (r"reapertura|rematric|continuidad|cambio|traslado","swap"),
+ (r"examen|certific|logro","medal"),
+ (r"venta|ingreso","trend"),
+ (r"estudiante|candidat|matriculad|grupo|asesor|equipo|empleado|personal","users"),
+ (r"inventario|stock|libro|producto|pedido|mercader|activo|codigo|entrega","box"),
+ (r"nivel|credito|programa|curso|modulo|clase","book"),
+ (r"archivo|documento|contrato|plantilla|condicion","doc"),
+ (r"configura|regla|parametro|integracion|automatiz|ajuste","cog"),
+ (r"correo|mensaje|notific|whatsapp|chat","chat"),
+ (r"dato|ficha|perfil|cliente|empresa|contacto","id"),
+ (r"lista|todas|todos|listado","list"),
+]
+def tab_ico(label):
+    t=_ud.normalize("NFKD",re.sub(r"<[^>]+>","",str(label))).encode("ascii","ignore").decode().lower()
+    for pat,name in _TAB_ICO:
+        if re.search(pat,t): return ico(name,"t-ico")
+    return ico("doc","t-ico")
 def ico(name, cls="nav-ico"):
     return f'<span class="{cls}" aria-hidden="true"><svg viewBox="0 0 24 24">{SVG.get(name,"")}</svg></span>'
 ICON={"Contratación":"id","Reclutamiento":"users","Tienda en línea":"box","Tablero comercial":"chart","Exámenes":"medal","Programas":"grad","Leads":"trend","Empresas":"id","Insights de IA":"spark","Inicio":"home","Estudiantes":"users","Cursos":"book","Sesiones":"cal","Profesores":"grad","Nueva matrícula":"plus","Facturación":"doc","Comisiones":"coin","Aprobaciones":"check","Stock por sede":"box","Entregas de libros":"check","Rematrícula":"swap","Movimientos y pedidos":"swap","Reportes":"chart","Dashboard ejecutivo":"trend","Usuarios y roles":"lock","Configuración":"cog","Audit log":"compass","Integraciones":"plug","Automatizaciones":"cog"}
@@ -1174,8 +1226,8 @@ def tabs(items, active, panels=None, roles=None, maxvis=5, counts=None):
     for t in items:
         label,href = t if isinstance(t,tuple) else (t,None); on=label==active
         rl=f' data-roles="{roles[label]}"' if label in roles else ""
-        if href: btns.append((label,f'<a href="{href}" role="tab"{rl} class="tab{" on" if on else ""}"{" aria-selected=\"true\"" if on else ""}>{label}</a>'))
-        else: btns.append((label,f'<button type="button" role="tab" id="tab-{_slug(label)}" data-tab="{label}"{rl} aria-selected="{"true" if on else "false"}" tabindex="{"0" if on else "-1"}" class="tab{" on" if on else ""}">{label}{(" "+count(counts[label])) if label in counts else ""}</button>'))
+        if href: btns.append((label,f'<a href="{href}" role="tab"{rl} class="tab{" on" if on else ""}"{" aria-selected=\"true\"" if on else ""}>{tab_ico(label)}{label}</a>'))
+        else: btns.append((label,f'<button type="button" role="tab" id="tab-{_slug(label)}" data-tab="{label}"{rl} aria-selected="{"true" if on else "false"}" tabindex="{"0" if on else "-1"}" class="tab{" on" if on else ""}">{tab_ico(label)}{label}{(" "+count(counts[label])) if label in counts else ""}</button>'))
     bar="".join(b for _,b in btns[:maxvis])
     if len(btns)>maxvis:
         i=_nid(); act_in=[l for l,_ in btns[maxvis:] if l==active]
@@ -4220,6 +4272,9 @@ h1,h2,h3,h4{font-weight:600;line-height:var(--lh-tight)}
 .nav-ico{width:18px;height:18px;flex:none;display:inline-flex}.nav-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sidebar-more{position:absolute;left:0;right:0;bottom:0;height:56px;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 70%);opacity:0;transition:opacity var(--dur-2);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:var(--t-12);color:var(--mute)}.sidebar-more::after{content:"Más opciones"}.sidebar.has-more .sidebar-more{opacity:1}
 .sidebar-sede{display:none}
+.tab .t-ico{display:inline-flex;width:16px;height:16px;flex:none;margin-right:8px;opacity:.75}.tab .t-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab.on .t-ico,.tab[aria-selected=true] .t-ico{opacity:1}
+.tab{display:inline-flex;align-items:center}
 .sidebar.has-more nav{padding-bottom:48px}
 .nav-find{display:flex;align-items:center;gap:8px;margin:0 2px 8px;padding:0 10px;height:36px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);color:var(--mute);flex:none}
 .nav-find .nav-ico,.nav-find .nav-ico svg{width:16px;height:16px}
