@@ -329,6 +329,7 @@ def page(fname, title, inner, lang_title):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="assets/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <title>{lang_title} · Wireframes Plataforma Cambridge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
 <link rel="stylesheet" href="style.css">
@@ -4220,6 +4221,7 @@ idx=f'''<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="assets/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <title>Wireframes Plataforma Cambridge</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
@@ -4235,7 +4237,7 @@ idx=f'''<!doctype html>
 </html>'''
 open(os.path.join(ROOT,"Mapa.html"),"w").write(idx)
 open(os.path.join(ROOT,"index.html"),"w").write('''<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=Main.html"><title>Plataforma Cambridge</title><link rel="canonical" href="Main.html"></head>
+<html lang="es"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=Main.html"><title>Plataforma Cambridge</title><link rel="icon" href="assets/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png"><link rel="canonical" href="Main.html"></head>
 <body style="font-family:sans-serif;padding:24px">Abriendo la plataforma… <a href="Main.html">Entrar</a></body></html>''')
 css='''*{box-sizing:border-box}
 :root{
