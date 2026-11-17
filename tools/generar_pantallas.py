@@ -330,15 +330,23 @@ def _list_panels(html):
         i=html.find(key,pos)
         if i<0: out.append(html[pos:]);break
         e=_div_end(html,i)
-        rest=html[e:];ws=len(rest)-len(rest.lstrip())
-        if e<0 or not rest.lstrip().startswith('<div class="tbl-wrap"'):
-            out.append(html[pos:e if e>0 else i+len(key)]);pos=e if e>0 else i+len(key);continue
-        t=e+ws;te=_div_end(html,t)
+        if e<0: out.append(html[pos:i+len(key)]);pos=i+len(key);continue
+        # franjas de cifras entre los filtros y la tabla: suben encima del panel
+        j=e;moved=[]
+        while True:
+            r=html[j:];k=j+len(r)-len(r.lstrip());r=r.lstrip()
+            if r.startswith('<div class="summary"') or (r.startswith('<div data-roles=') and re.match(r'<div data-roles="[^"]*" style="display:contents"><div class="summary"',r)):
+                ke=_div_end(html,k);moved.append(html[k:ke]);j=ke
+            else: break
+        rest=html[j:];ws=len(rest)-len(rest.lstrip())
+        if not rest.lstrip().startswith('<div class="tbl-wrap"'):
+            out.append(html[pos:e]);pos=e;continue
+        t=j+ws;te=_div_end(html,t)
         rest2=html[te:];ws2=len(rest2)-len(rest2.lstrip())
         pe=te
         if rest2.lstrip().startswith('<div class="wf-pager'):
             pe=_div_end(html,te+ws2)
-        out.append(html[pos:i]+'<section class="list-panel">'+html[i:pe]+'</section>');pos=pe
+        out.append(html[pos:i]+"".join(moved)+'<section class="list-panel">'+html[i:e]+html[t:pe]+'</section>');pos=pe
     return "".join(out)
 def page(fname, title, inner, lang_title):
     inner=_list_panels(inner)
@@ -1539,7 +1547,12 @@ def row(*cells, gap=16):
     return f'<div class="row" style="gap:{gap}px">'+"".join(cells)+'</div>'
 def foot(*buttons):
     """Pie de formulario fijo abajo: acción principal primero, luego secundarias."""
-    return '<div class="form-foot">'+"".join(buttons)+'</div>'
+    def _tert(b):
+        # Cancelar / Salir sin guardar: acción terciaria, como enlace a la izquierda (referencia Nueva matrícula)
+        if re.search(r'>(Cancelar|Salir sin guardar|Volver)<',b) and 'btn-primary' not in b and 'btn-ghost' not in b:
+            b=re.sub(r'class="btn(?=[ "])','class="btn btn-ghost',b,count=1)
+        return b
+    return '<div class="form-foot">'+"".join(_tert(b) for b in buttons)+'</div>'
 def stack(*parts):
     """Bloques a todo el ancho, uno debajo del otro (cuando una columna puede quedar vacía según el rol)."""
     return "".join(p for p in parts if isinstance(p,str))
@@ -3259,7 +3272,7 @@ page("Reportes.html","Reportes",rep,"Reportes y dashboards")
 # 13 Usuarios y roles
 page("Usuarios.html","Usuarios",shell("Usuarios y roles","Usuarios y roles",
  filters(search("Buscar","Nombre o email",w="260px"),sel("Rol",["Todos","Administrador General","Gerente General","Director Comercial","Administrador de Sucursal","Coordinador Académico","Asesor Comercial","Secretaría","Profesor (consulta)"],w="220px"),sel("Estado",["Todos","Activo","Inactivo"],w="130px"),actions=btn("Nuevo usuario",None,True)),
- ltable("usuarios",["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Diego R.","Asesor Comercial","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Sofía L.","Asesor Comercial","Ambato","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Dir. Comercial","Director Comercial","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Secretaría Ambato","Secretaría","Ambato","Inactivo",'<a href="NuevoUsuario.html">Editar</a>'],["Admin. Sucursal Valle","Administrador de Sucursal","Valle","Activo",'<a href="NuevoUsuario.html">Editar</a>'],["Gerencia","Gerente General","Todas","Activo",'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
+ ltable("usuarios",["Usuario","Rol","Sedes visibles","Estado","Acción"],[["Estefanía","Administrador General","Todas",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Carla M.","Asesor Comercial","Quito",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Coord. Académica","Coordinador Académico","Valle",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["P. Gómez","Profesor (consulta)","Quito",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Diego R.","Asesor Comercial","Valle",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Sofía L.","Asesor Comercial","Ambato",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Dir. Comercial","Director Comercial","Todas",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Secretaría Ambato","Secretaría","Ambato",badge("Inactivo","neutral"),'<a href="NuevoUsuario.html">Editar</a>'],["Admin. Sucursal Valle","Administrador de Sucursal","Valle",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>'],["Gerencia","Gerente General","Todas",badge("Activo","ok"),'<a href="NuevoUsuario.html">Editar</a>']],sede=2),
  note("Los empleados de TeamDesk (tabla Employees: p. ej. 'Administrador de Sucursal') se migran como usuarios con rol; los datos personales del empleado (cédula, teléfono, cumpleaños) quedan en su ficha de usuario, no en una tabla aparte."),
  card("Matriz de permisos por rol", table(["Acción","Admin General","Gerente","Dir. Comercial","Admin. Sucursal","Coord. Académica","Asesor","Secretaría"],[["Crear estudiante / matrícula","✓","—","✓","✓","—","✓","✓"],["Aplicar descuento >10%","✓","—","✓","—","—","—","—"],["Aprobar profesor","✓","✓","✓","—","—","—","—"],["Calificar curso (pass/fail)","✓","—","—","—","✓","—","—"],["Aprobar payment sheet","✓","✓","—","✓","—","—","—"],["Exportar base completa","✓","—","—","—","—","—","—"],["Ver otras sedes","✓","✓","✓","—","—","—","—"],["Dashboard ejecutivo","✓","✓","✓","—","—","—","—"]])),
  subtitle="RBAC: roles, permisos por acción y visibilidad multi-sede"),"Usuarios y roles")
@@ -5206,7 +5219,8 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .btn .arr{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* asistente */
 .wizard{grid-template-columns:minmax(0,1fr) 340px;gap:24px}
-@media (max-width:1360px){.wizard{grid-template-columns:minmax(0,1fr) 300px;gap:20px}}
+.wizard:not(.has-sum){grid-template-columns:minmax(0,1fr)}
+@media (max-width:1360px){.wizard.has-sum{grid-template-columns:minmax(0,1fr) 300px;gap:20px}}
 .wiz-head{grid-column:1/-1}
 .stepper{display:flex;align-items:center}
 .stepper li{flex:0 0 auto;display:flex;align-items:center}
@@ -5265,6 +5279,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .more-fields[open]>summary{margin-bottom:12px}
 /* pie de formulario */
 .form-foot{padding:12px 32px;gap:8px}
+.main:has(.form-foot){min-height:calc(100vh - 60px)}.main>.form-foot{margin-top:auto}
 .form-foot .btn{min-height:var(--hit);font-size:var(--t-14)}
 .form-foot .btn-ghost{order:-1}
 .form-foot .wiz-prev{order:9;margin-left:auto}.form-foot .wiz-prev:not([hidden])~.btn-primary{margin-left:0}
@@ -5272,7 +5287,9 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 /* listados y bloques comunes con el mismo acabado de Nueva matrícula */
 .main{gap:24px}
 .list-panel{background:var(--surface);border:1px solid #E6E8EC;border-radius:12px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-width:0}
-.list-panel>.wf-filters{padding:16px 20px;border-bottom:1px solid var(--line);gap:10px 12px}
+.wf-filters{background:var(--surface);border:1px solid #E6E8EC;border-radius:12px;box-shadow:var(--shadow-card);padding:16px 20px;gap:10px 12px}
+.list-panel>.wf-filters{border:0;border-bottom:1px solid var(--line);border-radius:12px 12px 0 0;box-shadow:none}
+.wf-filters .field label{font-size:var(--t-12);font-weight:600;color:var(--ink-2)}
 .list-panel>.tbl-wrap{border:0;border-radius:0 0 12px 12px;box-shadow:none;background:transparent}
 .list-panel>.wf-pager{padding:10px 20px;border-top:1px solid var(--line);margin:0}
 .list-panel .wf-filters .field label,.list-panel .wf-filters>label{font-size:var(--t-12);font-weight:600;color:var(--ink-2)}
