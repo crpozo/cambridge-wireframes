@@ -316,7 +316,32 @@ def analizar_pantalla(title, inner):
     return " ".join(out)
 AI_DEFAULT=[("¿Qué puedo hacer en esta pantalla?","Te explico lo que ves aquí y qué acciones tienes según tu rol. También puedo buscar un estudiante, curso o profesor por nombre o código."),("¿Hay algo pendiente que deba revisar?","Reviso aprobaciones, sesiones sin confirmar, saldos y alertas de inventario relacionados con esta pantalla y te digo qué es urgente.")]
 
+def _div_end(s, i):
+    """Índice justo después del </div> que cierra el <div que empieza en i."""
+    d=0
+    for m in re.finditer(r'<div\b|</div>', s[i:]):
+        d+=1 if m.group()!='</div>' else -1
+        if d==0: return i+m.end()
+    return -1
+def _list_panels(html):
+    """Listados: barra de filtros + tabla + paginador quedan en un solo panel blanco (como la tarjeta de Nueva matrícula)."""
+    out=[];pos=0;key='<div class="wf-filters filters"'
+    while True:
+        i=html.find(key,pos)
+        if i<0: out.append(html[pos:]);break
+        e=_div_end(html,i)
+        rest=html[e:];ws=len(rest)-len(rest.lstrip())
+        if e<0 or not rest.lstrip().startswith('<div class="tbl-wrap"'):
+            out.append(html[pos:e if e>0 else i+len(key)]);pos=e if e>0 else i+len(key);continue
+        t=e+ws;te=_div_end(html,t)
+        rest2=html[te:];ws2=len(rest2)-len(rest2.lstrip())
+        pe=te
+        if rest2.lstrip().startswith('<div class="wf-pager'):
+            pe=_div_end(html,te+ws2)
+        out.append(html[pos:i]+'<section class="list-panel">'+html[i:pe]+'</section>');pos=pe
+    return "".join(out)
 def page(fname, title, inner, lang_title):
+    inner=_list_panels(inner)
     fab='' if fname in NO_FAB else f'''<button type="button" class="ai-fab" id="ai-fab" aria-label="Abrir asistente">{ico("spark","nav-ico")}<span class="ai-fab-dot"></span></button>
 <aside class="ai-panel" id="ai-panel" hidden aria-label="Asistente">
   <div class="ai-panel-head"><span class="ai-spark">{ico("spark","nav-ico")}</span><div><b>Asistente Cambridge</b><small>Estás en: <span id="ai-ctx">{lang_title}</span></small></div><button type="button" class="icon-btn" id="ai-close" aria-label="Cerrar">×</button></div>
@@ -5244,6 +5269,22 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .form-foot .btn-ghost{order:-1}
 .form-foot .wiz-prev{order:9;margin-left:auto}.form-foot .wiz-prev:not([hidden])~.btn-primary{margin-left:0}
 .form-foot .btn-primary{padding:0 20px}
+/* listados y bloques comunes con el mismo acabado de Nueva matrícula */
+.main{gap:24px}
+.list-panel{background:var(--surface);border:1px solid #E6E8EC;border-radius:12px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-width:0}
+.list-panel>.wf-filters{padding:16px 20px;border-bottom:1px solid var(--line);gap:10px 12px}
+.list-panel>.tbl-wrap{border:0;border-radius:0 0 12px 12px;box-shadow:none;background:transparent}
+.list-panel>.wf-pager{padding:10px 20px;border-top:1px solid var(--line);margin:0}
+.list-panel .wf-filters .field label,.list-panel .wf-filters>label{font-size:var(--t-12);font-weight:600;color:var(--ink-2)}
+.tbl-wrap{border-radius:12px;border-color:#E6E8EC;box-shadow:var(--shadow-card)}
+.wf-table .th{font-size:11px;letter-spacing:.04em;color:var(--mute);background:#FAFAF9}
+.summary{border-radius:12px;border-color:#E6E8EC;box-shadow:var(--shadow-card)}
+.sum-item{padding:14px 18px}
+.sum-item b,.sum-item strong{color:var(--ink-head)}
+.hero{gap:14px}
+.tabs{margin-bottom:-4px}
+.card .tbl-wrap,.list-panel .tbl-wrap{box-shadow:none}
+.wf-table .btn.kebab{min-height:36px;width:36px;padding:0;border-color:transparent;background:transparent;color:var(--ink-2);font-size:18px}.wf-table .btn.kebab:hover,.wf-table .btn.kebab[aria-expanded=true]{background:var(--surface-2);border-color:var(--line)}
 @media (max-width:1360px){.stepper li:not([aria-current]) .s-t{display:none}.stepper button{padding-right:4px}.stepper li[aria-current=step] button{padding-right:18px}}
 @media (max-width:1180px){.wizard{grid-template-columns:minmax(0,1fr)}.wiz-summary>summary{padding:16px 20px}.wiz-sum-body{padding:4px 20px 20px}}
 @media (max-width:600px){.stepper{display:none}.stepper.is-open{display:flex;flex-direction:column;align-items:stretch;gap:6px}.stepper.is-open li::after{display:none}.stepper.is-open .s-t{display:inline!important}.page-head h1{font-size:var(--t-20)}.wiz-step{padding:16px}.wiz-step>h3{font-size:var(--t-16)}.card{padding:16px}

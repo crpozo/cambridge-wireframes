@@ -895,6 +895,22 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .form-foot .btn-ghost{order:-1}
 .form-foot .wiz-prev{order:9;margin-left:auto}.form-foot .wiz-prev:not([hidden])~.btn-primary{margin-left:0}
 .form-foot .btn-primary{padding:0 20px}
+/* listados y bloques comunes con el mismo acabado de Nueva matrícula */
+.main{gap:24px}
+.list-panel{background:var(--surface);border:1px solid #E6E8EC;border-radius:12px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;min-width:0}
+.list-panel>.wf-filters{padding:16px 20px;border-bottom:1px solid var(--line);gap:10px 12px}
+.list-panel>.tbl-wrap{border:0;border-radius:0 0 12px 12px;box-shadow:none;background:transparent}
+.list-panel>.wf-pager{padding:10px 20px;border-top:1px solid var(--line);margin:0}
+.list-panel .wf-filters .field label,.list-panel .wf-filters>label{font-size:var(--t-12);font-weight:600;color:var(--ink-2)}
+.tbl-wrap{border-radius:12px;border-color:#E6E8EC;box-shadow:var(--shadow-card)}
+.wf-table .th{font-size:11px;letter-spacing:.04em;color:var(--mute);background:#FAFAF9}
+.summary{border-radius:12px;border-color:#E6E8EC;box-shadow:var(--shadow-card)}
+.sum-item{padding:14px 18px}
+.sum-item b,.sum-item strong{color:var(--ink-head)}
+.hero{gap:14px}
+.tabs{margin-bottom:-4px}
+.card .tbl-wrap,.list-panel .tbl-wrap{box-shadow:none}
+.wf-table .btn.kebab{min-height:36px;width:36px;padding:0;border-color:transparent;background:transparent;color:var(--ink-2);font-size:18px}.wf-table .btn.kebab:hover,.wf-table .btn.kebab[aria-expanded=true]{background:var(--surface-2);border-color:var(--line)}
 @media (max-width:1360px){.stepper li:not([aria-current]) .s-t{display:none}.stepper button{padding-right:4px}.stepper li[aria-current=step] button{padding-right:18px}}
 @media (max-width:1180px){.wizard{grid-template-columns:minmax(0,1fr)}.wiz-summary>summary{padding:16px 20px}.wiz-sum-body{padding:4px 20px 20px}}
 @media (max-width:600px){.stepper{display:none}.stepper.is-open{display:flex;flex-direction:column;align-items:stretch;gap:6px}.stepper.is-open li::after{display:none}.stepper.is-open .s-t{display:inline!important}.page-head h1{font-size:var(--t-20)}.wiz-step{padding:16px}.wiz-step>h3{font-size:var(--t-16)}.card{padding:16px}
