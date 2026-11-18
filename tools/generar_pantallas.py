@@ -191,7 +191,7 @@ def btn(label, href=None, primary=False, action=None, next=None):
 HIDDEN=set()  # vacío: Facturación visible. Para ocultar un módulo: {"Facturas.html","DetalleFactura.html","RegistrarPago.html","NotaCredito.html"}
 
 # Tipos de usuario (RBAC). Código → (nombre del rol, usuario de ejemplo)
-ROLES=[("ADM","Administrador General","Estefanía"),("GER","Gerente General","Gerencia"),("DIR","Director Comercial","Dir. Comercial"),("SUC","Administrador de Sucursal","Admin. Valle"),("COO","Coordinador Académico","Coord. Académica"),("ASE","Asesor Comercial","Carla M."),("SEC","Secretaría","Secretaría"),("PRO","Profesor (consulta)","P. Gómez"),("CON","Contabilidad","Contabilidad")]
+ROLES=[("ADM","Administrador General","Estefanía"),("GER","Gerente General","Gerencia"),("DIR","Director Comercial","Dir. Comercial"),("SUC","Administrador de Sucursal","Admin. Valle"),("COO","Coordinador Académico","Coord. Académica"),("ASE","Asesor Comercial","Carla M."),("SEC","Secretaría","Secretaría"),("PRO","Profesor (consulta)","P. Gómez"),("CON","Contabilidad","Contabilidad"),("MKT","Marketing","Marketing")]
 ALL="ADM,GER,DIR,SUC,COO,ASE,SEC,PRO,CON"
 COMERCIAL="ADM,GER,DIR,SUC,ASE,SEC"
 ACADEMICO="ADM,GER,SUC,COO,PRO"
@@ -202,11 +202,11 @@ def only(roles, html, inline=False):
 
 # Menú lateral agrupado por áreas. Cada ítem: (nombre, archivo, roles que lo ven). Un área desaparece si el rol no ve ninguno de sus ítems.
 NAV=[
- ("",[("Inicio","Home.html",ALL)]),
- ("Académico",[("Programas","Programas.html",ALL),("Cursos","Cursos.html",ALL),("Rematrícula","Rematricula.html","ADM,GER,DIR,SUC,SEC"),("Estudiantes","Estudiantes.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO"),("Contratación","ContratacionProfesores.html","ADM,GER,DIR,SUC,COO"),("Exámenes","ExamenesInternacionales.html","ADM,GER,SUC,COO,SEC")]),
- ("Comercial",[("Leads","Leads.html",COMERCIAL),("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Empresas","Empresas.html","ADM,GER,DIR,SUC,ASE"),("Tienda en línea","Pedidos.html",COMERCIAL+",SEC"),("Tablero comercial","TableroComercial.html","ADM,GER,DIR,SUC,ASE,CON"),("Facturación","Facturas.html",COMERCIAL+",CON"),("Comisiones","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
+ ("",[("Inicio","Home.html",ALL+",MKT")]),
+ ("Académico",[("Programas","Programas.html",ALL+",MKT"),("Cursos","Cursos.html",ALL+",MKT"),("Rematrícula","Rematricula.html","ADM,GER,DIR,SUC,SEC"),("Estudiantes","Estudiantes.html",ALL),("Sesiones","Sesiones.html",ACADEMICO+",SEC"),("Profesores","Profesores.html","ADM,GER,DIR,SUC,COO"),("Contratación","ContratacionProfesores.html","ADM,GER,DIR,SUC,COO"),("Exámenes","ExamenesInternacionales.html","ADM,GER,SUC,COO,SEC")]),
+ ("Comercial",[("Leads","Leads.html",COMERCIAL+",MKT"),("Nueva matrícula","NuevaVenta.html",COMERCIAL),("Empresas","Empresas.html","ADM,GER,DIR,SUC,ASE"),("Tienda en línea","Pedidos.html",COMERCIAL+",SEC"),("Tablero comercial","TableroComercial.html","ADM,GER,DIR,SUC,ASE,CON,MKT"),("Facturación","Facturas.html",COMERCIAL+",CON"),("Comisiones","Comisiones.html","ADM,GER,DIR,SUC,ASE"),("Aprobaciones","Aprobaciones.html",APROBADORES)]),
  ("Inventario",[("Stock por sede","Inventario.html","ADM,GER,SUC,COO,SEC"),("Entregas de libros","EntregasLibros.html","ADM,GER,SUC,COO,SEC"),("Movimientos y pedidos","Movimientos.html","ADM,GER,SUC,SEC")]),
- ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR"),("Automatizaciones","Automatizaciones.html","ADM,GER,DIR,SUC,COO,SEC")]),
+ ("Dirección",[("Insights de IA","Insights.html","ADM,GER,DIR,SUC,COO,MKT"),("Reportes","Reportes.html","ADM,GER,DIR,SUC,COO,CON,MKT"),("Dashboard ejecutivo","DashboardEjecutivo.html","ADM,GER,DIR"),("Automatizaciones","Automatizaciones.html","ADM,GER,DIR,SUC,COO,SEC")]),
  ("Administración",[("Usuarios y roles","Usuarios.html","ADM,GER"),("Configuración","Configuracion.html","ADM,GER"),("Audit log","AuditLog.html","ADM,GER,SUC"),("Integraciones","Integraciones.html","ADM"),("Reclutamiento","ReclutamientoAdministrativo.html","ADM,GER,SUC")]),
 ]
 # Índice del buscador de la barra superior: (nombre, destino, palabras clave, roles, dónde está)
@@ -225,6 +225,8 @@ def _gs_index():
      ["Matriz KPI mensual","TableroComercial.html#tab-matriz-kpi-mensual","kpi kpis indicadores mensual meta 15 variacion cumplimiento proyeccion referidos niveles espanol reporte mensual",T,tc],
      ["Resultados por origen del lead","TableroComercial.html#tab-indicadores-y-graficos/origen","origen fuente canal walk-in walkin facebook instagram tiktok whatsapp referido feria convenio alianza exalumno pauta",T+",CON",tc],
      ["Matriz exportable a Excel","TableroComercial.html#tab-indicadores-y-graficos/matriz","matriz detalle excel exportar sede asesor producto programa canal",T,tc+" → Indicadores y gráficos"],
+     ["Informe mensual de sede","TableroComercial.html#tab-informe-mensual-de-sede","informe mensual sede completas cuotas abono forma de pago condicion sql sin contactabilidad perdidos ganados digital directa descuento modalidad online puro grupo etario edad walk-in servicios adicionales summer canal meta precio lleno","ADM,GER,DIR,SUC",tc],
+     ["Diccionario de métricas","TableroComercial.html#tab-diccionario-de-metricas","diccionario metricas indicadores formula definicion calculo kpi glosario matricula efectiva",T,tc],
      ["Consolidado por sede","TableroComercial.html#tab-consolidado-por-sede","consolidado quito valle ambato sedes reporte general","ADM,GER,DIR,SUC",tc],
      ["Metas por asesor","TableroComercial.html#tab-metas-por-asesor","metas meta asesor avance",T+",CON",tc],
      ["Informe de comisiones del asesor","InformeComisiones.html","informe individual asesor reporte comisiones matriculas anteriores cobradas",T,"Comercial → Comisiones"],
@@ -2170,7 +2172,9 @@ def tablero_indice():
         ("Matriz KPI mensual","2025 frente a 2026, variación, meta +15 % y cumplimiento","#tab-matriz-kpi-mensual",D),
         ("Origen del lead","Matrículas, ingresos y conversión por canal y walk-in",P+"/origen",D),
         ("Resultado por asesor","Matrículas, facturación, conversión, referidos y upsell",P+"/asesores",D),
-        ("Matriz exportable","Detalle por sede, asesor, producto, programa y canal",P+"/matriz",D)]
+        ("Matriz exportable","Detalle por sede, asesor, producto, programa y canal",P+"/matriz",D),
+        ("Informe mensual de sede","Forma de pago, embudo digital y directo, modalidad, edad y canal frente a la meta","#tab-informe-mensual-de-sede","ADM,GER,DIR,SUC"),
+        ("Diccionario de métricas","Qué mide cada indicador, su fórmula y dónde se ve","#tab-diccionario-de-metricas",T)]
     return card("¿Qué quieres ver?",'<nav class="goto" aria-label="Ir directo a">'+"".join(f'<a href="{h}" data-roles="{r}"><b>{n}</b><small>{d}</small></a>' for n,d,h,r in it)+'</nav>')
 
 # ===== Tablero comercial · pestaña "Indicadores y gráficos" (antes "Plan estratégico" (métricas de Dirección Comercial, nov 2026) =====
@@ -2356,10 +2360,10 @@ def stages(head, items):
     return f'<section class="stages" style="--n:{len(items)}" data-fgroup aria-label="Etapas del embudo"><div class="stages-head">{head}</div>{st}</section>'
 page("Leads.html","Leads",shell("Leads y conversión","Leads",
  stages(f'<b>{sv(310,180,80,50,0)} leads del mes · {agg("count","leads")} ganados en la lista</b><span class="sync-ok">Resumen de consulta del embudo de Kommo · el trabajo diario sigue en Kommo · sincronizado hace 3 min</span><span style="margin-left:auto">'+btn("Sincronizar con Kommo",None,False,"Se traen los leads nuevos y cambios de etapa desde Kommo (API).",kind="ghost")+'</span>',[
-   ("Contactado",sv(138,78,37,23,0),"89% de los leads","var(--info)","Contactado"),
-   ("Cotizado",sv(120,70,30,20,0),"39% de los leads cotiza","var(--warn)","Cotizado"),
-   ("Matriculado",sv(52,28,15,9,0),"17% matricula · meta 20%","var(--ok)","Ganado"),
-   ("Perdido",sv(31,18,8,5,0),"precio y horario, las causas más comunes","var(--mute)","Perdido")]),
+   ("Sin contactabilidad",sv(96,55,25,16,0),"31% · no responde tras los intentos","var(--mute)","Sin contactabilidad"),
+   ("Calificados (SQL)",sv(131,79,32,20,0),"42% · interés y perfil validado","var(--info)","SQL"),
+   ("Perdidos",sv(31,18,8,5,0),"precio y horario, las causas más comunes","var(--warn)","Perdido"),
+   ("Ganados",sv(52,28,15,9,0),"17% de conversión global · meta 20%","var(--ok)","Ganado")]),
  filters(search("Buscar","Nombre, teléfono o correo",w="240px"),sel("Período",PERIODOS,w="150px",col="@Ganado en Kommo"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L.","Ana P."],w="150px"),sel("Origen",["Todos"]+ORIGENES,w="160px"),sel("Quién estudia",["Todos","La misma persona","Dependiente","Varios"],w="160px"),actions='<span class="result-count" aria-live="polite"></span>'+btn("Exportar"))
  +ltable("leads",["Lead ganado","Sede","Origen","Interés","Asesor","Quién estudia","Ganado en Kommo","Acción"],[
   [c2("Andrea Villacís","099 000 0101 · a.villacis@ejemplo.com"),"Quito",c2("Instagram","Meta Ads · Instagram"),"Adults · virtual · grupal","Carla M.","La misma persona","Hoy 10:20",VL],
@@ -2384,15 +2388,15 @@ page("RegistrarWalkIn.html","Registrar walk-in",shell("Registrar walk-in","Leads
 page("Empresas.html","Empresas",shell("Empresas y grupos B2B","Empresas",
  kpis([("Empresas en la lista",agg("count","empresas"),"según filtros y sede"),("Activas",agg("count:Estado=Activo","empresas"),"con convenio vigente"),("Estudiantes corporativos",agg("sum:Estudiantes","empresas","int"),"vinculados"),("Facturación mensual",agg("sum:Facturación","empresas","money0"),"según convenios"),("Por renovar",agg("count:Estado=Por renovar","empresas"),"convenio vence pronto")]),
  filters(search("Buscar","Empresa o RUC",w="240px"),sel("Estado",["Todos","Activo","Por renovar","Inactivo"],w="130px"),actions=btn("Nueva empresa","NuevaEmpresa.html")+btn("Exportar PDF"))
- +ltable("empresas",["Empresa","Sede","Convenio","Estudiantes","Cursos","Facturación","Estado","Acción"],[
-  [c2("Grupo Nova","RUC 1790012345001 · contacto RR. HH."),"Ambato","15% · factura a la empresa · 30 días","17","3 · Business one to one y grupal","$2,800 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Banco del Valle","RUC 1790098765001"),"Quito","10% · factura al empleado","12","2 · Adults virtual","$1,900 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Colegio Los Andes","convenio institucional"),"Valle","20% · Kids y Teens","6","1 · Teens presencial","$720 / mes",badge("Por renovar · dic","warn"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Clínica Santa Fe","RUC 1790055555001"),"Quito","10% · factura a la empresa","8","2 · Adults sábados","$1,000 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Cooperativa Andina","RUC 0190077777001"),"Cuenca","12% · factura a la empresa · 30 días","9","2 · Business one to one","$1,350 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Textiles Andinos","RUC 1890033333001"),"Ambato","10% · factura al empleado","5","1 · Adults virtual","$620 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Hotel Quinta Real","RUC 1790044444001"),"Quito","15% · factura a la empresa · 15 días","4","1 · Business grupal","$480 / mes",badge("Inactivo","neutral"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
-  [c2("Unidad Educativa San Patricio","convenio institucional"),"Valle","20% · Kids y Teens","11","2 · Kids presencial","$1,100 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>']],sede=1,hide=(1,),wide=0,tid="empresas"),
+ +ltable("empresas",["Empresa","Sede","Convenio","Estudiantes","Inscritos frente a comprometidos","Facturación","Estado","Acción"],[
+  [c2("Grupo Nova","RUC 1790012345001 · contacto RR. HH."),"Ambato","15% · factura a la empresa · 30 días","17",c2("85%","17 de 20 comprometidos"),"$2,800 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Banco del Valle","RUC 1790098765001"),"Quito","10% · factura al empleado","12",c2("80%","12 de 15 comprometidos"),"$1,900 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Colegio Los Andes","convenio institucional"),"Valle","20% · Kids y Teens","6",c2(badge("60% · plan de activación","warn"),"6 de 10 comprometidos"),"$720 / mes",badge("Por renovar · dic","warn"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Clínica Santa Fe","RUC 1790055555001"),"Quito","10% · factura a la empresa","8",c2("80%","8 de 10 comprometidos"),"$1,000 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Cooperativa Andina","RUC 0190077777001"),"Cuenca","12% · factura a la empresa · 30 días","9",c2("75%","9 de 12 comprometidos"),"$1,350 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Textiles Andinos","RUC 1890033333001"),"Ambato","10% · factura al empleado","5",c2(badge("62% · plan de activación","warn"),"5 de 8 comprometidos"),"$620 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Hotel Quinta Real","RUC 1790044444001"),"Quito","15% · factura a la empresa · 15 días","4",c2(badge("67% · plan de activación","warn"),"4 de 6 comprometidos"),"$480 / mes",badge("Inactivo","neutral"),'<a href="DetalleEmpresa.html">Ver grupo</a>'],
+  [c2("Unidad Educativa San Patricio","convenio institucional"),"Valle","20% · Kids y Teens","11",c2("92%","11 de 12 comprometidos"),"$1,100 / mes",badge("Activo","ok"),'<a href="DetalleEmpresa.html">Ver grupo</a>']],sede=1,hide=(1,),wide=0,tid="empresas"),
  seg(["Grupo Nova","Banco del Valle","Colegio Los Andes","Clínica Santa Fe"],[
    two(card("Grupo Nova · consolidado", kpis([("Vinculados","17","desde ene 2026"),("Activos","14","con matrícula vigente"),("En curso","12","2 en bolsa sin curso"),("Finalizados","3","1 rematriculado")])+kv(("Asistencia promedio","91%"),("Aprobación","12 de 12 módulos cerrados"),("Rematrícula","9 de 12 que terminaron (75%)"),("Saldo","$1,200 · factura 000021102 · vence 11 nov"))+hbars([("Business one to one · L. Vega",8),("Business grupal · Ma-Ju 07:00",6),("Adults B2 virtual",3)],unit="")+row(btn("Exportar PDF"),btn("Enviar estado de cuenta"),btn("Ver grupo","DetalleEmpresa.html"))),
        card("Convenio · paga la empresa", kv(("Descuento","15% sobre el course fee · lo edita solo Dirección Comercial; un cambio aplica a las matrículas nuevas"),("Factura global","000021102 · $1,200 · crédito 30 días · vence 11 nov · "+badge("Por cobrar","warn")),("Facturas individuales","a cada estudiante en $0 (por validar con el contador)"),("Contacto","RR. HH. · rrhh@gruponova.ejemplo.com"),("Vigencia","ene – dic 2026"),("Reporte mensual","asistencia, avance y aprobación por persona · se envía el 1 de cada mes"))
@@ -2552,9 +2556,11 @@ home=shell("Inicio","Inicio",
  home_admin(),
  only("SEC", kpis([("Estudiantes activos",sv(812,420,230,162),"en tu sede"),("Rematrículas por confirmar",sv(2,1,1,0),"pago reportado desde el portal"),("Cobrado hoy",sv("$3,160","$1,420","$980","$760"),"15 pagos · caja abierta"),("Facturas sin autorizar",sv(2,2,0,0),"1 rechazada por el SRI")]))+
  only("COO,PRO", kpis([("Cursos en curso",sv(41,22,12,7),"esta semana"),("Sesiones por confirmar",sv(3,1,1,1),"de esta semana"),("Terminados sin calificar",sv(2,1,1,0),"bloquean certificados"),("Estudiantes en riesgo",sv(14,6,5,3),"asistencia < 75%")]))+
- only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$443","$443","$0","$0"),"meta cumplida · ver cálculo")]))+
+ only("ASE", kpis([("Mis matrículas del mes",sv(14,14,0,0),"meta 12 · 117%"),("Mis leads Kommo",sv(23,23,0,0),"5 sin contactar"),("Mis matrículas con saldo",sv("$1,420","$1,420","$0","$0"),"4 estudiantes"),("Comisión estimada",sv("$338","$338","$0","$0"),"meta cumplida · ver cálculo")]))+
  only("SEC", tasks([("Rematricular a 8 estudiantes","el profesor cerró las notas de A1 Sábados; el aviso ya salió solo",badge("Listos","ok"),"Rematricula.html"),("Confirmar 2 rematrículas","Sofía Herrera reportó una transferencia desde el portal",badge("Pendiente","warn"),"Facturas.html"),("Corregir la factura 000021095","rechazada por el SRI: cédula del cliente inválida",badge("Rechazada SRI","bad"),"Facturas.html"),("Llamar por 2 cuotas vencidas","$725 en cartera · Pedro Mora y Gabriela Núñez",badge("Vencida","bad"),"Facturas.html"),("Pedir 3 libros con stock negativo","el correo de las 07:00 ya salió",badge("Stock negativo","bad"),"Inventario.html"),("Cerrar la caja de hoy","15 pagos · 1 con diferencia por revisar · las listas se arman solas",badge("Abierta","warn"),"CierreCaja.html"),("Recibir el pedido #P-041","Books & Bits · llega hoy · 12 libros para Valle",badge("En camino","navy"),"RecepcionPedido.html"),("Entregar 2 libros pendientes","y 4 matriculados llevan más de 7 días sin retirar el suyo",badge("Pendiente","warn"),"EntregasLibros.html")]))+
  only("ASE", tasks([("Contactar 5 leads de Kommo","2 llevan más de 3 días sin respuesta",badge("Sin contactar","bad"),"Leads.html"),("Seguir tu solicitud de descuento de 42%","Gabriela Núñez · espera a Dirección Comercial",badge("En revisión","info"),"SolicitudDescuento.html"),("Llamar a 4 estudiantes con saldo vencido","$1,420 en total",badge("Vencida","bad"),"Facturas.html")]))+
+ only("MKT", kpis([("Leads del mes",sv(310,180,80,50),"digitales y directas · Kommo"),("Sin sede u origen",sv(4,2,1,1),"corregir en Kommo · meta 0"),("Conversión global",sv("17%","16%","19%","18%"),"ganados ÷ recibidos"),("Canales en meta",sv("9 de 14","8 de 14","9 de 14","10 de 14"),"ventas por canal frente a la meta")]))+
+ only("MKT", tasks([("Corregir 4 leads sin sede u origen","sin sede no se asignan ni se miden por canal",badge("Calidad","warn"),"Leads.html"),("Revisar canales bajo 80 % de la meta","Facebook Forms y Contacto Web · octubre",badge("Bajo meta","warn"),"TableroComercial.html#tab-informe-mensual-de-sede"),("Ver el informe mensual de sede","forma de pago, embudo digital y directo, modalidad y edad",badge("Octubre","info"),"TableroComercial.html#tab-informe-mensual-de-sede")]))+
  only("COO,PRO", tasks([("Confirmar 3 sesiones de esta semana","2 de P. Gómez · Teens A2 lleva 2 días",badge("Pendiente","warn"),"Sesiones.html"),("Calificar Adults A1 Sábados","terminó hace 5 días · 14 estudiantes esperan su certificado",badge("Requiere acción","bad"),"CalificarCurso.html"),("Asignar profesor a Teens B1 Virtual","abre en 2 semanas · P. Gómez tiene horario libre",badge("Sin profesor","warn"),"Cursos.html")])),
  stack(""
      +only("COO", card("Pendientes de aprobación", li(["Tarifa de profesor fuera de tabla · coordinación","Asignación profesor sin contrato activo"])+row(btn("Ir a aprobaciones","Aprobaciones.html"))))
@@ -2696,7 +2702,7 @@ venta=shell("Nueva matrícula","Nueva matrícula",
    "Cada concepto tiene su propio descuento, como en TeamDesk"),
   ("Factura y pago",
    form([("Facturar a","María Andrade · CED 1712345678","select",["María Andrade · CED 1712345678","Consumidor final","Grupo Nova · RUC 1790012345001","Clínica Santa Fe · RUC 1790055555001","Otro cliente…"],True),("Identificación","Cédula","select",["Cédula","RUC","Pasaporte"],True),
-         ("RUC especial","No","select",["No","Sí · verificado en el SRI"],False,"Solo si verificaste el RUC en el SRI"),("Plan de pago","2 cuotas · cada 30 días","select",["Contado","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días","Personalizado (según convenio)"],True,"Elige uno o edita los días y las cuotas"),("Días entre cuotas","30","number",None,True,"Editable de 15 a 60 días; más de 30 solo con convenio de crédito"),("Número de cuotas","2","number",None,True,"De 1 a 12"),
+         ("RUC especial","No","select",["No","Sí · verificado en el SRI"],False,"Solo si verificaste el RUC en el SRI"),("Plan de pago","2 cuotas · cada 30 días","select",["Contado","Abono · pago parcial que separa el cupo","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días","Personalizado (según convenio)"],True,"Elige uno o edita los días y las cuotas"),("Días entre cuotas","30","number",None,True,"Editable de 15 a 60 días; más de 30 solo con convenio de crédito"),("Número de cuotas","2","number",None,True,"De 1 a 12"),
          ("Crédito","Sí · 30 días","text",None,False,"Automático"),("Actualizar datos de facturación en la ficha","No","select",["No","Sí · reemplazar en la ficha del estudiante"],False)],cols=3)+'<p class="plan-nota" data-credito-out aria-live="polite"></p>'
    +card("Datos de la factura",'<div class="form-grid cols-3">'+field("Nombre o razón social","",'text',None,True)+field("Número de identificación","",'text',None,True)+field("Correo para la factura","",'email',None,True)+field("Dirección","",'text',None,False)+field("Teléfono de la factura","",'tel',None,False)+'</div>'+row('<button type="button" class="btn" data-copy-est>Usar los datos del estudiante</button>')+'<p class="plan-nota" data-copy-out>Un clic copia nombre, identificación, correo, dirección y teléfono de la ficha; no hay que volver a escribirlos.</p>')+card("Aceptación de términos y condiciones",'<label class="check"><input type="checkbox" data-acepta><span><b>El estudiante acepta los términos, la política de no reembolso y el tratamiento de sus datos</b><small>Como en una compra en línea: el estudiante marca la casilla y recibe el comprobante por correo</small></span></label>'+'<p class="plan-nota" data-acepta-out>Sin aceptación: no se puede confirmar la matrícula por canales digitales</p>'+kv(("Registro","fecha, hora, enlace y correo quedan guardados con la matrícula"),("Validación legal",badge("Requerimiento · por consultar con el equipo legal")))+row(btn("Enviar enlace de compra con aceptación",kind="ghost")))+card("Ítems de la factura · todos con su código", table(["Ítem","Cant.","Valor"],[
       [c2("Módulo 7 · B1","SRV-MOD-07 · course fee · virtual"),"1","$250.00"],[c2("Módulo 8 · B1","SRV-MOD-08 · course fee · virtual"),"1","$250.00"],
@@ -2743,7 +2749,7 @@ venta_lead=shell("Nueva matrícula · desde lead","Nueva matrícula",
    +'<div class="form-grid cols-3">'+disc_field("lgl",0)+field("Motivo del descuento","Sin descuento","select",["Sin descuento","Referido","Promoción vigente","Convenio empresa","Hermano matriculado","Otro"],False,"Obligatorio si hay descuento")+field("Matrícula firmada","","file",None,True,"Adjunta la matrícula original firmada (PDF)")+'</div>'+aprob_descuento("lgl")+politica_descuentos(),
    sub="Mismos conceptos que una venta normal; el asesor puede aplicar hasta 10% con motivo")
   +step(4,"Factura y forma de pago",
-   form([("Facturar a","Andrea Villacís · cédula por completar","select",["Andrea Villacís · cédula por completar","Consumidor final","Otro cliente…"],True),("Plan de pago","Contado","select",["Contado","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días"],True),("Crédito","No","text",None,False,"Automático")],cols=3)
+   form([("Facturar a","Andrea Villacís · cédula por completar","select",["Andrea Villacís · cédula por completar","Consumidor final","Otro cliente…"],True),("Plan de pago","Contado","select",["Contado","Abono · pago parcial que separa el cupo","2 cuotas · cada 15 días","2 cuotas · cada 30 días","3 cuotas · cada 30 días"],True),("Crédito","No","text",None,False,"Automático")],cols=3)
    +table(["Pago","Método","Comprobante","Monto"],[["Pago único · hoy, 19 oct","Tarjeta de crédito","Datafast · lote 0193","$545.00"]])
    +row(btn("Agregar pago")))
   +step(5,"Confirmación",
@@ -2784,7 +2790,7 @@ page("DetalleMatricula.html","Detalle matrícula",shell("Matrícula 001-20260279
   "Asistencia": table(["Sesión","Fecha","Presente","Observación"],[["8","13 oct · 19:00","✓","—"],["9","14 oct · 19:00","✓","—"],["10","15 oct · 19:00","✗","Aviso previo"],["11","19 oct · 19:00","✓","—"]])+kv(("Asistencia","10 de 11 sesiones · 90%"),("Mínimo para aprobar","75%")),
   "Portafolio": table(["Módulo","Documento","Generado","Acción"],[["7",c2("Student Report · módulo 7","notas, asistencia y comentarios del profesor"),"al cerrar el módulo",badge("Se genera al calificar","neutral")],["6",c2("Student Report · módulo 6","A2 · nota 8.1 · asistencia 92%"),"28 ago 2026",btn("Ver PDF")],["5",c2("Student Report · módulo 5","A2 · nota 7.9 · asistencia 88%"),"3 jul 2026",btn("Ver PDF")]],wide=1)+kv(("Portafolio","un Student Report en PDF por módulo cerrado, como la pestaña Portfolio de TeamDesk; se adjunta al expediente y lo ve el estudiante en el portal")),
   "Certificados": table(["Módulo","Programa · modalidad · curso","Nota","Certificado","Acción"],[["7",c2("Adults · virtual","0001-2026-0767 · P. Gómez · Quito"),"8.4 · en curso",badge("Al cerrar el módulo","neutral"),"—"],["8",c2("Adults · virtual","0001-2026-0767 · P. Gómez · Quito"),"—",badge("Pendiente","neutral"),"—"]],wide=1)+kv(("Certificado de nivel B1","se emite al aprobar los módulos 7 y 8 con nota ≥ 7, con código único de verificación"))+row(btn("Emitir certificado")),
-  "Comisión": kv(("Asesor","Carla M."),("Regla","Rango 11+ · 4% virtual"),("Monto","$39.20 por la venta de 4 módulos"),("Estado",badge("Pagada en el cierre de septiembre","ok")))+row('<a href="DetalleComision.html">Ver detalle de comisiones del asesor</a>'),
+  "Comisión": kv(("Asesor","Carla M."),("Regla","2 niveles (4 módulos) · Adults virtual"),("Monto","$39.00 · tabla de niveles virtual"),("Estado",badge("Pagada en el cierre de septiembre","ok")))+row('<a href="DetalleComision.html">Ver detalle de comisiones del asesor</a>'),
   "Historial": table(["Fecha","Usuario","Acción"],[["28 ago 10:11","Carla M.","Creó la venta multi-módulo (4 matrículas) y la factura 000021090"],["28 ago 10:15","Carla M.","Adjuntó la matrícula firmada"],["28 ago 12:14","Sistema","Factura enviada a Dora a las 12:11 (2 h después de emitirla), autorizada por el SRI y enviada al cliente"],["31 ago 09:00","Sistema","Envió el enlace de clase y agregó a la estudiante al equipo de Teams"],["27 sep 17:20","Secretaría","Registró el pago de la cuota 2"]]),
  }),
  subtitle="Una matrícula por módulo, como el Enrollment de TeamDesk; la venta agrupa sus módulos en una factura"),"Detalle de matrícula")
@@ -2899,7 +2905,7 @@ page("InformeComisiones.html","Informe de comisiones",shell("Mi informe de comis
    ["16 oct",c2('<a href="DetalleVenta.html">'+"Emilia Ludeña</a>","V-2026-0410"),"1",'<span class="mono">001-202603244</span>',"$220.00","$170.00","Presencial","Summer for Kids","Summer y cursos cortos"],
    ["18 oct",c2('<a href="DetalleVenta.html">'+"Julina Rosero</a>","V-2026-0412 · ya era estudiante"),"1",'<span class="mono">001-202603250</span>',"$210.00","$160.00","Presencial","English for Teens","Estudiante existente"],
    ["20 oct",c2('<a href="DetalleVenta.html">'+"Paula Ortiz</a>","V-2026-0407 · vendida en Quito"),"4",'<span class="mono">001-202603252</span>',"$1,060.00","$920.00","Virtual","English for Adults Virtual","Venta en otra sede"]],hide=(8,),wide=1)
-   +kv(("Total","11 matrículas · total facturas $4,962.40 · servicios educativos $4,201.40"),("Ticket","$451.13 por matrícula (facturas) · $381.95 (servicios educativos)"),("Mismo formato","que el 'Reporte para comisiones' mensual: fecha, estudiante, módulos u horas vendidos, matrícula, total de facturas, servicios educativos, modalidad, programa y vendedor, agrupado en bloques"),("Comisión","se calcula sobre las ventas totalmente pagadas, con la tabla de rangos de la sede (pendiente de recibir la tabla real)"))),
+   +kv(("Total","11 matrículas · total facturas $4,962.40 · servicios educativos $4,201.40"),("Ticket","$451.13 por matrícula (facturas) · $381.95 (servicios educativos)"),("Mismo formato","que el 'Reporte para comisiones' mensual: fecha, estudiante, módulos u horas vendidos, matrícula, total de facturas, servicios educativos, modalidad, programa y vendedor, agrupado en bloques"),("Comisión","Administración la calcula con estas filas: base de la sede, módulos sueltos, niveles por módulos vendidos, one to one por horas, summer camp y bonos (Reglas de comisión)"))),
  card("Cobros del mes de ventas anteriores", table(["Venta original","Fecha de venta","Asesor original","Cobrado en octubre","Cuenta como"],[[c2('<a href="DetalleVenta.html">V-2026-0371</a>',"Gabriela Núñez · cuota 2"),"18 sep","Carla M.","$225",badge("Cobro, no venta nueva","navy")],[c2('<a href="DetalleVenta.html">V-2026-0365</a>',"Mateo Salazar · saldo"),"5 sep","Carla M.","$755",badge("Cobro, no venta nueva","navy")]])),
  foot(only("ASE",btn("Enviar a Dirección Comercial",None,True),True)+only("DIR",btn("Aprobar y enviar a Administración",None,True),True)+only("ADM,GER",btn("Asignar pago de comisión",None,True),True)+only("DIR,ADM,GER",btn("Devolver con observaciones"),True)+btn("Volver","Comisiones.html")),
  subtitle="Reemplaza el registro manual del asesor: ventas, servicios educativos y cobros de ventas anteriores con su asesor original"),"Informe de comisiones del asesor")
@@ -2940,12 +2946,143 @@ def ventas_rows():
         out.append([f,c2(f'<a href="DetalleVenta.html">{est}</a>',f"{v} · {cls.lower()}"),c2(o,osub),prod,prog,mod,cls,f"${serv:,.2f}",f"${tot:,.2f}",badge(pag,"ok" if pag.startswith("Sí") else "warn"),f"{ase} · {sede}",sede,'<a href="DetalleVenta.html">Ver venta</a>'])
     return out
 ventas_tbl=table(["Fecha de venta","Venta · estudiante","Origen","Producto o servicio","Programa","Modalidad","Clasificación","Servicios educativos","Total facturado","Pagada por completo","Asesor · sede","Sede","Acción"],ventas_rows(),sede=11,hide=(4,5,6,11),wide=1,tid="ventas")
+# ================= INFORME MENSUAL DE SEDE (R-12 "Mediciones mensuales" + R-13 MP-MKT-04) =================
+def _reparto(total, pesos):
+    """Reparte un entero según pesos con el método del mayor residuo: la suma siempre es exactamente total."""
+    s=sum(pesos) or 1; base=[total*p/s for p in pesos]; ent=[int(b) for b in base]
+    for i in sorted(range(len(pesos)), key=lambda i: base[i]-ent[i], reverse=True)[:total-sum(ent)]: ent[i]+=1
+    return ent
+EST_DIG=["WhatsApp","Instagram","Facebook","Facebook Forms","TikTok","Test Online","Contacto Web"]
+EST_DIR=["Walk in","Referencia / Referido","Exalumno","Convenios empresariales","Alianzas","Feria","Otros"]
+_INF_SEDES={  # matrículas del mes · Valle replica el corte de referencia del documento (65)
+ "Quito":{"tot":92,"seed":1},"Valle de los Chillos":{"tot":65,"seed":2},"Ambato":{"tot":41,"seed":3}}
+def _inf_data(tot, seed):
+    pesos=[14,9,6,5,3,4,5, 12,10,6,3,2,2,1]
+    pesos=[p+((i*seed)%3) for i,p in enumerate(pesos)]   # cada sede con su propia mezcla de canales
+    g_can=_reparto(tot,pesos)
+    conv=[12,6,5,9,4,18,10, 45,38,40,30,25,15,20]
+    leads=[max(g, round(g*100/c)) if g else 3 for g,c in zip(g_can,conv)]
+    perd=[max(0,round((l-g)*0.55)) for l,g in zip(leads,g_can)]
+    pago=[_reparto(g,[5,3,2]) for g in g_can]          # completas, cuotas, abonos por canal
+    desc=_reparto(tot,[38,62]); mod=_reparto(tot,[44,30,6,12,8]); eta=_reparto(tot,[6,22,24,48])
+    srv=[3+seed,6-seed%2,4+seed,2]                      # pruebas internacionales, summer, traducciones, español
+    walk=_reparto(g_can[7],[30,22,14,12,8,6,4,4])
+    return dict(tot=tot,can=g_can,leads=leads,perd=perd,pago=pago,desc=desc,mod=mod,eta=eta,srv=srv,walk=walk)
+def _inf_sum(a,b):
+    if isinstance(a,list): return [_inf_sum(x,y) for x,y in zip(a,b)]
+    return a+b
+def _pct(n,t): return f"{(n*100/t if t else 0):.0f}%"
+def informe_panel(nombre, d):
+    tot=d["tot"]; can=EST_DIG+EST_DIR; nd=len(EST_DIG)
+    comp=sum(p[0] for p in d["pago"]); cuo=sum(p[1] for p in d["pago"]); abo=sum(p[2] for p in d["pago"])
+    L=sum(d["leads"]); P=sum(d["perd"]); G=sum(d["can"]); sinc=round((L-G-P)*0.45); sql=L-G-P-sinc
+    gd=sum(d["can"][:nd]); gr=G-gd; ld=sum(d["leads"][:nd]); lr=L-ld
+    s_tot=sum(d["srv"])
+    cuadre=all(x==tot for x in (comp+cuo+abo, gd+gr, sum(d["desc"]), sum(d["mod"]), sum(d["eta"]), G))
+    head=(kpis([("Total matrículas de la sede",str(tot),"completas + en cuotas + abonos"),("Completas",f"{comp}",f"{_pct(comp,tot)} · pago total al inscribirse"),("En cuotas",f"{cuo}",f"{_pct(cuo,tot)} · financiamiento"),("Con abono",f"{abo}",f"{_pct(abo,tot)} · separa el cupo"),("Con descuento",f"{d['desc'][0]}",f"{_pct(d['desc'][0],tot)} frente a tarifa plena")])
+      +kpis([("Leads recibidos",f"{L}",f"digitales {ld} · directas {lr}"),("Sin contactabilidad",f"{sinc}","no responde · Kommo"),("Calificados (SQL)",f"{sql}","con interés y perfil validado"),("Perdidos",f"{P}","no concretaron"),("Ganados",f"{G}",f"= matrículas · conversión {_pct(G,L)}"),("Servicios adicionales",f"{s_tot}","no suman a matrículas")])
+      +info_line(f'Cuadre único: las {tot} matrículas cuadran en condición de pago, estrategia, descuento, modalidad y grupo etario. '+(badge("Cuadra","ok") if cuadre else badge("No cuadra · revisar","bad"))))
+    rows=[]
+    for i,c in enumerate(can):
+        rows.append([c,"Digital" if i<nd else "Directa",str(d["pago"][i][0]),str(d["pago"][i][1]),str(d["pago"][i][2]),str(d["can"][i])])
+    t_canal=table(["Canal","Estrategia","Completas","En cuotas","Abono","Total"],rows)
+    funnel=table(["Medio","Estrategia","Leads","Perdidos","Ganados","Conversión"],[[can[i],"Digital" if i<nd else "Directa",str(d["leads"][i]),str(d["perd"][i]),str(d["can"][i]),_pct(d["can"][i],d["leads"][i])] for i in range(len(can))])
+    walk_lab=["Fachada o sector","Pauta digital vista","Asociación de marca","Redes orgánicas","Google o IA","Ferias","Prensa","Conocía la marca"]
+    comp_card=card("Participación del mes",
+        '<h4 class="section-title">Condición de pago</h4>'+hbars([("Completas",round(comp*100/tot)),("En cuotas",round(cuo*100/tot)),("Abono",round(abo*100/tot))])
+        +'<h4 class="section-title">Estrategia</h4>'+hbars([("Digitales",round(gd*100/tot)),("Directas y referencias",round(gr*100/tot))])
+        +'<h4 class="section-title">Descuento</h4>'+hbars([("Con descuento",round(d["desc"][0]*100/tot)),("Tarifa plena",round(d["desc"][1]*100/tot))]))
+    mod_card=card("Por modalidad y grupo etario",
+        '<h4 class="section-title">Modalidad académica</h4>'+hbars(list(zip(["Cursos presencial","Cursos virtual","Online puro","One to one","Summer camp"],d["mod"])),unit=" ")
+        +'<h4 class="section-title">Grupo etario</h4>'+hbars(list(zip(["Pre-School","Kids","Teens","Adults"],d["eta"])),unit=" "))
+    srv_card=card("Servicios adicionales y walk-in",
+        '<h4 class="section-title">Servicios adicionales por categoría</h4>'+hbars(list(zip(["Pruebas internacionales","Summer camp","Traducciones","Curso de español"],d["srv"])),unit=" ")
+        +f'<h4 class="section-title">Walk-in ganados ({d["can"][7]}) · cómo nos conocieron</h4>'+hbars([(l,round(v*100/(d["can"][7] or 1))) for l,v in zip(walk_lab,d["walk"]) if v]))
+    meses=["May","Jun","Jul","Ago","Sep","Oct"]; k=tot/65
+    evo=two(card("Evolución mensual",linechart(meses,{"Completas":[round(v*k) for v in (28,30,26,31,29,comp*65/tot)],"En cuotas":[round(v*k) for v in (18,17,20,19,21,cuo*65/tot)],"Abonos":[round(v*k) for v in (12,11,13,10,12,abo*65/tot)]})),
+            card("Leads recibidos frente a ganados",linechart(meses,{"Recibidos":[round(v*k) for v in (420,455,430,470,445,L*65/tot)],"Ganados":[round(v*k) for v in (58,61,55,66,60,65)]})))
+    # R-13 MP-MKT-04 4.7: ventas por canal contra meta, precio lleno frente a descuento
+    metas=_reparto(round(tot*1.08),[14,9,6,5,3,4,5,12,10,6,3,2,2,1])
+    vrows=[]
+    for i,c in enumerate(can):
+        real=d["can"][i]; m=metas[i] or 1; con_d=_reparto(real,[38+(i*7)%30,62-(i*7)%30])[0]
+        cump=round(real*100/m); alerta=cump<80 or (real and con_d*100/real>50)
+        vrows.append([c,str(m),str(real),f"{cump}%",str(real-con_d),str(con_d),badge("Acción correctiva","warn") if alerta else badge("En meta","ok")])
+    ventas=card("Ventas por canal frente a la meta · precio lleno y con descuento",table(["Canal","Meta","Real","Cumplimiento","Precio lleno","Con descuento","Estado"],vrows,wide=0)
+        +kv(("Regla de alerta","canal con cumplimiento menor a 80 % o con más del 50 % de sus ventas con descuento (propuesta a validar del manual de marketing)"),("Metas","se registran por canal y sede en la matriz de metas; sin meta aprobada no se calcula cumplimiento")))
+    fuera=card("Costo por matrícula y ROAS por canal",'<p>'+badge("Propuesta · fuera del alcance del contrato actual")+' Requiere la inversión de pauta de Meta, Google y TikTok y conectores a esas plataformas (M11 solo incluye Kommo, Moodle y Dora). Con la inversión cargada a mano se podría calcular por canal y sede.</p>')
+    return (head+card("Matrículas por estrategia y forma de pago",t_canal)
+            +card(f"Embudo por medio · digitales {_pct(gd,ld)} · directas y referencias {_pct(gr,lr)} de conversión",funnel)
+            +'<div class="grid grid-3">'+"".join(f'<div class="g-cell">{c}</div>' for c in (comp_card,mod_card,srv_card))+'</div>'+evo+ventas+fuera)
+def informe_mensual():
+    ds={n:_inf_data(v["tot"],v["seed"]) for n,v in _INF_SEDES.items()}
+    cons=None
+    for d in ds.values(): cons=d if cons is None else {k:(_inf_sum(cons[k],d[k]) if k!="tot" else cons[k]+d[k]) for k in d}
+    noms=list(ds)+["Consolidado"]; panels=[informe_panel(n,ds[n]) for n in ds]+[informe_panel("Consolidado",cons)]
+    return ('<div class="kv"><span><span class="k">Informe de</span> octubre 2026 · fuente: matrículas de la plataforma y estados de Kommo</span></div>'
+            +seg(noms,panels,label="Sede del informe")+row(btn("Exportar Excel"),btn("Descargar PDF")))
+# ================= DICCIONARIO DE MÉTRICAS (R-12, los dos descriptivos de Cambridge) =================
+_IG="#tab-indicadores-y-graficos"; _IM="#tab-informe-mensual-de-sede"
+DICC=[  # (grupo, indicador, qué mide, fórmula, formato, dónde se ve, ancla)
+ ("Tarjetas","Ingreso total","Facturación neta por matrículas y servicios complementarios","∑ ingresos netos (matrículas + servicios)","$","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Número de matrículas","Inscripciones formalizadas en el período","conteo(matrículas efectivas)","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Número de niveles vendidos","Módulos o niveles adquiridos; una matrícula puede agrupar varios","∑ niveles adquiridos por matrícula","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Ticket promedio","Valor medio por matrícula","ingresos por matrículas ÷ número de matrículas","$","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Programas one to one vendidos","Matrículas en clases personalizadas","conteo(matrículas con modalidad one to one)","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Certificados vendidos","Derechos de certificación o exámenes facturados","conteo(ventas de categoría certificados)","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Traducciones vendidas","Servicios de traducción facturados","conteo(ventas de categoría traducciones)","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Total de servicios vendidos","Servicios complementarios no regulares","certificados + traducciones + otros servicios","#","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Ticket promedio de servicios","Valor medio por servicio complementario","ingresos por servicios ÷ total de servicios","$","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Cumplimiento de la meta","Avance frente a la meta de ingresos o matrículas","(resultado real ÷ meta proyectada) × 100","%","Indicadores y gráficos · Resumen",_IG),
+ ("Tarjetas","Variación frente al año anterior","Crecimiento frente al mismo rango de días del año previo","((actual − año anterior) ÷ año anterior) × 100","%","Indicadores y gráficos · Resumen",_IG),
+ ("Evolución","Ingresos y matrículas mensuales","Estacionalidad de facturación e inscritos","∑ ingresos del mes · conteo(matrículas del mes)","$ / #","Indicadores y gráficos · Tendencias",_IG),
+ ("Evolución","Ticket promedio mensual","Impacto de promociones o tarifas en el valor medio","ingresos por matrículas del mes ÷ matrículas del mes","$","Indicadores y gráficos · Tendencias",_IG),
+ ("Evolución","Real frente a la meta proyectada","Brecha mensual entre ejecución y presupuesto","real del mes − meta del mes","$ / #","Indicadores y gráficos · Tendencias",_IG),
+ ("Evolución","Comparación con el año anterior","Año actual superpuesto al año previo","((valor t − valor t−12) ÷ valor t−12) × 100","%","Indicadores y gráficos · Tendencias",_IG),
+ ("Evolución","Conversión y deserción","Cierre de prospectos frente a abandono de alumnos activos","conversión = matrículas ÷ leads recibidos × 100 · deserción = retirados ÷ activos × 100","%","Indicadores y gráficos · Tendencias",_IG),
+ ("Comparación","Ingresos por sede","Facturación por sucursal o modalidad virtual","∑ ingresos netos por sede","$","Indicadores y gráficos · Productos y sedes",_IG),
+ ("Comparación","Ingresos por línea, producto y tipo de programa","Facturación por unidad de negocio y categoría","∑ ingresos netos por línea, producto o tipo","$","Indicadores y gráficos · Productos y sedes",_IG),
+ ("Comparación","Resultado por asesor","Matrículas, facturación, conversión, referidos y upsell de cada asesor","conteo, ∑ ingresos y (matrículas ÷ leads asignados) × 100 por asesor","# / $ / %","Indicadores y gráficos · Asesores",_IG),
+ ("Comparación","Certificaciones, traducciones y servicios","Unidades por tipo de servicio","conteo(unidades vendidas por tipo)","#","Indicadores y gráficos · Productos y sedes",_IG),
+ ("Comparación","Matrículas e ingresos por origen del lead","Rendimiento por fuente de adquisición","conteo y ∑ ingresos por origen","# / $","Indicadores y gráficos · Origen del lead",_IG),
+ ("Comparación","Conversión por canal","Cierre por medio de contacto (WhatsApp, llamada, web, presencial)","(matrículas del canal ÷ leads gestionados del canal) × 100","%","Indicadores y gráficos · Origen del lead",_IG),
+ ("Participación","Estudiantes en planes de nivel","Nivel único frente a paquete de niveles","(estudiantes en el plan ÷ total) × 100","%","Indicadores y gráficos · Resumen",_IG),
+ ("Participación","One to one frente a programas regulares","Peso de las matrículas personalizadas","(matrículas de la modalidad ÷ total) × 100","%","Indicadores y gráficos · Productos y sedes",_IG),
+ ("Participación","Matrículas de referidos","Peso de las inscripciones por recomendación","(matrículas con origen referido ÷ total) × 100","%","Indicadores y gráficos · Origen del lead",_IG),
+ ("Participación","Upsell por asesor","Participación de cada asesor en las ventas adicionales del equipo","(upsell del asesor ÷ upsell del equipo) × 100","%","Indicadores y gráficos · Asesores",_IG),
+ ("Participación","Matrículas por programa","Composición por programa académico","(matrículas del programa ÷ total) × 100","%","Indicadores y gráficos · Productos y sedes",_IG),
+ ("Informe mensual","Total matrículas de sede","Inscripciones del mes en la sede, todas las formas de pago","completas + en cuotas + abonos","#","Informe mensual de sede",_IM),
+ ("Informe mensual","Matrículas completas, en cuotas y con abono","Cada condición de pago y su peso","conteo por condición · (condición ÷ total) × 100","# / %","Informe mensual de sede",_IM),
+ ("Informe mensual","Servicios adicionales","Summer camp, traducciones, pruebas internacionales y español, aparte de las matrículas","∑ unidades de las cuatro categorías","#","Informe mensual de sede",_IM),
+ ("Informe mensual","Leads recibidos","Prospectos del mes por estrategias digitales y directas","leads digitales + leads directos","#","Informe mensual de sede",_IM),
+ ("Informe mensual","Sin contactabilidad · SQL · perdidos · ganados","Estado del lead en Kommo; ganados = matrículas","conteo por estado","#","Informe mensual de sede",_IM),
+ ("Informe mensual","Tasa de conversión global","Cierre sobre el total de leads de la sede","(leads ganados ÷ leads recibidos) × 100","%","Informe mensual de sede",_IM),
+ ("Informe mensual","Matrículas con descuento","Cierres con beneficio frente a tarifa plena","conteo · (con descuento ÷ total) × 100","# / %","Informe mensual de sede",_IM),
+ ("Informe mensual","Matrículas por canal y forma de pago","Cierres por fuente, apilados por condición de pago","conteo(matrículas por canal y condición)","#","Informe mensual de sede",_IM),
+ ("Informe mensual","Embudo digital y embudo directo","Leads, perdidos, ganados y conversión por medio","(ganados del medio ÷ leads del medio) × 100","# / %","Informe mensual de sede",_IM),
+ ("Informe mensual","Matrículas por modalidad y grupo etario","Presencial, virtual, online puro, one to one, summer · Pre-School, Kids, Teens, Adults","conteo por segmento · (segmento ÷ total) × 100","# / %","Informe mensual de sede",_IM),
+ ("Informe mensual","Origen walk-in (ganados)","Cómo conocieron la sede quienes llegaron sin contacto previo","(ganados walk-in por motivo ÷ total walk-in) × 100","%","Informe mensual de sede",_IM),
+ ("Informe mensual","Ventas por canal frente a la meta","Cumplimiento por canal con precio lleno y con descuento (manual de marketing)","(real del canal ÷ meta del canal) × 100","# / %","Informe mensual de sede",_IM),
+]
+def diccionario_metricas():
+    rows=[[c2(i,g),q,f'<code>{f}</code>',fm,f'<a href="{a}">{w}</a>',g] for g,i,q,f,fm,w,a in DICC]
+    return (filters(search("Buscar","Indicador, fórmula o pantalla","320px"),sel("Grupo",["Todos","Tarjetas","Evolución","Comparación","Participación","Informe mensual"],w="170px"),actions=btn("Exportar Excel"))
+            +table(["Indicador","Qué mide","Fórmula","Formato","Dónde se ve","Grupo"],rows,wide=0,hide=(5,))
+            +kv(("Valores netos","todo indicador monetario y de volumen descuenta anulaciones, devoluciones y notas de crédito"),
+                ("Filtros","las fórmulas se recalculan con el período, la sede, la línea de negocio, el programa y el asesor elegidos"),
+                ("Año anterior","se compara exactamente el mismo rango de días del año previo"),
+                ("Matrícula efectiva","contrato aprobado y primer pago validado en el período; no cuentan anuladas ni desistidas antes del inicio"),
+                ("Estrategias","digitales: WhatsApp, Instagram, Facebook, Facebook Forms, TikTok, Test Online, Contacto Web · directas: walk-in, referidos, exalumnos, convenios y alianzas, ferias"),
+                ("Condición de pago","completa: pago total al inscribirse · en cuotas: pagos periódicos · abono: pago parcial que separa el cupo")))
+
 page("TableroComercial.html","Tablero comercial",shell("Tablero comercial","Tablero comercial",
  tablero_indice(),
  '<div class="kv"><span><span class="k">Sedes</span> </span>'+pills(["Quito","Valle","Ambato","Cuenca","Consolidado"],on=(4,),multi=True,sede=True)+'<span class="field-hint">Elige una, combina dos o tres, o mira el consolidado. Cuenca lleva un reporte distinto y no entra en el consolidado de Quito, Valle y Ambato.</span></div>'
  +filters(sel("Período",PERIODOS,w="170px",col="@Fecha de venta"),sel("Asesor",["Todos","Carla M.","Diego R.","Sofía L.","Ana P."],w="140px",col="Asesor · sede"),sel("Programa",["Todos","Preescolar","Kids","Teens","Adults","Business","Exam Preparation","Tailored","Spanish"],w="150px"),sel("Modalidad",["Todas","Virtual","Presencial"],w="130px"),sel("Origen",["Todos"]+ORIGENES,w="200px"),sel("Producto o servicio",["Todos","módulo","horas","Mock Test","TOEFL","Traducción","español"],w="170px"),sel("Clasificación",["Todas","Nueva","Reingreso","Continuidad"],w="140px"),actions=btn("Exportar Excel"),show=3,target="ventas"),
  kpis([("Ventas",agg("count","ventas"),"en el período y sedes elegidos"),("Nuevas matrículas válidas",agg("count:Clasificación=Nueva","ventas"),"meta del mes 22 · reingresos y continuidad aparte"),("Servicios educativos",agg("sum:Servicios educativos","ventas","money0"),"base de metas y comisiones"),("Total facturado",agg("sum:Total facturado","ventas","money0"),"todos los conceptos"),("Pagadas por completo",agg("pct:Pagada por completo=Sí","ventas"),"solo estas generan comisión")]),
- tabs(["Seguimiento diario","Indicadores y gráficos","Matriz KPI mensual","Por origen del lead","Metas por asesor","Consolidado por sede","Ventas","Cobros del período","Clasificación","Origen y oferta"],"Seguimiento diario",maxvis=6,roles={"Consolidado por sede":"ADM,GER,DIR,SUC","Matriz KPI mensual":"ADM,GER,DIR,SUC,ASE","Indicadores y gráficos":"ADM,GER,DIR,SUC,ASE"},panels={
+ tabs(["Seguimiento diario","Indicadores y gráficos","Informe mensual de sede","Matriz KPI mensual","Por origen del lead","Metas por asesor","Consolidado por sede","Ventas","Cobros del período","Clasificación","Origen y oferta","Diccionario de métricas"],"Seguimiento diario",maxvis=6,roles={"Consolidado por sede":"ADM,GER,DIR,SUC","Matriz KPI mensual":"ADM,GER,DIR,SUC,ASE,MKT","Indicadores y gráficos":"ADM,GER,DIR,SUC,ASE,MKT","Informe mensual de sede":"ADM,GER,DIR,SUC,MKT","Cobros del período":"ADM,GER,DIR,SUC,ASE,CON","Metas por asesor":"ADM,GER,DIR,SUC,ASE"},panels={
+  "Informe mensual de sede": informe_mensual(),
+  "Diccionario de métricas": diccionario_metricas(),
   "Indicadores y gráficos": tablero_plan(),
   "Metas por asesor": table(["Asesor","Sede","Meta del mes","Lleva","Le falta","Avance","Días restantes"],[
      ["Carla M.","Quito","$6,000 · 12 niveles","$5,420 · 14 niveles","$580 · meta de niveles cumplida",progress(90),"8"],
@@ -3133,26 +3270,26 @@ descuentos=table(["Fecha","Estudiante","Asesor","Venta","Precio lista","% dcto."
   ["03 oct",c2('<a href="Ficha360.html">Gabriela Núñez</a>',"Quito · A2"),"Carla M.","A2","$450","42%","-$189","Referido",badge("Pendiente de aprobación","warn"),V3]],hide=(3,),wide=1,tid="dctos")
 com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
  tabs(["Comisiones","Descuentos otorgados"],"Comisiones",roles={"Descuentos otorgados":"ADM,GER,DIR,SUC"},panels={
-  "Comisiones": only("ASE", card("Tu comisión de octubre, en corto", kpis([("Vendiste","14 niveles","meta 12 · 117%"),("Rango","11+ niveles","$18 virtual · $22 presencial por nivel · tabla Quito"),("Comisión estimada","$443.30","incluye bono $50"),("Retenido","$22.50","1 venta sin cobrar")])+progress(100,"Meta: 14 de 12 niveles",CH[0])+row(btn("Preparar mi informe del mes","InformeComisiones.html",True),btn("Ver el cálculo paso a paso","DetalleComision.html"),btn("Exportar Excel"))))
-   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total comisiones","$930"),("Niveles vendidos","34"))))
+  "Comisiones": only("ASE", card("Tu comisión de septiembre, en corto", kpis([("Matrículas válidas","24","base 15 · meta cumplida"),("Sobre la base","9","desde la matrícula 16"),("Comisión","$337.66","módulos, niveles, one to one, summer y bono"),("Se paga","octubre","tras la aprobación del período")])+progress(100,"Base superada: 24 de 15",CH[0])+row(btn("Preparar mi informe del mes","InformeComisiones.html",True),btn("Ver el cálculo paso a paso","DetalleComision.html"),btn("Exportar Excel"))))
+   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total asesores","$667.66"),("Niveles vendidos","34"))))
    +only("ADM,GER,DIR,SUC", flow([("Borrador (cálculo automático)","","","done"),("En revisión (Dir. Comercial)","","","now"),("Aprobado (se paga)","","","")])
-   +table(["Asesor","Niveles vendidos","Virtual / Presencial","Meta","Real","Comisión","Acción"],[
-    ["Carla M.","14","6 / 8","12","14","$443.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Diego R.","9","4 / 5","12","9","$180.00",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Sofía L.","11","7 / 4","10","11","$330.00",'<a href="DetalleComision.html">Ver cálculo</a>']])
+   +table(["Asesor","Sede","Matrículas válidas","Base","Sobre la base","Comisión","Acción"],[
+    ["Carla M.","Quito","24","15 · meta cumplida","9","$337.66",'<a href="DetalleComision.html">Ver cálculo</a>'],
+    ["Diego R.","Valle","25","30","0 · solo one to one, summer y bono","$141.60",'<a href="DetalleComision.html">Ver cálculo</a>'],
+    ["Sofía L.","Ambato","14","6 · meta cumplida","8","$188.40",'<a href="DetalleComision.html">Ver cálculo</a>']])
    +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
-        card("Tabla de rangos vigente · Quito · por nivel grupal", table(["Niveles vendidos en el mes","Virtual","Presencial"],[["1 – 5","$8","$10"],["6 – 10","$12","$15"],["11 o más","$18","$22"]],wide=0)
-          +kv(("Base por sede","Ambato y Valle tienen su propia tabla; one to one y los demás productos tienen rangos aparte"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Pago completo","la comisión se genera cuando la matrícula está totalmente pagada"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
-   +card("Reporte mensual por grupo · octubre 2026 · bloques del registro de matrículas", table(["Grupo","Asesor","Matrículas","Módulos / horas","Servicios educativos","Comisión"],[
-     [c2("2 módulos o más","nivel completo o varios"),"Carla M.","9","26 módulos","$6,500","$312.00"],[c2("2 módulos o más","nivel completo o varios"),"Diego R.","5","12 módulos","$3,000","$120.00"],
-     [c2("1 módulo","módulo suelto"),"Carla M.","3","3 módulos","$750","$24.00"],[c2("1 módulo","módulo suelto"),"Sofía L.","4","4 módulos","$1,000","$32.00"],
-     [c2("Horas","one to one, tailored y preparatorias"),"Carla M.","2","30 h","$900","$45.00"],[c2("Horas","one to one, tailored y preparatorias"),"Sofía L.","1","10 h","$300","$15.00"],
-     [c2("Summer y cursos cortos","summer camp, clubes"),"Carla M.","3","3","$510","$15.00"],[c2("Estudiante existente","ya era estudiante · no cuenta como nueva"),"Diego R.","2","2 módulos","$320","$8.00"],[c2("Venta en otra sede","se registra con la sede donde estudia"),"Carla M.","1","4 módulos","$920","$36.80"]],wide=0)
+        card("Tabla vigente · niveles presencial (extracto)", table(["Módulos vendidos en la venta","Kids","Teens","Adults"],[["1 nivel (2 módulos)","$32.00","$21.00","$22.00"],["2 niveles (4 módulos)","$79.00","$43.00","$44.00"],["3 niveles (6 módulos)","$142.00","$66.00","$68.00"]],wide=0)
+          +kv(("Base","Quito y Valle 30 matrículas, Ambato 12; a la mitad si el asesor cumple la meta"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Dirección Comercial","cobra aparte, sobre el crecimiento frente a la base comercial"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
+   +card("Reporte mensual por grupo · octubre 2026 · bloques del registro de matrículas", table(["Grupo","Asesor","Matrículas","Módulos / horas","Servicios educativos"],[
+     [c2("2 módulos o más","nivel completo o varios"),"Carla M.","9","26 módulos","$6,500"],[c2("2 módulos o más","nivel completo o varios"),"Diego R.","5","12 módulos","$3,000"],
+     [c2("1 módulo","módulo suelto"),"Carla M.","3","3 módulos","$750"],[c2("1 módulo","módulo suelto"),"Sofía L.","4","4 módulos","$1,000"],
+     [c2("Horas","one to one, tailored y preparatorias"),"Carla M.","2","30 h","$900"],[c2("Horas","one to one, tailored y preparatorias"),"Sofía L.","1","10 h","$300"],
+     [c2("Summer y cursos cortos","summer camp, clubes"),"Carla M.","3","3","$510"],[c2("Estudiante existente","ya era estudiante · no cuenta como nueva"),"Diego R.","2","2 módulos","$320"],[c2("Venta en otra sede","se registra con la sede donde estudia"),"Carla M.","1","4 módulos","$920"]],wide=0)
      +kv(("Bloques","los mismos del 'Reporte para comisiones' mensual: 2 módulos o más, 1 módulo, horas, summer y cursos cortos, estudiante existente y venta en otra sede"))+row(btn("Exportar Excel")))
    +card("Ventas que entran a la comisión de octubre · pagadas por completo en octubre", table(["Venta","Estudiante","Fecha de venta","Pagada por completo","Asesor","Monto","Comisión"],[
-     [c2("V-2026-0338","multi-módulo · 2 niveles"),"Tomás Villacrés","12 ago 2026",badge("15 oct 2026","ok"),"Diego R.","$980","$39.20"],
-     [c2("V-2026-0371","1 nivel"),"Gabriela Núñez","18 sep 2026",badge("19 oct 2026","ok"),"Carla M.","$450","$18.00"],
-     [c2("V-2026-0411","1 nivel"),"Gabriel Mora","18 oct 2026",badge("18 oct 2026","ok"),"Carla M.","$500","$20.00"],
+     [c2("V-2026-0338","multi-módulo · 2 niveles"),"Tomás Villacrés","12 ago 2026",badge("15 oct 2026","ok"),"Diego R.","$980",c2("$44.00","2 niveles Adults presencial")],
+     [c2("V-2026-0371","1 nivel"),"Gabriela Núñez","18 sep 2026",badge("19 oct 2026","ok"),"Carla M.","$450",c2("$18.72","1 nivel Adults virtual")],
+     [c2("V-2026-0411","1 nivel"),"Gabriel Mora","18 oct 2026",badge("18 oct 2026","ok"),"Carla M.","$500",c2("$18.72","1 nivel Adults virtual")],
      [c2("V-2026-0405","2 niveles"),"Martín Ortega","17 oct 2026",badge("Pendiente · cuota 2, 16 nov","warn"),"Ana P.","$880","$0.00"]],wide=0)
      +kv(("Regla","venta de agosto pagada por completo en octubre = venta de agosto en el tablero y comisión de octubre"),("Ventas vendidas en octubre sin pagar","no generan comisión hasta completar el pago")))),
   "Descuentos otorgados": kpis([("Ventas en la lista",agg("count","dctos"),"según filtros"),("Con descuento",agg("count:% dcto.=%","dctos"),"el resto sin descuento"),("Total descontado",agg("sum:Descuento","dctos","money0"),"sobre el precio de lista"),("Descuento promedio",agg("avg:% dcto.","dctos","pct"),"límite del asesor: 10%"),("Fuera del límite",agg("count:Aprobación=aprobación","dctos"),"aprobados, pendientes o rechazados")])
@@ -3690,7 +3827,7 @@ page("DetalleFactura.html","Detalle factura",shell("Factura 000021090","Facturac
    ["Producto","1292",c2("Empower B1+ Combo B","ISBN 9781108961523 · reservado en Quito para el módulo 9"),"1","$40.00","0%","$0.00","$40.00","$0.00"]],wide=2,hide=(1,))
    +totals([("Subtotal","$1,080.00"),("Descuento · 10% referido, dentro del límite del asesor","-$100.00"),("IVA · servicios educativos 0%","$0.00"),("Total","$980.00")])),
  two(card("Pagos", table(["Pago","Monto"],[[c2("Cuota 1 · transferencia · 28 ago 2026","Banco Pichincha · ref. 884512"),"$490.00"],[c2("Cuota 2 · tarjeta de crédito · 27 sep 2026","Caja Quito · recibo 0421 · voucher 55120"),"$490.00"]])+kv(("Total pagado","$980.00"),("Saldo","$0.00"))+only(COMERCIAL,row(btn("Registrar pago",None,False,kind="ghost")))),
-     card("Efecto en la matrícula", kv(("Saldo antes de la factura","$980.00"),("Saldo después","$0.00"),("Módulos habilitados","7 a 10 · 4 matrículas"),("Comisión","Carla M. · 4% virtual · $39.20 · cierre de septiembre"))+table(["Movimiento","Monto"],[[c2("Factura emitida y autorizada","28 ago 2026"),"$980.00"],[c2("Pagos · cuota 1 y cuota 2","28 ago y 27 sep 2026"),"$980.00"],[c2("Nota de crédito","Ninguna emitida"),"—"]]))),
+     card("Efecto en la matrícula", kv(("Saldo antes de la factura","$980.00"),("Saldo después","$0.00"),("Módulos habilitados","7 a 10 · 4 matrículas"),("Comisión","Carla M. · 2 niveles Adults virtual · $39.00 · cierre de septiembre"))+table(["Movimiento","Monto"],[[c2("Factura emitida y autorizada","28 ago 2026"),"$980.00"],[c2("Pagos · cuota 1 y cuota 2","28 ago y 27 sep 2026"),"$980.00"],[c2("Nota de crédito","Ninguna emitida"),"—"]]))),
  card("Historial", table(["Fecha","Usuario","Evento"],[["27 sep 17:20","Secretaría","Pago de la cuota 2 · $490 · tarjeta de crédito"],["28 ago 12:14","Sistema","Comprobante PDF + XML enviado a maria.andrade@ejemplo.com"],["28 ago 12:12","Sistema","Autorizada por el SRI y subida al sistema contable"],["28 ago 12:11","Sistema","Enviada a Dora, 2 horas después de emitirla"],["28 ago 10:11","Carla M.","Factura emitida desde Nueva matrícula (venta multi-módulo, 4 matrículas)"]],wide=2)),
  subtitle="Equivale al registro Invoice de TeamDesk: términos, cliente, montos, pagos, ítems y transacción de la matrícula"),"Detalle de factura")
 
@@ -3704,50 +3841,75 @@ def calc_rows(rows):
     """Cálculo paso a paso: [(paso, detalle, monto)]; el último es el total."""
     body="".join(f'<div class="calc-row{" total" if i==len(rows)-1 else ""}"><span class="calc-n">{i+1 if i<len(rows)-1 else "="}</span><div class="calc-txt"><b>{p}</b><small>{d}</small></div><span class="calc-amt">{m}</span></div>' for i,(p,d,m) in enumerate(rows))
     return f'<div class="calc">{body}</div>'
-mi_comision=card("Así se calcula tu comisión de octubre",
-  calc_rows([("Vendiste 14 niveles","6 virtuales ($5,420) y 8 presenciales ($3,980). Con 11 o más niveles entras al rango más alto: 4% virtual y 5% presencial.","Rango 11+"),
-             ("Comisión por ventas virtuales","$5,420 × 4%","$216.80"),
-             ("Comisión por ventas presenciales","$3,980 × 5%","$199.00"),
-             ("Bono por cumplir la meta","Tu meta era 12 niveles y vendiste 14 (117%).","+$50.00"),
-             ("Retenido hasta que el estudiante pague","Tomás Guerrero (A2 presencial, $450) aún no paga: $22.50 se liberan cuando cobre.","-$22.50"),
-             ("Tu comisión de octubre","Se paga el 5 de noviembre con el cierre del mes. Lo retenido se suma al mes en que se cobre.","$443.30")]),
-  extra=badge("Meta cumplida · 117%","ok"))
-meta_card=card("Tu meta del mes", progress(100,"14 de 12 niveles · meta cumplida",CH[0])
-  +kv(("Faltan para el siguiente rango","Ya estás en el rango más alto"),("Si vendes 1 nivel presencial más ($500)","+$25 de comisión"),("Si vendes 1 nivel virtual más ($450)","+$18 de comisión"))
-  +hbars([("Rango 1–5 niveles · 2% / 3%",5),("Rango 6–10 niveles · 3% / 4%",10),("Rango 11+ niveles · 4% / 5% · estás aquí",14)],unit=""))
-ventas_asesor=table(["Fecha","Venta","Modalidad","Monto","Cobrado","Regla","Comisión","Estado"],[
-  ["12 oct",c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202603218 · B1 módulo 7 · rematrícula"),"Virtual","$250","100%","4%","$10.00",badge("Por pagar","warn")],
-  ["11 oct",c2('<a href="DetalleMatricula.html">Valeria Cedeño</a>',"001-202603221 · B2 · 1 nivel"),"Virtual","$495","100%","4%","$19.80",badge("Por pagar","warn")],
-  ["09 oct",c2('<a href="DetalleMatricula.html">Ana Ruiz (menor)</a>',"001-202603215 · Kids 2 · 2 niveles"),"Presencial","$760","50%","5%","$38.00",badge("Por pagar","warn")],
-  ["05 oct",c2('<a href="DetalleMatricula.html">Tomás Guerrero</a>',"001-202603219 · A2 módulos 5–6 · 1 nivel"),"Presencial","$450","0%","5%","$22.50",badge("Retenida · sin cobro","bad")],
-  ["03 oct",c2('<a href="DetalleMatricula.html">Gabriela Núñez</a>',"001-202602863 · A2 · 1 nivel"),"Virtual","$261","100%","4%","$10.44",badge("Por pagar","warn")],
-  ["10 oct",c2('<a href="DetalleMatricula.html">Martín Ortega</a>',"001-202603223 · Teens A2 módulo 3 · rematrícula"),"Virtual","$230","100%","4%","$9.20",badge("Por pagar","warn")]],wide=1)
-page("DetalleComision.html","Detalle comisión",shell("Mi comisión · Octubre 2026","Comisiones",
- hero([("Asesor","Carla M. · Quito"),("Período","1 – 31 oct 2026 · cierra en 19 días"),("Niveles vendidos","14 (6 virtual · 8 presencial)"),("Meta","12 niveles"),("Comisión estimada","$443.30"),("Se paga","5 nov 2026")],
+def rangos_tbl(filas): return table(["Rango del mes","Virtual","Presencial","Vigencia"],filas,wide=0)
+mi_comision=card("Así se calcula tu comisión de septiembre (se paga en octubre)",
+  calc_rows([("24 matrículas válidas · base de 15","Cumpliste la meta, así que tu base baja de 30 a 15. Las 15 primeras del mes, en orden de llegada, no comisionan; desde la 16 sí.","9 sobre la base"),
+             ("3 módulos sueltos","Adults virtual $10.14 · Teens presencial $10.00 · Kids presencial $12.00","$32.14"),
+             ("6 ventas de niveles","según la tabla de niveles por módulos vendidos, programa y modalidad (detalle abajo)","$163.72"),
+             ("One to one","1 programa de 30 horas presencial normal · no suma a la base","$19.80"),
+             ("Summer camp y meses anteriores","2 summer camp × $6 · 1 matrícula de agosto cobrada en septiembre × $10","$22.00"),
+             ("Bono grupal","Quito y Valle llegaron juntos a la meta del mes","+$100.00"),
+             ("Tu comisión","Se paga en octubre, después de que Dirección Comercial y Administración aprueban el período.","$337.66")]),
+  extra=badge("Meta cumplida · base 15","ok"))
+meta_card=card("Tu base y tu meta", progress(100,"24 matrículas válidas · meta cumplida",CH[0])
+  +kv(("Base de Quito","30 matrículas · 15 si cumples la meta"),("Ya pasaste la base","desde la matrícula 16 todo comisiona"),("Una venta más de 2 niveles Adults presencial","+$44.00"),("Una venta más de 1 nivel Adults virtual","+$18.72")))
+ventas_asesor=table(["N.º","Venta","Programa · modalidad","Módulos","Tabla","Comisión"],[
+  ["1 a 15",c2("Base del mes","del 1 al 12 sep · no comisionan"),"varios","—","base","$0.00"],
+  ["16",c2('<a href="Ficha360.html">Sofía Herrera</a>',"001-202603218 · rematrícula"),"Adults · virtual","1","módulo suelto","$10.14"],
+  ["17",c2('<a href="DetalleMatricula.html">Valeria Cedeño</a>',"001-202603221"),"Adults · presencial","2","1 nivel","$22.00"],
+  ["18",c2('<a href="DetalleMatricula.html">Ana Ruiz (menor)</a>',"001-202603215"),"Kids · presencial","2","1 nivel","$32.00"],
+  ["19",c2('<a href="DetalleMatricula.html">Gabriela Núñez</a>',"001-202602863"),"Adults · virtual","4","2 niveles","$39.00"],
+  ["20",c2('<a href="DetalleMatricula.html">Tomás Guerrero</a>',"001-202603219"),"Teens · presencial","2","1 nivel","$21.00"],
+  ["21",c2('<a href="DetalleMatricula.html">Martín Ortega</a>',"001-202603223"),"Teens · presencial","1","módulo suelto","$10.00"],
+  ["22",c2('<a href="DetalleMatricula.html">Lucía Paredes</a>',"001-202603230"),"Adults · virtual","2","1 nivel","$18.72"],
+  ["23",c2('<a href="DetalleMatricula.html">Daniel Rosero</a>',"001-202603236"),"Teens · virtual","3","3 módulos","$31.00"],
+  ["24",c2('<a href="DetalleMatricula.html">Emma Salazar (menor)</a>',"001-202603241"),"Kids · presencial","1","módulo suelto","$12.00"]],wide=1)
+page("DetalleComision.html","Detalle comisión",shell("Mi comisión · Septiembre 2026","Comisiones",
+ hero([("Asesor","Carla M. · Quito"),("Período","1 – 30 sep 2026 · se paga en octubre"),("Matrículas válidas","24 · base 15"),("Meta","cumplida"),("Comisión","$337.66"),("Estado","en revisión")],
    btn("Exportar detalle")+btn("Ver reglas de comisión","ReglasComision.html"),
    tag='<span class="hero-code">Carla M.</span>'+badge("Meta cumplida","ok")+badge("En revisión · Dir. Comercial","warn")),
  two(mi_comision, meta_card, ratio="1.3fr 1fr"),
- card("Tus ventas del mes", ventas_asesor+kv(("Total ventas","$3,446 cobradas de $3,896"),("Comisión por pagar","$420.80"),("Retenida","$22.50"),("Bono","$50.00"))),
- two(card("Tu historial", vbars([("Jul",[350]),("Ago",[280]),("Sep",[300]),("Oct",[443])],["Comisión"],h=140)), card("Preguntas frecuentes", li(["¿Por qué una comisión aparece retenida? Porque el estudiante todavía no paga; se libera cuando cobre.","¿Cuándo se paga? El 5 de cada mes, después de que Dirección Comercial revisa y aprueba el período.","¿Qué pasa si un estudiante anula? Si se devuelve el dinero, la comisión de esa venta se descuenta del mes siguiente.","¿Los descuentos afectan mi comisión? Sí: la comisión se calcula sobre el valor facturado, después del descuento."]))),
+ card("Tus matrículas del mes en orden de llegada", ventas_asesor+kv(("Módulos sueltos","$32.14"),("Niveles","$163.72"),("Fuera de la tabla","one to one $19.80 · summer camp $12.00 · meses anteriores $10.00 · bono $100.00"))),
+ two(card("Tu historial", vbars([("Jun",[290]),("Jul",[312]),("Ago",[265]),("Sep",[338])],["Comisión"],h=140)), card("Preguntas frecuentes", li(["¿Qué es la base? Las primeras 30 matrículas del mes en Quito y Valle (12 en Ambato) no comisionan; si cumples la meta, la base baja a la mitad.","¿Cuándo se paga? El mes siguiente, después de que Dirección Comercial y Administración revisan y aprueban el período.","¿Por qué un monto fijo? Cada venta paga según cuántos módulos tiene, el programa y la modalidad; no es un porcentaje.","¿El one to one suma a la base? No: se paga aparte por horas; solo los de menos de 20 horas suman a la base."]))),
  subtitle="Cada paso del cálculo con tus números; sin fórmulas ocultas"),"Mi comisión")
 
 # 26 Reglas de comisión
-def rangos_tbl(filas): return table(["Rango del mes","Virtual","Presencial","Vigencia"],filas,wide=0)
-page("ReglasComision.html","Reglas de comisión",shell("Reglas de comisión","Comisiones",
- only("ADM,GER,DIR",kv(("Quién configura","Administración (Estefanía) · los asesores solo consultan sus comisiones y las exportan a Excel"),("Modelo","tablas de rangos según módulos o niveles vendidos, modalidad, base de cada sede y producto; no son porcentajes"),("Estado",badge("Tablas de ejemplo · la tabla real de comisiones sigue pendiente de Cambridge","warn")))),
- tabs(["Niveles y módulos (grupal)","One to one y horas","Otros productos","Bonos","Simulador"],"Niveles y módulos (grupal)",panels={
-  "Niveles y módulos (grupal)": seg(["Quito","Valle de los Chillos","Ambato","Cuenca"],[
-     rangos_tbl([["1 – 5 niveles","$8 por nivel","$10 por nivel","2026"],["6 – 10 niveles","$12 por nivel","$15 por nivel","2026"],["11 o más niveles","$18 por nivel","$22 por nivel","2026"],["Módulo suelto","$4 por módulo","$5 por módulo","2026"]]),
-     rangos_tbl([["1 – 4 niveles","$8 por nivel","$10 por nivel","2026"],["5 – 8 niveles","$12 por nivel","$15 por nivel","2026"],["9 o más niveles","$18 por nivel","$22 por nivel","2026"],["Módulo suelto","$4 por módulo","$5 por módulo","2026"]]),
-     rangos_tbl([["1 – 3 niveles","$8 por nivel","$10 por nivel","2026"],["4 – 7 niveles","$12 por nivel","$15 por nivel","2026"],["8 o más niveles","$18 por nivel","$22 por nivel","2026"],["Módulo suelto","$4 por módulo","$5 por módulo","2026"]]),
-     rangos_tbl([["1 – 3 niveles","$8 por nivel","$10 por nivel","2026"],["4 – 6 niveles","$12 por nivel","$15 por nivel","2026"],["7 o más niveles","$18 por nivel","$22 por nivel","2026"],["Módulo suelto","$4 por módulo","$5 por módulo","2026"]])],label="Sede")
-    +kv(("Base por sede","la meta de Ambato no es la de Quito: cada sede tiene sus rangos"),("Cómo se cuenta","niveles completos (2 módulos) y módulos sueltos de ventas totalmente pagadas en el mes"))+only("ADM,GER,DIR",row(btn("Editar tabla"),btn("Nueva regla"))),
-  "One to one y horas": table(["Rango de horas vendidas en el mes","One to one","One to one reducido","One to one Business","Vigencia"],[["1 – 20 h","$1.50 por hora","$1.00 por hora","$2.00 por hora","2026"],["21 – 50 h","$2.00 por hora","$1.50 por hora","$2.50 por hora","2026"],["51 o más","$2.50 por hora","$2.00 por hora","$3.00 por hora","2026"]],wide=0)+kv(("Pestaña aparte","las horas no se mezclan con los niveles en el reporte mensual"))+only("ADM,GER,DIR",row(btn("Editar tabla"))),
-  "Otros productos": table(["Producto","Comisión","Condición","Vigencia"],[["Certificaciones (exámenes internacionales)","$5 por inscripción","pago completo","2026"],["Traducciones","3% del valor","pago completo","2026"],["Cursos de español","tabla de niveles de la sede","—","2026"],["Mercadería","sin comisión","—","2026"]],wide=0)+only("ADM,GER,DIR",row(btn("Editar tabla"))),
-  "Bonos": table(["Bono","Condición","Monto","Vigencia","Estado"],[["Meta mensual","cumple la meta de niveles de su sede","$50","2026",badge("Activo","ok")],["Retención","70% o más de rematrícula de su cartera","$30","2026",badge("Activo","ok")]],wide=0)+only("ADM,GER,DIR",row(btn("Nueva regla"))),
-  "Simulador": filters(sel("Período de prueba",["Septiembre 2026","Agosto 2026"],w="170px"),actions=btn("Simular",None,False,"Se recalculan las comisiones del período elegido con las tablas actuales, sin guardar nada."))+table(["Asesor","Comisión real","Con tablas nuevas","Diferencia"],[["Carla M.","$300","$330","+$30"],["Diego R.","$150","$150","$0"],["Sofía L.","$220","$236","+$16"]],wide=0),
+# ===== Comisiones: tablas reales de Cambridge (R-09 · tabla de cálculo de julio 2026 y videos del proceso) =====
+COM_FILAS=["1 nivel (2 módulos)","3 módulos","2 niveles (4 módulos)","5 módulos","3 niveles (6 módulos)","7 módulos","4 niveles (8 módulos)","9 módulos","5 niveles (10 módulos)","11 módulos","6 niveles (12 módulos)","13 módulos"]
+COM_NIV={
+ "Presencial":{"Preschool":[33,62],"Kids":[32,53,79,109,142,166],"Teens":[21,32,43,55,66,79,90,104,115,134,148],"Adults":[22,33,44,57,68,81,93,107,118,136,151,175]},
+ "Virtual":{"Teens":[20,31,42,55,66,79,90.72,106,118,136,150],"Adults":[18.72,28.08,39,48.75,60.84,70.98,84.24,94.77,109.2,122.08,139.78,158.05]},
+ "Online":{"Teens y Adults":[16.2,25.38,33.84,44.1,52.92,63,72,84.24,93.6,106.92,116.64,128.7]}}
+COM_MOD=[("Presencial","Preschool",12),("Presencial","Kids",12),("Presencial","Teens",10),("Presencial","Adults",10),("Virtual","Teens",10),("Virtual","Adults",10.14),("Online","Teens y Adults",8.10)]
+COM_O2O=[20,30,40,45,50,60,70,80,90]
+COM_O2O_V={"Presencial normal":[13.2,19.8,26.4,29.7,41.25,49.5,57.75,66,89.1],"Presencial preparatoria":[14.4,21.6,28.8,32.4,45,54,63,72,97.2],"Virtual normal":[11.6,17.4,23.2,26.1,36.25,43.5,50.75,58,78.3],"Virtual preparatoria":[12.96,19.44,25.92,29.16,40.5,48.6,56.7,64.8,87.48]}
+def _m(v): return f"${v:,.2f}" if v is not None else "—"
+def com_niveles_tbl(mod):
+    progs=COM_NIV[mod]; n=max(len(v) for v in progs.values())
+    return table(["Módulos vendidos en la venta"]+list(progs),[[COM_FILAS[i]]+[_m(v[i]) if i<len(v) else "—" for v in progs.values()] for i in range(n)],wide=0)
+reglas_com=shell("Reglas de comisión","Comisiones",
+ only("ADM,GER,DIR",kv(("Quién configura","Administración (Estefanía) · los asesores solo consultan sus comisiones y las exportan a Excel"),("Modelo","montos fijos por venta según módulos vendidos, programa y modalidad; nunca porcentajes (salvo la Dirección Comercial, que cobra sobre el crecimiento)"),("Fuente","R-09 · tabla de cálculo de comisiones de julio 2026 y videos del proceso"),("Cuándo se paga","el mes siguiente: en octubre se pagan las matrículas nuevas de septiembre"))),
+ tabs(["Niveles por venta","Módulo suelto","One to one por horas","Base y bonos","Dirección Comercial","Simulador"],"Niveles por venta",maxvis=5,panels={
+  "Niveles por venta": seg(["Presencial y híbrido","Virtual","Online"],[com_niveles_tbl("Presencial"),com_niveles_tbl("Virtual"),com_niveles_tbl("Online")],label="Modalidad")
+     +kv(("Cómo se lee","una venta de 2 niveles de Adults presencial paga $44.00; el monto depende de cuántos módulos tiene esa venta, no del total del mes"),("Business corporativo","no comisiona en esta tabla"),("Cuenca","lleva su propio cálculo"))+only("ADM,GER,DIR",row(btn("Editar tabla"))),
+  "Módulo suelto": table(["Modalidad","Programa","Comisión por matrícula de 1 módulo"],[[a,b,_m(c)] for a,b,c in COM_MOD],wide=0)
+     +kv(("Cuenta separada","cada venta de un solo módulo se paga aparte, por encima de la base"),("Menos de 20 horas","las ventas de one to one de menos de 20 horas se cuentan aquí y suman a la base"))+only("ADM,GER,DIR",row(btn("Editar tabla"))),
+  "One to one por horas": table(["Horas vendidas"]+list(COM_O2O_V),[[f"{h} h"]+[_m(v[i]) for v in COM_O2O_V.values()] for i,h in enumerate(COM_O2O)],wide=0)
+     +kv(("No suma a la base","el one to one se paga aparte, por programa vendido"),("Preparatoria","programas de preparación para exámenes internacionales"))+only("ADM,GER,DIR",row(btn("Editar tabla"))),
+  "Base y bonos": table(["Regla","Quito","Valle de los Chillos","Ambato"],[
+       [c2("Base sin comisión","primeras matrículas del mes, en orden de llegada, contando módulos y niveles"),"30","30","12"],
+       [c2("Base si el asesor cumple la meta","la base baja a la mitad"),"15","15","6"],
+       [c2("Bono grupal","si Quito y Valle llegan juntos a la meta del mes"),"$100 por asesor","$100 por asesor","—"],
+       [c2("Summer camp","por matrícula"),"$6","$6","$6"],
+       [c2("Matrículas de meses anteriores","cobradas en este mes"),"$10 c/u","$10 c/u","$10 c/u"]],wide=0)
+     +kv(("Fórmula del mes","módulos sobre la base × su monto + niveles según la tabla + one to one + summer camp + meses anteriores + bono grupal"),("Cruce de control","la plataforma compara sus matrículas con el reporte comercial; las que no cruzan se revisan una por una antes de aprobar"))+only("ADM,GER,DIR",row(btn("Editar tabla"))),
+  "Dirección Comercial": kv(("Base comercial","ingreso por matrículas nuevas del mismo mes, promedio de los últimos tres años, por sede"),("Se paga sobre","el excedente: venta real del mes − base comercial; no sobre la venta total"),("Sin crecimiento","no hay comisión"))
+     +table(["Crecimiento sobre la base","Comisión sobre el excedente"],[["0 % a 4.99 %","sin comisión"],["5 % a 9.99 %","1 %"],["10 % a 14.99 %","2 %"],["15 % a 19.99 %","3 %"],["20 % o más","4 % · máximo"]],wide=0)
+     +table(["Sede","Base comercial","Venta real","Crecimiento","Excedente","Comisión"],[["Quito","$15,000","$25,880","73 %","$10,880","$435.20"],["Valle","$9,500","$11,200","18 %","$1,700",c2("$51.00","3 %")],["Ambato","$5,200","$5,050","−3 %","$0","$0.00"]],wide=0),
+  "Simulador": filters(sel("Período de prueba",["Septiembre 2026","Agosto 2026"],w="170px"),actions=btn("Simular",None,False,"Se recalculan las comisiones del período elegido con las tablas actuales, sin guardar nada."))+table(["Asesor","Comisión pagada","Con las tablas actuales","Diferencia"],[["Carla M.","$312.40","$337.66","+$25.26"],["Diego R.","$141.60","$141.60","$0.00"],["Sofía L.","$171.20","$188.40","+$17.20"]],wide=0),
  }),
- subtitle="Tablas de rangos por producto, modalidad y sede; cada cambio queda en el audit log"),"Reglas de comisión")
+ subtitle="Montos fijos por venta según módulos, programa y modalidad; cada cambio queda en el audit log")
+page("ReglasComision.html","Reglas de comisión",reglas_com,"Reglas de comisión")
 
 # 27 Inventario
 page("Inventario.html","Inventario",shell("Inventario de libros","Inventario",
@@ -5300,6 +5462,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .sum-item b,.sum-item strong{color:var(--ink-head)}
 .hero{gap:14px}
 .tabs{margin-bottom:-4px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}@media (max-width:1180px){.grid-3{grid-template-columns:minmax(0,1fr)}}
 .card .tbl-wrap,.list-panel .tbl-wrap{box-shadow:none}
 .wf-table .btn.kebab{min-height:36px;width:36px;padding:0;border-color:transparent;background:transparent;color:var(--ink-2);font-size:18px}.wf-table .btn.kebab:hover,.wf-table .btn.kebab[aria-expanded=true]{background:var(--surface-2);border-color:var(--line)}
 @media (max-width:1360px){.stepper li:not([aria-current]) .s-t{display:none}.stepper button{padding-right:4px}.stepper li[aria-current=step] button{padding-right:18px}}
