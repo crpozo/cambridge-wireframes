@@ -913,6 +913,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .sum-item b,.sum-item strong{color:var(--ink-head)}
 .hero{gap:14px}
 .tabs{margin-bottom:-4px}
+.tabs .tab-more>.tab.btn{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;box-shadow:none;min-height:var(--hit);padding:0 12px;font-weight:500;color:var(--ink-2);margin-bottom:-1px}.tabs .tab-more>.tab.btn:hover{background:none;color:var(--ink)}.tabs .tab-more>.tab.btn[aria-expanded=true]{color:var(--ink);background:none}.tabs .tab-more>.tab.btn.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}.tabs .tab-more>.tab.btn .chev{margin-left:2px}
 .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}@media (max-width:1180px){.grid-3{grid-template-columns:minmax(0,1fr)}}
 .card .tbl-wrap,.list-panel .tbl-wrap{box-shadow:none}
 .wf-table .btn.kebab{min-height:36px;width:36px;padding:0;border-color:transparent;background:transparent;color:var(--ink-2);font-size:18px}.wf-table .btn.kebab:hover,.wf-table .btn.kebab[aria-expanded=true]{background:var(--surface-2);border-color:var(--line)}
