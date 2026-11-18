@@ -3271,12 +3271,12 @@ descuentos=table(["Fecha","Estudiante","Asesor","Venta","Precio lista","% dcto."
 com=shell("Comisiones y descuentos · Octubre 2026","Comisiones",
  tabs(["Comisiones","Descuentos otorgados"],"Comisiones",roles={"Descuentos otorgados":"ADM,GER,DIR,SUC"},panels={
   "Comisiones": only("ASE", card("Tu comisión de septiembre, en corto", kpis([("Matrículas válidas","24","base 15 · meta cumplida"),("Sobre la base","9","desde la matrícula 16"),("Comisión","$337.66","módulos, niveles, one to one, summer y bono"),("Se paga","octubre","tras la aprobación del período")])+progress(100,"Base superada: 24 de 15",CH[0])+row(btn("Preparar mi informe del mes","InformeComisiones.html",True),btn("Ver el cálculo paso a paso","DetalleComision.html"),btn("Exportar Excel"))))
-   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total asesores","$667.66"),("Niveles vendidos","34"))))
+   +only("ADM,GER,DIR,SUC", filters(sel("Período",["Octubre 2026","Septiembre 2026","Agosto 2026"],w="170px"),actions=kv(("Estado",badge("En revisión","warn")),("Total asesores","$714.18"),("Niveles vendidos","34"))))
    +only("ADM,GER,DIR,SUC", flow([("Borrador (cálculo automático)","","","done"),("En revisión (Dir. Comercial)","","","now"),("Aprobado (se paga)","","","")])
    +table(["Asesor","Sede","Matrículas válidas","Base","Sobre la base","Comisión","Acción"],[
     ["Carla M.","Quito","24","15 · meta cumplida","9","$337.66",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Diego R.","Valle","25","30","0 · solo one to one, summer y bono","$141.60",'<a href="DetalleComision.html">Ver cálculo</a>'],
-    ["Sofía L.","Ambato","14","6 · meta cumplida","8","$188.40",'<a href="DetalleComision.html">Ver cálculo</a>']])
+    ["Diego R.","Valle","25","30","0 · solo one to one, summer y bono","$147.80",'<a href="DetalleComision.html">Ver cálculo</a>'],
+    ["Sofía L.","Ambato","14","6 · meta cumplida","8","$228.72",'<a href="DetalleComision.html">Ver cálculo</a>']])
    +two(card("Meta vs real por asesor", vbars([("Carla M.",[12,14]),("Diego R.",[12,9]),("Sofía L.",[10,11])],["Meta","Real"])),
         card("Tabla vigente · niveles presencial (extracto)", table(["Módulos vendidos en la venta","Kids","Teens","Adults"],[["1 nivel (2 módulos)","$32.00","$21.00","$22.00"],["2 niveles (4 módulos)","$79.00","$43.00","$44.00"],["3 niveles (6 módulos)","$142.00","$66.00","$68.00"]],wide=0)
           +kv(("Base","Quito y Valle 30 matrículas, Ambato 12; a la mitad si el asesor cumple la meta"),("Quién configura","Administración (Estefanía) en Reglas de comisión; los asesores solo consultan y exportan"),("Dirección Comercial","cobra aparte, sobre el crecimiento frente a la base comercial"))+row('<a href="ReglasComision.html" style="font-size:13px">Ver todas las tablas</a>')))
@@ -3870,7 +3870,7 @@ page("DetalleComision.html","Detalle comisión",shell("Mi comisión · Septiembr
    tag='<span class="hero-code">Carla M.</span>'+badge("Meta cumplida","ok")+badge("En revisión · Dir. Comercial","warn")),
  two(mi_comision, meta_card, ratio="1.3fr 1fr"),
  card("Tus matrículas del mes en orden de llegada", ventas_asesor+kv(("Módulos sueltos","$32.14"),("Niveles","$163.72"),("Fuera de la tabla","one to one $19.80 · summer camp $12.00 · meses anteriores $10.00 · bono $100.00"))),
- two(card("Tu historial", vbars([("Jun",[290]),("Jul",[312]),("Ago",[265]),("Sep",[338])],["Comisión"],h=140)), card("Preguntas frecuentes", li(["¿Qué es la base? Las primeras 30 matrículas del mes en Quito y Valle (12 en Ambato) no comisionan; si cumples la meta, la base baja a la mitad.","¿Cuándo se paga? El mes siguiente, después de que Dirección Comercial y Administración revisan y aprueban el período.","¿Por qué un monto fijo? Cada venta paga según cuántos módulos tiene, el programa y la modalidad; no es un porcentaje.","¿El one to one suma a la base? No: se paga aparte por horas; solo los de menos de 20 horas suman a la base."]))),
+ two(card("Tu historial", vbars([("Jun",[290]),("Jul",[154]),("Ago",[157]),("Sep",[338])],["Comisión"],h=140)), card("Preguntas frecuentes", li(["¿Qué es la base? Las primeras 30 matrículas del mes en Quito y Valle (12 en Ambato) no comisionan; si cumples la meta, la base baja a la mitad.","¿Cuándo se paga? El mes siguiente, después de que Dirección Comercial y Administración revisan y aprueban el período.","¿Por qué un monto fijo? Cada venta paga según cuántos módulos tiene, el programa y la modalidad; no es un porcentaje.","¿El one to one suma a la base? No: se paga aparte por horas; solo los de menos de 20 horas suman a la base."]))),
  subtitle="Cada paso del cálculo con tus números; sin fórmulas ocultas"),"Mi comisión")
 
 # 26 Reglas de comisión
@@ -3887,6 +3887,70 @@ def _m(v): return f"${v:,.2f}" if v is not None else "—"
 def com_niveles_tbl(mod):
     progs=COM_NIV[mod]; n=max(len(v) for v in progs.values())
     return table(["Módulos vendidos en la venta"]+list(progs),[[COM_FILAS[i]]+[_m(v[i]) if i<len(v) else "—" for v in progs.values()] for i in range(n)],wide=0)
+# ===== Simulador de comisiones (datos ficticios en orden de llegada; misma regla que Reglas de comisión y assets/simulador.js) =====
+import random as _rnd
+SIM_BASE={"Quito":30,"Valle":30,"Ambato":12}
+def _sim_rand_sale(r):
+    k=r.random()
+    if k<0.3:
+        mod,prog,_=r.choice(COM_MOD); return ["m",mod,prog,1]
+    mod=r.choice(["Presencial","Presencial","Virtual","Online"]); prog=r.choice(list(COM_NIV[mod])); n=len(COM_NIV[mod][prog])
+    return ["n",mod,prog,2+r.choice([o for o in (0,0,0,1,2,2,4) if o<n])]
+def _sim_fill(r,n): return [_sim_rand_sale(r) for _ in range(n)]
+_r=_rnd.Random(11)
+SIM_DATA={
+ "Septiembre 2026":[
+  {"asesor":"Carla M.","sede":"Quito","meta":True,"bono":True,"ventas":_sim_fill(_r,15)+[["m","Virtual","Adults",1],["n","Presencial","Adults",2],["n","Presencial","Kids",2],["n","Virtual","Adults",4],["n","Presencial","Teens",2],["m","Presencial","Teens",1],["n","Virtual","Adults",2],["n","Virtual","Teens",3],["m","Presencial","Kids",1],["o","Presencial normal",30],["s"],["s"],["a"]]},
+  {"asesor":"Diego R.","sede":"Valle","meta":False,"bono":True,"ventas":_sim_fill(_r,25)+[["o","Virtual normal",30],["o","Presencial preparatoria",20],["s"],["a"]]},
+  {"asesor":"Sofía L.","sede":"Ambato","meta":True,"bono":False,"ventas":_sim_fill(_r,6)+[["n","Presencial","Kids",2],["n","Presencial","Teens",2],["m","Presencial","Preschool",1],["n","Online","Teens y Adults",2],["n","Presencial","Adults",4],["m","Presencial","Kids",1],["n","Presencial","Teens",3],["n","Virtual","Adults",2],["o","Presencial preparatoria",40],["s"],["s"]]}],
+ "Agosto 2026":[
+  {"asesor":"Carla M.","sede":"Quito","meta":False,"bono":False,"ventas":_sim_fill(_r,34)+[["o","Virtual normal",40],["s"],["a"],["a"]]},
+  {"asesor":"Diego R.","sede":"Valle","meta":True,"bono":False,"ventas":_sim_fill(_r,22)+[["s"],["s"],["s"]]},
+  {"asesor":"Sofía L.","sede":"Ambato","meta":False,"bono":False,"ventas":_sim_fill(_r,16)+[["o","Presencial normal",30]]}],
+ "Julio 2026":[
+  {"asesor":"Carla M.","sede":"Quito","meta":False,"bono":True,"ventas":_sim_fill(_r,26)+[["o","Presencial normal",45],["s"],["s"],["s"],["s"]]},
+  {"asesor":"Diego R.","sede":"Valle","meta":True,"bono":True,"ventas":_sim_fill(_r,21)+[["a"]]},
+  {"asesor":"Sofía L.","sede":"Ambato","meta":True,"bono":False,"ventas":_sim_fill(_r,11)+[["s"]]}]}
+SIM_DEF={"baseQV":30,"baseA":12,"metaPct":50,"ajNiv":0,"ajMod":0,"bono":100,"summer":6,"ant":10}
+def sim_calc(a, p=SIM_DEF):
+    base0=p["baseA"] if a["sede"]=="Ambato" else p["baseQV"]
+    base=int(round(base0*(p["metaPct"]/100))) if a["meta"] else base0
+    valid=0; tot=0.0; sobre=0
+    for v in a["ventas"]:
+        t=v[0]
+        if t in ("m","n"):
+            valid+=1
+            if valid<=base: continue
+            sobre+=1
+            if t=="m": tot+=next(c for m,pr,c in COM_MOD if m==v[1] and pr==v[2])*(1+p["ajMod"]/100)
+            else: tot+=COM_NIV[v[1]][v[2]][v[3]-2]*(1+p["ajNiv"]/100)
+        elif t=="o": tot+=COM_O2O_V[v[1]][COM_O2O.index(v[2])]
+        elif t=="s": tot+=p["summer"]
+        elif t=="a": tot+=p["ant"]
+    if a["bono"]: tot+=p["bono"]
+    return {"valid":valid,"base":base,"sobre":sobre,"tot":round(tot+1e-9,2)}
+def simulador_panel():
+    import json as _j
+    data=_j.dumps({"niv":COM_NIV,"mod":[[m,p,c] for m,p,c in COM_MOD],"o2oH":COM_O2O,"o2o":COM_O2O_V,"data":SIM_DATA,"def":SIM_DEF},ensure_ascii=False)
+    per=list(SIM_DATA)[0]; rows=[]
+    for i,a in enumerate(SIM_DATA[per]):
+        c=sim_calc(a)
+        rows.append([c2(a["asesor"],a["sede"]),f'<span data-s="{i}-valid">{c["valid"]}</span>',f'<span data-s="{i}-base">{c["base"]}</span>',f'<span data-s="{i}-sobre">{c["sobre"]}</span>',f'<span data-s="{i}-vig">${c["tot"]:,.2f}</span>',f'<span data-s="{i}-sim">${c["tot"]:,.2f}</span>',f'<span data-s="{i}-dif">$0.00</span>'])
+    def num(lbl,key,val,hint,step="1"):
+        return f'<label class="field" style="width:170px">{lbl}<input type="number" class="ctl" data-p="{key}" value="{val}" step="{step}"><span class="field-hint">{hint}</span></label>'
+    tv=sum(sim_calc(a)["tot"] for a in SIM_DATA[per])
+    return (f'<div data-sim><script type="application/json" class="sim-data">{data}</script>'
+      +card("Qué quieres probar",'<div class="filters sim-params">'
+        +f'<label class="field" style="width:170px">Período<select class="ctl" data-p="per">{"".join(f"<option>{k}</option>" for k in SIM_DATA)}</select><span class="field-hint">matrículas en orden de llegada</span></label>'
+        +num("Base Quito y Valle","baseQV",30,"vigente: 30")+num("Base Ambato","baseA",12,"vigente: 12")+num("Base con meta (%)","metaPct",50,"vigente: 50 %")
+        +num("Ajuste a niveles (%)","ajNiv",0,"0 = tabla vigente")+num("Ajuste a módulos (%)","ajMod",0,"0 = tabla vigente")+num("Bono grupal ($)","bono",100,"vigente: $100")
+        +num("Summer camp ($)","summer",6,"vigente: $6")+num("Meses anteriores ($)","ant",10,"vigente: $10")
+        +'</div>'+row('<button type="button" class="btn btn-ghost" data-sim-reset>Restablecer valores vigentes</button>'))
+      +kpis([("Total con las tablas vigentes",f'<span data-s="tv">${tv:,.2f}</span>',"período elegido"),("Total con tus cambios",f'<span data-s="ts">${tv:,.2f}</span>',"se recalcula al cambiar un valor"),("Diferencia",f'<span data-s="td">$0.00</span>',f'<span data-s="tdp">sin cambios</span>')])
+      +card("Resultado por asesor",table(["Asesor","Matrículas válidas","Base","Sobre la base","Tablas vigentes","Con tus cambios","Diferencia"],rows,wide=0)
+        +kv(("No se guarda nada","el simulador solo sirve para decidir; para aplicar un cambio, edita la tabla en su pestaña (queda en el audit log)"),("Fuera de la base","one to one de 20 horas o más, summer camp, meses anteriores y bono grupal se pagan aparte de la base")))
+      +'<script src="assets/simulador.js"></script></div>')
+
 reglas_com=shell("Reglas de comisión","Comisiones",
  only("ADM,GER,DIR",kv(("Quién configura","Administración (Estefanía) · los asesores solo consultan sus comisiones y las exportan a Excel"),("Modelo","montos fijos por venta según módulos vendidos, programa y modalidad; nunca porcentajes (salvo la Dirección Comercial, que cobra sobre el crecimiento)"),("Fuente","R-09 · tabla de cálculo de comisiones de julio 2026 y videos del proceso"),("Cuándo se paga","el mes siguiente: en octubre se pagan las matrículas nuevas de septiembre"))),
  tabs(["Niveles por venta","Módulo suelto","One to one por horas","Base y bonos","Dirección Comercial","Simulador"],"Niveles por venta",maxvis=5,panels={
@@ -3906,7 +3970,7 @@ reglas_com=shell("Reglas de comisión","Comisiones",
   "Dirección Comercial": kv(("Base comercial","ingreso por matrículas nuevas del mismo mes, promedio de los últimos tres años, por sede"),("Se paga sobre","el excedente: venta real del mes − base comercial; no sobre la venta total"),("Sin crecimiento","no hay comisión"))
      +table(["Crecimiento sobre la base","Comisión sobre el excedente"],[["0 % a 4.99 %","sin comisión"],["5 % a 9.99 %","1 %"],["10 % a 14.99 %","2 %"],["15 % a 19.99 %","3 %"],["20 % o más","4 % · máximo"]],wide=0)
      +table(["Sede","Base comercial","Venta real","Crecimiento","Excedente","Comisión"],[["Quito","$15,000","$25,880","73 %","$10,880","$435.20"],["Valle","$9,500","$11,200","18 %","$1,700",c2("$51.00","3 %")],["Ambato","$5,200","$5,050","−3 %","$0","$0.00"]],wide=0),
-  "Simulador": filters(sel("Período de prueba",["Septiembre 2026","Agosto 2026"],w="170px"),actions=btn("Simular",None,False,"Se recalculan las comisiones del período elegido con las tablas actuales, sin guardar nada."))+table(["Asesor","Comisión pagada","Con las tablas actuales","Diferencia"],[["Carla M.","$312.40","$337.66","+$25.26"],["Diego R.","$141.60","$141.60","$0.00"],["Sofía L.","$171.20","$188.40","+$17.20"]],wide=0),
+  "Simulador": simulador_panel(),
  }),
  subtitle="Montos fijos por venta según módulos, programa y modalidad; cada cambio queda en el audit log")
 page("ReglasComision.html","Reglas de comisión",reglas_com,"Reglas de comisión")
@@ -5462,6 +5526,7 @@ textarea.ctl{padding:10px 12px;resize:vertical;min-height:88px}select.ctl{appear
 .sum-item b,.sum-item strong{color:var(--ink-head)}
 .hero{gap:14px}
 .tabs{margin-bottom:-4px}
+[data-sim]{display:flex;flex-direction:column;gap:24px}.sim-up{color:var(--warn);font-weight:600}.sim-down{color:var(--ok);font-weight:600}.sim-params{align-items:flex-start}.sim-params .field-hint{font-size:var(--t-12);color:var(--mute)}
 .tabs .tab-more>.tab.btn{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;box-shadow:none;min-height:var(--hit);padding:0 12px;font-weight:500;color:var(--ink-2);margin-bottom:-1px}.tabs .tab-more>.tab.btn:hover{background:none;color:var(--ink)}.tabs .tab-more>.tab.btn[aria-expanded=true]{color:var(--ink);background:none}.tabs .tab-more>.tab.btn.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}.tabs .tab-more>.tab.btn .chev{margin-left:2px}
 .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}@media (max-width:1180px){.grid-3{grid-template-columns:minmax(0,1fr)}}
 .card .tbl-wrap,.list-panel .tbl-wrap{box-shadow:none}
