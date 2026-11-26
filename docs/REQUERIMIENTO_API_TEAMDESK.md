@@ -1,6 +1,6 @@
 # Pedido a Cambridge · acceso a TeamDesk para la migración
 
-La migración contratada consolida las bases TeamDesk de cada sede en una sola base con el campo Sede (ver `docs/DECISIONES.md` → Mapeo TeamDesk → Plataforma). Para extraer los datos por la API REST de TeamDesk necesitamos lo siguiente.
+La migración contratada consolida las bases TeamDesk de cada sede en una sola base, con el campo Sede para distinguirlas, y conserva los códigos actuales de curso, matrícula e inventario. Para extraer los datos por la API REST de TeamDesk necesitamos lo siguiente.
 
 ## 1. Accesos (uno por cada base)
 
