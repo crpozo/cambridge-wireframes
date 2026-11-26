@@ -14,6 +14,7 @@ Repo de wireframes estáticos (HTML/CSS puro, sin build) para la **Plataforma Ca
 - `docs/CONTEXTO_PROYECTO_CAMBRIDGE.md`: contexto completo exportable (qué es, actores, alcance contractual con lo que está dentro y lo que debe cotizarse aparte, estado del prototipo, decisiones, requerimientos, pendientes).
 - `docs/INFORME_REMATRICULA_ENTREGAS_NOV2026.md`: auditoría de `main` frente a los requerimientos de la sesión con Secretaría (5 nov), el plan estratégico comercial y la entrega digital de libros; qué se agregó, qué es viable y qué no.
 - `docs/DOCUMENTACION_CLIENTE_18NOV.md`: documentos R-02 (áreas y validadores), R-09 (comisiones: tablas reales, proceso y Dirección Comercial), R-12 (diccionarios de indicadores y del informe mensual de sede) y R-13 (manual de marketing): qué pide cada uno, dónde vive en la plataforma, qué es fuera de alcance y preguntas abiertas.
+- `docs/REQUERIMIENTO_API_TEAMDESK.md`: lo que se pide a Cambridge para extraer las bases TeamDesk por la API (accesos, tablas, adjuntos, reglas de consolidación, operación de la migración).
 - `docs/CONTEXTO_SESION.md`: traspaso completo de la sesión de trabajo (cronología de pedidos, estado del repo, pendientes).
 
 ## Estructura
