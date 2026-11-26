@@ -296,7 +296,6 @@ AI_CTX={
  "Configuracion.html":[("¿Qué aulas están libres el sábado en la mañana?","En Valle: C-2 (9 estudiantes) y C-7 (5). En Quito, Q-1 está ocupada al 60%. La capacidad se calcula con la norma SETEC.")],
  "Insights.html":[("¿Qué insight es el más urgente?","El descuento del 42% pendiente desde ayer bloquea una matrícula de $450. Después, los 14 estudiantes de A1 Sábados sin calificar: no pueden pasar a A2 y hay 3 cupos esperándolos.")],
 }
-PORTAL_URL="https://cambridgesol.edu.ec/cambridge-connect/"  # portal real del estudiante (Cambridge Connect); el mockup PortalEstudiante.html queda como referencia
 NO_FAB={"Main.html","RecuperarContrasena.html","PortalEstudiante.html","VerificarCertificado.html"}
 def analizar_pantalla(title, inner):
     """Análisis automático de la pantalla a partir de lo que se ve: KPIs, alertas (badges rojos/amarillos), tablas y acciones."""
@@ -2032,13 +2031,13 @@ def _mail(asunto,para,cuerpo,cta,href,nota=""):
 _mail_ok=_mail("Aprobaste el módulo 7 · tu módulo 8 empieza el 3 de noviembre","maria.andrade@ejemplo.com",
   '<p>Hola María,</p><p>Tu profesor cerró las notas de <b>English for Adults B1</b>. Tu nota final fue <b>8.4</b> y aprobaste.</p>'
   '<p>Tu siguiente módulo: <b>Módulo 8 · B1</b> · Lu-Ma-Mi-Ju 19:00–21:00 · inicia el 3 de noviembre con P. Gómez.</p><p>Te reservamos el cupo hasta el <b>26 de octubre a las 10:00</b>. Valor pendiente: <b>$250.00</b>.</p>',
-  "Confirmar mi matrícula y pagar",PORTAL_URL,"El enlace es personal. Si ya pagaste varios módulos, tu cupo está asegurado y solo debes confirmar.")
+  "Confirmar mi matrícula y pagar","PortalEstudiante.html","El enlace es personal. Si ya pagaste varios módulos, tu cupo está asegurado y solo debes confirmar.")
 _mail_rec=_mail("Tu nota del módulo 7 · siguientes pasos","sofia.herrera@ejemplo.com",
   '<p>Hola Sofía,</p><p>Tu nota final fue <b>6.8</b>. Antes de pasar al módulo 8 necesitas <b>tutorías y el examen de recuperación</b>.</p><p>Coordinación Académica te contactará en las próximas 48 horas para agendarlas.</p>',
-  "Agendar mi tutoría",PORTAL_URL,"No se te matricula en el siguiente módulo hasta decidirlo con Coordinación.")
+  "Agendar mi tutoría","PortalEstudiante.html","No se te matricula en el siguiente módulo hasta decidirlo con Coordinación.")
 _mail_deuda=_mail("Tienes un saldo pendiente · regularízalo para ver tu nota","pedro.mora@ejemplo.com",
   '<p>Hola Pedro,</p><p>Tus notas del módulo 7 ya están listas. Tienes un saldo vencido de <b>$500.00</b>; al regularizarlo te enviaremos tu nota y la matrícula de tu siguiente módulo.</p>',
-  "Ver mi estado de cuenta",PORTAL_URL,"Si ya pagaste, responde este correo con tu comprobante.")
+  "Ver mi estado de cuenta","PortalEstudiante.html","Si ya pagaste, responde este correo con tu comprobante.")
 _AV=[("23 oct 09:10","María Andrade","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Confirmó"),("23 oct 09:10","Martín Ortega","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Abierto"),
      ("23 oct 09:10","Camila Sánchez","Teens A2 · módulo 6","Aprobado · matrícula propuesta","Correo","Enviado"),("23 oct 09:10","Gabriela Núñez","Adults A2 · módulo 4","Aprobado · matrícula propuesta","Correo","Sin abrir"),
      ("23 oct 09:10","Sofía Herrera","Adults B1 · módulo 7","Recuperación · tutorías","Correo","Abierto"),("23 oct 09:10","Luis Torres","Adults B1 · módulo 7","Aprobado · matrícula propuesta","Correo","Rebotó")]
@@ -2234,7 +2233,7 @@ login=f'''<div class="auth">
   <a href="RecuperarContrasena.html" style="font-size:13px;text-align:center">Olvidé mi contraseña</a>
   <a href="VerificarCertificado.html" style="font-size:12px;text-align:center">Verificar un certificado</a>
   <p style="margin:0;font-size:12px;color:{MUTE};text-align:center">Un solo ingreso: según tu usuario entras al panel del equipo o al portal del estudiante · 2FA opcional</p>
-  <a href="{PORTAL_URL}" style="font-size:12px;text-align:center;color:{MUTE}">Demo: ver qué ve un estudiante al ingresar</a>
+  <a href="PortalEstudiante.html" style="font-size:12px;text-align:center;color:{MUTE}">Demo: ver qué ve un estudiante al ingresar</a>
 </form>
 </div>'''
 page("Main.html","Login",login,"Login")
@@ -2270,10 +2269,10 @@ portal=f'''<div class="portal">
      +row(btn("Rematricularme",disabled_reason="Se activa al aprobar el módulo 10 · tu bolsa cubre hasta el 10"))
      +'<p class="plain">Si tuvieras un saldo pendiente verías aquí un aviso con el contacto de Secretaría de tu sede en lugar del botón, hasta regularizarlo.</p>')
    +card("Próximos cursos", table(["Curso","Inicia","Profesor","Horario","Estado"],[[c2("Adults · virtual · B1 módulo 8","0001-2026-0767"),"3 nov 2026","P. Gómez","Lu-Ma-Mi-Ju 19:00–21:00",badge("Confirma tu cupo","warn")],[c2("Adults · presencial · B1+ módulos 9–10","sábados · Quito"),"9 ene 2027","L. Vega","Sa 09:00–13:00",badge("Pagado · cupo reservado","navy")],[c2("Adults · virtual · B2 módulos 11–14","por abrir"),"mar 2027","por asignar","—",badge("Rematrícula al terminar B1+","neutral")]],wide=0))
-   +card("Cursos", course_item("Adults · virtual · B1","módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),href=PORTAL_URL,tone=0,sessions="18",hours="36 h")
-     +course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),href=PORTAL_URL,tone=2,sessions="36",hours="72 h")
-     +course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),href=PORTAL_URL,tone=3,sessions="18",hours="36 h")
-     +course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),href=PORTAL_URL,tone=1,sessions="0",hours="0 h")),
+   +card("Cursos", course_item("Adults · virtual · B1","módulo 7 · P. Gómez",60,badge("En curso","navy"),"84 / 100",badge("Pendiente"),href="PortalEstudiante.html",tone=0,sessions="18",hours="36 h")
+     +course_item("English for Adults A2","Adults · A2 · módulos 3–6 · L. Vega",100,badge("Completado","ok"),"85 / 100",badge("A2.pdf","navy"),href="PortalEstudiante.html",tone=2,sessions="36",hours="72 h")
+     +course_item("English for Adults A1","Adults · A1 · módulos 1–2 · L. Vega",100,badge("Completado","ok"),"80 / 100",badge("A1.pdf","navy"),href="PortalEstudiante.html",tone=3,sessions="18",hours="36 h")
+     +course_item("English for Adults B2 · por abrir","Adults · B2 · módulos 11–14 · inicia mar 2027",0,badge("Pendiente"),"—",badge("Ninguno"),href="PortalEstudiante.html",tone=1,sessions="0",hours="0 h")),
   "Asistencia": two(card("Esta semana", stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"Clase":[2,2,2,2,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)),
      card("Últimas sesiones", row(btn("Justificar ausencia"),btn("Pedir reposición"))+table(["Sesión","Fecha","Asistí"],[["Sesión 11 · módulo 7","Mié 7 oct · 19:00",badge("Sí","ok")],["Sesión 10 · módulo 7","Mar 6 oct · 19:00",badge("Sí","ok")],["Sesión 9 · módulo 7","Lun 5 oct · 19:00",badge("No · aviso previo","warn")],["Sesión 8 · módulo 7","Jue 1 oct · 19:00",badge("Sí","ok")],["Sesión 7 · módulo 7","Mié 30 sep · 19:00",badge("Sí","ok")]])+kv(("Asistencia del curso","90%"),("Mínimo para certificado","75%")))),
   "Notas y certificados": two(card("Puntaje actual · B1", '<div class="perf">'+gauge(84,"Puntaje total")+'<div class="perf-legend"><div><i style="background:var(--ch1)"></i>Participación<b>55%</b></div><div><i style="background:var(--ch2)"></i>Quiz en clase<b>15%</b></div><div><i style="background:var(--ch3)"></i>Examen<b>10%</b></div><div><i style="background:var(--ch4)"></i>Ausencias<b>10%</b></div></div></div>'),
@@ -2608,7 +2607,7 @@ _ficha_resumen=(f'''<div class="grid" style="grid-template-columns:320px 1fr">
     <div class="actions"><button type="button" class="btn" style="flex:0 0 46px" aria-label="Llamar" data-action="Se abre el marcador con el teléfono del estudiante y se registra el contacto en su historial.">{ico("phone")}</button><button type="button" class="btn" style="flex:0 0 46px" aria-label="Email" data-action="Se abre un correo con la plantilla de contacto y queda registrado en el historial.">{ico("mail")}</button><button type="button" class="btn" style="background:var(--tint-navy);border-color:var(--tint-navy)" data-action="Se abre WhatsApp con la plantilla elegida (enlace de clase, recordatorio de saldo, certificado listo).">{ico("chat")}&nbsp;WhatsApp</button></div>
     <div class="section"><h3>Contacto</h3><div class="clist"><div><span class="cico">{ico("mail","")}</span><span><b>Email</b>maria.andrade@example.com</span></div><div><span class="cico">{ico("phone","")}</span><span><b>Teléfono</b>099 000 0001</span></div><div><span class="cico">{ico("pin","")}</span><span><b>Sector</b>Quito Norte · La Carolina (ubicada en el mapa)</span></div><div><span class="cico">{ico("id","")}</span><span><b>Cédula · ID legado</b>1712345678 · TeamDesk Quito 001-2026xxxxx</span></div><div><span class="cico">{ico("grad","")}</span><span><b>Programa · asesor</b>English for Adults · B1 (módulo 7 de 16) · Carla M.</span></div></div></div>
     <div class="section"><h3>Logros y certificados</h3><div class="awards"><div><i></i>Certificado A1 · dic 2025</div><div><i></i>Certificado A2 · jun 2026 · nota 85</div><div><i></i>Asistencia perfecta · módulo 5</div><div><i></i>Mejor progreso del grupo · módulo 6</div><div><i></i>Referido: trajo a 1 estudiante</div></div></div>
-    <div class="actions"><a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="{PORTAL_URL}" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
+    <div class="actions"><a href="NuevoEstudiante.html" class="btn">{ico("edit")}&nbsp;Editar</a><a href="PortalEstudiante.html" class="btn btn-ghost btn-portal"><span>Ver portal del estudiante</span><small>lo que ve María al ingresar · propuesta</small></a></div></div></aside>
   <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
     <div class="grid" style="grid-template-columns:1.25fr 1fr">
       {card("Actividad de aprendizaje", '<div class="hours"><b>6</b><span>horas</span><b>30</b><span>minutos esta semana</span></div>'+stackbars(["Lu","Ma","Mi","Ju","Vi","Sa","Do"],{"B1 Virtual":[2,2,2,2,0,0,0],"Club de conversación":[0,1,0,0,0,0,0],"Moodle":[0.5,0,0.5,0,1,0,0]},h=160)+'<div class="chips"><span class="chip"><b>8 h</b>B1 Virtual · P. Gómez</span><span class="chip"><b>1 h</b>Club de conversación</span><span class="chip"><b>2 h</b>Tareas en Moodle</span></div>', sel("Período",["Esta semana","Últimas 4 semanas","Módulo actual"],w="160px",col=False))}
